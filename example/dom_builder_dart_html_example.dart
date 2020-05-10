@@ -10,6 +10,7 @@ class BootstrapNavbarToggler {
     var button = $button( classes: 'navbar-toggler', type: 'button', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
         content: $span( classes: 'navbar-toggler-icon')
     );
+
     return button.buildDOM(domGenerator) ;
   }
 

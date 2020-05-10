@@ -13,12 +13,12 @@ import 'package:dom_builder/dom_builder.dart';
 
 void main() {
 
-  var div0 = $divHTML('<div class="container"><span>Builder</span></div>')
+  var div = $divHTML('<div class="container"><span>Builder</span></div>')
       .insertAt( 0, $span( id: 's1', content: 'The ' ) )
       .insertAfter( 's1' , $span( id: 's2', content: 'DOM ', style: 'font-weight: bold' ) )
   ;
 
-  print( div0.buildHTML( withIdent: true ) ) ;
+  print( div.buildHTML( withIdent: true ) ) ;
 
   ////////////
   // Output //
@@ -49,7 +49,30 @@ class BootstrapNavbarToggler {
     var button = $button( classes: 'navbar-toggler', type: 'button', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
         content: $span( classes: 'navbar-toggler-icon')
     );
+
     return button.buildDOM(domGenerator) ;
+  }
+
+}
+
+```
+
+## Mixing real DOM Elements with Builder (`dart:html`):
+
+```dart
+import 'dart:html' ;
+import 'package:dom_builder/dom_builder.dart';
+
+class TitleComponent {
+
+  static DOMGenerator domGenerator = DOMGenerator.dartHTML() ;
+
+  Element render() {
+    var div = $divHTML('<div class="container"><span>The </span></div>') ;
+
+    div.addExternalElement( SpanElement()..text = 'Builder' ) ;
+
+    return div.buildDOM(domGenerator) ;
   }
 
 }

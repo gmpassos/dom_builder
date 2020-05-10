@@ -26,6 +26,9 @@ abstract class DOMGenerator<T> {
       buildText(domParent, parent, domNode) ;
       return null ;
     }
+    else if ( domNode is ExternalElementNode ) {
+      return buildExternalElement(domParent, parent, domNode) ;
+    }
     else {
       throw StateError("Can't build node of type: ${ domNode.runtimeType }");
     }
@@ -45,6 +48,7 @@ abstract class DOMGenerator<T> {
   void appendElementText(T element, String text) ;
 
   T buildElement( DOMElement domParent, T parent, DOMElement domElement ) {
+
     var element = createElement( domElement.tag ) ;
     setAttributes(domElement, element);
 
@@ -53,23 +57,42 @@ abstract class DOMGenerator<T> {
     for (var i = 0; i < length; i++) {
       var node = domElement.nodeByIndex(i);
 
-      var subElement = build(domElement, element, node);
-
-      addToElement(element, subElement);
+      build(domElement, element, node);
     }
 
     if (parent != null) {
-      addToElement(parent, element);
+      addChildToElement(parent, element);
     }
 
     return element ;
   }
 
-  void addToElement(T element, T child) ;
+  T buildExternalElement( DOMElement domParent, T parent, ExternalElementNode domElement ) {
+    var element = domElement.element ;
+
+    if (parent != null) {
+      return addExternalElementToElement(parent, element);
+    }
+
+    return null ;
+  }
+
+  void addChildToElement(T element, T child) ;
+
+  bool canHandleExternalElement( dynamic externalElement ) ;
+
+  T addExternalElementToElement(T element, dynamic externalElement) ;
 
   T createElement(String tag) ;
 
-  void setAttributes( DOMElement domElement , T element ) ;
+  void setAttributes( DOMElement domElement , T element ) {
+    for (var attrName in domElement.attributesNames ) {
+      var attrVal = domElement[attrName] ;
+      setAttribute(element, attrName, attrVal);
+    }
+  }
+
+  void setAttribute(T element, String attrName, String attrVal) ;
 
 }
 

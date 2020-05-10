@@ -130,6 +130,43 @@ class DOMAttribute implements WithValue {
     return null ;
   }
 
+  List<String> get values {
+    if ( isBoolean ) return [ _boolean.toString() ] ;
+
+    if ( isListValue ) {
+      if ( isObjectNotEmpty(_values) ) {
+        return _values ;
+      }
+    }
+    else {
+      if ( isObjectNotEmpty(_value) ) {
+        return [_value] ;
+      }
+    }
+
+    return null ;
+  }
+
+  bool containsValue(String v) {
+    if ( isBoolean ) {
+      v ??= 'false' ;
+      return _boolean.toString() == v ;
+    }
+
+    if ( isListValue ) {
+      if ( isObjectNotEmpty(_values) ) {
+        return _values.contains(v) ;
+      }
+    }
+    else {
+      if ( isObjectNotEmpty(_value) ) {
+        return _value == v ;
+      }
+    }
+
+    return false ;
+  }
+
   void setBoolean(dynamic value) {
     _boolean = parseBool(value, false) ;
   }
@@ -268,7 +305,21 @@ NodeSelector asNodeSelector(dynamic selector) {
   if (selector == null) return null ;
 
   if (selector is String) {
-    return (n) => n is DOMElement && n.id == selector ;
+    var str = selector.trim() ;
+    if (str.isEmpty) return null ;
+
+    // id:
+    if ( str.startsWith('#') ) {
+      return (n) => n is DOMElement && n.id == str.substring(1) ;
+    }
+    // class
+    else if ( str.startsWith('.') ) {
+      return (n) => n is DOMElement && n.containsClass( str.substring(1) ) ;
+    }
+    // tag
+    else {
+      return (n) => n is DOMElement && n.tag == str ;
+    }
   }
   else if (selector is DOMNode) {
     return (n) => n == selector ;
@@ -333,6 +384,12 @@ class DOMElement extends DOMNode {
 
   String get classes => getAttributeValue('class') ;
   String get style => getAttributeValue('style') ;
+
+  bool containsClass(String className) {
+    var attribute = getAttribute('class') ;
+    if (attribute == null) return null ;
+    return attribute.containsValue(className) ;
+  }
 
   //////
 
@@ -436,6 +493,8 @@ class DOMElement extends DOMNode {
 
   bool get hasAttributes => DOMAttribute.hasAttributes(_attributes) ;
 
+  //////////////////////////////////////////////////////////////////////////////
+
   String buildOpenTagHTML() {
     var html = '<$tag' ;
 
@@ -517,7 +576,7 @@ class DOMElement extends DOMNode {
     return _content.any( (n) => (n is DOMElement) ) == false ;
   }
 
-  void _addToContent(dynamic entry) {
+  void _addToContent(DOMNode entry) {
     if (_content == null) {
       _content = [entry] ;
     }
@@ -526,7 +585,7 @@ class DOMElement extends DOMNode {
     }
   }
 
-  void _insertToContent(int index, dynamic entry) {
+  void _insertToContent(int index, DOMNode entry) {
     if (_content == null) {
       _content = [entry] ;
     }
@@ -541,38 +600,39 @@ class DOMElement extends DOMNode {
     }
   }
 
-  DOMNode nodeByIndex( int index ) {
+  T nodeByIndex<T extends DOMNode>( int index ) {
     if ( index == null || isEmpty ) return null ;
     return _content[index] ;
   }
 
-  DOMNode nodeByID( String id ) {
+  DOMElement nodeByID( String id ) {
     if ( id == null || isEmpty ) return null ;
+    if (id.startsWith('#')) id = id.substring(1) ;
     return nodeWhere( (n) => n is DOMElement && n.id == id ) ;
   }
 
-
-  DOMNode selectByID( String id ) {
+  DOMElement selectByID( String id ) {
     if ( id == null || isEmpty ) return null ;
+    if (id.startsWith('#')) id = id.substring(1) ;
     return selectWhere( (n) => n is DOMElement && n.id == id ) ;
   }
 
-  DOMNode nodeEquals( DOMNode node ) {
+  T nodeEquals<T extends DOMNode>( DOMNode node ) {
     if ( node == null || isEmpty ) return null ;
     return nodeWhere( (n) => n == node ) ;
   }
 
-  DOMNode selectEquals( DOMNode node ) {
+  T selectEquals<T extends DOMNode>( DOMNode node ) {
     if ( node == null || isEmpty ) return null ;
     return selectWhere( (n) => n == node ) ;
   }
 
-  DOMNode nodeWhere( NodeSelector selector ) {
+  T nodeWhere<T extends DOMNode>( NodeSelector selector ) {
     if ( selector == null || isEmpty ) return null ;
     return _content.firstWhere( selector , orElse: () => null ) ;
   }
 
-  DOMNode selectWhere( NodeSelector selector ) {
+  T selectWhere<T extends DOMNode>( NodeSelector selector ) {
     if ( selector == null || isEmpty ) return null ;
 
     var found = nodeWhere(selector) ;
@@ -586,7 +646,7 @@ class DOMElement extends DOMNode {
     return null ;
   }
 
-  DOMNode node( dynamic selector ) {
+  T node<T extends DOMNode>( dynamic selector ) {
     if ( selector == null || isEmpty ) return null ;
 
     if ( selector is num ) {
@@ -598,7 +658,7 @@ class DOMElement extends DOMNode {
     }
   }
 
-  DOMNode select( dynamic selector ) {
+  T select<T extends DOMNode>( dynamic selector ) {
     if ( selector == null || isEmpty ) return null ;
 
     if ( selector is num ) {
@@ -611,6 +671,17 @@ class DOMElement extends DOMNode {
   }
 
   //////////////////////////////////////////////////////////////////////////////
+
+  DOMElement addHTML(String html) {
+    var list = $html(html) ;
+    if (list == null || list.isEmpty) return this;
+
+    for (var node in list) {
+      _addToContent(node) ;
+    }
+
+    return this ;
+  }
 
   DOMElement add(dynamic entry) {
     var node = DOMNode.from(entry) ;
@@ -654,6 +725,37 @@ class DOMElement extends DOMNode {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  DOMElement addExternalElement( dynamic externalElement ) {
+    var node = ExternalElementNode(externalElement) ;
+    _addToContent(node) ;
+    return this ;
+  }
+
+  DOMElement insertExternalElementAt(dynamic indexSelector, dynamic element) {
+    var idx = indexOf(indexSelector) ;
+
+    if (idx >= 0) {
+      var node = ExternalElementNode(element) ;
+      _insertToContent(idx, node) ;
+    }
+
+    return this ;
+  }
+
+  DOMElement insertExternalElementAfter(dynamic indexSelector, dynamic element) {
+    var idx = indexOf(indexSelector) ;
+
+    if (idx >= 0) {
+      idx++;
+      var node = ExternalElementNode(element) ;
+      _insertToContent(idx, node) ;
+    }
+
+    return this ;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -666,6 +768,19 @@ class DOMElement extends DOMNode {
 
   @override
   int get hashCode => tag.hashCode ^ deepHashCode( _attributes ) ^ deepHashCode( _content ) ;
+
+}
+
+class ExternalElementNode extends DOMNode {
+
+  final dynamic element ;
+
+  ExternalElementNode(this.element);
+
+  @override
+  String buildHTML({bool withIdent = false, String parentIdent = '', String ident = '  '}) {
+    return null ;
+  }
 
 }
 
@@ -719,7 +834,7 @@ DOMElement $tag( String tag , { id, classes, style, Map<String,String> attribute
   return DOMElement(tag, id: id, classes: classes, style: style, attributes: attributes, content: content) ;
 }
 
-T $tagHTML<T extends DOMElement>(dynamic html) => $html<DOMElement>(html)[0] as T;
+T $tagHTML<T extends DOMElement>(dynamic html) => $html<DOMElement>(html).whereType<T>().first ;
 
 DOMElement $div( { id, classes , style, Map<String,String> attributes, content } ) => $tag('div', id: id, classes: classes, style: style, attributes: attributes, content: content) ;
 

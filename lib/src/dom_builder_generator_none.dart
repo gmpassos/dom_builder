@@ -10,7 +10,7 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  void addToElement(T element, T child) {
+  void addChildToElement(T element, T child) {
     _noDartHTML();
   }
 
@@ -34,6 +34,22 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   @override
   void appendElementText(T element, String text) {
     _noDartHTML();
+  }
+
+  @override
+  void setAttribute(T element, String attrName, String attrVal) {
+    _noDartHTML();
+  }
+
+  @override
+  T addExternalElementToElement(T element, dynamic externalElement) {
+    _noDartHTML();
+    return null ;
+  }
+
+  @override
+  bool canHandleExternalElement(externalElement) {
+    return false ;
   }
 
 }
