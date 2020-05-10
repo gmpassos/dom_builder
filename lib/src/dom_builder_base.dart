@@ -6,6 +6,9 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'package:html/parser.dart' as html_parse ;
 import 'package:html/dom.dart' as html_dom ;
 
+import 'dom_builder_generator.dart';
+
+
 final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+') ;
 
 List<String> parseListOfStrings(dynamic s, [Pattern delimiter, bool trim = true]) {
@@ -333,12 +336,16 @@ class DOMElement extends DOMNode {
 
   //////
 
+  final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = { 'checked' } ;
+
   final Map<String,Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = { 'class': ' ' , 'style': ';' } ;
   final Map<String,Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = { 'class': RegExp(r'\s+') , 'style': RegExp(r'\s*;\s*') } ;
 
   LinkedHashMap<String, DOMAttribute> _attributes ;
 
-  DOMAttribute operator [](String name) => getAttribute(name) ;
+  Iterable<String> get attributesNames => _attributes.keys;
+
+  String operator [](String name) => getAttributeValue(name) ;
   void operator []=(String name, dynamic value) => attribute(name, value) ;
 
   String getAttributeValue( String name ) {
@@ -366,10 +373,21 @@ class DOMElement extends DOMNode {
       attribute = DOMAttribute(name, values: parseListOfStrings(value, delimiterPattern), delimiter: delimiter) ;
     }
     else {
-      attribute = DOMAttribute(name, value: value) ;
+      var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name) ;
+
+      if (attrBoolean) {
+        if (value != null) {
+          attribute = DOMAttribute(name, value: value) ;
+        }
+      }
+      else {
+        attribute = DOMAttribute(name, value: value) ;
+      }
     }
 
-    addDOMAttribute( attribute ) ;
+    if (attribute != null) {
+      addDOMAttribute(attribute);
+    }
 
     return this ;
   }
@@ -459,7 +477,30 @@ class DOMElement extends DOMNode {
 
   //////////////////////////////////////////////////////////////////////////////
 
+  static DOMGenerator setDefaultDomGeneratorToDartHTML() {
+    return _defaultDomGenerator = DOMGenerator.dartHTML() ;
+  }
+
+  static DOMGenerator _defaultDomGenerator ;
+
+  static DOMGenerator get defaultDomGenerator {
+    return _defaultDomGenerator ?? DOMGenerator.dartHTML() ;
+  }
+
+  static set defaultDomGenerator(DOMGenerator value) {
+    _defaultDomGenerator = value ?? DOMGenerator.dartHTML() ;
+  }
+
+  T buildDOM<T>( [ DOMGenerator<T> generator ] ) {
+    generator ??= defaultDomGenerator ;
+    return generator.generate( this ) ;
+  }
+
+  //////////////////////////////////////////////////////////////////////////////
+
   List<DOMNode> _content ;
+
+  Iterable<DOMNode> get nodes => List.from( _content ).cast() ;
 
   int get length => _content != null ? _content.length : 0 ;
 
@@ -674,23 +715,18 @@ List<DOMNode> $html<T extends DOMNode>(dynamic html) {
 
 ////////////////////////////////////////////////////////////////////////////////
 
-DOMElement $tag( String tag , { id, classes, style, content } ) {
-  return DOMElement(tag, id: id, classes: classes, style: style, content: content) ;
+DOMElement $tag( String tag , { id, classes, style, Map<String,String> attributes, content } ) {
+  return DOMElement(tag, id: id, classes: classes, style: style, attributes: attributes, content: content) ;
 }
 
-T $tagHTML<T extends DOMElement>(dynamic html) {
-  return $html<DOMElement>(html)[0] as T ;
-}
+T $tagHTML<T extends DOMElement>(dynamic html) => $html<DOMElement>(html)[0] as T;
 
-DOMElement $span( { id, classes , style, content } ) => $tag('span', id: id, classes: classes, style: style, content: content) ;
+DOMElement $div( { id, classes , style, Map<String,String> attributes, content } ) => $tag('div', id: id, classes: classes, style: style, attributes: attributes, content: content) ;
 
-DOMElement $div( { id, classes , style, content } ) => $tag('div', id: id, classes: classes, style: style, content: content) ;
+DIVElement $divHTML(dynamic html) => $tagHTML(html);
 
-DIVElement $divHTML(dynamic html) {
-  return $tagHTML(html) ;
-}
+DOMElement $span( { id, classes , style, Map<String,String> attributes, content } ) => $tag('span', id: id, classes: classes, style: style, attributes: attributes, content: content) ;
 
-
-
+DOMElement $button( { id, classes , style, type, Map<String,String> attributes, content } ) => $tag('button', id: id, classes: classes, style: style, attributes: { 'type': type, ...attributes }, content: content) ;
 
 
