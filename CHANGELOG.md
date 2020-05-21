@@ -1,3 +1,10 @@
+## 1.0.3
+
+- Better handling of selectors formats: .class, #id, tag
+- Table support.
+- Fix build HTML with ident.
+- Element helpers: $input, $textarea, $button, $label, $p, $br, $hr, $table, $thead, $tfoot, $tbody, $tr, $td, $th, $$divInline.
+
 ## 1.0.2
 
 - Added support for external elements.

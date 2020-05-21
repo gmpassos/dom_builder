@@ -17,7 +17,7 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   @override
   T createElement(String tag) {
     _noDartHTML();
-    return null ;;
+    return null ;
   }
 
   @override
@@ -50,6 +50,12 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   @override
   bool canHandleExternalElement(externalElement) {
     return false ;
+  }
+
+  @override
+  String buildElementHTML(T element) {
+    _noDartHTML();
+    return null ;
   }
 
 }

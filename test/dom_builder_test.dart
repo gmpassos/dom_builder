@@ -32,7 +32,7 @@ void main() {
       expect(div.buildHTML(), equals('<div class="container">Simple Text<span>Sub text</span></div>')) ;
     });
 
-    test('div content 2', () {
+    test('div content and apply', () {
 
       var div = $div( classes: 'container' )
           .add('Simple Text')
@@ -41,6 +41,11 @@ void main() {
 
       expect(div, isNotNull) ;
       expect(div.buildHTML(), equals('<div class="container">Simple Text<span>Sub text</span></div>')) ;
+
+      div.applyWhere( (e) => e is DOMElement && e.tag == 'span' , style: 'color: green') ;
+
+      expect(div.buildHTML(), equals('<div class="container">Simple Text<span style="color: green">Sub text</span></div>')) ;
+
     });
 
     test('Basic html', () {
@@ -52,6 +57,15 @@ void main() {
 
     });
 
+    test('build HTML', () {
+
+      var div = $tagHTML('<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span><span>Final Text</span></div>');
+
+      expect(div.buildHTML(), equals('<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span><span>Final Text</span></div>')) ;
+      expect(div.buildHTML( withIdent: true ), equals('<div class="container">\n  <span class="s1">Span Text<div class="d2">more text</div></span>\n  <span>Final Text</span>\n</div>')) ;
+
+    });
+
     test('html add span', () {
 
       var div = $divHTML('<DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>') ;
@@ -60,6 +74,10 @@ void main() {
 
       expect(div, isNotNull) ;
       expect(div.buildHTML(), equals('<div class="container">Simple Text<span>Sub text</span><span>Final text</span></div>')) ;
+
+      div.applyWhere( (e) => e is DOMElement && e.tag == 'span' , style: 'color: black') ;
+
+      expect(div.buildHTML(), equals('<div class="container">Simple Text<span style="color: black">Sub text</span><span style="color: black">Final text</span></div>')) ;
 
     });
 
@@ -121,10 +139,10 @@ void main() {
       var div = $tagHTML('<div class="container"></div>');
 
       var span = TestElem('span')..text = 'span element';
-      div.addExternalElement( span ) ;
+      div.add( span ) ;
 
       var text = TextElem('text element');
-      div.addExternalElement( text ) ;
+      div.add( text ) ;
 
       var genDiv = div.buildDOM(generator) ;
 
@@ -142,6 +160,68 @@ void main() {
       expect(genText, equals(text.asTestElem)) ;
 
     });
+
+    test('table element', () {
+
+      var table = $table( classes: 'ui-table', head: ['ha','hb','hc'], body: ['a','b','c'] , foot: ['fa','fb','fc'] ) ;
+
+      expect(table.buildHTML(), equals('<table class="ui-table"><thead><tr><th>ha</th><th>hb</th><th>hc</th></tr></thead><tbody><tr><td>a</td><td>b</td><td>c</td></tr></tbody><tfoot><tr><td>fa</td><td>fb</td><td>fc</td></tr></tfoot></table>')) ;
+
+    });
+
+
+    test('table parse', () {
+
+      var div = $div( classes: 'container', content: [
+        $span( id: 's1', content: 'The ' ) ,
+        $span( id: 's2', style: 'font-weight: bold', content: 'DOM ' ) ,
+        $span( content: 'Builder' ) ,
+        $table( head: ['Name','Age'] , body: [ ['Joe', 21] , ['Smith', 30] ])
+      ]) ;
+
+      // Equivalent:
+
+      var div2 = $divHTML('<div class="container"><span>Builder</span></div>')
+          .insertAt( 0, $span( id: 's1', content: 'The ' ) )
+          .insertAfter( '#s1' , $span( id: 's2', style: 'font-weight: bold', content: 'DOM ' ) )
+          .add( $tagHTML('''
+        <table>
+          <thead>
+            <tr><th>Name</th><th>Age</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>Joe</td><td>21</td></tr>
+            <tr><td>Smith</td><td>30</td></tr>
+          </tbody>
+        </table>
+      ''')
+      )
+      ;
+
+      expect(div.buildHTML( withIdent: true ), equals(div2.buildHTML( withIdent: true)) ) ;
+
+    });
+
+    test('Basic input', () {
+
+      var div = $div( content: [ $label( content: 'Some Label' ) , $input( type: 'text' , value: 'Some Text' ) , $br() , $textarea( content: 'Title:\nText block.' ) ] );
+
+      expect(div, isNotNull) ;
+      expect(div.buildHTML(), equals('<div><label>Some Label</label><input type="text" value="Some Text"><br><textarea>Title:\nText block.</textarea></div>')) ;
+      expect(div.buildHTML( withIdent: true ), equals('<div>\n  <label>Some Label</label>\n  <input type="text" value="Some Text">\n  <br>\n  <textarea>Title:\nText block.</textarea>\n</div>')) ;
+
+    });
+
+    test('Basic hr p', () {
+
+      var div = $div( content: [ 'AAA' , $hr() , 'BBB' , $p() , 'CCC' ] );
+
+      expect(div, isNotNull) ;
+      expect(div.buildHTML(), equals('<div>AAA<hr>BBB<p>CCC</div>')) ;
+      expect(div.buildHTML( withIdent: true ), equals('<div>AAA<hr>BBB<p>CCC</div>')) ;
+
+    });
+
 
   });
 }
@@ -167,6 +247,11 @@ class TestElem {
   String text = '' ;
 
   final Map<String,String> attributes = {} ;
+
+  String get asHTML {
+    // BAD HTML:
+    return '<$tag $attributes>$nodes</$tag>' ;
+  }
 
   @override
   bool operator ==(Object other) =>
@@ -229,6 +314,11 @@ class TestGenerator extends DOMGenerator<TestElem> {
   @override
   void setAttribute(TestElem element, String attrName, String attrVal) {
     element.attributes[attrName] = attrVal ;
+  }
+
+  @override
+  String buildElementHTML(TestElem element) {
+    return element.asHTML ;
   }
 
 }

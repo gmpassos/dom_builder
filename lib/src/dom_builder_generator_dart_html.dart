@@ -10,13 +10,13 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Element> {
 
   @override
   void appendElementText(Element element, String text) {
+    if (text == null || text.isEmpty) return ;
     element.appendText(text);
   }
 
   @override
   String getNodeText(TextNode domNode) {
-    var text = domNode.text;
-    return text;
+    return domNode.text;
   }
 
   @override
@@ -46,6 +46,13 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Element> {
   @override
   Element createElement(String tag) {
     return dart_html.createElement(tag) ;
+  }
+
+  @override
+  String buildElementHTML(Element element) {
+    if (element == null) return null ;
+    var html = element.outerHtml ;
+    return html ;
   }
 
 }

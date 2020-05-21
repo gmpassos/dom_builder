@@ -1,9 +1,15 @@
 
+import 'package:swiss_knife/swiss_knife.dart';
+
 import 'dom_builder_base.dart';
 
 import 'dom_builder_generator_none.dart'
   if (dart.library.html) "dom_builder_generator_dart_html.dart"
 ;
+
+
+
+typedef DOMElementGenerator = dynamic Function(dynamic parent) ;
 
 abstract class DOMGenerator<T> {
 
@@ -18,7 +24,11 @@ abstract class DOMGenerator<T> {
     return build(null, null, root) ;
   }
 
+  String buildElementHTML(T element) ;
+
   T build( DOMElement domParent, T parent, DOMNode domNode ) {
+    if ( domNode.isCommented ) return null ;
+
     if ( domNode is DOMElement ) {
       return buildElement(domParent, parent, domNode) ;
     }
@@ -50,6 +60,11 @@ abstract class DOMGenerator<T> {
   T buildElement( DOMElement domParent, T parent, DOMElement domElement ) {
 
     var element = createElement( domElement.tag ) ;
+
+    if ( element == null ) {
+      throw StateError("Can't create element for tag: ${domElement.tag}") ;
+    }
+
     setAttributes(domElement, element);
 
     var length = domElement.length;
@@ -68,7 +83,42 @@ abstract class DOMGenerator<T> {
   }
 
   T buildExternalElement( DOMElement domParent, T parent, ExternalElementNode domElement ) {
-    var element = domElement.element ;
+    var externalElement = domElement.externalElement ;
+
+    if ( !canHandleExternalElement( externalElement ) ) {
+
+      if ( externalElement is List && listMatchesAll(externalElement, (e) => e is DOMNode ) ) {
+        List<DOMNode> listNodes = externalElement ;
+        for (var node in listNodes) {
+          build(domParent, parent, node) ;
+        }
+        return null ;
+      }
+      else if ( externalElement is DOMNode ) {
+        return build(domParent, parent, externalElement) ;
+      }
+      else if ( externalElement is DOMElementGenerator ) {
+        var functionGenerator = externalElement ;
+        var element = functionGenerator( parent );
+        if ( element != null ) {
+          addChildToElement(parent, element);
+        }
+        return element ;
+      }
+      else if ( externalElement is String ) {
+        var list = DOMNode.parseNodes(externalElement) ;
+
+        if ( list != null ) {
+          for (var elem in list) {
+            build(domParent, parent, elem) ;
+          }
+        }
+      }
+
+      return null ;
+    }
+
+    var element = domElement.externalElement ;
 
     if (parent != null) {
       return addExternalElementToElement(parent, element);
