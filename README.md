@@ -70,7 +70,7 @@ class TitleComponent {
   Element render() {
     var div = $divHTML('<div class="container"><span>The </span></div>') ;
 
-    div.addExternalElement( SpanElement()..text = 'Builder' ) ;
+    div.add( SpanElement()..text = 'DOM Builder' ) ;
 
     return div.buildDOM(domGenerator) ;
   }
@@ -78,6 +78,52 @@ class TitleComponent {
 }
 
 ```
+
+## Example of Bootstrap Cards and Table:
+
+```dart
+
+      // ...
+
+      var tableHeads = ['User', 'E-Mail'] ;
+      var usersEntries = [ ['Joe' , 'joe@mail.com'] , ['Smith' , 'smith@mail.com'] ] ;
+
+      var content = $div( content: [
+        $div( classes: 'card' , content: [
+          $div( classes: 'card-header' , content: 'Activity Timeline:') ,
+          $div( id: 'timeline-chart' )
+        ]) ,
+
+        $hr(),
+
+        $div( classes: 'card' , content: [
+          $div( classes: 'card-header' , content: "Users:"),
+          $div( classes: 'card-body' , content:
+            $table( classes: 'table text-truncate', head: tableHeads, body: usersEntries)
+            ..applyWhere( 'td , th' , classes: 'd-inline text-truncate' , style: 'max-width: 50vw')
+          )
+        ]) ,
+
+      ] );
+
+      // ...
+
+      if (timelineChartSeries != null) {
+        content.select( '#timeline-chart' ).add(
+            ( parent ) {
+              // render Chart inside element parent...
+            }
+        ) ;
+      }
+      else {
+        content.select( '#timeline-chart' ).add( 'No Timeline Data.' ) ;
+      }
+
+      // ...
+
+      return content.buildDOM(domGenerator) ;
+```
+
 
 ## Features and bugs
 
