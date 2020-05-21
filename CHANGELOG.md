@@ -1,3 +1,8 @@
+## 1.0.4
+
+- Fix README example and new examples.
+- Fix 'dartdoc' issues.
+
 ## 1.0.3
 
 - Better handling of selectors formats: .class, #id, tag

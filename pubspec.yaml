@@ -1,6 +1,6 @@
 name: dom_builder
 description: Helpers to generate DOM elements or HTML (Web and Native support).
-version: 1.0.3
+version: 1.0.4
 homepage: https://github.com/gmpassos/dom_builder
 
 environment:

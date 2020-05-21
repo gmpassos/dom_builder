@@ -1,4 +1,4 @@
-library dom_builder;
+library dom_builder_dart_html ;
 
 export 'src/dom_builder_base.dart';
 export 'src/dom_builder_generator.dart';
