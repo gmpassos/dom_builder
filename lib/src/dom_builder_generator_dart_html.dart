@@ -1,16 +1,14 @@
-
 import 'dart:html';
 
-import 'dom_builder_generator.dart';
 import 'dom_builder_base.dart';
+import 'dom_builder_dart_html.dart' as dart_html;
+import 'dom_builder_generator.dart';
 
-import 'dom_builder_dart_html.dart' as dart_html ;
-
+/// [DOMGenerator] based in `dart:html`.
 class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Element> {
-
   @override
   void appendElementText(Element element, String text) {
-    if (text == null || text.isEmpty) return ;
+    if (text == null || text.isEmpty) return;
     element.appendText(text);
   }
 
@@ -21,43 +19,42 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Element> {
 
   @override
   void addChildToElement(Element element, Element child) {
-    element.children.add( child ) ;
+    element.children.add(child);
   }
 
   @override
   bool canHandleExternalElement(externalElement) {
-    return externalElement is Node ;
+    return externalElement is Node;
   }
 
   @override
-  Element addExternalElementToElement(Element element, dynamic externalElement) {
+  Element addExternalElementToElement(
+      Element element, dynamic externalElement) {
     if (externalElement is Node) {
-      element.children.add( externalElement ) ;
-      return externalElement ;
+      element.children.add(externalElement);
+      return externalElement;
     }
-    return null ;
+    return null;
   }
 
   @override
   void setAttribute(Element element, String attrName, String attrVal) {
-    element.setAttribute(attrName, attrVal) ;
+    element.setAttribute(attrName, attrVal);
   }
 
   @override
   Element createElement(String tag) {
-    return dart_html.createElement(tag) ;
+    return dart_html.createElement(tag);
   }
 
   @override
   String buildElementHTML(Element element) {
-    if (element == null) return null ;
-    var html = element.outerHtml ;
-    return html ;
+    if (element == null) return null;
+    var html = element.outerHtml;
+    return html;
   }
-
 }
 
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
-  return DOMGeneratorDartHTMLImpl() as DOMGeneratorDartHTML<T> ;
+  return DOMGeneratorDartHTMLImpl() as DOMGeneratorDartHTML<T>;
 }
-

@@ -1,12 +1,12 @@
-
-import 'dom_builder_generator.dart';
 import 'dom_builder_base.dart';
+import 'dom_builder_generator.dart';
 
-
-class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
-
+/// Dummy [DOMGeneratorDartHTML] for platforms that doesn't supports `dart:html`.
+///
+/// Useful when [DOMGenerator.dartHTML] is called in the wrong platform.
+class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   void _noDartHTML() {
-    throw UnsupportedError('DOMGeneratorDartHTML: dart:html not loaded') ;
+    throw UnsupportedError('DOMGeneratorDartHTML: dart:html not loaded');
   }
 
   @override
@@ -17,11 +17,11 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   @override
   T createElement(String tag) {
     _noDartHTML();
-    return null ;
+    return null;
   }
 
   @override
-  void setAttributes( DOMElement domElement , T element ) {
+  void setAttributes(DOMElement domElement, T element) {
     _noDartHTML();
   }
 
@@ -44,24 +44,21 @@ class DOMGeneratorDartHTMLNone<T> extends DOMGeneratorDartHTML<T> {
   @override
   T addExternalElementToElement(T element, dynamic externalElement) {
     _noDartHTML();
-    return null ;
+    return null;
   }
 
   @override
   bool canHandleExternalElement(externalElement) {
-    return false ;
+    return false;
   }
 
   @override
   String buildElementHTML(T element) {
     _noDartHTML();
-    return null ;
+    return null;
   }
-
 }
-
 
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
-  return DOMGeneratorDartHTMLNone<T>() ;
+  return DOMGeneratorDartHTMLUnsupported<T>();
 }
-

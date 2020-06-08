@@ -1,64 +1,65 @@
-
 import 'dart:collection';
 
+import 'package:html/dom.dart' as html_dom;
+import 'package:html/parser.dart' as html_parse;
 import 'package:swiss_knife/swiss_knife.dart';
-
-import 'package:html/parser.dart' as html_parse ;
-import 'package:html/dom.dart' as html_dom ;
 
 import 'dom_builder_generator.dart';
 
+final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+');
 
-final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+') ;
+final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
 
-final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*') ;
+/// Parses [s] as a flat [List<String>].
+///
+/// [s] If is a [String] uses [delimiter] to split strings. If [s] is a [List] iterator over it and flatten sub lists.
+/// [delimiter] Pattern to split [s] to list.
+/// [trim] If [true] trims all strings.
+List<String> parseListOfStrings(dynamic s,
+    [Pattern delimiter, bool trim = true]) {
+  if (s == null) return null;
 
-List<String> parseListOfStrings(dynamic s, [Pattern delimiter, bool trim = true]) {
-  if (s == null) return null ;
-
-  List<String> list ;
+  List<String> list;
 
   if (s is List) {
-    list = s.map( parseString ).toList() ;
-  }
-  else {
-    var str = parseString(s) ;
-    if (trim) str = str.trim() ;
+    list = s.map(parseString).toList();
+  } else {
+    var str = parseString(s);
+    if (trim) str = str.trim();
     list = str.split(delimiter);
   }
 
   if (trim) {
-    list = list.where( (e) => e != null ).map( (e) => e.trim() ).where( (e) => e.isNotEmpty ).toList() ;
+    list = list
+        .where((e) => e != null)
+        .map((e) => e.trim())
+        .where((e) => e.isNotEmpty)
+        .toList();
   }
 
-  return list ;
+  return list;
 }
 
 bool isObjectEmpty(dynamic o) {
-  if (o == null) return true ;
+  if (o == null) return true;
 
   if (o is List) {
-    return o.isEmpty ;
-  }
-  else if (o is Map) {
-    return o.isEmpty ;
-  }
-  else {
-    return o.toString().isEmpty ;
+    return o.isEmpty;
+  } else if (o is Map) {
+    return o.isEmpty;
+  } else {
+    return o.toString().isEmpty;
   }
 }
 
 bool isObjectNotEmpty(dynamic o) {
-  return !isObjectEmpty(o) ;
+  return !isObjectEmpty(o);
 }
 
 abstract class WithValue {
+  bool get hasValue;
 
-  bool get hasValue ;
-
-  String get value ;
-
-
+  String get value;
 }
 
 //
@@ -66,143 +67,146 @@ abstract class WithValue {
 //
 
 class DOMAttribute implements WithValue {
+  static bool hasAttribute(DOMAttribute attribute) =>
+      attribute != null && attribute.hasValue;
 
-  static bool hasAttribute( DOMAttribute attribute ) => attribute != null && attribute.hasValue ;
-  static bool hasAttributes( Map<String, DOMAttribute> attributes ) => attributes != null && attributes.isNotEmpty ;
+  static bool hasAttributes(Map<String, DOMAttribute> attributes) =>
+      attributes != null && attributes.isNotEmpty;
 
-  final String name ;
+  final String name;
 
-  String _value ;
-  List<String> _values ;
-  final String delimiter ;
+  String _value;
 
-  bool _boolean ;
+  List<String> _values;
 
-  DOMAttribute(String name, { dynamic value, List values, this.delimiter , dynamic boolean } ) :
-      name = name.toLowerCase().trim() ,
-      _value = parseString(value) ,
-      _values = parseListOfStrings(values) ,
-      _boolean = parseBool(boolean)
-  {
-    if (_value != null && _values != null) throw ArgumentError('Attribute $name: Only value or values can be defined, not both.') ;
-    if (_boolean != null && (_value != null || _values != null) ) throw ArgumentError("Attribute $name: Boolean attribute doesn't have value.") ;
-    if (_values != null && delimiter == null) throw ArgumentError('Attribute $name: If values is defined a delimiter is required.') ;
+  final String delimiter;
+
+  bool _boolean;
+
+  DOMAttribute(String name,
+      {dynamic value, List values, this.delimiter, dynamic boolean})
+      : name = name.toLowerCase().trim(),
+        _value = parseString(value),
+        _values = parseListOfStrings(values),
+        _boolean = parseBool(boolean) {
+    if (_value != null && _values != null)
+      throw ArgumentError(
+          'Attribute $name: Only value or values can be defined, not both.');
+    if (_boolean != null && (_value != null || _values != null))
+      throw ArgumentError(
+          "Attribute $name: Boolean attribute doesn't have value.");
+    if (_values != null && delimiter == null)
+      throw ArgumentError(
+          'Attribute $name: If values is defined a delimiter is required.');
   }
 
-  bool get isBoolean => _boolean != null ;
-  bool get isListValue => delimiter != null ;
+  bool get isBoolean => _boolean != null;
+
+  bool get isListValue => delimiter != null;
 
   @override
   bool get hasValue {
-    if ( isBoolean ) return _boolean ;
+    if (isBoolean) return _boolean;
 
-    if ( isListValue ) {
-      if ( isObjectNotEmpty(_values) ) {
+    if (isListValue) {
+      if (isObjectNotEmpty(_values)) {
         if (_values.length == 1) {
           return _values[0].isNotEmpty;
-        }
-        else {
+        } else {
           return true;
         }
       }
-    }
-    else {
-      return isObjectNotEmpty(_value) ;
+    } else {
+      return isObjectNotEmpty(_value);
     }
 
-    return false ;
+    return false;
   }
 
   @override
   String get value {
-    if ( isBoolean ) return _boolean.toString() ;
+    if (isBoolean) return _boolean.toString();
 
-    if ( isListValue ) {
-      if ( isObjectNotEmpty(_values) ) {
+    if (isListValue) {
+      if (isObjectNotEmpty(_values)) {
         if (_values.length == 1) {
-          return _values[0] ;
-        }
-        else {
-          return _values.join(delimiter) ;
+          return _values[0];
+        } else {
+          return _values.join(delimiter);
         }
       }
-    }
-    else {
-      if ( isObjectNotEmpty(_value) ) {
-        return _value ;
+    } else {
+      if (isObjectNotEmpty(_value)) {
+        return _value;
       }
     }
 
-    return null ;
+    return null;
   }
 
   List<String> get values {
-    if ( isBoolean ) return [ _boolean.toString() ] ;
+    if (isBoolean) return [_boolean.toString()];
 
-    if ( isListValue ) {
-      if ( isObjectNotEmpty(_values) ) {
-        return _values ;
+    if (isListValue) {
+      if (isObjectNotEmpty(_values)) {
+        return _values;
+      }
+    } else {
+      if (isObjectNotEmpty(_value)) {
+        return [_value];
       }
     }
-    else {
-      if ( isObjectNotEmpty(_value) ) {
-        return [_value] ;
-      }
-    }
 
-    return null ;
+    return null;
   }
 
   bool containsValue(String v) {
-    if ( isBoolean ) {
-      v ??= 'false' ;
-      return _boolean.toString() == v ;
+    if (isBoolean) {
+      v ??= 'false';
+      return _boolean.toString() == v;
     }
 
-    if ( isListValue ) {
-      if ( isObjectNotEmpty(_values) ) {
-        return _values.contains(v) ;
+    if (isListValue) {
+      if (isObjectNotEmpty(_values)) {
+        return _values.contains(v);
       }
-    }
-    else {
-      if ( isObjectNotEmpty(_value) ) {
-        return _value == v ;
+    } else {
+      if (isObjectNotEmpty(_value)) {
+        return _value == v;
       }
     }
 
-    return false ;
+    return false;
   }
 
   void setBoolean(dynamic value) {
-    _boolean = parseBool(value, false) ;
+    _boolean = parseBool(value, false);
   }
 
   void setValue(value) {
-    if ( isBoolean ) {
-      setBoolean(value) ;
-      return ;
+    if (isBoolean) {
+      setBoolean(value);
+      return;
     }
 
-    if ( isListValue ) {
-      if ( _values != null && _values.length == 1 ) {
-        _values[0] = parseString(value) ;
+    if (isListValue) {
+      if (_values != null && _values.length == 1) {
+        _values[0] = parseString(value);
+      } else {
+        _values = [parseString(value)];
       }
-      else {
-        _values = [ parseString(value) ] ;
-      }
-    }
-    else {
-      _value = parseString(value) ;
+    } else {
+      _value = parseString(value);
     }
   }
 
   void appendValue(value) {
-    if ( !isListValue ) {
-      setValue(value) ;
-      return ;
+    if (!isListValue) {
+      setValue(value);
+      return;
     }
 
-    _values ??= [] ;
+    _values ??= [];
 
     var s = parseString(value);
     if (s != null) {
@@ -211,629 +215,603 @@ class DOMAttribute implements WithValue {
   }
 
   String buildHTML() {
-    if ( isBoolean ) {
-      return _boolean ? name : '' ;
+    if (isBoolean) {
+      return _boolean ? name : '';
     }
 
-    var htmlValue = value ;
+    var htmlValue = value;
 
-    if ( htmlValue != null ) {
-      var html = '$name=' ;
-      html += htmlValue.contains('"') ? "'$htmlValue'" : '"$htmlValue"' ;
-      return html ;
-    }
-    else {
-      return '' ;
+    if (htmlValue != null) {
+      var html = '$name=';
+      html += htmlValue.contains('"') ? "'$htmlValue'" : '"$htmlValue"';
+      return html;
+    } else {
+      return '';
     }
   }
-
 }
 
 //
 // NodeSelector:
 //
 
-typedef NodeSelector = bool Function( DOMNode node ) ;
+typedef NodeSelector = bool Function(DOMNode node);
 
-final RegExp _SELECTOR_DELIMITER = RegExp(r'\s*,\s*') ;
+final RegExp _SELECTOR_DELIMITER = RegExp(r'\s*,\s*');
 
 NodeSelector asNodeSelector(dynamic selector) {
-  if (selector == null) return null ;
+  if (selector == null) return null;
 
   if (selector is NodeSelector) {
-    return selector ;
-  }
-  else if (selector is String) {
-    var str = selector.trim() ;
-    if (str.isEmpty) return null ;
+    return selector;
+  } else if (selector is String) {
+    var str = selector.trim();
+    if (str.isEmpty) return null;
 
-    var selectors = str.split(_SELECTOR_DELIMITER) ;
-    selectors.removeWhere( (s) => s.isEmpty ) ;
+    var selectors = str.split(_SELECTOR_DELIMITER);
+    selectors.removeWhere((s) => s.isEmpty);
 
     if (selectors.isEmpty) {
-      return null ;
-    }
-    else if (selectors.length == 1) {
+      return null;
+    } else if (selectors.length == 1) {
       // id:
-      if ( str.startsWith('#') ) {
-        return (n) => n is DOMElement && n.id == str.substring(1) ;
+      if (str.startsWith('#')) {
+        return (n) => n is DOMElement && n.id == str.substring(1);
       }
       // class
-      else if ( str.startsWith('.') ) {
-        return (n) => n is DOMElement && n.containsClass( str.substring(1) ) ;
+      else if (str.startsWith('.')) {
+        return (n) => n is DOMElement && n.containsClass(str.substring(1));
       }
       // tag
       else {
-        return (n) => n is DOMElement && n.tag == str ;
+        return (n) => n is DOMElement && n.tag == str;
       }
+    } else {
+      var multiSelector = selectors.map(asNodeSelector).toList();
+      return (n) => multiSelector.any((f) => f(n));
     }
-    else {
-      var multiSelector = selectors.map(asNodeSelector).toList() ;
-      return (n) => multiSelector.any( (f) => f(n) ) ;
-    }
-  }
-  else if (selector is DOMNode) {
-    return (n) => n == selector ;
-  }
-  else if (selector is List) {
-    if ( selector.isEmpty ) return null ;
-    if ( selector.length == 1 ) return asNodeSelector( selector[0] ) ;
+  } else if (selector is DOMNode) {
+    return (n) => n == selector;
+  } else if (selector is List) {
+    if (selector.isEmpty) return null;
+    if (selector.length == 1) return asNodeSelector(selector[0]);
 
-    var multiSelector = selector.map(asNodeSelector).toList() ;
+    var multiSelector = selector.map(asNodeSelector).toList();
 
-    return (n) => multiSelector.any( (f) => f(n) ) ;
+    return (n) => multiSelector.any((f) => f(n));
   }
 
-  throw ArgumentError("Can't use NodeSelector of type: [ ${ selector.runtimeType }") ;
+  throw ArgumentError(
+      "Can't use NodeSelector of type: [ ${selector.runtimeType}");
 }
 
-//
-// DOMNode:
-//
-
+/// Represents a DOM Node.
 class DOMNode {
-
+  /// Parses [entry] to a list of nodes.
   static List<DOMNode> parseNodes(entry) {
-    if (entry == null) return null ;
+    if (entry == null) return null;
 
-    if ( entry is DOMNode ) {
-      return [entry] ;
-    }
-    else if ( entry is html_dom.Node ) {
-      return [ DOMNode.from(entry) ];
-    }
-    else if ( entry is List ) {
-      entry.removeWhere( (e) => e == null ) ;
-      return entry.expand( parseNodes ).toList() ;
-    }
-    else if ( entry is String ) {
-      if ( isHTMLElement(entry) ) {
-        return parseHTML( entry ) ;
+    if (entry is DOMNode) {
+      return [entry];
+    } else if (entry is html_dom.Node) {
+      return [DOMNode.from(entry)];
+    } else if (entry is List) {
+      entry.removeWhere((e) => e == null);
+      return entry.expand(parseNodes).toList();
+    } else if (entry is String) {
+      if (isHTMLElement(entry)) {
+        return parseHTML(entry);
+      } else {
+        return [TextNode(entry)];
       }
-      else {
-        return [ TextNode(entry) ] ;
+    } else if (entry is num || entry is bool) {
+      return [TextNode(entry.toString())];
+    } else if (isDOMBuilderDirectHelper(entry)) {
+      try {
+        var tag = entry();
+        return [tag];
+      } catch (e, s) {
+        print(e);
+        print(s);
+        return null;
       }
-    }
-    else if ( entry is num || entry is bool ) {
-      return [ TextNode(entry.toString()) ] ;
-    }
-    else if ( entry is DOMElementGenerator ) {
-      return [ ExternalElementNode( entry ) ] ;
-    }
-    else {
-      return [ ExternalElementNode( entry ) ] ;
+    } else if (entry is DOMElementGenerator) {
+      return [ExternalElementNode(entry)];
+    } else {
+      return [ExternalElementNode(entry)];
     }
   }
 
   static dynamic _parseNode(entry) {
-    if (entry == null) return null ;
-
-    if ( entry is DOMNode ) {
-      return entry ;
-    }
-    else if ( entry is html_dom.Node ) {
-      return DOMNode.from(entry) ;
-    }
-    else if ( entry is List ) {
-      entry.removeWhere( (e) => e == null ) ;
-      return entry.expand( parseNodes ).toList() ;
-    }
-    else if ( entry is String ) {
-      if ( isHTMLElement(entry) ) {
-        return parseHTML( entry ) ;
-      }
-      else {
-        return TextNode(entry) ;
-      }
-    }
-    else if ( entry is num || entry is bool ) {
-      return TextNode(entry.toString()) ;
-    }
-    else if ( entry is DOMElementGenerator ) {
-      return ExternalElementNode( entry ) ;
-    }
-    else {
-      return ExternalElementNode( entry ) ;
-    }
-  }
-
-  factory DOMNode.from(entry) {
-    if (entry == null) return null ;
+    if (entry == null) return null;
 
     if (entry is DOMNode) {
-      return entry ;
-    }
-    else if (entry is html_dom.Node) {
-      return DOMNode._fromHtmlNode(entry) ;
-    }
-    else if ( entry is List ) {
-      if ( entry.isEmpty ) return null ;
-      entry.removeWhere( (e) => e == null ) ;
-      return DOMNode.from( entry.single ) ;
-    }
-    else if (entry is String) {
-      if ( isHTMLElement(entry) ) {
-        return parseHTML( entry ).single ;
+      return entry;
+    } else if (entry is html_dom.Node) {
+      return DOMNode.from(entry);
+    } else if (entry is List) {
+      entry.removeWhere((e) => e == null);
+      return entry.expand(parseNodes).toList();
+    } else if (entry is String) {
+      if (isHTMLElement(entry)) {
+        return parseHTML(entry);
+      } else {
+        return TextNode(entry);
       }
-      else {
-        return TextNode(entry) ;
-      }
-    }
-    else if ( entry is num || entry is bool ) {
-      return TextNode(entry.toString()) ;
-    }
-    else if ( entry is DOMElementGenerator ) {
-      return ExternalElementNode( entry ) ;
-    }
-    else {
-      return ExternalElementNode( entry ) ;
+    } else if (entry is num || entry is bool) {
+      return TextNode(entry.toString());
+    } else if (entry is DOMElementGenerator) {
+      return ExternalElementNode(entry);
+    } else {
+      return ExternalElementNode(entry);
     }
   }
 
-  factory DOMNode._fromHtmlNode( html_dom.Node entry ) {
-    if ( entry is html_dom.Text ) {
-      return TextNode( entry.text ) ;
-    }
-    else if ( entry is html_dom.Element ) {
-      return DOMNode._fromHtmlNodeElement( entry ) ;
-    }
+  /// Creates a [DOMNode] from dynamic parameter [entry].
+  ///
+  /// [entry] Can be a [DOMNode], a String with HTML, a Text,
+  /// a [Function] or an external element.
+  factory DOMNode.from(entry) {
+    if (entry == null) return null;
 
-    return null ;
+    if (entry is DOMNode) {
+      return entry;
+    } else if (entry is html_dom.Node) {
+      return DOMNode._fromHtmlNode(entry);
+    } else if (entry is List) {
+      if (entry.isEmpty) return null;
+      entry.removeWhere((e) => e == null);
+      return DOMNode.from(entry.single);
+    } else if (entry is String) {
+      if (isHTMLElement(entry)) {
+        return parseHTML(entry).single;
+      } else {
+        return TextNode(entry);
+      }
+    } else if (entry is num || entry is bool) {
+      return TextNode(entry.toString());
+    } else if (entry is DOMElementGenerator) {
+      return ExternalElementNode(entry);
+    } else {
+      return ExternalElementNode(entry);
+    }
   }
 
-  factory DOMNode._fromHtmlNodeElement( html_dom.Element entry ) {
+  factory DOMNode._fromHtmlNode(html_dom.Node entry) {
+    if (entry is html_dom.Text) {
+      return TextNode(entry.text);
+    } else if (entry is html_dom.Element) {
+      return DOMNode._fromHtmlNodeElement(entry);
+    }
+
+    return null;
+  }
+
+  factory DOMNode._fromHtmlNodeElement(html_dom.Element entry) {
     var name = entry.localName;
 
-    var attributes = entry.attributes.map( (k,v) => MapEntry( k.toString() , v) ) ;
+    var attributes = entry.attributes.map((k, v) => MapEntry(k.toString(), v));
 
-    //var subNodes = DOMNode.parseNodes( entry.nodes ) ;
-
-    return DOMElement( name , attributes: attributes , content: List.from(entry.nodes) ) ;
+    return DOMElement(name,
+        attributes: attributes, content: List.from(entry.nodes));
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  /// Indicates if this node accepts content.
+  final bool allowContent;
 
-  final bool allowContent ;
+  bool _commented;
 
-  bool _commented ;
+  DOMNode._(bool allowContent, bool commented)
+      : allowContent = allowContent ?? true,
+        _commented = commented ?? false;
 
-  DOMNode._(bool allowContent, bool commented) :
-        allowContent = allowContent ?? true ,
-        _commented = commented ?? false
-  ;
-
-  DOMNode( { content } ) :
-        allowContent = true
-  {
-
+  DOMNode({content}) : allowContent = true {
     if (content != null) {
-      _content = DOMNode.parseNodes(content) ;
+      _content = DOMNode.parseNodes(content);
     }
-
   }
 
+  /// If [true] this node is commented (ignored).
   bool get isCommented => _commented;
 
   set commented(bool value) {
-    _commented = value ?? false ;
+    _commented = value ?? false;
   }
 
+  /// Generates a HTML from this node tree.
+  ///
+  /// [withIdent] If [true] will generate a indented HTML.
+  String buildHTML(
+      {bool withIdent = false, String parentIdent = '', String ident = '  '}) {
+    if (isCommented) return '';
 
-  //////////////////////////////////////////////////////////////////////////////
+    var allowIdent = withIdent && isNotEmpty && hasOnlyElements;
 
-  String buildHTML( { bool withIdent = false, String parentIdent = '' , String ident = '  ' } ) {
-    if ( isCommented ) return '' ;
+    var innerIdent = allowIdent ? parentIdent : '';
 
-    var allowIdent = withIdent && isNotEmpty && hasOnlyElements ;
+    var innerBreakLine = allowIdent ? '\n' : '';
 
-    var innerIdent = allowIdent ? parentIdent : '' ;
+    var html = (withIdent ? parentIdent : '') + innerBreakLine;
 
-    var innerBreakLine = allowIdent ? '\n' : '' ;
-
-    var html = (withIdent ? parentIdent : '') + innerBreakLine ;
-
-    if ( isObjectNotEmpty(_content) ) {
+    if (isObjectNotEmpty(_content)) {
       for (var node in _content) {
-        var subElement = node.buildHTML( withIdent: withIdent, parentIdent: parentIdent+ident, ident: ident );
+        var subElement = node.buildHTML(
+            withIdent: withIdent,
+            parentIdent: parentIdent + ident,
+            ident: ident);
         if (subElement != null) {
           html += innerIdent + subElement + innerBreakLine;
         }
       }
     }
 
-    return html ;
+    return html;
   }
 
-  // DOM Generator:
-
+  /// Sets the default [DOMGenerator] to `dart:html` implementation.
+  ///
+  /// Note that `dom_builder_generator_dart_html.dart` should be imported
+  /// to enable `dart:html`.
   static DOMGenerator setDefaultDomGeneratorToDartHTML() {
-    return _defaultDomGenerator = DOMGenerator.dartHTML() ;
+    return _defaultDomGenerator = DOMGenerator.dartHTML();
   }
 
-  static DOMGenerator _defaultDomGenerator ;
+  static DOMGenerator _defaultDomGenerator;
 
+  /// Returns the default [DOMGenerator].
   static DOMGenerator get defaultDomGenerator {
-    return _defaultDomGenerator ?? DOMGenerator.dartHTML() ;
+    return _defaultDomGenerator ?? DOMGenerator.dartHTML();
   }
 
   static set defaultDomGenerator(DOMGenerator value) {
-    _defaultDomGenerator = value ?? DOMGenerator.dartHTML() ;
+    _defaultDomGenerator = value ?? DOMGenerator.dartHTML();
   }
 
-  T buildDOM<T>( [ DOMGenerator<T> generator ] ) {
-    if (isCommented) return null ;
+  /// Builds a DOM using [generator].
+  ///
+  /// Note that this instance is a virtual DOM and an implementation of
+  /// [DOMGenerator] is responsible to actually generate a DOM tree.
+  T buildDOM<T>([DOMGenerator<T> generator]) {
+    if (isCommented) return null;
 
-    generator ??= defaultDomGenerator ;
-    return generator.generate( this ) ;
+    generator ??= defaultDomGenerator;
+    return generator.generate(this);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  List<DOMNode> _content;
 
-  List<DOMNode> _content ;
+  /// List of nodes that represents the content of this node.
+  List<DOMNode> get content => _content;
 
-  List<DOMNode> get content => _content ;
+  Iterable<DOMNode> get nodes => allowContent ? List.from(_content).cast() : [];
 
-  Iterable<DOMNode> get nodes => allowContent ? List.from( _content ).cast() : [] ;
+  int get length => allowContent && _content != null ? _content.length : 0;
 
-  int get length => allowContent && _content != null ? _content.length : 0 ;
+  bool get isEmpty =>
+      allowContent && _content != null ? _content.isEmpty : true;
 
-  bool get isEmpty => allowContent && _content != null ? _content.isEmpty : true ;
-  bool get isNotEmpty => !isEmpty ;
+  bool get isNotEmpty => !isEmpty;
 
   bool get hasOnlyElements {
-    if ( isEmpty ) return false ;
-    return _content.any( (n) => !(n is DOMElement) ) == false ;
+    if (isEmpty) return false;
+    return _content.any((n) => !(n is DOMElement)) == false;
   }
 
   bool get hasOnlyTexts {
-    if ( isEmpty ) return false ;
-    return _content.any( (n) => (n is DOMElement) ) == false ;
+    if (isEmpty) return false;
+    return _content.any((n) => (n is DOMElement)) == false;
   }
 
   void _addToContent(dynamic entry) {
-    if ( entry is List ) {
-      _addListToContent(entry) ;
-    }
-    else {
-      _addNodeToContent(entry) ;
+    if (entry is List) {
+      _addListToContent(entry);
+    } else {
+      _addNodeToContent(entry);
     }
   }
 
   void _addListToContent(List<DOMNode> list) {
-    if (list == null) return ;
-    list.removeWhere( (e) => e == null ) ;
-    if (list.isEmpty) return ;
+    if (list == null) return;
+    list.removeWhere((e) => e == null);
+    if (list.isEmpty) return;
 
     for (var elem in list) {
-      _addNodeToContent(elem) ;
+      _addNodeToContent(elem);
     }
   }
 
   void _addNodeToContent(DOMNode entry) {
-    if (entry == null) return ;
+    if (entry == null) return;
 
     _checkAllowContent();
 
     if (_content == null) {
-      _content = [entry] ;
-    }
-    else {
+      _content = [entry];
+    } else {
       _content.add(entry);
     }
   }
 
   void _insertToContent(int index, dynamic entry) {
     if (entry is List) {
-      _insertListToContent(index, entry) ;
-    }
-    else {
-      _insertNodeToContent(index, entry) ;
+      _insertListToContent(index, entry);
+    } else {
+      _insertNodeToContent(index, entry);
     }
   }
 
   void _insertListToContent(int index, List<DOMNode> list) {
-    if (list == null) return ;
-    list.removeWhere( (e) => e == null ) ;
-    if (list.isEmpty) return ;
+    if (list == null) return;
+    list.removeWhere((e) => e == null);
+    if (list.isEmpty) return;
 
-    if ( list.length == 1 ) {
-      _addNodeToContent( list[0] ) ;
-      return ;
+    if (list.length == 1) {
+      _addNodeToContent(list[0]);
+      return;
     }
 
     _checkAllowContent();
 
     if (_content == null) {
-      _content = List.from( list ).cast() ;
-    }
-    else {
-      if (index > _content.length) index = _content.length ;
+      _content = List.from(list).cast();
+    } else {
+      if (index > _content.length) index = _content.length;
       if (index == _content.length) {
         for (var entry in list) {
-          _addNodeToContent(entry) ;
+          _addNodeToContent(entry);
         }
-      }
-      else {
-        _content.insertAll(index, list) ;
+      } else {
+        _content.insertAll(index, list);
       }
     }
   }
 
   void _insertNodeToContent(int index, DOMNode entry) {
-    if (entry == null) return ;
+    if (entry == null) return;
 
     _checkAllowContent();
 
     if (_content == null) {
-      _content = [entry] ;
-    }
-    else {
-      if (index > _content.length) index = _content.length ;
+      _content = [entry];
+    } else {
+      if (index > _content.length) index = _content.length;
       if (index == _content.length) {
-        _addNodeToContent(entry) ;
-      }
-      else {
+        _addNodeToContent(entry);
+      } else {
         _content.insert(index, entry);
       }
     }
   }
 
   void _checkAllowContent() {
-    if ( !allowContent ) throw UnsupportedError("$runtimeType: can't insert entry to content!") ;
+    if (!allowContent)
+      throw UnsupportedError("$runtimeType: can't insert entry to content!");
   }
 
-  void normalizeContent() {
-
-  }
+  void normalizeContent() {}
 
   DOMNode setContent(elementContent) {
-    _content = DOMNode.parseNodes(elementContent) ;
+    _content = DOMNode.parseNodes(elementContent);
     normalizeContent();
-    return this ;
+    return this;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-
-  T nodeByIndex<T extends DOMNode>( int index ) {
-    if ( index == null || isEmpty ) return null ;
-    return _content[index] ;
+  T nodeByIndex<T extends DOMNode>(int index) {
+    if (index == null || isEmpty) return null;
+    return _content[index];
   }
 
-  T nodeByID<T extends DOMNode>( String id ) {
-    if ( id == null || isEmpty ) return null ;
-    if (id.startsWith('#')) id = id.substring(1) ;
-    return nodeWhere( (n) => n is DOMElement && n.id == id ) ;
+  T nodeByID<T extends DOMNode>(String id) {
+    if (id == null || isEmpty) return null;
+    if (id.startsWith('#')) id = id.substring(1);
+    return nodeWhere((n) => n is DOMElement && n.id == id);
   }
 
-  T selectByID<T extends DOMNode>( String id ) {
-    if ( id == null || isEmpty ) return null ;
-    if (id.startsWith('#')) id = id.substring(1) ;
-    return selectWhere( (n) => n is DOMElement && n.id == id ) ;
+  T selectByID<T extends DOMNode>(String id) {
+    if (id == null || isEmpty) return null;
+    if (id.startsWith('#')) id = id.substring(1);
+    return selectWhere((n) => n is DOMElement && n.id == id);
   }
 
-  T nodeEquals<T extends DOMNode>( DOMNode node ) {
-    if ( node == null || isEmpty ) return null ;
-    return nodeWhere( (n) => n == node ) ;
+  T nodeEquals<T extends DOMNode>(DOMNode node) {
+    if (node == null || isEmpty) return null;
+    return nodeWhere((n) => n == node);
   }
 
-  T selectEquals<T extends DOMNode>( DOMNode node ) {
-    if ( node == null || isEmpty ) return null ;
-    return selectWhere( (n) => n == node ) ;
+  T selectEquals<T extends DOMNode>(DOMNode node) {
+    if (node == null || isEmpty) return null;
+    return selectWhere((n) => n == node);
   }
 
-  T nodeWhere<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return null ;
-    var nodeSelector = asNodeSelector(selector) ;
+  T nodeWhere<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return null;
+    var nodeSelector = asNodeSelector(selector);
 
-    return _content.firstWhere( nodeSelector , orElse: () => null ) ;
+    return _content.firstWhere(nodeSelector, orElse: () => null);
   }
 
-  List<T> nodesWhere<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return [] ;
-    var nodeSelector = asNodeSelector(selector) ;
+  List<T> nodesWhere<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return [];
+    var nodeSelector = asNodeSelector(selector);
 
-    return _content.where( nodeSelector ).toList() ;
+    return _content.where(nodeSelector).toList();
   }
 
-  void catchNodesWhere<T extends DOMNode>( dynamic selector , List<T> destiny ) {
-    if ( selector == null || isEmpty ) return ;
-    var nodeSelector = asNodeSelector(selector) ;
+  void catchNodesWhere<T extends DOMNode>(dynamic selector, List<T> destiny) {
+    if (selector == null || isEmpty) return;
+    var nodeSelector = asNodeSelector(selector);
 
-    destiny.addAll( _content.where( nodeSelector ).whereType<T>() ) ;
+    destiny.addAll(_content.where(nodeSelector).whereType<T>());
   }
 
-  T selectWhere<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return null ;
-    var nodeSelector = asNodeSelector(selector) ;
+  T selectWhere<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return null;
+    var nodeSelector = asNodeSelector(selector);
 
-    var found = nodeWhere(nodeSelector) ;
-    if (found != null) return found ;
+    var found = nodeWhere(nodeSelector);
+    if (found != null) return found;
 
-    for (var n in _content.whereType<DOMNode>() ) {
-      found = n.selectWhere(selector) ;
-      if (found != null) return found ;
+    for (var n in _content.whereType<DOMNode>()) {
+      found = n.selectWhere(selector);
+      if (found != null) return found;
     }
 
-    return null ;
+    return null;
   }
 
-  List<T> selectAllWhere<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return [] ;
-    var nodeSelector = asNodeSelector(selector) ;
+  List<T> selectAllWhere<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return [];
+    var nodeSelector = asNodeSelector(selector);
 
-    var all = <T>[] ;
-    _selectAllWhereImpl(nodeSelector, all) ;
-    return all ;
+    var all = <T>[];
+    _selectAllWhereImpl(nodeSelector, all);
+    return all;
   }
 
-  void _selectAllWhereImpl<T extends DOMNode>( NodeSelector selector , List<T> all ) {
-    if ( isEmpty ) return ;
+  void _selectAllWhereImpl<T extends DOMNode>(
+      NodeSelector selector, List<T> all) {
+    if (isEmpty) return;
 
-    catchNodesWhere(selector, all) ;
+    catchNodesWhere(selector, all);
 
-    for (var n in _content.whereType<DOMNode>() ) {
-      n._selectAllWhereImpl(selector, all) ;
-    }
-  }
-
-  T node<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return null ;
-
-    if ( selector is num ) {
-      return nodeByIndex(selector) ;
-    }
-    else {
-      var nodeSelector = asNodeSelector(selector) ;
-      return nodeWhere(nodeSelector) ;
+    for (var n in _content.whereType<DOMNode>()) {
+      n._selectAllWhereImpl(selector, all);
     }
   }
 
-  T select<T extends DOMNode>( dynamic selector ) {
-    if ( selector == null || isEmpty ) return null ;
-
-    if ( selector is num ) {
-      return nodeByIndex(selector) ;
-    }
-    else {
-      var nodeSelector = asNodeSelector(selector) ;
-      return selectWhere(nodeSelector) ;
-    }
-  }
-
-  int indexOf( dynamic selector ) {
-    if (selector == null || _content == null || _content.isEmpty) return -1 ;
+  T node<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return null;
 
     if (selector is num) {
-      return selector ;
+      return nodeByIndex(selector);
+    } else {
+      var nodeSelector = asNodeSelector(selector);
+      return nodeWhere(nodeSelector);
     }
-
-    var nodeSelector = asNodeSelector(selector) ;
-    return _content.indexWhere(nodeSelector) ;
   }
 
-  //////////////////////////////////////////////////////////////////////////////
+  T select<T extends DOMNode>(dynamic selector) {
+    if (selector == null || isEmpty) return null;
 
-  DOMNode addEach<T>( Iterable<T> iterable , [ ElementGenerator<T> elementGenerator ] ) {
-    if ( elementGenerator != null ) {
-      for (var entry in iterable) {
-        var elem = elementGenerator(entry) ;
-        _addImpl( elem ) ;
-      }
+    if (selector is num) {
+      return nodeByIndex(selector);
+    } else {
+      var nodeSelector = asNodeSelector(selector);
+      return selectWhere(nodeSelector);
     }
-    else {
+  }
+
+  int indexOf(dynamic selector) {
+    if (selector == null || _content == null || _content.isEmpty) return -1;
+
+    if (selector is num) {
+      return selector;
+    }
+
+    var nodeSelector = asNodeSelector(selector);
+    return _content.indexWhere(nodeSelector);
+  }
+
+  DOMNode addEach<T>(Iterable<T> iterable,
+      [ElementGenerator<T> elementGenerator]) {
+    if (elementGenerator != null) {
       for (var entry in iterable) {
-        _addImpl( entry ) ;
+        var elem = elementGenerator(entry);
+        _addImpl(elem);
+      }
+    } else {
+      for (var entry in iterable) {
+        _addImpl(entry);
       }
     }
 
     normalizeContent();
-    return this ;
+    return this;
   }
 
-  DOMNode addEachAsTag<T>( String tag, Iterable<T> iterable , [ ElementGenerator<T> elementGenerator ] ) {
-    if ( elementGenerator != null ) {
+  DOMNode addEachAsTag<T>(String tag, Iterable<T> iterable,
+      [ElementGenerator<T> elementGenerator]) {
+    if (elementGenerator != null) {
       for (var entry in iterable) {
-        var elem = elementGenerator(entry) ;
-        var tagElem = $tag(tag , content: elem) ;
-        _addImpl( tagElem ) ;
+        var elem = elementGenerator(entry);
+        var tagElem = $tag(tag, content: elem);
+        _addImpl(tagElem);
       }
-    }
-    else {
+    } else {
       for (var entry in iterable) {
-        var tagElem = $tag(tag , content: entry) ;
-        _addImpl( tagElem ) ;
+        var tagElem = $tag(tag, content: entry);
+        _addImpl(tagElem);
       }
     }
 
     normalizeContent();
-    return this ;
+    return this;
   }
 
   DOMNode addHTML(String html) {
-    var list = $html(html) ;
-    _addListToContent(list) ;
+    var list = $html(html);
+    _addListToContent(list);
 
     normalizeContent();
-    return this ;
+    return this;
   }
 
   DOMNode add(dynamic entry) {
     _addImpl(entry);
     normalizeContent();
-    return this ;
+    return this;
   }
 
   void _addImpl(entry) {
-    var node = _parseNode(entry) ;
-    _addToContent(node) ;
+    var node = _parseNode(entry);
+    _addToContent(node);
   }
 
   DOMNode insertAt(dynamic indexSelector, dynamic entry) {
-    var idx = indexOf(indexSelector) ;
+    var idx = indexOf(indexSelector);
 
     if (idx >= 0) {
-      var node = _parseNode(entry) ;
-      _insertToContent(idx, node) ;
+      var node = _parseNode(entry);
+      _insertToContent(idx, node);
 
       normalizeContent();
     }
 
-    return this ;
+    return this;
   }
 
   DOMNode insertAfter(dynamic indexSelector, dynamic entry) {
-    var idx = indexOf(indexSelector) ;
+    var idx = indexOf(indexSelector);
 
     if (idx >= 0) {
       idx++;
 
-      var node = _parseNode(entry) ;
-      _insertToContent(idx, node) ;
+      var node = _parseNode(entry);
+      _insertToContent(idx, node);
 
       normalizeContent();
     }
 
-    return this ;
+    return this;
   }
-
 }
 
 class TextNode extends DOMNode implements WithValue {
+  final String text;
 
-  final String text ;
-
-  TextNode(this.text) : super._(false, false) ;
-
-  @override
-  bool get hasValue => isObjectNotEmpty(text) ;
+  TextNode(this.text) : super._(false, false);
 
   @override
-  String buildHTML( { bool withIdent = false, String parentIdent = '' , String ident = '  ' } ) {
-    return text ;
+  bool get hasValue => isObjectNotEmpty(text);
+
+  @override
+  String buildHTML(
+      {bool withIdent = false, String parentIdent = '', String ident = '  '}) {
+    return text;
   }
 
   @override
-  String get value => text ;
+  String get value => text;
 
   @override
   bool operator ==(Object other) =>
@@ -844,19 +822,19 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   int get hashCode => text.hashCode;
-
 }
 
 //
 // ElementGenerator:
 //
 
-typedef ElementGenerator<T> = dynamic Function( T entry ) ;
+typedef ElementGenerator<T> = dynamic Function(T entry);
 
 //
 
 void _checkTag(String expectedTag, DOMElement domElement) {
-  if (domElement.tag != expectedTag) throw StateError('Not a $expectedTag tag: $domElement') ;
+  if (domElement.tag != expectedTag)
+    throw StateError('Not a $expectedTag tag: $domElement');
 }
 
 //
@@ -864,131 +842,190 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 //
 
 class DOMElement extends DOMNode {
+  final Set<String> _NO_CONTENT_TAG = {'p', 'hr', 'br', 'input'};
 
-  final Set<String> _NO_CONTENT_TAG = { 'p', 'hr', 'br', 'input' } ;
+  final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked'};
 
-  final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = { 'checked' } ;
+  final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
+    'class': ' ',
+    'style': ';'
+  };
 
-  final Map<String,Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = { 'class': ' ' , 'style': ';' } ;
-  final Map<String,Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = { 'class': RegExp(r'\s+') , 'style': RegExp(r'\s*;\s*') } ;
+  final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
+    'class': RegExp(r'\s+'),
+    'style': RegExp(r'\s*;\s*')
+  };
 
-  //////////////////////////////////////////////////////////////////////////////
+  final String tag;
 
-
-  final String tag ;
-
-  factory DOMElement(String tag, { Map<String, dynamic> attributes, id, classes, style, content , bool commented }) {
+  factory DOMElement(String tag,
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented}) {
     if (tag == null) throw ArgumentError('Null tag');
 
-    tag = tag.toLowerCase().trim() ;
+    tag = tag.toLowerCase().trim();
 
     if (tag == 'div') {
-      return DIVElement( attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented ) ;
-    }
-    else if (tag == 'table') {
-      return TABLEElement( attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented ) ;
-    }
-    else if (tag == 'thead') {
-      return THEADElement( attributes: attributes, id: id, classes: classes, style: style, rows: content , commented: commented ) ;
-    }
-    else if (tag == 'tbody') {
-      return TBODYElement( attributes: attributes, id: id, classes: classes, style: style, rows: content , commented: commented ) ;
-    }
-    else if (tag == 'tfoot') {
-      return TFOOTElement( attributes: attributes, id: id, classes: classes, style: style, rows: content , commented: commented ) ;
-    }
-    else if (tag == 'tr') {
-      return TRowElement( attributes: attributes, id: id, classes: classes, style: style, cells: content , commented: commented ) ;
-    }
-    else if (tag == 'td') {
-      return TDElement( attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented ) ;
-    }
-    else if (tag == 'th') {
-      return THElement( attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented ) ;
-    }
-    else {
-      return DOMElement._(tag, attributes: attributes, id: id, classes: classes, style: style, content: content) ;
+      return DIVElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          commented: commented);
+    } else if (tag == 'table') {
+      return TABLEElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          commented: commented);
+    } else if (tag == 'thead') {
+      return THEADElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          commented: commented);
+    } else if (tag == 'tbody') {
+      return TBODYElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          commented: commented);
+    } else if (tag == 'tfoot') {
+      return TFOOTElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          commented: commented);
+    } else if (tag == 'tr') {
+      return TRowElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          cells: content,
+          commented: commented);
+    } else if (tag == 'td') {
+      return TDElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          commented: commented);
+    } else if (tag == 'th') {
+      return THElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          commented: commented);
+    } else {
+      return DOMElement._(tag,
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content);
     }
   }
 
-  DOMElement._(this.tag, {Map<String, dynamic> attributes, id, classes, style, content, bool commented}) : super._(true, commented) {
-
-    addAttributes( attributes ) ;
+  DOMElement._(this.tag,
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._(true, commented) {
+    addAttributes(attributes);
 
     if (id != null) {
-      attribute('id', id) ;
+      attribute('id', id);
     }
 
     if (classes != null) {
-      attributeAppendValue('class', classes) ;
+      attributeAppendValue('class', classes);
     }
 
     if (style != null) {
-      attributeAppendValue('style', style) ;
+      attributeAppendValue('style', style);
     }
 
     if (content != null) {
-      setContent(content) ;
+      setContent(content);
     }
-
   }
 
-  //////
+  String get id => getAttributeValue('id');
 
-  String get id => getAttributeValue('id') ;
+  String get classes => getAttributeValue('class');
 
-  String get classes => getAttributeValue('class') ;
-  String get style => getAttributeValue('style') ;
+  String get style => getAttributeValue('style');
 
   bool containsClass(String className) {
-    var attribute = getAttribute('class') ;
-    if (attribute == null) return false ;
-    return attribute.containsValue(className) ;
+    var attribute = getAttribute('class');
+    if (attribute == null) return false;
+    return attribute.containsValue(className);
   }
 
-  //////
+  LinkedHashMap<String, DOMAttribute> _attributes;
 
-  LinkedHashMap<String, DOMAttribute> _attributes ;
+  Iterable<String> get attributesNames =>
+      _attributes != null ? _attributes.keys : [];
 
-  Iterable<String> get attributesNames => _attributes != null ? _attributes.keys : [] ;
+  String operator [](String name) => getAttributeValue(name);
 
-  String operator [](String name) => getAttributeValue(name) ;
-  void operator []=(String name, dynamic value) => attribute(name, value) ;
+  void operator []=(String name, dynamic value) => attribute(name, value);
 
-  String getAttributeValue( String name ) {
-    var attr = getAttribute(name) ;
-    return attr != null ? attr.value : null ;
+  String getAttributeValue(String name) {
+    var attr = getAttribute(name);
+    return attr != null ? attr.value : null;
   }
 
-  DOMAttribute getAttribute( String name ) {
-    if ( isObjectEmpty(_attributes) ) return null ;
-    return _attributes[name] ;
+  DOMAttribute getAttribute(String name) {
+    if (isObjectEmpty(_attributes)) return null;
+    return _attributes[name];
   }
 
-  DOMElement attribute( String name , dynamic value ) {
-    if (name == null) return null ;
+  DOMElement attribute(String name, dynamic value) {
+    if (name == null) return null;
 
-    name = name.toLowerCase().trim() ;
+    name = name.toLowerCase().trim();
 
-    DOMAttribute attribute ;
+    DOMAttribute attribute;
 
-    var delimiter = _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name] ;
+    var delimiter = _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
 
-    if ( delimiter != null ) {
-      var delimiterPattern = _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name] ;
-      assert( delimiterPattern != null ) ;
-      attribute = DOMAttribute(name, values: parseListOfStrings(value, delimiterPattern), delimiter: delimiter) ;
-    }
-    else {
-      var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name) ;
+    if (delimiter != null) {
+      var delimiterPattern =
+          _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
+      assert(delimiterPattern != null);
+      attribute = DOMAttribute(name,
+          values: parseListOfStrings(value, delimiterPattern),
+          delimiter: delimiter);
+    } else {
+      var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name);
 
       if (attrBoolean) {
         if (value != null) {
-          attribute = DOMAttribute(name, value: value) ;
+          attribute = DOMAttribute(name, value: value);
         }
-      }
-      else {
-        attribute = DOMAttribute(name, value: value) ;
+      } else {
+        attribute = DOMAttribute(name, value: value);
       }
     }
 
@@ -996,73 +1033,72 @@ class DOMElement extends DOMNode {
       addDOMAttribute(attribute);
     }
 
-    return this ;
+    return this;
   }
 
-  DOMElement attributeAppendValue( String name , dynamic value ) {
+  DOMElement attributeAppendValue(String name, dynamic value) {
     // ignore: prefer_collection_literals
     _attributes ??= LinkedHashMap();
 
-    var attr = getAttribute(name) ;
+    var attr = getAttribute(name);
 
     if (attr == null) {
-      return attribute(name, value) ;
+      return attribute(name, value);
     }
 
-    if ( attr.isListValue ) {
-      attr.appendValue(value) ;
-    }
-    else {
-      attr.setValue(value) ;
+    if (attr.isListValue) {
+      attr.appendValue(value);
+    } else {
+      attr.setValue(value);
     }
 
-    return this ;
+    return this;
   }
 
-  DOMElement addAttributes( Map<String,dynamic> attributes ) {
-    if ( isObjectNotEmpty(attributes) ) {
+  DOMElement addAttributes(Map<String, dynamic> attributes) {
+    if (isObjectNotEmpty(attributes)) {
       for (var entry in attributes.entries) {
-        var name = entry.key ;
-        var value = entry.value ;
+        var name = entry.key;
+        var value = entry.value;
         attribute(name, value);
       }
     }
 
-    return this ;
+    return this;
   }
 
-  DOMElement addDOMAttribute( DOMAttribute attribute ) {
-    if (attribute == null) return this ;
+  DOMElement addDOMAttribute(DOMAttribute attribute) {
+    if (attribute == null) return this;
 
     // ignore: prefer_collection_literals
-    _attributes ??= LinkedHashMap() ;
-    _attributes[attribute.name] = attribute ;
+    _attributes ??= LinkedHashMap();
+    _attributes[attribute.name] = attribute;
 
-    return this ;
+    return this;
   }
 
-  bool get hasAttributes => DOMAttribute.hasAttributes(_attributes) ;
+  bool get hasAttributes => DOMAttribute.hasAttributes(_attributes);
 
-  T apply<T extends DOMElement>( {id, classes, style} ) {
+  T apply<T extends DOMElement>({id, classes, style}) {
     if (id != null) {
-      attribute('id', id) ;
+      attribute('id', id);
     }
 
     if (classes != null) {
-      attributeAppendValue('classes', classes) ;
+      attributeAppendValue('classes', classes);
     }
 
     if (style != null) {
-      attributeAppendValue('style', style) ;
+      attributeAppendValue('style', style);
     }
 
-    return this ;
+    return this;
   }
 
-  T applyWhere<T extends DOMElement>( dynamic selector , {id, classes, style} ) {
-    var nodeSelector = asNodeSelector(selector) ;
+  T applyWhere<T extends DOMElement>(dynamic selector, {id, classes, style}) {
+    var nodeSelector = asNodeSelector(selector);
 
-    var all = selectAllWhere(nodeSelector) ;
+    var all = selectAllWhere(nodeSelector);
 
     for (var elem in all) {
       if (elem is DOMElement) {
@@ -1070,23 +1106,23 @@ class DOMElement extends DOMNode {
       }
     }
 
-    return this ;
+    return this;
   }
-
-  //////////////////////////////////////////////////////////////////////////////
 
   @override
   DOMElement add(entry) {
-    return super.add(entry) ;
+    return super.add(entry);
   }
 
   @override
-  DOMElement addEach<T>(Iterable<T> iterable, [ElementGenerator<T> elementGenerator]) {
+  DOMElement addEach<T>(Iterable<T> iterable,
+      [ElementGenerator<T> elementGenerator]) {
     return super.addEach(iterable, elementGenerator);
   }
 
   @override
-  DOMElement addEachAsTag<T>(String tag, Iterable<T> iterable, [ElementGenerator<T> elementGenerator]) {
+  DOMElement addEachAsTag<T>(String tag, Iterable<T> iterable,
+      [ElementGenerator<T> elementGenerator]) {
     return super.addEachAsTag(tag, iterable, elementGenerator);
   }
 
@@ -1110,55 +1146,54 @@ class DOMElement extends DOMNode {
     return super.setContent(elementContent);
   }
 
-  //////////////////////////////////////////////////////////////////////////////
-
   String buildOpenTagHTML() {
-    var html = '<$tag' ;
+    var html = '<$tag';
 
     if (hasAttributes) {
-      for ( var attr in _attributes.values.where((v) => v != null && v.hasValue) ) {
-        html += ' '+ attr.buildHTML() ;
+      for (var attr
+          in _attributes.values.where((v) => v != null && v.hasValue)) {
+        html += ' ' + attr.buildHTML();
       }
     }
 
-    html += '>' ;
+    html += '>';
 
-    return html ;
+    return html;
   }
 
   String buildCloseTagHTML() {
-    return '</$tag>' ;
+    return '</$tag>';
   }
 
   @override
-  String buildHTML( { bool withIdent = false, String parentIdent = '' , String ident = '  ' } ) {
-    var allowIdent = withIdent && isNotEmpty && hasOnlyElements ;
+  String buildHTML(
+      {bool withIdent = false, String parentIdent = '', String ident = '  '}) {
+    var allowIdent = withIdent && isNotEmpty && hasOnlyElements;
 
-    var innerIdent = allowIdent ? parentIdent+ident : '' ;
-    var innerBreakLine = allowIdent ? '\n' : '' ;
+    var innerIdent = allowIdent ? parentIdent + ident : '';
+    var innerBreakLine = allowIdent ? '\n' : '';
 
-    if ( _NO_CONTENT_TAG.contains(tag) ) {
-      var html = parentIdent + buildOpenTagHTML() ;
-      return html ;
+    if (_NO_CONTENT_TAG.contains(tag)) {
+      var html = parentIdent + buildOpenTagHTML();
+      return html;
     }
 
-    var html = parentIdent + buildOpenTagHTML() + innerBreakLine ;
+    var html = parentIdent + buildOpenTagHTML() + innerBreakLine;
 
-    if ( isObjectNotEmpty(_content) ) {
+    if (isObjectNotEmpty(_content)) {
       for (var node in _content) {
-        var subElement = node.buildHTML( withIdent: withIdent, parentIdent: innerIdent, ident: ident );
+        var subElement = node.buildHTML(
+            withIdent: withIdent, parentIdent: innerIdent, ident: ident);
         if (subElement != null) {
           html += subElement + innerBreakLine;
         }
       }
     }
 
-    html += (allowIdent ? parentIdent : '')  + buildCloseTagHTML() ;
+    html += (allowIdent ? parentIdent : '') + buildCloseTagHTML();
 
-    return html ;
+    return html;
   }
-
-  //////////////////////////////////////////////////////////////////////////////
 
   @override
   bool operator ==(Object other) =>
@@ -1167,11 +1202,11 @@ class DOMElement extends DOMNode {
           runtimeType == other.runtimeType &&
           tag == other.tag &&
           isEqualsDeep(_attributes, other._attributes) &&
-          isEqualsDeep(_content, other._content)
-          ;
+          isEqualsDeep(_content, other._content);
 
   @override
-  int get hashCode => tag.hashCode ^ deepHashCode( _attributes ) ^ deepHashCode( _content ) ;
+  int get hashCode =>
+      tag.hashCode ^ deepHashCode(_attributes) ^ deepHashCode(_content);
 
   @override
   String toString() {
@@ -1184,24 +1219,22 @@ class DOMElement extends DOMNode {
 //
 
 class ExternalElementNode extends DOMNode {
+  final dynamic externalElement;
 
-  final dynamic externalElement ;
-
-  ExternalElementNode(this.externalElement, [bool allowContent]) : super._(allowContent, false) ;
+  ExternalElementNode(this.externalElement, [bool allowContent])
+      : super._(allowContent, false);
 
   @override
-  String buildHTML({bool withIdent = false, String parentIdent = '', String ident = '  '}) {
-    if ( externalElement == null ) return null ;
+  String buildHTML(
+      {bool withIdent = false, String parentIdent = '', String ident = '  '}) {
+    if (externalElement == null) return null;
 
-    if ( externalElement is String ) {
-      return externalElement ;
+    if (externalElement is String) {
+      return externalElement;
+    } else {
+      return '$externalElement';
     }
-    else {
-      return '$externalElement' ;
-    }
-
   }
-
 }
 
 //
@@ -1209,424 +1242,896 @@ class ExternalElementNode extends DOMNode {
 //
 
 class DIVElement extends DOMElement {
-
   factory DIVElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is DIVElement) return entry ;
+    if (entry == null) return null;
+    if (entry is DIVElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('div', entry) ;
-      return DIVElement( attributes: entry._attributes , content: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('div', entry);
+      return DIVElement(
+          attributes: entry._attributes,
+          content: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  DIVElement( { Map<String, dynamic> attributes, id, classes, style, content , bool commented} ) : super._('div', attributes: attributes, id: id, classes: classes, style: style, content: content, commented: commented);
-
+  DIVElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._('div',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            commented: commented);
 }
 
 //
 // TABLEElement:
 //
 
-List createTableContent( content, head, body, foot , { bool header , bool footer} ) {
-
+List createTableContent(content, head, body, foot, {bool header, bool footer}) {
   if (content == null) {
-    return [ createTableEntry(head, header: true), createTableEntry(body), createTableEntry(foot, footer: true) ] ;
-  }
-  else if (content is List) {
-    if ( listMatchesAll(content, (e) => e is html_dom.Node) ) {
-      var thread = content.firstWhere( (e) => e is html_dom.Element && e.localName == 'thead' , orElse: () => null ) ;
-      var tfoot = content.firstWhere( (e) => e is html_dom.Element && e.localName == 'tfoot' , orElse: () => null ) ;
-      var tbody = content.firstWhere( (e) => e is html_dom.Element && e.localName == 'tbody' , orElse: () => null ) ;
+    return [
+      createTableEntry(head, header: true),
+      createTableEntry(body),
+      createTableEntry(foot, footer: true)
+    ];
+  } else if (content is List) {
+    if (listMatchesAll(content, (e) => e is html_dom.Node)) {
+      var thread = content.firstWhere(
+          (e) => e is html_dom.Element && e.localName == 'thead',
+          orElse: () => null);
+      var tfoot = content.firstWhere(
+          (e) => e is html_dom.Element && e.localName == 'tfoot',
+          orElse: () => null);
+      var tbody = content.firstWhere(
+          (e) => e is html_dom.Element && e.localName == 'tbody',
+          orElse: () => null);
 
-      var list = [ DOMNode.from(thread) , DOMNode.from(tbody) , DOMNode.from(tfoot) ] ;
-      list.removeWhere( (e) => e == null ) ;
-      return list ;
+      var list = [
+        DOMNode.from(thread),
+        DOMNode.from(tbody),
+        DOMNode.from(tfoot)
+      ];
+      list.removeWhere((e) => e == null);
+      return list;
+    } else {
+      return content.map((e) => createTableEntry(e)).toList();
     }
-    else {
-      return content.map( (e) => createTableEntry( e ) ).toList() ;
-    }
+  } else {
+    return [createTableEntry(body)];
   }
-  else {
-    return [  createTableEntry(body) ] ;
-  }
-
 }
 
-TABLENode createTableEntry( dynamic entry , { bool header , bool footer} ) {
-  if (entry == null) return null ;
-  header ??= false ;
-  footer ??= false ;
+TABLENode createTableEntry(dynamic entry, {bool header, bool footer}) {
+  if (entry == null) return null;
+  header ??= false;
+  footer ??= false;
 
-  if ( entry is THEADElement ) {
-    return entry ;
-  }
-  else if ( entry is TBODYElement ) {
-    return entry ;
-  }
-  else if ( entry is TFOOTElement ) {
-    return entry ;
-  }
-  else if ( entry is html_dom.Element ) {
-    return DOMNode.from(entry) ;
-  }
-  else if ( entry is html_dom.Text ) {
-    return DOMNode.from(entry) ;
-  }
-  else {
+  if (entry is THEADElement) {
+    return entry;
+  } else if (entry is TBODYElement) {
+    return entry;
+  } else if (entry is TFOOTElement) {
+    return entry;
+  } else if (entry is html_dom.Element) {
+    return DOMNode.from(entry);
+  } else if (entry is html_dom.Text) {
+    return DOMNode.from(entry);
+  } else {
     if (header) {
-      return $thead( rows: entry ) ;
-    }
-    else if (footer) {
-      return $tfoot( rows: entry ) ;
-    }
-    else {
-      return $tbody( rows: entry ) ;
+      return $thead(rows: entry);
+    } else if (footer) {
+      return $tfoot(rows: entry);
+    } else {
+      return $tbody(rows: entry);
     }
   }
 }
 
 List<TRowElement> createTableRows(dynamic rows, bool header) {
-  List<TRowElement> tableRows ;
+  List<TRowElement> tableRows;
 
   if (rows is Iterable) {
-    var rowsList = List.from(rows) ;
+    var rowsList = List.from(rows);
 
-    if ( listMatchesAll(rowsList, (e) => e is TRowElement) ) {
-      return rowsList.cast() ;
-    }
-    else if ( listMatchesAll(rowsList, (e) => e is html_dom.Node) ) {
-      var trList = rowsList.where( (e) => e is html_dom.Element && e.localName == 'tr' ) ;
-      var list = trList.map( (e) => DOMNode.from(e) ).toList();
-      list.removeWhere( (e) => e == null ) ;
-      return list.cast() ;
-    }
-    else if ( listMatchesAll(rowsList, (e) => e is MapEntry) ) {
-      var mapEntries = rowsList.whereType<MapEntry>().toList() ;
-      tableRows = mapEntries.map( (e) => createTableRow( [e.key , e.value] , header) ).toList() ;
-    }
-    else if ( rowsList.any( (e) => e is List ) ) {
-      tableRows = [] ;
+    if (listMatchesAll(rowsList, (e) => e is TRowElement)) {
+      return rowsList.cast();
+    } else if (listMatchesAll(rowsList, (e) => e is html_dom.Node)) {
+      var trList =
+          rowsList.where((e) => e is html_dom.Element && e.localName == 'tr');
+      var list = trList.map((e) => DOMNode.from(e)).toList();
+      list.removeWhere((e) => e == null);
+      return list.cast();
+    } else if (listMatchesAll(rowsList, (e) => e is MapEntry)) {
+      var mapEntries = rowsList.whereType<MapEntry>().toList();
+      tableRows = mapEntries
+          .map((e) => createTableRow([e.key, e.value], header))
+          .toList();
+    } else if (rowsList.any((e) => e is List)) {
+      tableRows = [];
       for (var rowCells in rowsList) {
-        var tr = createTableRow(rowCells, header) ;
-        tableRows.add(tr) ;
+        var tr = createTableRow(rowCells, header);
+        tableRows.add(tr);
       }
+    } else {
+      tableRows = [createTableRow(rowsList, header)];
     }
-    else {
-      tableRows = [ createTableRow(rowsList, header) ] ;
-    }
-  }
-  else {
-    tableRows = [ createTableRow(rows, header) ] ;
+  } else {
+    tableRows = [createTableRow(rows, header)];
   }
 
   return tableRows;
 }
 
-TRowElement createTableRow( dynamic rowCells , [ bool header ] ) {
-  header ??= false ;
+TRowElement createTableRow(dynamic rowCells, [bool header]) {
+  header ??= false;
 
-  if ( rowCells is TRowElement ) {
-    return rowCells ;
+  if (rowCells is TRowElement) {
+    return rowCells;
   }
 
-  Iterable iterable ;
+  Iterable iterable;
 
   if (rowCells is Iterable) {
-    iterable = List.from(rowCells) ;
-  }
-  else {
-    iterable = [rowCells] ;
-  }
-
-  var tr = TRowElement() ;
-
-  if ( header ) {
-    tr.addEachAsTag('th', iterable ) ;
-  }
-  else {
-    tr.addEachAsTag('td', iterable ) ;
+    iterable = List.from(rowCells);
+  } else {
+    iterable = [rowCells];
   }
 
-  return tr ;
+  var tr = TRowElement();
+
+  if (header) {
+    tr.addEachAsTag('th', iterable);
+  } else {
+    tr.addEachAsTag('td', iterable);
+  }
+
+  return tr;
 }
 
-List<TABLENode> createTableCells( dynamic rowCells , [ bool header ] ) {
-  header ??= false ;
+List<TABLENode> createTableCells(dynamic rowCells, [bool header]) {
+  header ??= false;
 
-  if ( rowCells is List && listMatchesAll(rowCells, (e) => e is DIVElement) ) {
-    return rowCells ;
-  }
-  else if ( rowCells is List && listMatchesAll(rowCells, (e) => e is html_dom.Node) ) {
-    var tdList = rowCells.where( (e) => e is html_dom.Element && ( e.localName == 'td' || e.localName == 'th' ) ) ;
-    var list = tdList.map( (e) => DOMNode.from(e) ).toList() ;
-    list.removeWhere( (e) => e == null ) ;
-    return list.cast() ;
-  }
-
-
-  List list ;
-  if ( header ) {
-    list = $tags('th', rowCells );
-  }
-  else {
-    list = $tags('td', rowCells );
+  if (rowCells is List && listMatchesAll(rowCells, (e) => e is DIVElement)) {
+    return rowCells;
+  } else if (rowCells is List &&
+      listMatchesAll(rowCells, (e) => e is html_dom.Node)) {
+    var tdList = rowCells.where((e) =>
+        e is html_dom.Element && (e.localName == 'td' || e.localName == 'th'));
+    var list = tdList.map((e) => DOMNode.from(e)).toList();
+    list.removeWhere((e) => e == null);
+    return list.cast();
   }
 
-  return list != null ? list.cast() : null ;
+  List list;
+  if (header) {
+    list = $tags('th', rowCells);
+  } else {
+    list = $tags('td', rowCells);
+  }
+
+  return list != null ? list.cast() : null;
 }
 
 abstract class TABLENode extends DOMElement {
-
-  TABLENode._(String tag, {Map<String, dynamic> attributes, id, classes, style, content, bool commented}) : super._(tag, attributes: attributes, id: id, classes: classes, style: style, content: content, commented: commented) ;
-
+  TABLENode._(String tag,
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._(tag,
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            commented: commented);
 }
 
 class TABLEElement extends DOMElement {
-
   factory TABLEElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is TABLEElement) return entry ;
+    if (entry == null) return null;
+    if (entry is TABLEElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('table', entry) ;
-      return TABLEElement( attributes: entry._attributes , body: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('table', entry);
+      return TABLEElement(
+          attributes: entry._attributes,
+          body: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  TABLEElement( { Map<String, dynamic> attributes, id, classes, style, head, body, foot , content, bool commented } ) : super._('table', attributes: attributes, id: id, classes: classes, style: style, content: createTableContent(content, head, body, foot) , commented: commented );
-
+  TABLEElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      head,
+      body,
+      foot,
+      content,
+      bool commented})
+      : super._('table',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: createTableContent(content, head, body, foot),
+            commented: commented);
 }
 
 class THEADElement extends TABLENode {
-
   factory THEADElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is THEADElement) return entry ;
+    if (entry == null) return null;
+    if (entry is THEADElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('thead', entry) ;
-      return THEADElement( attributes: entry._attributes , rows: entry._content, commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('thead', entry);
+      return THEADElement(
+          attributes: entry._attributes,
+          rows: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  THEADElement( { Map<String, dynamic> attributes, id, classes, style, rows , bool commented} ) : super._('thead', attributes: attributes, id: id, classes: classes, style: style, content: createTableRows(rows, true) , commented: commented);
-
+  THEADElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      rows,
+      bool commented})
+      : super._('thead',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: createTableRows(rows, true),
+            commented: commented);
 }
-
 
 class TBODYElement extends TABLENode {
-
   factory TBODYElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is TBODYElement) return entry ;
+    if (entry == null) return null;
+    if (entry is TBODYElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('tbody', entry) ;
-      return TBODYElement( attributes: entry._attributes , rows: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('tbody', entry);
+      return TBODYElement(
+          attributes: entry._attributes,
+          rows: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  TBODYElement( { Map<String, dynamic> attributes, id, classes, style, rows , bool commented } ) : super._('tbody', attributes: attributes, id: id, classes: classes, style: style, content: createTableRows(rows, false) , commented: commented);
-
+  TBODYElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      rows,
+      bool commented})
+      : super._('tbody',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: createTableRows(rows, false),
+            commented: commented);
 }
 
-
 class TFOOTElement extends TABLENode {
-
   factory TFOOTElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is TFOOTElement) return entry ;
+    if (entry == null) return null;
+    if (entry is TFOOTElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('tfoot', entry) ;
-      return TFOOTElement( attributes: entry._attributes , rows: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('tfoot', entry);
+      return TFOOTElement(
+          attributes: entry._attributes,
+          rows: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  TFOOTElement( { Map<String, dynamic> attributes, id, classes, style, rows , bool commented } ) : super._('tfoot', attributes: attributes, id: id, classes: classes, style: style, content: createTableRows(rows, false) , commented: commented);
-
+  TFOOTElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      rows,
+      bool commented})
+      : super._('tfoot',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: createTableRows(rows, false),
+            commented: commented);
 }
 
 class TRowElement extends TABLENode {
-
   factory TRowElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is TRowElement) return entry ;
+    if (entry == null) return null;
+    if (entry is TRowElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('tr', entry) ;
-      return TRowElement( attributes: entry._attributes , cells: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('tr', entry);
+      return TRowElement(
+          attributes: entry._attributes,
+          cells: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  TRowElement( { Map<String, dynamic> attributes, id, classes, style, cells , bool commented } ) : super._('tr', attributes: attributes, id: id, classes: classes, style: style, content: createTableCells(cells) , commented: commented);
-
+  TRowElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      cells,
+      bool commented})
+      : super._('tr',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: createTableCells(cells),
+            commented: commented);
 }
 
 class THElement extends TABLENode {
-
   factory THElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is THElement) return entry ;
+    if (entry == null) return null;
+    if (entry is THElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('th', entry) ;
-      return THElement( attributes: entry._attributes , content: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('th', entry);
+      return THElement(
+          attributes: entry._attributes,
+          content: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  THElement( { Map<String, dynamic> attributes, id, classes, style, content , bool commented } ) : super._('th', attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented);
-
+  THElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._('th',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            commented: commented);
 }
 
 class TDElement extends TABLENode {
-
   factory TDElement.from(dynamic entry) {
-    if (entry == null) return null ;
-    if (entry is TDElement) return entry ;
+    if (entry == null) return null;
+    if (entry is TDElement) return entry;
 
-    if ( entry is DOMElement ) {
-      _checkTag('td', entry) ;
-      return TDElement( attributes: entry._attributes , content: entry._content , commented: entry.isCommented ) ;
+    if (entry is DOMElement) {
+      _checkTag('td', entry);
+      return TDElement(
+          attributes: entry._attributes,
+          content: entry._content,
+          commented: entry.isCommented);
     }
 
-    return null ;
+    return null;
   }
 
-  TDElement( { Map<String, dynamic> attributes, id, classes, style, content , bool commented } ) : super._('td', attributes: attributes, id: id, classes: classes, style: style, content: content , commented: commented);
-
+  TDElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._('td',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            commented: commented);
 }
 
-
-
-////////////////////////////////////////////////////////////////////////////////
-
+/// Parses a [html] to nodes.
 List<DOMNode> parseHTML(String html) {
-  if (html == null) return null ;
+  if (html == null) return null;
 
-  var parsed = html_parse.parseFragment(html, container: 'div') ;
+  var parsed = html_parse.parseFragment(html, container: 'div');
 
-  if ( parsed.nodes.isEmpty ) {
-    return null ;
-  }
-  else if ( parsed.nodes.length == 1 ) {
-    var node = parsed.nodes[0] ;
-    return [ DOMNode.from(node) ] ;
-  }
-  else {
-    return parsed.nodes.map( (e) => DOMNode.from(e) ).toList() ;
+  if (parsed.nodes.isEmpty) {
+    return null;
+  } else if (parsed.nodes.length == 1) {
+    var node = parsed.nodes[0];
+    return [DOMNode.from(node)];
+  } else {
+    return parsed.nodes.map((e) => DOMNode.from(e)).toList();
   }
 }
 
+/// Returns a list of nodes from [html].
 List<DOMNode> $html<T extends DOMNode>(dynamic html) {
-  if (html == null) return null ;
+  if (html == null) return null;
   if (html is String) {
-    return parseHTML(html) ;
+    return parseHTML(html);
   }
-  throw ArgumentError("Ca't parse type: ${ html.runtimeType}") ;
+  throw ArgumentError("Ca't parse type: ${html.runtimeType}");
 }
 
-////////////////////////////////////////////////////////////////////////////////
+typedef DOMNodeValidator = bool Function();
 
 final RegExp _PATTERN_HTML_ELEMENT_INIT = RegExp(r'\s*<\w+');
 
 bool isHTMLElement(String s) {
-  if (s == null) return false ;
-  return s.startsWith( _PATTERN_HTML_ELEMENT_INIT ) ;
+  if (s == null) return false;
+  return s.startsWith(_PATTERN_HTML_ELEMENT_INIT);
 }
 
-DOMNode $node( { content } ) {
-  return DOMNode( content: content ) ;
+DOMNode $node({content}) {
+  return DOMNode(content: content);
 }
 
-DOMElement $tag( String tag , { id, classes, style, Map<String,String> attributes, content , bool commented } ) {
-  return DOMElement(tag, id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
-}
-
-T $tagHTML<T extends DOMElement>(dynamic html) => $html<DOMElement>(html).whereType<T>().first ;
-
-List<DOMElement> $tags<T>( String tag, Iterable<T> iterable , [ ElementGenerator<T> elementGenerator ] ) {
-  if (iterable == null) return null ;
-
-  var elements = <DOMElement>[] ;
-
-  if ( elementGenerator != null ) {
-    for (var entry in iterable) {
-      var elem = elementGenerator(entry) ;
-      var tagElem = $tag(tag , content: elem) ;
-      elements.add( tagElem ) ;
-    }
-  }
-  else {
-    for (var entry in iterable) {
-      var tagElem = $tag(tag , content: entry) ;
-      elements.add( tagElem ) ;
+bool _isValid(DOMNodeValidator validate) {
+  if (validate != null) {
+    try {
+      var valid = validate();
+      if (valid != null && !valid) {
+        return false;
+      }
+    } catch (e, s) {
+      print(e);
+      print(s);
     }
   }
 
-  return elements ;
+  return true;
 }
 
+/// Creates a node with [tag].
+DOMElement $tag(String tag,
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    content,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
 
-TABLEElement $table( { id, classes , style, Map<String,String> attributes, head, body, foot, bool commented } ) {
-  return TABLEElement( id: id, classes: classes, style: style, attributes: attributes, head: head, body: body, foot: foot, commented: commented );
+  return DOMElement(tag,
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      content: content,
+      commented: commented);
 }
 
-THEADElement $thead( { id, classes , style, Map<String,String> attributes, rows , bool commented } ) {
-  return THEADElement( id: id, classes: classes, style: style, attributes: attributes, rows: rows, commented: commented );
+/// Creates a tag node from [html].
+T $tagHTML<T extends DOMElement>(dynamic html) =>
+    $html<DOMElement>(html).whereType<T>().first;
+
+/// Creates a list of nodes of same [tag].
+List<DOMElement> $tags<T>(String tag, Iterable<T> iterable,
+    [ElementGenerator<T> elementGenerator]) {
+  if (iterable == null) return null;
+
+  var elements = <DOMElement>[];
+
+  if (elementGenerator != null) {
+    for (var entry in iterable) {
+      var elem = elementGenerator(entry);
+      var tagElem = $tag(tag, content: elem);
+      elements.add(tagElem);
+    }
+  } else {
+    for (var entry in iterable) {
+      var tagElem = $tag(tag, content: entry);
+      elements.add(tagElem);
+    }
+  }
+
+  return elements;
 }
 
-TBODYElement $tbody( { id, classes , style, Map<String,String> attributes, rows , bool commented } ) {
-  return TBODYElement( id: id, classes: classes, style: style, attributes: attributes, rows: rows, commented: commented );
+/// Creates a `table` node.
+TABLEElement $table(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    head,
+    body,
+    foot,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+
+  return TABLEElement(
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      head: head,
+      body: body,
+      foot: foot,
+      commented: commented);
 }
 
-TFOOTElement $tfoot( { id, classes , style, Map<String,String> attributes, rows , bool commented } ) {
-  return TFOOTElement( id: id, classes: classes, style: style, attributes: attributes, rows: rows, commented: commented );
+/// Creates a `thread` node.
+THEADElement $thead(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    rows,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+
+  return THEADElement(
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      rows: rows,
+      commented: commented);
 }
 
-TRowElement $tr( { id, classes , style, Map<String,String> attributes, cells , bool commented } ) {
-  return TRowElement( id: id, classes: classes, style: style, attributes: attributes, cells: cells, commented: commented);
+/// Creates a `tbody` node.
+TBODYElement $tbody(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    rows,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+
+  return TBODYElement(
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      rows: rows,
+      commented: commented);
 }
 
-DOMElement $td( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('td', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
-DOMElement $th( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('td', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
+/// Creates a `tfoot` node.
+TFOOTElement $tfoot(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    rows,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
 
-DIVElement $div( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('div', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
+  return TFOOTElement(
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      rows: rows,
+      commented: commented);
+}
 
-DIVElement $divInline( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('div', id: id, classes: classes, style: toFlatListOfStrings(['display: inline-block', style], delimiter: CSS_LIST_DELIMITER) , attributes: attributes, content: content, commented: commented) ;
+/// Creates a `tr` node.
+TRowElement $tr(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    Map<String, String> attributes,
+    cells,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
 
+  return TRowElement(
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      cells: cells,
+      commented: commented);
+}
+
+/// Creates a `td` node.
+DOMElement $td(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('td',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
+/// Creates a `th` node.
+DOMElement $th(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('td',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
+/// Creates a `div` node.
+DIVElement $div(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('div',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
+/// Creates a `div` node with `display: inline-block`.
+DIVElement $divInline(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('div',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: toFlatListOfStrings(['display: inline-block', style],
+            delimiter: CSS_LIST_DELIMITER),
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
+/// Creates a `div` node from HTML.
 DIVElement $divHTML(dynamic html) => $tagHTML(html);
 
-DOMElement $span( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('span', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
+/// Creates a `span` node.
+DOMElement $span(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('span',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
 
-DOMElement $button( { id, classes , style, type, Map<String,String> attributes, content , bool commented } ) => $tag('button', id: id, classes: classes, style: style, attributes: { 'type': type, ...?attributes }, content: content, commented: commented) ;
+/// Creates a `button` node.
+DOMElement $button(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        type,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('button',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: {'type': type, ...?attributes},
+        content: content,
+        commented: commented);
 
-DOMElement $label( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('label', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
+/// Creates a `label` node.
+DOMElement $label(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('label',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
 
-DOMElement $textarea( { id, classes , style, Map<String,String> attributes, content , bool commented } ) => $tag('textarea', id: id, classes: classes, style: style, attributes: attributes, content: content, commented: commented) ;
+/// Creates a `textarea` node.
+DOMElement $textarea(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('textarea',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
 
-DOMElement $input( { id, classes , style, type, Map<String,String> attributes, value , bool commented } ) => $tag('input', id: id, classes: classes, style: style, attributes: { 'type': type, 'value': value, ...?attributes }, commented: commented) ;
+/// Creates a `input` node.
+DOMElement $input(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        type,
+        Map<String, String> attributes,
+        value,
+        bool commented}) =>
+    $tag('input',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: {'type': type, 'value': value, ...?attributes},
+        commented: commented);
 
-DOMElement $p( { id, classes , style, Map<String,String> attributes , bool commented } ) => $tag('p', id: id, classes: classes, style: style, attributes: attributes, commented: commented) ;
+/// Creates a `p` node.
+DOMElement $p(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        bool commented}) =>
+    $tag('p',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        commented: commented);
 
-DOMElement $br( { id, classes , style, Map<String,String> attributes , bool commented } ) => $tag('br', id: id, classes: classes, style: style, attributes: attributes, commented: commented) ;
+/// Creates a `br` node.
+DOMElement $br(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        bool commented}) =>
+    $tag('br',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        commented: commented);
 
-DOMElement $hr( { id, classes , style, Map<String,String> attributes , bool commented } ) => $tag('hr', id: id, classes: classes, style: style, attributes: attributes, commented: commented) ;
+/// Creates a `hr` node.
+DOMElement $hr(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        bool commented}) =>
+    $tag('hr',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        commented: commented);
 
+/// Creates a `form` node.
+DOMElement $form(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('form',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
 
+/// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
+///
+/// Note: A direct helper is only for tags that don't need parameters to be valid.
+bool isDOMBuilderDirectHelper(dynamic f) {
+  if (f == null || !(f is Function)) return false;
 
+  return identical(f, $br) ||
+      identical(f, $p) ||
+      identical(f, $div) ||
+      identical(f, $divInline) ||
+      identical(f, $hr) ||
+      identical(f, $form) ||
+      identical(f, $table) ||
+      identical(f, $tbody) ||
+      identical(f, $thead) ||
+      identical(f, $tfoot) ||
+      identical(f, $td) ||
+      identical(f, $tr);
+}

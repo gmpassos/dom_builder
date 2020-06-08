@@ -1,3 +1,9 @@
+## 1.0.5
+
+- Added API Documentation.
+- dartfmt.
+- swiss_knife: ^2.5.2
+
 ## 1.0.4
 
 - Fix README example and new examples.

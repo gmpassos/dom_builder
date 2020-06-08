@@ -1,6 +1,6 @@
 name: dom_builder
 description: Helpers to generate DOM elements or HTML (Web and Native support).
-version: 1.0.4
+version: 1.0.5
 homepage: https://github.com/gmpassos/dom_builder
 
 environment:
@@ -8,7 +8,7 @@ environment:
 
 dependencies:
   html: ^0.14.0+3
-  swiss_knife: ^2.4.0
+  swiss_knife: ^2.5.2
     #path: ../swiss_knife
 
 dev_dependencies:
