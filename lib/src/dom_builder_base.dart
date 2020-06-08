@@ -89,15 +89,18 @@ class DOMAttribute implements WithValue {
         _value = parseString(value),
         _values = parseListOfStrings(values),
         _boolean = parseBool(boolean) {
-    if (_value != null && _values != null)
+    if (_value != null && _values != null) {
       throw ArgumentError(
           'Attribute $name: Only value or values can be defined, not both.');
-    if (_boolean != null && (_value != null || _values != null))
+    }
+    if (_boolean != null && (_value != null || _values != null)) {
       throw ArgumentError(
           "Attribute $name: Boolean attribute doesn't have value.");
-    if (_values != null && delimiter == null)
+    }
+    if (_values != null && delimiter == null) {
       throw ArgumentError(
           'Attribute $name: If values is defined a delimiter is required.');
+    }
   }
 
   bool get isBoolean => _boolean != null;
@@ -584,8 +587,9 @@ class DOMNode {
   }
 
   void _checkAllowContent() {
-    if (!allowContent)
+    if (!allowContent) {
       throw UnsupportedError("$runtimeType: can't insert entry to content!");
+    }
   }
 
   void normalizeContent() {}
@@ -833,8 +837,9 @@ typedef ElementGenerator<T> = dynamic Function(T entry);
 //
 
 void _checkTag(String expectedTag, DOMElement domElement) {
-  if (domElement.tag != expectedTag)
+  if (domElement.tag != expectedTag) {
     throw StateError('Not a $expectedTag tag: $domElement');
+  }
 }
 
 //
