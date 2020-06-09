@@ -2121,6 +2121,42 @@ DOMElement $form(
         content: content,
         commented: commented);
 
+/// Creates a `header` node.
+DOMElement $header(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('header',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
+/// Creates a `footer` node.
+DOMElement $footer(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        content,
+        bool commented}) =>
+    $tag('footer',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        commented: commented);
+
 /// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
 ///
 /// Note: A direct helper is only for tags that don't need parameters to be valid.
@@ -2133,6 +2169,8 @@ bool isDOMBuilderDirectHelper(dynamic f) {
       identical(f, $divInline) ||
       identical(f, $hr) ||
       identical(f, $form) ||
+      identical(f, $header) ||
+      identical(f, $footer) ||
       identical(f, $table) ||
       identical(f, $tbody) ||
       identical(f, $thead) ||

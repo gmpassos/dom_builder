@@ -1,3 +1,7 @@
+## 1.0.7
+
+- Added helpers for `header` and `footer`.
+
 ## 1.0.6
 
 - dartfmt.
