@@ -167,10 +167,10 @@ void main() {
 
       var div = $tagHTML('<div class="container"></div>');
 
-      var span = TestElem('span')..add( TextElem('span element') );
+      var span = TestElem('span')..add( TestText('span element') );
       div.add(span);
 
-      var text = TextElem('text element');
+      var text = TestText('text element');
       div.add(text);
 
       var genDiv = div.buildDOM(generator) as TestElem ;
@@ -274,7 +274,7 @@ abstract class TestNode {
 
 }
 
-class TextElem implements TestNode {
+class TestText implements TestNode {
   String _text;
 
   @override
@@ -284,11 +284,11 @@ class TextElem implements TestNode {
     _text = value ?? '' ;
   }
 
-  TextElem(String text) :
+  TestText(String text) :
         _text = text ?? ''
   ;
 
-  TestElem get asTestElem => TestElem('span')..add( TextElem(text) ) ;
+  TestElem get asTestElem => TestElem('span')..add( TestText(text) ) ;
 }
 
 class TestElem implements TestNode {
@@ -371,7 +371,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   bool canHandleExternalElement(externalElement) {
-    return externalElement is TestElem || externalElement is TextElem;
+    return externalElement is TestElem || externalElement is TestText;
   }
 
   @override
@@ -381,7 +381,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
       if (externalElement is TestElem) {
         element.add(externalElement);
         return [externalElement];
-      } else if (externalElement is TextElem) {
+      } else if (externalElement is TestText) {
         var testElem = externalElement.asTestElem;
         element.add(testElem);
         return [testElem];
@@ -393,7 +393,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
   @override
   TestNode appendElementText(TestNode element, String text) {
     if (element is TestElem) {
-      var textElem = TextElem(text);
+      var textElem = TestText(text);
       element.add(textElem);
       return textElem;
     }
@@ -402,11 +402,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   TestNode createTextNode(String text) {
-    return TextElem(text) ;
+    return TestText(text) ;
   }
 
   @override
-  bool isTextNode(TestNode node) => node is TextElem ;
+  bool isTextNode(TestNode node) => node is TestText ;
 
   @override
   TestElem createElement(String tag) {
@@ -464,10 +464,10 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   set text(String value) {
     if ( node is TestElem ) {
       TestElem element = node ;
-      element.add( TextElem(value) ) ;
+      element.add( TestText(value) ) ;
     }
-    else if ( node is TextElem ) {
-      TextElem textElem = node ;
+    else if ( node is TestText ) {
+      TestText textElem = node ;
       textElem.text = value ?? '';
     }
   }
