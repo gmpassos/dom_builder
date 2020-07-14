@@ -1527,10 +1527,10 @@ class DOMElement extends DOMNode {
     return attribute.values ?? [] ;
   }
 
+  /// Adds a [className] to attribute `class`.
   void addClass(String className) {
     appendToAttribute('class', className) ;
   }
-
 
   /// Returns the attribute `style`.
   String get style => getAttributeValue('style');
