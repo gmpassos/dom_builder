@@ -16,7 +16,12 @@ abstract class DOMNodeRuntime<T> {
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
-  DOMNodeRuntime<T> get parentRuntime ;
+  DOMNodeRuntime<T> get parentRuntime {
+    var domNodeParent = domNode.parent ;
+    var nodeParent = domGenerator.getElementParent(node) ;
+    if (domNodeParent == null || nodeParent == null) return null ;
+    return domGenerator.createDOMNodeRuntime(treeMap, domNodeParent, nodeParent) ;
+  }
 
   bool get hasParent ;
 
@@ -154,7 +159,17 @@ abstract class DOMNodeRuntime<T> {
 
   T copy() ;
 
-  T duplicate() ;
+  T duplicate() {
+    var parentRuntime = this.parentRuntime ;
+    var idx = indexInParent ;
+    if (idx < 0) return null  ;
+
+    var copy = this.copy() ;
+    parentRuntime.insertAt(idx+1, copy) ;
+
+    return copy ;
+  }
+
 
   bool absorbNode(T other) ;
 

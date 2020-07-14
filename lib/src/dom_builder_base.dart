@@ -139,7 +139,7 @@ class DOMNode {
         print(s);
         return null;
       }
-    } else if (entry is DOMElementGenerator) {
+    } else if (entry is DOMElementGenerator || entry is DOMElementGeneratorFunction) {
       return [ExternalElementNode(entry)];
     } else {
       return [ExternalElementNode(entry)];
@@ -171,7 +171,7 @@ class DOMNode {
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
-    } else if (entry is DOMElementGenerator) {
+    } else if (entry is DOMElementGenerator || entry is DOMElementGeneratorFunction) {
       return ExternalElementNode(entry);
     } else {
       return ExternalElementNode(entry);
@@ -203,7 +203,7 @@ class DOMNode {
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
-    } else if (entry is DOMElementGenerator) {
+    } else if (entry is DOMElementGenerator || entry is DOMElementGeneratorFunction) {
       return ExternalElementNode(entry);
     } else {
       return ExternalElementNode(entry);
@@ -289,21 +289,26 @@ class DOMNode {
   ///
   /// [withIdent] If [true] will generate a indented HTML.
   String buildHTML(
-      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode previousNode}) {
+      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode parentNode, DOMNode previousNode}) {
     if (isCommented) return '';
 
     var html = '' ;
 
     if (isNotEmptyObject(_content)) {
+      DOMNode prev ;
       for (var node in _content) {
         var subHtml = node.buildHTML(
             withIdent: withIdent,
             parentIdent: parentIdent + ident,
             ident: ident,
-            disableIdent: disableIdent);
+            disableIdent: disableIdent,
+          parentNode: parentNode,
+          previousNode: prev
+        );
         if (subHtml != null) {
           html += subHtml ;
         }
+        prev = node ;
       }
     }
 
@@ -772,14 +777,12 @@ class DOMNode {
   T nodeWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return null;
     var nodeSelector = asNodeSelector(selector);
-
     return _content.firstWhere(nodeSelector, orElse: () => null);
   }
 
   List<T> nodesWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return [];
     var nodeSelector = asNodeSelector(selector);
-
     return _content.where(nodeSelector).toList();
   }
 
@@ -797,7 +800,7 @@ class DOMNode {
     if (found != null) return found;
 
     for (var n in _content.whereType<DOMNode>()) {
-      found = n.selectWhere(selector);
+      found = n.selectWhere(nodeSelector);
       if (found != null) return found;
     }
 
@@ -830,8 +833,7 @@ class DOMNode {
     if (selector is num) {
       return nodeByIndex(selector);
     } else {
-      var nodeSelector = asNodeSelector(selector);
-      return nodeWhere(nodeSelector);
+      return nodeWhere(selector);
     }
   }
 
@@ -841,8 +843,7 @@ class DOMNode {
     if (selector is num) {
       return nodeByIndex(selector);
     } else {
-      var nodeSelector = asNodeSelector(selector);
-      return selectWhere(nodeSelector);
+      return selectWhere(selector);
     }
   }
 
@@ -1060,8 +1061,8 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   String buildHTML(
-      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode previousNode}) {
-    return _text;
+      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode parentNode, DOMNode previousNode}) {
+    return _text.replaceAll('\xa0', '&nbsp;') ;
   }
 
   @override
@@ -1333,6 +1334,14 @@ class DOMElement extends DOMNode {
 
     name = name.toLowerCase().trim();
 
+    if (_attributes != null) {
+      var prevAttribute = _attributes[name] ;
+      if (prevAttribute != null) {
+        prevAttribute.setValue(value) ;
+        return this ;
+      }
+    }
+
     var attribute = DOMAttribute.from(name, value);
 
     if (attribute != null) {
@@ -1435,9 +1444,7 @@ class DOMElement extends DOMNode {
   }
 
   T applyWhere<T extends DOMElement>(dynamic selector, {id, classes, style}) {
-    var nodeSelector = asNodeSelector(selector);
-
-    var all = selectAllWhere(nodeSelector);
+    var all = selectAllWhere(selector);
 
     for (var elem in all) {
       if (elem is DOMElement) {
@@ -1574,9 +1581,33 @@ class DOMElement extends DOMNode {
     var html = '<$tag';
 
     if (hasAttributes) {
-      var attributesWithValue =
-          _attributes.values.where((v) => v != null && v.hasValue);
-      for (var attr in attributesWithValue) {
+      var attributeId = _attributes['id'] ;
+      var attributeClass = _attributes['class'] ;
+      var attributeStyle = _attributes['style'] ;
+
+      if (attributeId != null) {
+        html += ' ' + attributeId.buildHTML();
+      }
+
+      if (attributeClass != null) {
+        html += ' ' + attributeClass.buildHTML();
+      }
+
+      if (attributeStyle != null) {
+        html += ' ' + attributeStyle.buildHTML();
+      }
+
+      var attributesNormal =
+      _attributes.values.where((v) => v != null && v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
+
+      for (var attr in attributesNormal) {
+        html += ' ' + attr.buildHTML();
+      }
+
+      var attributesBoolean =
+      _attributes.values.where((v) => v != null && v.hasValue && !_isPriorityAttribute(v) && v.isBoolean);
+
+      for (var attr in attributesBoolean) {
         html += ' ' + attr.buildHTML();
       }
     }
@@ -1584,6 +1615,10 @@ class DOMElement extends DOMNode {
     html += '>';
 
     return html;
+  }
+
+  bool _isPriorityAttribute( DOMAttribute attr ) {
+    return attr.name == 'id' || attr.name == 'class' || attr.name == 'style' ;
   }
 
   String buildCloseTagHTML() {
@@ -1603,7 +1638,7 @@ class DOMElement extends DOMNode {
 
   @override
   String buildHTML(
-      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode previousNode}) {
+      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode parentNode, DOMNode previousNode}) {
 
     disableIdent ??= false ;
     if ( !disableIdent && !_tagAllowsInnerIdent(tag) ) {
@@ -1630,7 +1665,7 @@ class DOMElement extends DOMNode {
       DOMNode prev ;
       for (var node in _content) {
         var subElement = node.buildHTML(
-            withIdent: withIdent, parentIdent: innerIdent, ident: ident, disableIdent: disableIdent, previousNode: prev);
+            withIdent: withIdent, parentIdent: innerIdent, ident: ident, disableIdent: disableIdent, parentNode: this, previousNode: prev);
         if (subElement != null) {
           html += subElement + innerBreakLine;
         }
@@ -1752,11 +1787,19 @@ class ExternalElementNode extends DOMNode {
 
   @override
   String buildHTML(
-      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode previousNode}) {
-    if (externalElement == null) return null;
+      {bool withIdent = false, String parentIdent = '', String ident = '  ', bool disableIdent = false, DOMNode parentNode, DOMNode previousNode}) {
+    if (externalElement == null) return '';
 
     if (externalElement is String) {
       return externalElement;
+    } else if (externalElement is DOMElementGenerator) {
+      var function = externalElement as DOMElementGenerator ;
+      var element = function(parentNode) ;
+      return '$element' ;
+    } else if (externalElement is DOMElementGeneratorFunction) {
+      var function = externalElement as DOMElementGeneratorFunction ;
+      var element = function() ;
+      return '$element' ;
     } else {
       return '$externalElement';
     }

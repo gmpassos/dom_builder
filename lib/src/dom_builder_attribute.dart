@@ -30,12 +30,14 @@ class DOMAttribute implements WithValue {
   List<String> _values;
 
   final String delimiter;
+  final Pattern delimiterPattern;
 
   bool _valueBoolean;
   final bool _set;
 
   DOMAttribute(String name,
-      {dynamic value, List values, this.delimiter, dynamic set, dynamic valueBoolean})
+      {dynamic value, List values, this.delimiter, this.delimiterPattern,
+        dynamic set, dynamic valueBoolean})
       : name = name.toLowerCase().trim(),
         _value = parseString(value),
         _values = parseListOfStrings(values),
@@ -57,9 +59,14 @@ class DOMAttribute implements WithValue {
       throw ArgumentError(
           'Attribute $name: If value is defined, delimiter should be null.');
     }
-    if (_set && !isListValue) {
-      throw ArgumentError(
-          'Attribute $name: If is a set, it should be a list value.');
+
+    if (_set) {
+      if (!isListValue) {
+        throw ArgumentError(
+            'Attribute $name: If is a set, it should be a list value.');
+      }
+
+      _uniquifyValues();
     }
   }
 
@@ -75,7 +82,8 @@ class DOMAttribute implements WithValue {
 
       return DOMAttribute(name,
           values: parseListOfStrings(value, delimiterPattern),
-          delimiter: delimiter, set: attrSet);
+          delimiter: delimiter, delimiterPattern: delimiterPattern,
+          set: attrSet);
     } else {
       var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name);
 
@@ -83,12 +91,11 @@ class DOMAttribute implements WithValue {
         if (value != null) {
           return DOMAttribute(name, valueBoolean: value);
         }
+        return null ;
       } else {
         return DOMAttribute(name, value: value);
       }
     }
-
-    return null ;
   }
 
   bool get isBoolean => _valueBoolean != null;
@@ -172,17 +179,22 @@ class DOMAttribute implements WithValue {
     _valueBoolean = parseBool(value, false);
   }
 
-  void setValue(value) {
+  void setValue(dynamic value) {
     if (isBoolean) {
       setBoolean(value);
       return;
     }
 
     if (isListValue) {
-      if (_values != null && _values.length == 1) {
-        _values[0] = parseString(value);
+      var valuesList = parseListOfStrings(value, delimiterPattern) ;
+
+      if (valuesList == null || valuesList.isEmpty) {
+        _values = [] ;
+      }
+      else if (_values != null && _values.length == 1 && valuesList.length == 1) {
+        _values[0] = parseString( valuesList[0] );
       } else {
-        _values = [parseString(value)];
+        _values = valuesList;
       }
     } else {
       _value = parseString(value);

@@ -13,10 +13,12 @@ class DOMTreeMap<T> {
 
   DOMTreeMap(this.domGenerator);
 
-  void generate(DOMGenerator<T> domGenerator, DOMNode root) {
+  T generate(DOMGenerator<T> domGenerator, DOMNode root) {
       var rootElement = domGenerator.build(null, null, root, this);
       _rootDOMNode = root ;
       _rootElement = rootElement ;
+      map(root, rootElement) ;
+      return rootElement ;
   }
 
   DOMNode _rootDOMNode ;
@@ -148,6 +150,21 @@ class DOMTreeMap<T> {
     return DOMNodeMapping(this, domCopy, copy);
   }
 
+  bool emptyByElement(T element) =>
+      emptyByDOMNode(getMappedDOMNode(element));
+
+  bool emptyByDOMNode(DOMNode domNode) {
+    if (domNode == null) return false;
+
+    var nodeRuntime = domNode.runtime;
+    if (nodeRuntime == null) return false;
+
+    domNode.clearNodes() ;
+    nodeRuntime.clear() ;
+
+    return true;
+  }
+
   DOMNodeMapping<T> removeByElement(T element) =>
       removeByDOMNode(getMappedDOMNode(element));
 
@@ -157,8 +174,8 @@ class DOMTreeMap<T> {
     var nodeRuntime = domNode.runtime;
     if (nodeRuntime == null) return null;
 
-    domNode.remove() ;
     nodeRuntime.remove() ;
+    domNode.remove() ;
 
     unmap(domNode, nodeRuntime.node) ;
 

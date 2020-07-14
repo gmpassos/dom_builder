@@ -12,11 +12,19 @@ import 'dom_builder_runtime.dart';
 class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
   @override
-  List getElementNodes(Node node) {
+  List<Node> getElementNodes(Node node) {
     if ( node is Element ) {
       return List.from( node.nodes ) ;
     }
-    return [] ;
+    return <Node>[] ;
+  }
+
+  @override
+  Node getElementParent(Node element) {
+    if (element is Element) {
+      return element.parent ;
+    }
+    return null ;
   }
 
   @override
@@ -205,14 +213,6 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   DOMNodeRuntimeDartHTMLImpl(DOMTreeMap<Node> treeMap, DOMNode domNode, Node node) : super(treeMap, domNode, node);
-
-  @override
-  DOMNodeRuntime<Node> get parentRuntime {
-    var domNodeParent = domNode.parent ;
-    var nodeParent = node.parent ;
-    if (domNodeParent == null || nodeParent == null) return null ;
-    return domGenerator.createDOMNodeRuntime(treeMap, domNodeParent, nodeParent) ;
-  }
 
   @override
   bool get hasParent => node.parent != null ;
@@ -429,18 +429,6 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
   @override
   Element copy() {
     return node.clone(true) ;
-  }
-
-  @override
-  Element duplicate() {
-    var parentRuntime = this.parentRuntime ;
-    var idx = indexInParent ;
-    if (idx < 0) return null  ;
-
-    var copy = node.clone(true) ;
-    parentRuntime.insertAt(idx+1, copy) ;
-
-    return copy ;
   }
 
   @override

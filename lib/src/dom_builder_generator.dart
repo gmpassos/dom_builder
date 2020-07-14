@@ -10,6 +10,7 @@ import 'dom_builder_generator_none.dart'
 
 
 typedef DOMElementGenerator<T> = T Function(dynamic parent);
+typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
 abstract class DOMGenerator<T> {
@@ -32,7 +33,11 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't determine type equivalency: $domNode == $node") ;
   }
 
-  List getElementNodes(T element) {
+  T getElementParent(T element) {
+    throw UnsupportedError("Can't get element parent: $element") ;
+  }
+
+  List<T> getElementNodes(T element) {
     throw UnsupportedError("Can't get element nodes: $element") ;
   }
 
@@ -176,8 +181,15 @@ abstract class DOMGenerator<T> {
       } else if (externalElement is DOMNode) {
         return build(domParent, parent, externalElement, treeMap);
       } else if (externalElement is DOMElementGenerator) {
-        var functionGenerator = externalElement;
-        var element = functionGenerator(parent);
+        var element = externalElement(parent);
+        if (element != null) {
+          treeMap.map(domElement, element) ;
+          addChildToElement(parent, element);
+          return element;
+        }
+        return null ;
+      } else if (externalElement is DOMElementGeneratorFunction) {
+        var element = externalElement();
         if (element != null) {
           treeMap.map(domElement, element) ;
           addChildToElement(parent, element);
