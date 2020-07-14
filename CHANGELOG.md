@@ -15,6 +15,7 @@
 - char \xa0 is replaced to &nbsp;, to rollback conversion.
 - optimize call to `asNodeSelector`.
 - Added tests.
+- Added `test_coverage`.
 - swiss_knife: ^2.5.5
 
 ## 1.0.7
