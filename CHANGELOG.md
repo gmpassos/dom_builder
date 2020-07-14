@@ -10,6 +10,11 @@
 - Added: `isStringElement`, `isWhiteSpace`.
 - refactor `DOMAttribute`: set values.
 - Added: `DOMElement.addClass`.
+- buildHTML: prioritize attributes: id, class and style. Also shows boolean attributes at end of tag.
+- External element function: now accepts non argument version.
+- char \xa0 is replaced to &nbsp;, to rollback conversion.
+- optimize call to `asNodeSelector`.
+- Added tests.
 - swiss_knife: ^2.5.5
 
 ## 1.0.7
