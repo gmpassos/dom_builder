@@ -62,8 +62,7 @@ Element createElement(String tag) {
       return Element.ul();
     case 'video':
       return Element.video();
-
     default:
-      return Element.tag(tag);
+      return Element.isTagSupported(tag) ? Element.tag(tag) : null ;
   }
 }

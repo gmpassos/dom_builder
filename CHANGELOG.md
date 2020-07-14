@@ -1,6 +1,20 @@
+## 1.0.8
+
+- Added `DOMTreeMap`: can be used to map a [DOMNode] to a generated node.
+- Added `DOMNodeRuntime` and `DOMNode.runtime` to manipulate and access the actual generated node from the virtual node.
+- Added `onClick` and `DOMEvent`.
+- Added `DOMNode.copy`.
+- Added node operations: `moveUp`, `moveUpNode`, `moveDown`, `moveDownNode`, `duplicate`, `duplicateNode`, `clearNodes`, `delete`, `deleteNode`.
+- Added: `absorbNode`, `merge`.
+- Added: `isInSameParent`, `isPreviousNode`, `isNextNode`, `isConsecutiveNode`, `isConsecutiveNode`.
+- Added: `isStringElement`, `isWhiteSpace`.
+- refactor `DOMAttribute`.
+- swiss_knife: ^2.5.5
+
 ## 1.0.7
 
 - Added helpers for `header` and `footer`.
+- dartfmt
 
 ## 1.0.6
 

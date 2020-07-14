@@ -142,24 +142,24 @@ void main() {
       var generator = TestGenerator();
 
       var div = $tagHTML(
-          '<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span></div>');
+          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
 
-      var genDiv = div.buildDOM(generator);
+      var genDiv = div.buildDOM(generator) as TestElem ;
 
       expect(genDiv, isNotNull);
 
       expect(genDiv.attributes['class'], equals('container'));
-      expect(genDiv.nodes.length, equals(1));
+      expect(genDiv.nodesLength, equals(1));
 
-      var genSpan = genDiv.nodes[0];
+      var genSpan = genDiv.get(0)  as TestElem  ;
 
       expect(genSpan.attributes['class'], equals('s1'));
-      expect(genSpan.text, equals('Span Text'));
+      expect(genSpan.text, equals('Span TextMore text'));
 
-      var genDiv2 = genSpan.nodes[0];
+      var genDiv2 = genSpan.get(1) as TestElem ;
 
       expect(genDiv2.attributes['class'], equals('d2'));
-      expect(genDiv2.text, equals('more text'));
+      expect(genDiv2.text, equals('More text'));
     });
 
     test('external element', () {
@@ -167,24 +167,24 @@ void main() {
 
       var div = $tagHTML('<div class="container"></div>');
 
-      var span = TestElem('span')..text = 'span element';
+      var span = TestElem('span')..add( TextElem('span element') );
       div.add(span);
 
       var text = TextElem('text element');
       div.add(text);
 
-      var genDiv = div.buildDOM(generator);
+      var genDiv = div.buildDOM(generator) as TestElem ;
 
       expect(genDiv, isNotNull);
 
       expect(genDiv.attributes['class'], equals('container'));
-      expect(genDiv.nodes.length, equals(2));
+      expect(genDiv.nodesLength, equals(2));
 
-      var genSpan = genDiv.nodes[0];
+      var genSpan = genDiv.get(0);
 
       expect(genSpan, equals(span));
 
-      var genText = genDiv.nodes[1];
+      var genText = genDiv.get(1);
 
       expect(genText, equals(text.asTestElem));
     });
@@ -268,28 +268,80 @@ void main() {
   });
 }
 
-class TextElem {
-  final String text;
+abstract class TestNode {
 
-  TextElem(this.text);
+  String get text ;
 
-  TestElem get asTestElem => TestElem('span')..text = text;
 }
 
-class TestElem {
+class TextElem implements TestNode {
+  String _text;
+
+  @override
+  String get text => _text;
+
+  set text(String value) {
+    _text = value ?? '' ;
+  }
+
+  TextElem(String text) :
+        _text = text ?? ''
+  ;
+
+  TestElem get asTestElem => TestElem('span')..add( TextElem(text) ) ;
+}
+
+class TestElem implements TestNode {
+
+  TestElem parent ;
+
   final String tag;
 
   TestElem(this.tag);
 
-  final List<TestElem> nodes = [];
+  final List<TestNode> _nodes = [];
 
-  String text = '';
+  List<TestNode> get nodes => List.unmodifiable(_nodes) ;
+
+  int get nodesLength => _nodes.length ;
+
+  @override
+  String get text {
+    if ( _nodes.isEmpty ) return '' ;
+    return _nodes.map((e) => e.text).join('') ;
+  }
+
+  TestNode get(int index) => _nodes[index] ;
+
+  void add(TestNode node) {
+    _nodes.add(node) ;
+  }
+
+  bool remove(TestNode node) {
+    return _nodes.remove(node) ;
+  }
+
+  TestNode removeAt(int index) {
+    return _nodes.removeAt(index) ;
+  }
+
+  void insertAt(int index, TestNode node) {
+    _nodes.insert(index, node) ;
+  }
+
+  int indexOf(TestNode node) {
+    return _nodes.indexOf(node) ;
+  }
+
+  void clear() {
+    _nodes.clear();
+  }
 
   final Map<String, String> attributes = {};
 
   String get asHTML {
     // BAD HTML:
-    return '<$tag $attributes>$nodes</$tag>';
+    return '<$tag $attributes>$_nodes</$tag>';
   }
 
   @override
@@ -309,10 +361,12 @@ class TestElem {
   }
 }
 
-class TestGenerator extends DOMGenerator<TestElem> {
+class TestGenerator extends DOMGenerator<TestNode> {
   @override
-  void addChildToElement(TestElem element, TestElem child) {
-    element.nodes.add(child);
+  void addChildToElement(TestNode element, TestNode child) {
+    if (element is TestElem) {
+      element.add(child);
+    }
   }
 
   @override
@@ -321,23 +375,38 @@ class TestGenerator extends DOMGenerator<TestElem> {
   }
 
   @override
-  TestElem addExternalElementToElement(
-      TestElem element, dynamic externalElement) {
-    if (externalElement is TestElem) {
-      element.nodes.add(externalElement);
-      return externalElement;
-    } else if (externalElement is TextElem) {
-      var testElem = externalElement.asTestElem;
-      element.nodes.add(testElem);
-      return testElem;
+  List<TestNode> addExternalElementToElement(
+      TestNode element, dynamic externalElement) {
+    if ( element is TestElem ) {
+      if (externalElement is TestElem) {
+        element.add(externalElement);
+        return [externalElement];
+      } else if (externalElement is TextElem) {
+        var testElem = externalElement.asTestElem;
+        element.add(testElem);
+        return [testElem];
+      }
     }
     return null;
   }
 
   @override
-  void appendElementText(TestElem element, String text) {
-    element.text += text;
+  TestNode appendElementText(TestNode element, String text) {
+    if (element is TestElem) {
+      var textElem = TextElem(text);
+      element.add(textElem);
+      return textElem;
+    }
+    return null ;
   }
+
+  @override
+  TestNode createTextNode(String text) {
+    return TextElem(text) ;
+  }
+
+  @override
+  bool isTextNode(TestNode node) => node is TextElem ;
 
   @override
   TestElem createElement(String tag) {
@@ -350,12 +419,226 @@ class TestGenerator extends DOMGenerator<TestElem> {
   }
 
   @override
-  void setAttribute(TestElem element, String attrName, String attrVal) {
-    element.attributes[attrName] = attrVal;
+  void setAttribute(TestNode element, String attrName, String attrVal) {
+    if ( element is TestElem ) {
+      element.attributes[attrName] = attrVal;
+    }
   }
 
   @override
-  String buildElementHTML(TestElem element) {
-    return element.asHTML;
+  String buildElementHTML(TestNode element) {
+    if ( element is TestElem ) {
+      return element.asHTML;
+    }
+    return '';
   }
+
+  @override
+  DOMNodeRuntime<TestNode> createDOMNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestNode node) {
+    return TestNodeRuntime(treeMap, domNode, node) ;
+  }
+
 }
+
+class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
+
+  TestNodeRuntime(DOMTreeMap<TestElem> treeMap, DOMNode domNode, TestElem node) : super(treeMap, domNode, node);
+
+  @override
+  DOMNodeRuntime<TestElem> get parentRuntime => throw UnimplementedError();
+
+  @override
+  String get tagName {
+    if ( node is TestElem ) {
+      TestElem element = node ;
+      return element.tag ;
+    }
+    return null ;
+  }
+
+  @override
+  String get text {
+    return node.text ;
+  }
+  @override
+  set text(String value) {
+    if ( node is TestElem ) {
+      TestElem element = node ;
+      element.add( TextElem(value) ) ;
+    }
+    else if ( node is TextElem ) {
+      TextElem textElem = node ;
+      textElem.text = value ?? '';
+    }
+  }
+
+  @override
+  String get value => text ;
+  @override
+  set value(String value) {
+    text = value ;
+  }
+
+  @override
+  String getAttribute(String name) {
+    if (node is TestElem) {
+      TestElem element = node ;
+      return element.attributes[name];
+    }
+    return null ;
+  }
+
+  @override
+  void setAttribute(String name, String value) {
+    if (node is TestElem) {
+      TestElem element = node;
+      element.attributes[name] = value;
+    }
+  }
+
+  @override
+  void removeAttribute(String name) {
+    if (node is TestElem) {
+      TestElem element = node;
+      element.attributes.remove(name);
+    }
+  }
+
+  @override
+  List<TestNode> get children {
+    if (node is TestElem) {
+      TestElem element = node;
+      return List.from(element.nodes);
+    }
+    return [] ;
+  }
+
+  @override
+  int get nodesLength {
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.nodes.length ;
+    }
+    return 0 ;
+  }
+
+  @override
+  TestNode getNodeAt(int index) {
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.nodes[index] ;
+    }
+    return null ;
+  }
+
+  @override
+  void add(TestNode child) {
+    if (node is TestElem) {
+      TestElem element = node;
+      element.add(child);
+    }
+  }
+
+  @override
+  void clear() {
+    if (node is TestElem) {
+      TestElem element = node;
+      element.clear();
+    }
+  }
+
+  @override
+  int indexOf(TestNode child) {
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.indexOf(child);
+    }
+    return -1 ;
+  }
+
+  @override
+  void insertAt(int index, TestNode child) {
+    if (node is TestElem) {
+      TestElem element = node;
+      element.insertAt(index, child);
+    }
+  }
+
+  @override
+  bool removeNode(TestNode child) {
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.remove(child);
+    }
+    return false ;
+  }
+
+  @override
+  TestElem removeAt(int index) {
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.removeAt(index);
+    }
+    return null ;
+  }
+
+  @override
+  void addClass(String className) {
+  }
+
+  @override
+  List<String> get classes => [] ;
+
+  @override
+  void clearClasses() {
+  }
+
+  @override
+  bool removeClass(String className) => false ;
+
+  @override
+  TestElem copy() {
+    throw UnimplementedError();
+  }
+
+  @override
+  TestElem duplicate() {
+    throw UnimplementedError();
+  }
+
+  @override
+  bool absorbNode(TestNode other) {
+    throw UnimplementedError();
+  }
+
+  @override
+  int get indexInParent => throw UnimplementedError();
+
+  @override
+  bool isInSameParent(TestNode other) {
+    throw UnimplementedError();
+  }
+
+  @override
+  bool isPreviousNode(TestNode other) {
+    throw UnimplementedError();
+  }
+
+  @override
+  bool isNextNode(TestNode other) {
+    throw UnimplementedError();
+  }
+
+  @override
+  bool mergeNode(TestNode other, {bool onlyConsecutive = true}) {
+    throw UnimplementedError();
+  }
+
+  @override
+  bool get isStringElement => throw UnimplementedError();
+
+  @override
+  bool get hasParent => throw UnimplementedError();
+
+}
+
