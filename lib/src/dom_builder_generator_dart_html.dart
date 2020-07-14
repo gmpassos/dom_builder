@@ -19,11 +19,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  Node getElementParent(Node element) {
-    if (element is Element) {
-      return element.parent;
-    }
-    return null;
+  Node getNodeParent(Node node) {
+    return node.parent;
   }
 
   @override
@@ -219,9 +216,6 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
       DOMTreeMap<Node> treeMap, DOMNode domNode, Node node)
       : super(treeMap, domNode, node);
 
-  @override
-  bool get hasParent => node.parent != null;
-
   bool get isNodeElement => node is Element;
 
   Element get nodeAsElement => node as Element;
@@ -364,40 +358,9 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   bool isInSameParent(Node other) {
-    if (other == null || !(other is Element)) return false;
-    if (isNodeElement) {
-      var parent = nodeAsElement.parent;
-      return parent != null && parent == other.parent;
-    }
-    return false;
-  }
-
-  @override
-  bool isPreviousNode(Node other) {
     if (other == null) return false;
-    if (isNodeElement && other is Element) {
-      var parent = nodeAsElement.parent;
-      var otherParent = other.parent;
-      if (parent == null || parent != otherParent) return false;
-      var idx = parent.nodes.indexOf(node);
-      var otherIdx = parent.nodes.indexOf(other);
-      return otherIdx >= 0 && otherIdx + 1 == idx;
-    }
-    return false;
-  }
-
-  @override
-  bool isNextNode(Node other) {
-    if (other == null) return false;
-    if (isNodeElement && other is Element) {
-      var parent = nodeAsElement.parent;
-      var otherParent = other.parent;
-      if (parent == null || parent != otherParent) return false;
-      var idx = parent.nodes.indexOf(node);
-      var otherIdx = parent.nodes.indexOf(other);
-      return idx >= 0 && idx + 1 == otherIdx;
-    }
-    return false;
+    var parent = node.parent;
+    return parent != null && parent == other.parent;
   }
 
   @override
@@ -438,7 +401,7 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   bool absorbNode(Node other) {
-    if (other == null || other.nodes.isEmpty) return false;
+    if (other == null) return false;
 
     if (node is Text) {
       if (other is Text) {
@@ -446,8 +409,16 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
         other.text = '';
         return true;
       }
+      else if (other is Element) {
+        node.text += other.text;
+        other.nodes.clear();
+        return true;
+      }
     } else if (node is Element) {
       if (other is Element) {
+        if ( other.nodes.isEmpty ) {
+          return true ;
+        }
         nodeAsElement.nodes.addAll(other.nodes);
         other.nodes.clear();
         return true;
@@ -461,22 +432,6 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
     return false;
   }
 
-  @override
-  bool mergeNode(Node other, {bool onlyConsecutive = true}) {
-    onlyConsecutive ??= true;
-
-    if (onlyConsecutive) {
-      if (isPreviousNode(other)) {
-        return getSiblingRuntime(other).mergeNode(node, onlyConsecutive: false);
-      } else if (!isNextNode(other)) {
-        return false;
-      }
-    }
-
-    other.remove();
-    absorbNode(other);
-    return true;
-  }
 }
 
 String _getElementValue(Element element, [String def]) {

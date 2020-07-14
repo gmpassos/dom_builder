@@ -62,8 +62,8 @@ abstract class DOMGenerator<T> {
   }
 
 
-  T getElementParent(T element) {
-    throw UnsupportedError("Can't get element parent: $element");
+  T getNodeParent(T node) {
+    throw UnsupportedError("Can't get element parent: $node");
   }
 
   List<T> getElementNodes(T element) {

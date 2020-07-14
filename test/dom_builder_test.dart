@@ -314,11 +314,11 @@ void main() {
       expect(genDiv.text, equals('UUUBBBIII'));
       expect(uNode.indexInParent, equals(0));
 
-      var copy = treeMap.duplicateByDOMNode(bNode);
+      var copyB = treeMap.duplicateByDOMNode(bNode);
 
-      expect(copy, isNotNull);
-      expect(copy.domNode.text, equals('BBB'));
-      expect(copy.node.text, equals('BBB'));
+      expect(copyB, isNotNull);
+      expect(copyB.domNode.text, equals('BBB'));
+      expect(copyB.node.text, equals('BBB'));
 
       expect(div.buildHTML(),
           equals('<div><u>UUU</u><b>BBB</b><b>BBB</b><i>III</i></div>'));
@@ -329,6 +329,30 @@ void main() {
       expect(
           div.buildHTML(), equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUBBBIII'));
+
+      var copyU = treeMap.duplicateByDOMNode(uNode);
+
+      expect(copyU, isNotNull);
+      expect(copyU.domNode.parent, isNotNull);
+      expect(copyU.node.parent, isNotNull);
+      treeMap.matchesMapping(copyU.domNode, copyU.node) ;
+      expect(copyU.domNode.text, equals('UUU'));
+      expect(copyU.node.text, equals('UUU'));
+
+      copyU.domNode.add(TextNode('X')) ;
+      (copyU.node as TestElem).add(TestText('X')) ;
+      expect(copyU.domNode.text, equals('UUUX'));
+      expect(copyU.node.text, equals('UUUX'));
+
+      expect(div.buildHTML(),
+          equals('<div><u>UUU</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
+      expect(genDiv.text, equals('UUUUUUXBBBIII'));
+
+      var merge = treeMap.mergeNearStringNodes(uNode, copyU.domNode) ;
+
+      expect(merge, isNotNull);
+      expect(merge.domNode.text, equals('UUUUUUX'));
+      expect(merge.node.text, equals('UUUUUUX'));
 
       expect(treeMap.emptyByDOMNode(div), isTrue);
       expect(div.buildHTML(), equals('<div></div>'));
@@ -440,23 +464,19 @@ void main() {
     });
 
     test('\$br', () {
-
-      expect( $br().buildHTML() , equals('<br>') );
-      expect( $br(amount: 0) , isNull );
-      expect( $br(amount: 1).buildHTML() , equals('<br>') );
-      expect( $br(amount: 2).buildHTML() , equals('<span><br><br></span>') );
-      expect( $br(amount: 3).buildHTML() , equals('<span><br><br><br></span>') );
-
+      expect($br().buildHTML(), equals('<br>'));
+      expect($br(amount: 0), isNull);
+      expect($br(amount: 1).buildHTML(), equals('<br>'));
+      expect($br(amount: 2).buildHTML(), equals('<span><br><br></span>'));
+      expect($br(amount: 3).buildHTML(), equals('<span><br><br><br></span>'));
     });
 
     test('&nbsp;', () {
-
-      expect( $nbsp() , equals('&nbsp;') );
-      expect( $nbsp(0) , equals('') );
-      expect( $nbsp(1) , equals('&nbsp;') );
-      expect( $nbsp(2) , equals('&nbsp;&nbsp;') );
-      expect( $nbsp(3) , equals('&nbsp;&nbsp;&nbsp;') );
-
+      expect($nbsp(), equals('&nbsp;'));
+      expect($nbsp(0), equals(''));
+      expect($nbsp(1), equals('&nbsp;'));
+      expect($nbsp(2), equals('&nbsp;&nbsp;'));
+      expect($nbsp(3), equals('&nbsp;&nbsp;&nbsp;'));
     });
 
     test('Attribute class', () {
@@ -614,12 +634,19 @@ void main() {
 }
 
 abstract class TestNode {
+
+  TestNode parent;
+
   String get text;
 
   TestNode copy();
 }
 
 class TestText implements TestNode {
+
+  @override
+  TestNode parent;
+
   String _text;
 
   @override
@@ -643,8 +670,9 @@ class TestText implements TestNode {
 }
 
 class TestElem implements TestNode {
-  TestElem parent;
 
+  @override
+  TestNode parent;
   final String tag;
 
   TestElem(this.tag);
@@ -674,6 +702,10 @@ class TestElem implements TestNode {
 
   TestNode get(int index) => _nodes[index];
 
+  void addAll(Iterable<TestNode> nodes) {
+    _nodes.addAll(nodes) ;
+  }
+
   void add(TestNode node) {
     _nodes.add(node);
     _setParent(node, this);
@@ -688,15 +720,11 @@ class TestElem implements TestNode {
   }
 
   void _setParent(TestNode node, TestElem parent) {
-    if (node is TestElem) {
-      node.parent = parent;
-    }
+    node.parent = parent;
   }
 
   void _setParentNull(TestNode node) {
-    if (node is TestElem) {
-      node.parent = null;
-    }
+    node.parent = null;
   }
 
   TestNode removeAt(int index) {
@@ -745,11 +773,8 @@ class TestElem implements TestNode {
 
 class TestGenerator extends DOMGenerator<TestNode> {
   @override
-  TestNode getElementParent(TestNode element) {
-    if (element is TestElem) {
-      return element.parent;
-    }
-    return null;
+  TestNode getNodeParent(TestNode node) {
+    return node.parent;
   }
 
   @override
@@ -813,7 +838,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   String getNodeText(TestNode node) {
-    return node.text ;
+    return node.text;
   }
 
   @override
@@ -997,7 +1022,25 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
   @override
   bool absorbNode(TestNode other) {
-    throw UnimplementedError();
+    if ( node is TestText ) {
+      if ( other is TestText ) {
+        var textNode = node as TestText;
+        textNode.text += other.text;
+        other.text = '';
+        return true ;
+      }
+    }
+    else if ( node is TestElem ) {
+      var elemNode = node as TestElem;
+
+      if ( other is TestElem ) {
+        elemNode.addAll( other.nodes ) ;
+        other.clear();
+        return true ;
+      }
+    }
+
+    throw UnimplementedError('$node > $other');
   }
 
   @override
@@ -1006,26 +1049,6 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
       return parentRuntime.indexOf(node);
     }
     return -1;
-  }
-
-  @override
-  bool isInSameParent(TestNode other) {
-    throw UnimplementedError();
-  }
-
-  @override
-  bool isPreviousNode(TestNode other) {
-    throw UnimplementedError();
-  }
-
-  @override
-  bool isNextNode(TestNode other) {
-    throw UnimplementedError();
-  }
-
-  @override
-  bool mergeNode(TestNode other, {bool onlyConsecutive = true}) {
-    throw UnimplementedError();
   }
 
   @override
@@ -1039,12 +1062,4 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
     return false;
   }
 
-  @override
-  bool get hasParent {
-    if (node is TestElem) {
-      var elem = node as TestElem;
-      return elem.parent != null;
-    }
-    return false;
-  }
 }

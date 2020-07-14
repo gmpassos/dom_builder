@@ -17,14 +17,17 @@ abstract class DOMNodeRuntime<T> {
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
   DOMNodeRuntime<T> get parentRuntime {
-    var domNodeParent = domNode.parent;
-    var nodeParent = domGenerator.getElementParent(node);
-    if (domNodeParent == null || nodeParent == null) return null;
+    var domNodeParent = domNode != null ? domNode.parent : null ;
+    var nodeParent = domGenerator.getNodeParent(node);
+    if (nodeParent == null) return null;
     return domGenerator.createDOMNodeRuntime(
         treeMap, domNodeParent, nodeParent);
   }
 
-  bool get hasParent;
+  bool get hasParent {
+    var nodeParent = domGenerator.getNodeParent(node);
+    return nodeParent != null ;
+  }
 
   String get tagName;
 
@@ -66,20 +69,35 @@ abstract class DOMNodeRuntime<T> {
 
   int get indexInParent;
 
-  bool isInSameParent(T other);
+  bool isInSameParent(T other) {
+    var nodeParent = domGenerator.getNodeParent(node);
+    return nodeParent != null && nodeParent == domGenerator.getNodeParent(other) ;
+  }
 
   DOMNodeRuntime<T> getSiblingRuntime(T other) {
-    if (!isInSameParent(other)) return null;
+    if (other == null || !isInSameParent(other)) return null;
 
     var otherDomNode = treeMap.getMappedDOMNode(other);
-    if (otherDomNode == null) return null;
-
     return domGenerator.createDOMNodeRuntime(treeMap, otherDomNode, other);
   }
 
-  bool isPreviousNode(T other);
+  bool isPreviousNode(T other) {
+    var otherRuntime = getSiblingRuntime(other) ;
+    if (otherRuntime == null ) return false;
 
-  bool isNextNode(T other);
+    var idx = indexInParent ;
+    var otherIdx = otherRuntime.indexInParent ;
+    return otherIdx >= 0 && otherIdx + 1 == idx;
+  }
+
+  bool isNextNode(T other) {
+    var otherRuntime = getSiblingRuntime(other) ;
+    if (otherRuntime == null ) return false;
+
+    var idx = indexInParent ;
+    var otherIdx = otherRuntime.indexInParent ;
+    return idx >= 0 && idx + 1 == otherIdx;
+  }
 
   bool isConsecutiveNode(T other) {
     return isNextNode(other) || isPreviousNode(other);
@@ -189,18 +207,29 @@ abstract class DOMNodeRuntime<T> {
 
   bool absorbNode(T other);
 
-  bool mergeNode(T other, {bool onlyConsecutive = true});
+  bool mergeNode(T other, {bool onlyConsecutive = true}) {
+    onlyConsecutive ??= true;
+
+    if (onlyConsecutive) {
+      if (isPreviousNode(other)) {
+        return getSiblingRuntime(other).mergeNode(node, onlyConsecutive: false);
+      } else if (!isNextNode(other)) {
+        return false;
+      }
+    }
+
+    if (hasParent) {
+      parentRuntime.removeNode(other);
+    }
+
+    absorbNode(other);
+    return true;
+  }
 }
 
 class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   DOMNodeRuntimeDummy(DOMTreeMap<T> treeMap, DOMNode domNode, T node)
       : super(treeMap, domNode, node);
-
-  @override
-  DOMNodeRuntime<T> get parentRuntime => null;
-
-  @override
-  bool get hasParent => false;
 
   @override
   String get tagName => null;
@@ -228,9 +257,6 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
 
   @override
   set value(String value) {}
-
-  @override
-  bool remove() => false;
 
   @override
   String getAttribute(String name) {
@@ -262,15 +288,6 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   int get indexInParent => -1;
 
   @override
-  bool isInSameParent(T other) => false;
-
-  @override
-  bool isPreviousNode(T other) => false;
-
-  @override
-  bool isNextNode(T other) => false;
-
-  @override
   int indexOf(T child) => -1;
 
   @override
@@ -286,13 +303,7 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   T copy() => null;
 
   @override
-  T duplicate() => null;
-
-  @override
   bool absorbNode(T other) => false;
-
-  @override
-  bool mergeNode(T other, {bool onlyConsecutive = true}) => false;
 
   @override
   bool get isStringElement => false;

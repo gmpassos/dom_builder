@@ -68,6 +68,10 @@ class DOMTreeMap<T> {
     return _elementToDOMNodeMap[element];
   }
 
+  bool matchesMapping(DOMNode domNode, T node) {
+    return identical( _elementToDOMNodeMap[domNode] , node ) ;
+  }
+
   bool mapTree(DOMNode domRoot, T root) {
     if (domRoot == null || root == null) return false;
     map(domRoot, root);
@@ -183,7 +187,18 @@ class DOMTreeMap<T> {
     return DOMNodeMapping(this, domNode, nodeRuntime.node);
   }
 
-  DOMNodeMapping<T> mergeNearNodes(DOMNode domNode1, DOMNode domNode2) {
+  DOMNodeMapping<T> mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
+      {bool onlyCompatibles = false}) {
+    onlyCompatibles ??= false ;
+
+    if (domNode1 == null || domNode2 == null) {
+      return null;
+    }
+
+    if (onlyCompatibles && !domNode1.isCompatibleForMerge(domNode2)) {
+      return null ;
+    }
+
     var nodeRuntime1 = domNode1.runtime;
     var nodeRuntime2 = domNode2.runtime;
 
@@ -191,7 +206,7 @@ class DOMTreeMap<T> {
       return null;
     }
 
-    if (domNode1.isConsecutiveNode(domNode2)) {
+    if (domNode1.isNextNode(domNode2)) {
       if (domNode1.merge(domNode2) &&
           nodeRuntime1.mergeNode(nodeRuntime2.node)) {
         unmap(domNode2, nodeRuntime2.node);
@@ -204,12 +219,19 @@ class DOMTreeMap<T> {
         return DOMNodeMapping(this, domNode2, nodeRuntime2.node);
       }
     }
+
     return null;
   }
 
-  DOMNodeMapping<T> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2) {
+  DOMNodeMapping<T> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
+      {bool onlyCompatibles = false}) {
+    if (domNode1 == null || domNode2 == null) {
+      return null;
+    }
+
     if (domNode1.isStringElement && domNode2.isStringElement) {
-      return mergeNearNodes(domNode1, domNode2);
+      return mergeNearNodes(domNode1, domNode2,
+          onlyCompatibles: onlyCompatibles);
     }
 
     return null;

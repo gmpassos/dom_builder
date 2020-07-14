@@ -574,17 +574,9 @@ class DOMNode {
   /// Merges [other] node into this node.
   bool merge(DOMNode other, {bool onlyConsecutive = true}) => false;
 
-  static DOMNode mergeNearNodes(DOMNode node1, DOMNode node2) {
-    if (node1.isConsecutiveNode(node2)) {
-      if (node1.merge(node2)) {
-        return node1;
-      }
-    } else if (node1.isPreviousNode(node2)) {
-      if (node2.merge(node1)) {
-        return node2;
-      }
-    }
-    return null;
+  /// Returns [true] if [other] is compatible for merging.
+  bool isCompatibleForMerge(DOMNode other) {
+    return false ;
   }
 
   /// Returns [true] if this element is a [TextNode] or a [DOMElement] of
@@ -1045,6 +1037,11 @@ class TextNode extends DOMNode implements WithValue {
     } else {
       return false;
     }
+  }
+
+  @override
+  bool isCompatibleForMerge(DOMNode other) {
+    return other is TextNode ;
   }
 
   @override
@@ -1540,6 +1537,29 @@ class DOMElement extends DOMNode {
     } else {
       return false;
     }
+  }
+
+  @override
+  bool isCompatibleForMerge(DOMNode other) {
+    if (other is DOMElement) {
+      if ( tag == other.tag ) {
+        return getAttributesSignature() == other.getAttributesSignature() ;
+      }
+    }
+    return false ;
+  }
+
+  /// Returns a deterministic [String] of all attributes entries.
+  String getAttributesSignature() {
+    if (_attributes == null || _attributes.isEmpty) return '';
+    var entries = _attributes
+        .map((key, value) => MapEntry(key.toLowerCase(), value.value))
+        .entries
+        .toList();
+    entries.sort((a, b) => a.key.compareTo(b.key));
+    var attributesSignature =
+    entries.map((e) => '${e.key}=${e.value}').toList();
+    return attributesSignature.join('\n');
   }
 
   @override
