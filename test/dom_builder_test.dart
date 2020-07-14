@@ -48,9 +48,10 @@ void main() {
     });
 
     test('div content 3', () {
-      var div = $div(
-          classes: 'container',
-          content: ['<b>Simple &nbsp; Text</b>', $span(content: ['Sub',$br,'text'])]);
+      var div = $div(classes: 'container', content: [
+        '<b>Simple &nbsp; Text</b>',
+        $span(content: ['Sub', $br, 'text'])
+      ]);
 
       expect(div, isNotNull);
       expect(
@@ -60,9 +61,10 @@ void main() {
     });
 
     test('div content 4', () {
-      var div = $div(
-          classes: 'container',
-          content: ['<b>Simple &nbsp; Text</b>', $span(content: (parent) => TestText('ok1') )]);
+      var div = $div(classes: 'container', content: [
+        '<b>Simple &nbsp; Text</b>',
+        $span(content: (parent) => TestText('ok1'))
+      ]);
 
       expect(div, isNotNull);
       expect(
@@ -72,9 +74,10 @@ void main() {
     });
 
     test('div content 4', () {
-      var div = $div(
-          classes: 'container',
-          content: ['<b>Simple &nbsp; Text</b>', $span(content: () => TestText('ok2') )]);
+      var div = $div(classes: 'container', content: [
+        '<b>Simple &nbsp; Text</b>',
+        $span(content: () => TestText('ok2'))
+      ]);
 
       expect(div, isNotNull);
       expect(
@@ -192,19 +195,19 @@ void main() {
       var div = $tagHTML(
           '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
 
-      var genDiv = div.buildDOM(generator) as TestElem ;
+      var genDiv = div.buildDOM(generator) as TestElem;
 
       expect(genDiv, isNotNull);
 
       expect(genDiv.attributes['class'], equals('container'));
       expect(genDiv.nodesLength, equals(1));
 
-      var genSpan = genDiv.get(0)  as TestElem  ;
+      var genSpan = genDiv.get(0) as TestElem;
 
       expect(genSpan.attributes['class'], equals('s1'));
       expect(genSpan.text, equals('Span TextMore text'));
 
-      var genDiv2 = genSpan.get(1) as TestElem ;
+      var genDiv2 = genSpan.get(1) as TestElem;
 
       expect(genDiv2.attributes['class'], equals('d2'));
       expect(genDiv2.text, equals('More text'));
@@ -216,22 +219,22 @@ void main() {
       var div = $tagHTML(
           '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
 
-      var treeMap = generator.generateMapped(div) ;
+      var treeMap = generator.generateMapped(div);
 
-      var genDiv = treeMap.rootElement as TestElem ;
+      var genDiv = treeMap.rootElement as TestElem;
 
       expect(genDiv, isNotNull);
-      expect( treeMap.getMappedDOMNode(genDiv), equals(div));
+      expect(treeMap.getMappedDOMNode(genDiv), equals(div));
 
       expect(genDiv.attributes['class'], equals('container'));
       expect(genDiv.nodesLength, equals(1));
 
-      var genSpan = genDiv.get(0)  as TestElem  ;
+      var genSpan = genDiv.get(0) as TestElem;
 
       expect(genSpan.attributes['class'], equals('s1'));
       expect(genSpan.text, equals('Span TextMore text'));
 
-      var genDiv2 = genSpan.get(1) as TestElem ;
+      var genDiv2 = genSpan.get(1) as TestElem;
 
       expect(genDiv2.attributes['class'], equals('d2'));
       expect(genDiv2.text, equals('More text'));
@@ -240,17 +243,16 @@ void main() {
     test('generator treeMap: text only', () {
       var generator = TestGenerator();
 
-      var treeMap = generator.createDOMTreeMap() ;
+      var treeMap = generator.createDOMTreeMap();
 
-      var text = TextNode('txt!') ;
+      var text = TextNode('txt!');
 
-      var genText =treeMap.generate(generator, text) ;
+      var genText = treeMap.generate(generator, text);
 
       expect(text, isNotNull);
-      expect( treeMap.getMappedDOMNode(genText), equals(text));
+      expect(treeMap.getMappedDOMNode(genText), equals(text));
 
-      expect( genText.text , equals('txt!'));
-
+      expect(genText.text, equals('txt!'));
     });
 
     test('generator mapped: operations', () {
@@ -259,73 +261,78 @@ void main() {
       var div = $tagHTML('<div><b>BBB</b><i>III</i><u>UUU</u></div>');
       expect(div, isNotNull);
 
-      var bNode = div.node('b') as DOMElement ;
+      var bNode = div.node('b') as DOMElement;
       expect(bNode, isNotNull);
       expect(bNode.tag, equals('b'));
 
-      var iNode = div.node('i') as DOMElement ;
+      var iNode = div.node('i') as DOMElement;
       expect(iNode, isNotNull);
       expect(iNode.tag, equals('i'));
 
-      var uNode = div.node('u') as DOMElement ;
+      var uNode = div.node('u') as DOMElement;
       expect(uNode, isNotNull);
       expect(uNode.tag, equals('u'));
 
-      var treeMap = generator.generateMapped(div) ;
+      var treeMap = generator.generateMapped(div);
 
-      var genDiv = treeMap.rootElement as TestElem ;
-      expect( genDiv.text , equals(div.text));
+      var genDiv = treeMap.rootElement as TestElem;
+      expect(genDiv.text, equals(div.text));
 
-      expect( genDiv.text , equals('BBBIIIUUU') ) ;
+      expect(genDiv.text, equals('BBBIIIUUU'));
 
-      expect( bNode.indexInParent , equals(0) ) ;
+      expect(bNode.indexInParent, equals(0));
 
-      expect( bNode.isInSameParent(iNode) , isTrue ) ;
-      expect( bNode.isInSameParent(div) , isFalse ) ;
+      expect(bNode.isInSameParent(iNode), isTrue);
+      expect(bNode.isInSameParent(div), isFalse);
 
-      expect( bNode.isNextNode(iNode) , isTrue ) ;
-      expect( iNode.isPreviousNode(bNode) , isTrue ) ;
-      expect( bNode.isConsecutiveNode(iNode) , isTrue ) ;
-      expect( iNode.isConsecutiveNode(bNode) , isTrue ) ;
+      expect(bNode.isNextNode(iNode), isTrue);
+      expect(iNode.isPreviousNode(bNode), isTrue);
+      expect(bNode.isConsecutiveNode(iNode), isTrue);
+      expect(iNode.isConsecutiveNode(bNode), isTrue);
 
-      expect( treeMap.moveDownByDOMNode(bNode) , isTrue) ;
-      expect( div.buildHTML() , equals('<div><i>III</i><b>BBB</b><u>UUU</u></div>') ) ;
-      expect( genDiv.text , equals('IIIBBBUUU') ) ;
-      expect( bNode.indexInParent , equals(1) ) ;
+      expect(treeMap.moveDownByDOMNode(bNode), isTrue);
+      expect(
+          div.buildHTML(), equals('<div><i>III</i><b>BBB</b><u>UUU</u></div>'));
+      expect(genDiv.text, equals('IIIBBBUUU'));
+      expect(bNode.indexInParent, equals(1));
 
-      expect( treeMap.moveUpByDOMNode(bNode) , isTrue) ;
-      expect( div.buildHTML() , equals('<div><b>BBB</b><i>III</i><u>UUU</u></div>') ) ;
-      expect( genDiv.text , equals('BBBIIIUUU') ) ;
-      expect( bNode.indexInParent , equals(0) ) ;
+      expect(treeMap.moveUpByDOMNode(bNode), isTrue);
+      expect(
+          div.buildHTML(), equals('<div><b>BBB</b><i>III</i><u>UUU</u></div>'));
+      expect(genDiv.text, equals('BBBIIIUUU'));
+      expect(bNode.indexInParent, equals(0));
 
-      expect( treeMap.moveUpByDOMNode(uNode) , isTrue) ;
-      expect( div.buildHTML() , equals('<div><b>BBB</b><u>UUU</u><i>III</i></div>') ) ;
-      expect( genDiv.text , equals('BBBUUUIII') ) ;
-      expect( uNode.indexInParent , equals(1) ) ;
+      expect(treeMap.moveUpByDOMNode(uNode), isTrue);
+      expect(
+          div.buildHTML(), equals('<div><b>BBB</b><u>UUU</u><i>III</i></div>'));
+      expect(genDiv.text, equals('BBBUUUIII'));
+      expect(uNode.indexInParent, equals(1));
 
-      expect( treeMap.moveUpByDOMNode(uNode) , isTrue) ;
-      expect( div.buildHTML() , equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>') ) ;
-      expect( genDiv.text , equals('UUUBBBIII') ) ;
-      expect( uNode.indexInParent , equals(0) ) ;
+      expect(treeMap.moveUpByDOMNode(uNode), isTrue);
+      expect(
+          div.buildHTML(), equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>'));
+      expect(genDiv.text, equals('UUUBBBIII'));
+      expect(uNode.indexInParent, equals(0));
 
-      var copy = treeMap.duplicateByDOMNode(bNode) ;
+      var copy = treeMap.duplicateByDOMNode(bNode);
 
-      expect( copy, isNotNull ) ;
-      expect( copy.domNode.text, equals('BBB') ) ;
-      expect( copy.node.text, equals('BBB') ) ;
+      expect(copy, isNotNull);
+      expect(copy.domNode.text, equals('BBB'));
+      expect(copy.node.text, equals('BBB'));
 
-      expect( div.buildHTML() , equals('<div><u>UUU</u><b>BBB</b><b>BBB</b><i>III</i></div>') ) ;
-      expect( genDiv.text , equals('UUUBBBBBBIII') ) ;
+      expect(div.buildHTML(),
+          equals('<div><u>UUU</u><b>BBB</b><b>BBB</b><i>III</i></div>'));
+      expect(genDiv.text, equals('UUUBBBBBBIII'));
 
-      var removed = treeMap.removeByDOMNode(bNode) ;
-      expect( removed.domNode , equals(bNode)) ;
-      expect( div.buildHTML() , equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>') ) ;
-      expect( genDiv.text , equals('UUUBBBIII') ) ;
+      var removed = treeMap.removeByDOMNode(bNode);
+      expect(removed.domNode, equals(bNode));
+      expect(
+          div.buildHTML(), equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>'));
+      expect(genDiv.text, equals('UUUBBBIII'));
 
-      expect( treeMap.emptyByDOMNode(div) , isTrue ) ;
-      expect( div.buildHTML() , equals('<div></div>') ) ;
-      expect( genDiv.text , equals('') ) ;
-
+      expect(treeMap.emptyByDOMNode(div), isTrue);
+      expect(div.buildHTML(), equals('<div></div>'));
+      expect(genDiv.text, equals(''));
     });
 
     test('external element', () {
@@ -333,13 +340,13 @@ void main() {
 
       var div = $tagHTML('<div class="container"></div>');
 
-      var span = TestElem('span')..add( TestText('span element') );
+      var span = TestElem('span')..add(TestText('span element'));
       div.add(span);
 
       var text = TestText('text element');
       div.add(text);
 
-      var genDiv = div.buildDOM(generator) as TestElem ;
+      var genDiv = div.buildDOM(generator) as TestElem;
 
       expect(genDiv, isNotNull);
 
@@ -434,149 +441,162 @@ void main() {
 
     test('Attribute class', () {
       var div = $div(classes: 'a b');
-      expect(div.classesList, equals(['a','b']));
+      expect(div.classesList, equals(['a', 'b']));
       expect(div.classes, equals('a b'));
       div.addClass('c');
-      expect(div.classesList, equals(['a','b','c']));
+      expect(div.classesList, equals(['a', 'b', 'c']));
       expect(div.classes, equals('a b c'));
       div.addClass('c');
-      expect(div.classesList, equals(['a','b','c']));
+      expect(div.classesList, equals(['a', 'b', 'c']));
       expect(div.classes, equals('a b c'));
 
       var div2 = $div(classes: 'a b b c d');
-      expect(div2.classesList, equals(['a','b','c','d']));
+      expect(div2.classesList, equals(['a', 'b', 'c', 'd']));
       expect(div2.classes, equals('a b c d'));
     });
 
     test('Attribute class', () {
       var div = $div(classes: 'a b');
-      expect(div.classesList, equals(['a','b']));
+      expect(div.classesList, equals(['a', 'b']));
       expect(div.classes, equals('a b'));
       div.addClass('c');
-      expect(div.classesList, equals(['a','b','c']));
+      expect(div.classesList, equals(['a', 'b', 'c']));
       expect(div.classes, equals('a b c'));
       div.addClass('c');
-      expect(div.classesList, equals(['a','b','c']));
+      expect(div.classesList, equals(['a', 'b', 'c']));
       expect(div.classes, equals('a b c'));
 
       var div2 = $div(classes: 'a b b c d');
-      expect(div2.classesList, equals(['a','b','c','d']));
+      expect(div2.classesList, equals(['a', 'b', 'c', 'd']));
       expect(div2.classes, equals('a b c d'));
     });
 
-
     test('Attribute class 2', () {
-      var div = $div( classes: 'c1 c2 c2', );
-      expect( div.buildHTML() , equals('<div class="c1 c2"></div>'));
+      var div = $div(
+        classes: 'c1 c2 c2',
+      );
+      expect(div.buildHTML(), equals('<div class="c1 c2"></div>'));
 
       var attributeClass = div.getAttribute('class');
-      expect( attributeClass.value , equals('c1 c2'));
-      expect( attributeClass.values , equals(['c1','c2']));
-      expect( attributeClass.containsValue('c2') , isTrue);
-      expect( attributeClass.containsValue('Z') , isFalse);
-      expect( attributeClass.isBoolean , isFalse);
-      expect( attributeClass.isListValue , isTrue);
-      expect( attributeClass.isSet , isTrue);
+      expect(attributeClass.value, equals('c1 c2'));
+      expect(attributeClass.values, equals(['c1', 'c2']));
+      expect(attributeClass.containsValue('c2'), isTrue);
+      expect(attributeClass.containsValue('Z'), isFalse);
+      expect(attributeClass.isBoolean, isFalse);
+      expect(attributeClass.isListValue, isTrue);
+      expect(attributeClass.isSet, isTrue);
       attributeClass.setValue('c3 c4');
-      expect( attributeClass.value , equals('c3 c4'));
-      expect( attributeClass.values , equals(['c3','c4']));
+      expect(attributeClass.value, equals('c3 c4'));
+      expect(attributeClass.values, equals(['c3', 'c4']));
       attributeClass.appendValue('c5');
-      expect( attributeClass.value , equals('c3 c4 c5'));
-      expect( attributeClass.values , equals(['c3','c4','c5']));
+      expect(attributeClass.value, equals('c3 c4 c5'));
+      expect(attributeClass.values, equals(['c3', 'c4', 'c5']));
       attributeClass.setValue('c6');
-      expect( attributeClass.value , equals('c6'));
-      expect( attributeClass.values , equals(['c6']));
+      expect(attributeClass.value, equals('c6'));
+      expect(attributeClass.values, equals(['c6']));
       attributeClass.setValue('c7');
-      expect( attributeClass.value , equals('c7'));
-      expect( attributeClass.values , equals(['c7']));
+      expect(attributeClass.value, equals('c7'));
+      expect(attributeClass.values, equals(['c7']));
 
       attributeClass.setValue('');
-      expect( attributeClass.value , isNull);
-      expect( attributeClass.values , isNull);
-
+      expect(attributeClass.value, isNull);
+      expect(attributeClass.values, isNull);
     });
 
     test('Attribute foo', () {
-      var div = $div( attributes: {'foo': 'aaa'} );
-      expect( div.buildHTML() , equals('<div foo="aaa"></div>'));
+      var div = $div(attributes: {'foo': 'aaa'});
+      expect(div.buildHTML(), equals('<div foo="aaa"></div>'));
 
       var attributeFoo = div.getAttribute('foo');
-      expect( attributeFoo.value , equals('aaa'));
+      expect(attributeFoo.value, equals('aaa'));
       attributeFoo.setValue('bbb');
-      expect( attributeFoo.value , equals('bbb'));
+      expect(attributeFoo.value, equals('bbb'));
       attributeFoo.appendValue('ccc');
-      expect( attributeFoo.value , equals('ccc'));
+      expect(attributeFoo.value, equals('ccc'));
     });
 
     test('Attribute hidden', () {
-      var div = $div( id: 'x1', classes: 'c1 c2 c2', attributes: {'foo': '111', 'bar': '2', 'hidden': 'true'} , content: $span( attributes: {'bar': '222'}, content: 'sub') );
-      expect( div.buildHTML() , equals('<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
+      var div = $div(
+          id: 'x1',
+          classes: 'c1 c2 c2',
+          attributes: {'foo': '111', 'bar': '2', 'hidden': 'true'},
+          content: $span(attributes: {'bar': '222'}, content: 'sub'));
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
 
-      expect( div.getAttributeValue('foo') , equals('111'));
-      expect( div.getAttributeValue('hidden') , equals('true'));
+      expect(div.getAttributeValue('foo'), equals('111'));
+      expect(div.getAttributeValue('hidden'), equals('true'));
 
       var attributeClass = div.getAttribute('class');
-      expect( attributeClass.value , equals('c1 c2'));
-      expect( attributeClass.values , equals(['c1','c2']));
-      expect( attributeClass.containsValue('c2') , isTrue);
-      expect( attributeClass.containsValue('Z') , isFalse);
-      expect( attributeClass.isBoolean , isFalse);
-      expect( attributeClass.isListValue , isTrue);
-      expect( attributeClass.isSet , isTrue);
+      expect(attributeClass.value, equals('c1 c2'));
+      expect(attributeClass.values, equals(['c1', 'c2']));
+      expect(attributeClass.containsValue('c2'), isTrue);
+      expect(attributeClass.containsValue('Z'), isFalse);
+      expect(attributeClass.isBoolean, isFalse);
+      expect(attributeClass.isListValue, isTrue);
+      expect(attributeClass.isSet, isTrue);
 
       var attributeFoo = div.getAttribute('foo');
-      expect( attributeFoo.value , equals('111'));
-      expect( attributeFoo.values , equals(['111']));
-      expect( attributeFoo.containsValue('111') , isTrue);
-      expect( attributeFoo.containsValue('Z') , isFalse);
-      expect( attributeFoo.isBoolean , isFalse);
-      expect( attributeFoo.isListValue , isFalse);
-      expect( attributeFoo.isSet , isFalse);
+      expect(attributeFoo.value, equals('111'));
+      expect(attributeFoo.values, equals(['111']));
+      expect(attributeFoo.containsValue('111'), isTrue);
+      expect(attributeFoo.containsValue('Z'), isFalse);
+      expect(attributeFoo.isBoolean, isFalse);
+      expect(attributeFoo.isListValue, isFalse);
+      expect(attributeFoo.isSet, isFalse);
 
       var attributeBar = div.getAttribute('bar');
-      expect( attributeBar.value , equals('2'));
-      expect( attributeBar.values , equals(['2']));
-      expect( attributeBar.containsValue('2') , isTrue);
-      expect( attributeBar.containsValue('Z') , isFalse);
-      expect( attributeBar.isBoolean , isFalse);
-      expect( attributeBar.isListValue , isFalse);
-      expect( attributeBar.isSet , isFalse);
+      expect(attributeBar.value, equals('2'));
+      expect(attributeBar.values, equals(['2']));
+      expect(attributeBar.containsValue('2'), isTrue);
+      expect(attributeBar.containsValue('Z'), isFalse);
+      expect(attributeBar.isBoolean, isFalse);
+      expect(attributeBar.isListValue, isFalse);
+      expect(attributeBar.isSet, isFalse);
 
       var attributeBaz = div.getAttribute('baz');
-      expect( attributeBaz , isNull );
+      expect(attributeBaz, isNull);
 
       var attributeHidden = div.getAttribute('hidden');
-      expect( attributeHidden.value , equals('true'));
-      expect( attributeHidden.values , equals(['true']));
-      expect( attributeHidden.containsValue('true') , isTrue);
-      expect( attributeHidden.containsValue('Z') , isFalse);
-      expect( attributeHidden.isBoolean , isTrue);
-      expect( attributeHidden.isListValue , isFalse);
-      expect( attributeHidden.isSet , isFalse);
+      expect(attributeHidden.value, equals('true'));
+      expect(attributeHidden.values, equals(['true']));
+      expect(attributeHidden.containsValue('true'), isTrue);
+      expect(attributeHidden.containsValue('Z'), isFalse);
+      expect(attributeHidden.isBoolean, isTrue);
+      expect(attributeHidden.isListValue, isFalse);
+      expect(attributeHidden.isSet, isFalse);
 
-      div.setAttribute('hidden', 'true') ;
-      expect( div.buildHTML() , equals('<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
+      div.setAttribute('hidden', 'true');
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
 
-      div.setAttribute('hidden', false) ;
-      expect( div.buildHTML() , equals('<div id="x1" class="c1 c2" foo="111" bar="2"><span bar="222">sub</span></div>'));
+      div.setAttribute('hidden', false);
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div id="x1" class="c1 c2" foo="111" bar="2"><span bar="222">sub</span></div>'));
 
-      expect( div.removeAttribute('foo') , isTrue );
-      expect( div.buildHTML() , equals('<div id="x1" class="c1 c2" bar="2"><span bar="222">sub</span></div>'));
+      expect(div.removeAttribute('foo'), isTrue);
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div id="x1" class="c1 c2" bar="2"><span bar="222">sub</span></div>'));
 
-      expect( div.removeAttributeDeeply('bar') , isTrue );
-      expect( div.buildHTML() , equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
-
+      expect(div.removeAttributeDeeply('bar'), isTrue);
+      expect(div.buildHTML(),
+          equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
     });
-
   });
 }
 
 abstract class TestNode {
+  String get text;
 
-  String get text ;
-
-  TestNode copy() ;
-
+  TestNode copy();
 }
 
 class TestText implements TestNode {
@@ -586,28 +606,24 @@ class TestText implements TestNode {
   String get text => _text;
 
   set text(String value) {
-    _text = value ?? '' ;
+    _text = value ?? '';
   }
 
-  TestText(String text) :
-        _text = text ?? ''
-  ;
+  TestText(String text) : _text = text ?? '';
 
-  TestElem get asTestElem => TestElem('span')..add( TestText(text) ) ;
+  TestElem get asTestElem => TestElem('span')..add(TestText(text));
 
   @override
   String toString() {
-    return _text ;
+    return _text;
   }
 
   @override
-  TestText copy() => TestText(_text) ;
-
+  TestText copy() => TestText(_text);
 }
 
 class TestElem implements TestNode {
-
-  TestElem parent ;
+  TestElem parent;
 
   final String tag;
 
@@ -618,68 +634,68 @@ class TestElem implements TestNode {
     var copy = TestElem(tag);
 
     nodes.map((e) => e.copy()).forEach((e) {
-      copy.add(e) ;
+      copy.add(e);
     });
 
-    return copy ;
+    return copy;
   }
 
   final List<TestNode> _nodes = [];
 
-  List<TestNode> get nodes => List.unmodifiable(_nodes) ;
+  List<TestNode> get nodes => List.unmodifiable(_nodes);
 
-  int get nodesLength => _nodes.length ;
+  int get nodesLength => _nodes.length;
 
   @override
   String get text {
-    if ( _nodes.isEmpty ) return '' ;
-    return _nodes.map((e) => e.text).join('') ;
+    if (_nodes.isEmpty) return '';
+    return _nodes.map((e) => e.text).join('');
   }
 
-  TestNode get(int index) => _nodes[index] ;
+  TestNode get(int index) => _nodes[index];
 
   void add(TestNode node) {
-    _nodes.add(node) ;
-    _setParent(node, this) ;
+    _nodes.add(node);
+    _setParent(node, this);
   }
 
   bool remove(TestNode node) {
-    if ( _nodes.remove(node) ) {
+    if (_nodes.remove(node)) {
       _setParentNull(node);
-      return true ;
+      return true;
     }
-    return false ;
+    return false;
   }
 
   void _setParent(TestNode node, TestElem parent) {
-    if ( node is TestElem ) {
-      node.parent = parent ;
+    if (node is TestElem) {
+      node.parent = parent;
     }
   }
 
   void _setParentNull(TestNode node) {
-    if ( node is TestElem ) {
-      node.parent = null ;
+    if (node is TestElem) {
+      node.parent = null;
     }
   }
 
   TestNode removeAt(int index) {
     var node = _nodes.removeAt(index);
     _setParentNull(node);
-    return node ;
+    return node;
   }
 
   void insertAt(int index, TestNode node) {
-    _nodes.insert(index, node) ;
-    _setParent(node, this) ;
+    _nodes.insert(index, node);
+    _setParent(node, this);
   }
 
   int indexOf(TestNode node) {
-    return _nodes.indexOf(node) ;
+    return _nodes.indexOf(node);
   }
 
   void clear() {
-    _nodes.forEach(_setParentNull) ;
+    _nodes.forEach(_setParentNull);
     _nodes.clear();
   }
 
@@ -708,21 +724,20 @@ class TestElem implements TestNode {
 }
 
 class TestGenerator extends DOMGenerator<TestNode> {
-
   @override
   TestNode getElementParent(TestNode element) {
-    if ( element is TestElem ) {
-      return element.parent ;
+    if (element is TestElem) {
+      return element.parent;
     }
-    return null ;
+    return null;
   }
 
   @override
   List<TestNode> getElementNodes(TestNode element) {
-    if ( element is TestElem ) {
-      return List.from(element.nodes) ;
+    if (element is TestElem) {
+      return List.from(element.nodes);
     }
-    return [] ;
+    return [];
   }
 
   @override
@@ -740,7 +755,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
   @override
   List<TestNode> addExternalElementToElement(
       TestNode element, dynamic externalElement) {
-    if ( element is TestElem ) {
+    if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);
         return [externalElement];
@@ -760,16 +775,16 @@ class TestGenerator extends DOMGenerator<TestNode> {
       element.add(textElem);
       return textElem;
     }
-    return null ;
+    return null;
   }
 
   @override
   TestNode createTextNode(String text) {
-    return TestText(text) ;
+    return TestText(text);
   }
 
   @override
-  bool isTextNode(TestNode node) => node is TestText ;
+  bool isTextNode(TestNode node) => node is TestText;
 
   @override
   TestElem createElement(String tag) {
@@ -783,69 +798,70 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   void setAttribute(TestNode element, String attrName, String attrVal) {
-    if ( element is TestElem ) {
+    if (element is TestElem) {
       element.attributes[attrName] = attrVal;
     }
   }
 
   @override
   String buildElementHTML(TestNode element) {
-    if ( element is TestElem ) {
+    if (element is TestElem) {
       return element.asHTML;
     }
     return '';
   }
 
   @override
-  DOMNodeRuntime<TestNode> createDOMNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestNode node) {
-    return TestNodeRuntime(treeMap, domNode, node) ;
+  DOMNodeRuntime<TestNode> createDOMNodeRuntime(
+      DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestNode node) {
+    return TestNodeRuntime(treeMap, domNode, node);
   }
-
 }
 
 class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
-
-  TestNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestElem node) : super(treeMap, domNode, node);
+  TestNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestElem node)
+      : super(treeMap, domNode, node);
 
   @override
   String get tagName {
-    if ( node is TestElem ) {
-      TestElem element = node ;
-      return element.tag ;
+    if (node is TestElem) {
+      TestElem element = node;
+      return element.tag;
     }
-    return null ;
+    return null;
   }
 
   @override
   String get text {
-    return node.text ;
+    return node.text;
   }
+
   @override
   set text(String value) {
-    if ( node is TestElem ) {
-      TestElem element = node ;
-      element.add( TestText(value) ) ;
-    }
-    else if ( node is TestText ) {
-      TestText textElem = node ;
+    if (node is TestElem) {
+      TestElem element = node;
+      element.add(TestText(value));
+    } else if (node is TestText) {
+      TestText textElem = node;
       textElem.text = value ?? '';
     }
   }
 
   @override
-  String get value => text ;
+  String get value => text;
+
   @override
   set value(String value) {
-    text = value ;
+    text = value;
   }
 
   @override
   String getAttribute(String name) {
     if (node is TestElem) {
-      TestElem element = node ;
+      TestElem element = node;
       return element.attributes[name];
     }
-    return null ;
+    return null;
   }
 
   @override
@@ -870,25 +886,25 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
       TestElem element = node;
       return List.from(element.nodes);
     }
-    return [] ;
+    return [];
   }
 
   @override
   int get nodesLength {
     if (node is TestElem) {
       TestElem element = node;
-      return element.nodes.length ;
+      return element.nodes.length;
     }
-    return 0 ;
+    return 0;
   }
 
   @override
   TestNode getNodeAt(int index) {
     if (node is TestElem) {
       TestElem element = node;
-      return element.nodes[index] ;
+      return element.nodes[index];
     }
-    return null ;
+    return null;
   }
 
   @override
@@ -913,7 +929,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
       TestElem element = node;
       return element.indexOf(child);
     }
-    return -1 ;
+    return -1;
   }
 
   @override
@@ -930,7 +946,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
       TestElem element = node;
       return element.remove(child);
     }
-    return false ;
+    return false;
   }
 
   @override
@@ -939,22 +955,20 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
       TestElem element = node;
       return element.removeAt(index);
     }
-    return null ;
+    return null;
   }
 
   @override
-  void addClass(String className) {
-  }
+  void addClass(String className) {}
 
   @override
-  List<String> get classes => [] ;
+  List<String> get classes => [];
 
   @override
-  void clearClasses() {
-  }
+  void clearClasses() {}
 
   @override
-  bool removeClass(String className) => false ;
+  bool removeClass(String className) => false;
 
   @override
   TestNode copy() {
@@ -968,10 +982,10 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
   @override
   int get indexInParent {
-    if ( hasParent ) {
-      return parentRuntime.indexOf(node) ;
+    if (hasParent) {
+      return parentRuntime.indexOf(node);
     }
-    return -1 ;
+    return -1;
   }
 
   @override
@@ -996,24 +1010,21 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
   @override
   bool get isStringElement {
-    if ( node is TestText ) {
-      return true ;
+    if (node is TestText) {
+      return true;
+    } else if (node is TestElem) {
+      var elem = node as TestElem;
+      return DOMElement.isStringTagName(elem.tag);
     }
-    else if ( node is TestElem ) {
-      var elem = node as TestElem ;
-      return DOMElement.isStringTagName( elem.tag ) ;
-    }
-    return false ;
+    return false;
   }
 
   @override
   bool get hasParent {
-    if ( node is TestElem ) {
-      var elem = node as TestElem ;
-      return elem.parent != null ;
+    if (node is TestElem) {
+      var elem = node as TestElem;
+      return elem.parent != null;
     }
-    return false ;
+    return false;
   }
-
 }
-

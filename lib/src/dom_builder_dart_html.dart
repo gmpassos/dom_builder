@@ -63,6 +63,6 @@ Element createElement(String tag) {
     case 'video':
       return Element.video();
     default:
-      return Element.isTagSupported(tag) ? Element.tag(tag) : null ;
+      return Element.isTagSupported(tag) ? Element.tag(tag) : null;
   }
 }

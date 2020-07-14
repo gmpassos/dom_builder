@@ -1,11 +1,9 @@
-
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 
 class DOMAttribute implements WithValue {
-
-  static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked','hidden'};
+  static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked', 'hidden'};
   static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
 
   static final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
@@ -13,7 +11,8 @@ class DOMAttribute implements WithValue {
     'style': ';'
   };
 
-  static final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
+  static final Map<String, Pattern>
+      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
     'class': RegExp(r'\s+'),
     'style': RegExp(r'\s*;\s*')
   };
@@ -36,12 +35,16 @@ class DOMAttribute implements WithValue {
   final bool _set;
 
   DOMAttribute(String name,
-      {dynamic value, List values, this.delimiter, this.delimiterPattern,
-        dynamic set, dynamic valueBoolean})
+      {dynamic value,
+      List values,
+      this.delimiter,
+      this.delimiterPattern,
+      dynamic set,
+      dynamic valueBoolean})
       : name = name.toLowerCase().trim(),
         _value = parseString(value),
         _values = parseListOfStrings(values),
-        _set = parseBool(set,false),
+        _set = parseBool(set, false),
         _valueBoolean = parseBool(valueBoolean) {
     if (_value != null && _values != null) {
       throw ArgumentError(
@@ -75,14 +78,15 @@ class DOMAttribute implements WithValue {
 
     if (delimiter != null) {
       var delimiterPattern =
-      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
+          _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
       assert(delimiterPattern != null);
 
       var attrSet = _ATTRIBUTES_VALUE_AS_SET.contains(name);
 
       return DOMAttribute(name,
           values: parseListOfStrings(value, delimiterPattern),
-          delimiter: delimiter, delimiterPattern: delimiterPattern,
+          delimiter: delimiter,
+          delimiterPattern: delimiterPattern,
           set: attrSet);
     } else {
       var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name);
@@ -91,7 +95,7 @@ class DOMAttribute implements WithValue {
         if (value != null) {
           return DOMAttribute(name, valueBoolean: value);
         }
-        return null ;
+        return null;
       } else {
         return DOMAttribute(name, value: value);
       }
@@ -101,7 +105,8 @@ class DOMAttribute implements WithValue {
   bool get isBoolean => _valueBoolean != null;
 
   bool get isListValue => delimiter != null;
-  bool get isSet => _set ;
+
+  bool get isSet => _set;
 
   @override
   bool get hasValue {
@@ -115,7 +120,7 @@ class DOMAttribute implements WithValue {
           return true;
         }
       }
-      return false ;
+      return false;
     } else {
       return isNotEmptyObject(_value);
     }
@@ -186,13 +191,14 @@ class DOMAttribute implements WithValue {
     }
 
     if (isListValue) {
-      var valuesList = parseListOfStrings(value, delimiterPattern) ;
+      var valuesList = parseListOfStrings(value, delimiterPattern);
 
       if (valuesList == null || valuesList.isEmpty) {
-        _values = [] ;
-      }
-      else if (_values != null && _values.length == 1 && valuesList.length == 1) {
-        _values[0] = parseString( valuesList[0] );
+        _values = [];
+      } else if (_values != null &&
+          _values.length == 1 &&
+          valuesList.length == 1) {
+        _values[0] = parseString(valuesList[0]);
       } else {
         _values = valuesList;
       }
@@ -219,25 +225,24 @@ class DOMAttribute implements WithValue {
   }
 
   void _uniquifyValues() {
-    if (_values == null) return ;
+    if (_values == null) return;
 
-    for (var i = 0 ; i < _values.length;) {
-      var val1 = _values[i] ;
+    for (var i = 0; i < _values.length;) {
+      var val1 = _values[i];
 
-      var duplicated = false ;
-      for (var j = i+1 ; j < _values.length; j++) {
-        var val2 = _values[j] ;
+      var duplicated = false;
+      for (var j = i + 1; j < _values.length; j++) {
+        var val2 = _values[j];
         if (val1 == val2) {
-          duplicated = true ;
-          break ;
+          duplicated = true;
+          break;
         }
       }
 
       if (duplicated) {
-        _values.removeAt(i) ;
-      }
-      else {
-        i++ ;
+        _values.removeAt(i);
+      } else {
+        i++;
       }
     }
   }
@@ -262,5 +267,4 @@ class DOMAttribute implements WithValue {
   String toString() {
     return 'DOMAttribute{name: $name, _value: $_value, _values: $_values, delimiter: $delimiter, _valueBoolean: $_valueBoolean}';
   }
-
 }

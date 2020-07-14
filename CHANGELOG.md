@@ -1,3 +1,7 @@
+## 1.0.9
+
+- dartfmt.
+
 ## 1.0.8
 
 - Added `DOMTreeMap`: can be used to map a `DOMNode` to a generated node.

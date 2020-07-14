@@ -1,7 +1,7 @@
 import 'dom_builder_base.dart';
 import 'dom_builder_generator.dart';
-import 'dom_builder_treemap.dart';
 import 'dom_builder_runtime.dart';
+import 'dom_builder_treemap.dart';
 
 /// Dummy [DOMGeneratorDartHTML] for platforms that doesn't supports `dart:html`.
 ///
@@ -22,13 +22,11 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
     return null;
   }
 
-
   @override
   bool isTextNode(T node) {
     _noDartHTML();
     return null;
   }
-
 
   @override
   void setAttributes(DOMElement domElement, T element) {
@@ -70,7 +68,8 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  DOMNodeRuntime<T> createDOMNodeRuntime(DOMTreeMap<T> treeMap, DOMNode domNode, T node) {
+  DOMNodeRuntime<T> createDOMNodeRuntime(
+      DOMTreeMap<T> treeMap, DOMNode domNode, T node) {
     _noDartHTML();
     return null;
   }
@@ -80,7 +79,6 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
     _noDartHTML();
     return null;
   }
-
 }
 
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
