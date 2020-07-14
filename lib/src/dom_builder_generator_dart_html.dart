@@ -60,6 +60,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     var entries = attributes
         .map((key, value) => MapEntry(key.toLowerCase(), value))
         .entries
+        .where((e) => !isIgnoreAttributeEquivalence(e.key))
         .toList();
     entries.sort((a, b) => a.key.compareTo(b.key));
     var attributesSignature =
@@ -98,8 +99,9 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   bool isTextNode(Node node) => node is Text;
 
   @override
-  String getNodeText(TextNode domNode) {
-    return domNode.text;
+  String getNodeText(Node node) {
+    if (node == null) return null ;
+    return node.text ;
   }
 
   @override

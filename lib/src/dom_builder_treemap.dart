@@ -146,7 +146,7 @@ class DOMTreeMap<T> {
     if (domCopy == null && copy == null) return null;
 
     if (domCopy != null && copy != null) {
-      map(domCopy, copy);
+      mapTree(domCopy, copy);
     }
 
     return DOMNodeMapping(this, domCopy, copy);

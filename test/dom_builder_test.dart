@@ -792,8 +792,8 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  String getNodeText(TextNode domNode) {
-    return domNode.text;
+  String getNodeText(TestNode node) {
+    return node.text ;
   }
 
   @override

@@ -34,7 +34,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  String getNodeText(TextNode domNode) {
+  String getNodeText(T node) {
     _noDartHTML();
     return null;
   }

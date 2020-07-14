@@ -25,14 +25,42 @@ abstract class DOMGenerator<T> {
       return false;
     }
 
+    if ( domNode is TextNode ) {
+      return domNode.text == getNodeText(node) ;
+    }
+
     throw UnsupportedError(
         "Can't determine node equivalency: $domNode == $node");
   }
 
   bool isEquivalentNodeType(DOMNode domNode, T node) {
-    throw UnsupportedError(
-        "Can't determine type equivalency: $domNode == $node");
+    if ( domNode is TextNode && isTextNode(node) ) {
+      return true ;
+    }
+    else {
+      throw UnsupportedError(
+          "Can't determine type equivalency: $domNode == $node");
+    }
   }
+
+  final Set<String> _ignoreAttributeEquivalence = {} ;
+
+  bool isIgnoreAttributeEquivalence(String attributeName) {
+    return _ignoreAttributeEquivalence.contains( attributeName ) ;
+  }
+
+  void ignoreAttributeEquivalence(String attributeName) {
+    _ignoreAttributeEquivalence.add( attributeName ) ;
+  }
+
+  List<String> getIgnoredAttributesEquivalence() => List.from( _ignoreAttributeEquivalence ) ;
+
+  void clearIgnoredAttributesEquivalence() => _ignoreAttributeEquivalence.clear() ;
+
+  bool removeIgnoredAttributeEquivalence(String attributeName) {
+    return _ignoreAttributeEquivalence.remove( attributeName ) ;
+  }
+
 
   T getElementParent(T element) {
     throw UnsupportedError("Can't get element parent: $element");
@@ -104,7 +132,7 @@ abstract class DOMGenerator<T> {
       domNode.parent = domParent;
     }
 
-    var text = getNodeText(domNode);
+    var text = getDOMNodeText(domNode);
 
     T textNode;
     if (parent != null) {
@@ -120,7 +148,11 @@ abstract class DOMGenerator<T> {
     return textNode;
   }
 
-  String getNodeText(TextNode domNode);
+  String getDOMNodeText(TextNode domNode) {
+    return domNode.text;
+  }
+
+  String getNodeText(T node) ;
 
   T appendElementText(T element, String text);
 
@@ -271,7 +303,8 @@ abstract class DOMGenerator<T> {
 
     var element =
         generator(this, tag, parent, domElement.domAttributes, contentHolder);
-    treeMap.map(domElement, element);
+
+    treeMap.mapTree(domElement, element);
 
     onElementCreated(element);
 
