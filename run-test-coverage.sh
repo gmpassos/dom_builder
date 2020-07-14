@@ -1,11 +1,10 @@
 #!/bin/bash
 
-echo "[REMOVING ./coverage DIRECTORY]"
-rm -rf ./coverage
-
 echo ""
 echo "[RUNNING TEST + COVERAGE]"
-pub run test_coverage --no-badge --print-test-output  --min-coverage 40
+pub run test_coverage --no-badge  --print-test-output  --min-coverage 40
+
+rm coverage_badge.svg
 
 echo ""
 echo "[GENERATING COVERAGE REPORT AT ./coverage]"
