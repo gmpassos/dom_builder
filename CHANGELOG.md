@@ -8,7 +8,8 @@
 - Added: `absorbNode`, `merge`.
 - Added: `isInSameParent`, `isPreviousNode`, `isNextNode`, `isConsecutiveNode`, `isConsecutiveNode`.
 - Added: `isStringElement`, `isWhiteSpace`.
-- refactor `DOMAttribute`.
+- refactor `DOMAttribute`: set values.
+- Added: `DOMElement.addClass`.
 - swiss_knife: ^2.5.5
 
 ## 1.0.7
