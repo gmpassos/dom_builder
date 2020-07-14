@@ -1,6 +1,6 @@
 ## 1.0.8
 
-- Added `DOMTreeMap`: can be used to map a [DOMNode] to a generated node.
+- Added `DOMTreeMap`: can be used to map a `DOMNode` to a generated node.
 - Added `DOMNodeRuntime` and `DOMNode.runtime` to manipulate and access the actual generated node from the virtual node.
 - Added `onClick` and `DOMEvent`.
 - Added `DOMNode.copy`.
@@ -10,10 +10,10 @@
 - Added: `isStringElement`, `isWhiteSpace`.
 - refactor `DOMAttribute`: set values.
 - Added: `DOMElement.addClass`.
-- buildHTML: prioritize attributes: id, class and style. Also shows boolean attributes at end of tag.
+- `buildHTML`: prioritize attributes: id, class and style. Also shows boolean attributes at end of tag.
+- `buildHTML`: Char \xa0 is replaced to `&nbsp;` to rollback conversion.
 - External element function: now accepts non argument version.
-- char \xa0 is replaced to &nbsp;, to rollback conversion.
-- optimize call to `asNodeSelector`.
+- Optimize call to `asNodeSelector`.
 - Added tests.
 - Added `test_coverage`.
 - swiss_knife: ^2.5.5
