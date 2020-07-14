@@ -439,6 +439,26 @@ void main() {
           equals('<div>AAA<hr>BBB<p>CCC</div>'));
     });
 
+    test('\$br', () {
+
+      expect( $br().buildHTML() , equals('<br>') );
+      expect( $br(amount: 0) , isNull );
+      expect( $br(amount: 1).buildHTML() , equals('<br>') );
+      expect( $br(amount: 2).buildHTML() , equals('<span><br><br></span>') );
+      expect( $br(amount: 3).buildHTML() , equals('<span><br><br><br></span>') );
+
+    });
+
+    test('&nbsp;', () {
+
+      expect( $nbsp() , equals('&nbsp;') );
+      expect( $nbsp(0) , equals('') );
+      expect( $nbsp(1) , equals('&nbsp;') );
+      expect( $nbsp(2) , equals('&nbsp;&nbsp;') );
+      expect( $nbsp(3) , equals('&nbsp;&nbsp;&nbsp;') );
+
+    });
+
     test('Attribute class', () {
       var div = $div(classes: 'a b');
       expect(div.classesList, equals(['a', 'b']));

@@ -2969,14 +2969,20 @@ DOMElement $p(
 
 /// Creates a `br` node.
 DOMElement $br({int amount, bool commented}) {
-  if (amount != null && amount > 1) {
+  amount ??= 1 ;
+
+  if (amount <= 0) {
+    return null ;
+  }
+  else if (amount == 1) {
+    return $tag('br', commented: commented);
+  }
+  else {
     var list = <DOMElement>[];
     while (list.length < amount) {
       list.add($tag('br', commented: commented));
     }
     return $span(content: list, commented: commented);
-  } else {
-    return $tag('br', commented: commented);
   }
 }
 
