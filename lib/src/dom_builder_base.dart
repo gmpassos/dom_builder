@@ -542,7 +542,7 @@ class DOMNode {
 
   /// Returns [true] if [other] is compatible for merging.
   bool isCompatibleForMerge(DOMNode other) {
-    return false ;
+    return false;
   }
 
   /// Returns [true] if this element is a [TextNode] or a [DOMElement] of
@@ -1007,7 +1007,7 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   bool isCompatibleForMerge(DOMNode other) {
-    return other is TextNode ;
+    return other is TextNode;
   }
 
   @override
@@ -1508,11 +1508,11 @@ class DOMElement extends DOMNode {
   @override
   bool isCompatibleForMerge(DOMNode other) {
     if (other is DOMElement) {
-      if ( tag == other.tag ) {
-        return getAttributesSignature() == other.getAttributesSignature() ;
+      if (tag == other.tag) {
+        return getAttributesSignature() == other.getAttributesSignature();
       }
     }
-    return false ;
+    return false;
   }
 
   /// Returns a deterministic [String] of all attributes entries.
@@ -1524,7 +1524,7 @@ class DOMElement extends DOMNode {
         .toList();
     entries.sort((a, b) => a.key.compareTo(b.key));
     var attributesSignature =
-    entries.map((e) => '${e.key}=${e.value}').toList();
+        entries.map((e) => '${e.key}=${e.value}').toList();
     return attributesSignature.join('\n');
   }
 

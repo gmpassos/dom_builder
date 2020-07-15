@@ -335,12 +335,12 @@ void main() {
       expect(copyU, isNotNull);
       expect(copyU.domNode.parent, isNotNull);
       expect(copyU.node.parent, isNotNull);
-      treeMap.matchesMapping(copyU.domNode, copyU.node) ;
+      treeMap.matchesMapping(copyU.domNode, copyU.node);
       expect(copyU.domNode.text, equals('UUU'));
       expect(copyU.node.text, equals('UUU'));
 
-      copyU.domNode.add(TextNode('X')) ;
-      (copyU.node as TestElem).add(TestText('X')) ;
+      copyU.domNode.add(TextNode('X'));
+      (copyU.node as TestElem).add(TestText('X'));
       expect(copyU.domNode.text, equals('UUUX'));
       expect(copyU.node.text, equals('UUUX'));
 
@@ -348,7 +348,7 @@ void main() {
           equals('<div><u>UUU</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUUUUXBBBIII'));
 
-      var merge = treeMap.mergeNearStringNodes(uNode, copyU.domNode) ;
+      var merge = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
 
       expect(merge, isNotNull);
       expect(merge.domNode.text, equals('UUUUUUX'));
@@ -634,7 +634,6 @@ void main() {
 }
 
 abstract class TestNode {
-
   TestNode parent;
 
   String get text;
@@ -643,7 +642,6 @@ abstract class TestNode {
 }
 
 class TestText implements TestNode {
-
   @override
   TestNode parent;
 
@@ -670,7 +668,6 @@ class TestText implements TestNode {
 }
 
 class TestElem implements TestNode {
-
   @override
   TestNode parent;
   final String tag;
@@ -703,7 +700,7 @@ class TestElem implements TestNode {
   TestNode get(int index) => _nodes[index];
 
   void addAll(Iterable<TestNode> nodes) {
-    _nodes.addAll(nodes) ;
+    _nodes.addAll(nodes);
   }
 
   void add(TestNode node) {
@@ -1022,21 +1019,20 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
   @override
   bool absorbNode(TestNode other) {
-    if ( node is TestText ) {
-      if ( other is TestText ) {
+    if (node is TestText) {
+      if (other is TestText) {
         var textNode = node as TestText;
         textNode.text += other.text;
         other.text = '';
-        return true ;
+        return true;
       }
-    }
-    else if ( node is TestElem ) {
+    } else if (node is TestElem) {
       var elemNode = node as TestElem;
 
-      if ( other is TestElem ) {
-        elemNode.addAll( other.nodes ) ;
+      if (other is TestElem) {
+        elemNode.addAll(other.nodes);
         other.clear();
-        return true ;
+        return true;
       }
     }
 
@@ -1061,5 +1057,4 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
     }
     return false;
   }
-
 }

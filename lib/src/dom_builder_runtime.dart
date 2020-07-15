@@ -17,7 +17,7 @@ abstract class DOMNodeRuntime<T> {
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
   DOMNodeRuntime<T> get parentRuntime {
-    var domNodeParent = domNode != null ? domNode.parent : null ;
+    var domNodeParent = domNode != null ? domNode.parent : null;
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
     return domGenerator.createDOMNodeRuntime(
@@ -26,7 +26,7 @@ abstract class DOMNodeRuntime<T> {
 
   bool get hasParent {
     var nodeParent = domGenerator.getNodeParent(node);
-    return nodeParent != null ;
+    return nodeParent != null;
   }
 
   String get tagName;
@@ -71,7 +71,8 @@ abstract class DOMNodeRuntime<T> {
 
   bool isInSameParent(T other) {
     var nodeParent = domGenerator.getNodeParent(node);
-    return nodeParent != null && nodeParent == domGenerator.getNodeParent(other) ;
+    return nodeParent != null &&
+        nodeParent == domGenerator.getNodeParent(other);
   }
 
   DOMNodeRuntime<T> getSiblingRuntime(T other) {
@@ -82,20 +83,20 @@ abstract class DOMNodeRuntime<T> {
   }
 
   bool isPreviousNode(T other) {
-    var otherRuntime = getSiblingRuntime(other) ;
-    if (otherRuntime == null ) return false;
+    var otherRuntime = getSiblingRuntime(other);
+    if (otherRuntime == null) return false;
 
-    var idx = indexInParent ;
-    var otherIdx = otherRuntime.indexInParent ;
+    var idx = indexInParent;
+    var otherIdx = otherRuntime.indexInParent;
     return otherIdx >= 0 && otherIdx + 1 == idx;
   }
 
   bool isNextNode(T other) {
-    var otherRuntime = getSiblingRuntime(other) ;
-    if (otherRuntime == null ) return false;
+    var otherRuntime = getSiblingRuntime(other);
+    if (otherRuntime == null) return false;
 
-    var idx = indexInParent ;
-    var otherIdx = otherRuntime.indexInParent ;
+    var idx = indexInParent;
+    var otherIdx = otherRuntime.indexInParent;
     return idx >= 0 && idx + 1 == otherIdx;
   }
 

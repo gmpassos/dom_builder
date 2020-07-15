@@ -1,4 +1,3 @@
-
 import 'package:html/dom.dart' as html_dom;
 import 'package:html/parser.dart' as html_parse;
 import 'package:swiss_knife/swiss_knife.dart';
@@ -38,7 +37,6 @@ List<String> parseListOfStrings(dynamic s,
 
   return list;
 }
-
 
 final RegExp _REGEXP_DEPENDENT_TAG =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
@@ -577,15 +575,13 @@ DOMElement $p(
 
 /// Creates a `br` node.
 DOMElement $br({int amount, bool commented}) {
-  amount ??= 1 ;
+  amount ??= 1;
 
   if (amount <= 0) {
-    return null ;
-  }
-  else if (amount == 1) {
+    return null;
+  } else if (amount == 1) {
     return $tag('br', commented: commented);
-  }
-  else {
+  } else {
     var list = <DOMElement>[];
     while (list.length < amount) {
       list.add($tag('br', commented: commented));

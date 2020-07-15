@@ -97,8 +97,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
   @override
   String getNodeText(Node node) {
-    if (node == null) return null ;
-    return node.text ;
+    if (node == null) return null;
+    return node.text;
   }
 
   @override
@@ -408,16 +408,15 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
         node.text += other.text;
         other.text = '';
         return true;
-      }
-      else if (other is Element) {
+      } else if (other is Element) {
         node.text += other.text;
         other.nodes.clear();
         return true;
       }
     } else if (node is Element) {
       if (other is Element) {
-        if ( other.nodes.isEmpty ) {
-          return true ;
+        if (other.nodes.isEmpty) {
+          return true;
         }
         nodeAsElement.nodes.addAll(other.nodes);
         other.nodes.clear();
@@ -431,7 +430,6 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
     return false;
   }
-
 }
 
 String _getElementValue(Element element, [String def]) {

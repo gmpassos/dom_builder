@@ -70,7 +70,7 @@ class DOMTreeMap<T> {
 
   /// Returns [true] if the mapping for [domNode] matches [node].
   bool matchesMapping(DOMNode domNode, T node) {
-    return identical( _elementToDOMNodeMap[domNode] , node ) ;
+    return identical(_elementToDOMNodeMap[domNode], node);
   }
 
   bool mapTree(DOMNode domRoot, T root) {
@@ -190,14 +190,14 @@ class DOMTreeMap<T> {
 
   DOMNodeMapping<T> mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
       {bool onlyCompatibles = false}) {
-    onlyCompatibles ??= false ;
+    onlyCompatibles ??= false;
 
     if (domNode1 == null || domNode2 == null) {
       return null;
     }
 
     if (onlyCompatibles && !domNode1.isCompatibleForMerge(domNode2)) {
-      return null ;
+      return null;
     }
 
     var nodeRuntime1 = domNode1.runtime;

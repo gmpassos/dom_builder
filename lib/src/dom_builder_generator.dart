@@ -1,12 +1,11 @@
 import 'package:swiss_knife/swiss_knife.dart';
 
-import 'dom_builder_base.dart';
 import 'dom_builder_attribute.dart';
-import 'dom_builder_treemap.dart';
-import 'dom_builder_runtime.dart';
+import 'dom_builder_base.dart';
 import 'dom_builder_generator_none.dart'
     if (dart.library.html) "dom_builder_generator_dart_html.dart";
-
+import 'dom_builder_runtime.dart';
+import 'dom_builder_treemap.dart';
 
 typedef DOMElementGenerator<T> = T Function(dynamic parent);
 typedef DOMElementGeneratorFunction<T> = T Function();
@@ -25,8 +24,8 @@ abstract class DOMGenerator<T> {
       return false;
     }
 
-    if ( domNode is TextNode ) {
-      return domNode.text == getNodeText(node) ;
+    if (domNode is TextNode) {
+      return domNode.text == getNodeText(node);
     }
 
     throw UnsupportedError(
@@ -34,33 +33,33 @@ abstract class DOMGenerator<T> {
   }
 
   bool isEquivalentNodeType(DOMNode domNode, T node) {
-    if ( domNode is TextNode && isTextNode(node) ) {
-      return true ;
-    }
-    else {
+    if (domNode is TextNode && isTextNode(node)) {
+      return true;
+    } else {
       throw UnsupportedError(
           "Can't determine type equivalency: $domNode == $node");
     }
   }
 
-  final Set<String> _ignoreAttributeEquivalence = {} ;
+  final Set<String> _ignoreAttributeEquivalence = {};
 
   bool isIgnoreAttributeEquivalence(String attributeName) {
-    return _ignoreAttributeEquivalence.contains( attributeName ) ;
+    return _ignoreAttributeEquivalence.contains(attributeName);
   }
 
   void ignoreAttributeEquivalence(String attributeName) {
-    _ignoreAttributeEquivalence.add( attributeName ) ;
+    _ignoreAttributeEquivalence.add(attributeName);
   }
 
-  List<String> getIgnoredAttributesEquivalence() => List.from( _ignoreAttributeEquivalence ) ;
+  List<String> getIgnoredAttributesEquivalence() =>
+      List.from(_ignoreAttributeEquivalence);
 
-  void clearIgnoredAttributesEquivalence() => _ignoreAttributeEquivalence.clear() ;
+  void clearIgnoredAttributesEquivalence() =>
+      _ignoreAttributeEquivalence.clear();
 
   bool removeIgnoredAttributeEquivalence(String attributeName) {
-    return _ignoreAttributeEquivalence.remove( attributeName ) ;
+    return _ignoreAttributeEquivalence.remove(attributeName);
   }
-
 
   T getNodeParent(T node) {
     throw UnsupportedError("Can't get element parent: $node");
@@ -152,7 +151,7 @@ abstract class DOMGenerator<T> {
     return domNode.text;
   }
 
-  String getNodeText(T node) ;
+  String getNodeText(T node);
 
   T appendElementText(T element, String text);
 
