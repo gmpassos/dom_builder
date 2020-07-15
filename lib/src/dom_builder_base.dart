@@ -1466,8 +1466,9 @@ class DOMElement extends DOMNode {
     if (other == null) return false;
 
     if (other is DOMElement) {
+      if (other.isEmpty) return true ;
       addAll(other._content);
-      other.clearNodes();
+      other._content.clear();
       return true;
     } else if (other is TextNode) {
       other.remove();

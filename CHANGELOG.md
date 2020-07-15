@@ -1,5 +1,6 @@
 ## dev
 
+- `DOMElement`: fix `absorbNode`.
 - Removed helper `$node`
 - dartfmt.
 
