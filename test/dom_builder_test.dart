@@ -255,6 +255,30 @@ void main() {
       expect(genText.text, equals('txt!'));
     });
 
+    test('generator treeMap: external elements', () {
+      var generator = TestGenerator();
+
+      var treeMap = generator.createDOMTreeMap();
+
+      var div = $div(id: 'd1', classes: 'container', content: [
+        '<b>BBB</b>',
+        (parent) {
+          return TestElem('x-tag')..add(TestText('X'));
+        }
+      ]);
+
+      var genDiv = treeMap.generate(generator, div);
+
+      expect(genDiv, isNotNull);
+      expect(genDiv.text, equals('BBBX'));
+
+      var subNodes = (genDiv as TestElem).nodes;
+      expect(subNodes[0].text, equals('BBB'));
+      expect(subNodes[1].text, equals('X'));
+      expect(subNodes[0].parent, isNotNull);
+      expect(subNodes[1].parent, isNotNull);
+    });
+
     test('generator mapped: operations', () {
       var generator = TestGenerator();
 
@@ -352,8 +376,10 @@ void main() {
       expect(copyU2.domNode.text, equals('UUUX'));
       expect(copyU2.node.text, equals('UUUX'));
 
-      expect(div.buildHTML(),
-          equals('<div><u>UUU</u><u>UUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div><u>UUU</u><u>UUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUUUUXUUUXBBBIII'));
 
       var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
@@ -371,8 +397,15 @@ void main() {
       expect(mergeU.node.text, equals('UUUUUUX'));
       expect(mergeU.domNode.parent, isNotNull);
       expect(mergeU.node.parent, isNotNull);
-      expect(mergeU.domNode.nodes.where((e) => e.parent == null).isEmpty , isTrue);
-      expect(mergeU.nodeCast<TestElem>().nodes.where((e) => e.parent == null).isEmpty , isFalse);
+      expect(
+          mergeU.domNode.nodes.where((e) => e.parent == null).isEmpty, isTrue);
+      expect(
+          mergeU
+              .nodeCast<TestElem>()
+              .nodes
+              .where((e) => e.parent == null)
+              .isEmpty,
+          isFalse);
       expect(mergeU.domNode, equals(uNode));
 
       expect(mergeU.domNode.hasOnlyTextNodes, isTrue);
@@ -384,7 +417,6 @@ void main() {
       expect(mergeU2, isNotNull);
       expect(div.buildHTML(),
           equals('<div><u>UUUUUUXUUUX</u><b>BBB</b><i>III</i></div>'));
-
 
       expect(treeMap.emptyByDOMNode(div), isTrue);
       expect(div.buildHTML(), equals('<div></div>'));
@@ -663,18 +695,17 @@ void main() {
           equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
     });
 
-
     test('Helper \$tag', () {
       var div = $tag('div', attributes: {'foo': 'aaa'}, content: ['wow']);
 
-      expect(div.runtimeType, equals( DIVElement ));
+      expect(div.runtimeType, equals(DIVElement));
       expect(div.buildHTML(), equals('<div foo="aaa">wow</div>'));
     });
 
     test('Helper \$htmlRoot: div', () {
       var div = $htmlRoot('''<div foo="aaa">WOW</div>''');
 
-      expect(div.runtimeType, equals( DIVElement ));
+      expect(div.runtimeType, equals(DIVElement));
       expect(div.buildHTML(), equals('<div foo="aaa">WOW</div>'));
     });
 
@@ -694,15 +725,16 @@ void main() {
     });
 
     test('Helper \$tags', () {
-      var node = $tags('b', ['aa','bb']) ;
-      expect(node.map((e) => e.buildHTML()), equals(['<b>aa</b>','<b>bb</b>']));
+      var node = $tags('b', ['aa', 'bb']);
+      expect(
+          node.map((e) => e.buildHTML()), equals(['<b>aa</b>', '<b>bb</b>']));
     });
 
     test('Helper \$tags +generator', () {
-      var node = $tags<String>('b', ['aa','bb'], (e) => e.toUpperCase()) ;
-      expect(node.map((e) => e.buildHTML()), equals(['<b>AA</b>','<b>BB</b>']));
+      var node = $tags<String>('b', ['aa', 'bb'], (e) => e.toUpperCase());
+      expect(
+          node.map((e) => e.buildHTML()), equals(['<b>AA</b>', '<b>BB</b>']));
     });
-
   });
 }
 
