@@ -201,49 +201,10 @@ abstract class DOMGenerator<T> {
     var externalElement = domElement.externalElement;
 
     if (!canHandleExternalElement(externalElement)) {
-      if (externalElement is List &&
-          listMatchesAll(externalElement, (e) => e is DOMNode)) {
-        List<DOMNode> listNodes = externalElement;
-        var elements = <T>[];
-        for (var node in listNodes) {
-          var element = build(domParent, parent, node, treeMap);
-          elements.add(element);
-          treeMap.map(node, element);
-        }
-        return elements.isEmpty ? null : elements.first;
-      } else if (externalElement is DOMNode) {
-        return build(domParent, parent, externalElement, treeMap);
-      } else if (externalElement is DOMElementGenerator) {
-        var element = externalElement(parent);
-        if (element != null) {
-          treeMap.map(domElement, element);
-          addChildToElement(parent, element);
-          return element;
-        }
-        return null;
-      } else if (externalElement is DOMElementGeneratorFunction) {
-        var element = externalElement();
-        if (element != null) {
-          treeMap.map(domElement, element);
-          addChildToElement(parent, element);
-          return element;
-        }
-        return null;
-      } else if (externalElement is String) {
-        var list = DOMNode.parseNodes(externalElement);
-
-        if (list != null) {
-          var elements = <T>[];
-          for (var node in list) {
-            var element = build(domParent, parent, node, treeMap);
-            elements.add(element);
-            treeMap.map(node, element);
-          }
-          return elements.isEmpty ? null : elements.first;
-        }
+      var parsedElement = _parseExternalElement(domParent, parent, domElement, externalElement, treeMap);
+      if (parsedElement != null) {
+        return parsedElement ;
       }
-
-      return null;
     }
 
     if (parent != null) {
@@ -254,7 +215,50 @@ abstract class DOMGenerator<T> {
       return node;
     } else if (externalElement is T) {
       treeMap.map(domElement, externalElement);
+      addChildToElement(parent, externalElement);
       return externalElement;
+    }
+
+    return null;
+  }
+
+  T _parseExternalElement(DOMElement domParent, T parent, ExternalElementNode domElement, dynamic externalElement, DOMTreeMap<T> treeMap) {
+    if (externalElement == null) return null ;
+
+    if (externalElement is T) {
+      treeMap.map(domElement, externalElement);
+      addChildToElement(parent, externalElement);
+      return externalElement;
+    } else if (externalElement is List &&
+        listMatchesAll(externalElement, (e) => e is DOMNode)) {
+      List<DOMNode> listNodes = externalElement;
+      var elements = <T>[];
+      for (var node in listNodes) {
+        var element = build(domParent, parent, node, treeMap);
+        elements.add(element);
+        treeMap.map(node, element);
+      }
+      return elements.isEmpty ? null : elements.first;
+    } else if (externalElement is DOMNode) {
+      return build(domParent, parent, externalElement, treeMap);
+    } else if (externalElement is DOMElementGenerator) {
+      var element = externalElement(parent);
+      return _parseExternalElement(domParent, parent, domElement, element, treeMap);
+    } else if (externalElement is DOMElementGeneratorFunction) {
+      var element = externalElement();
+      return _parseExternalElement(domParent, parent, domElement, element, treeMap);
+    } else if (externalElement is String) {
+      var list = DOMNode.parseNodes(externalElement);
+
+      if (list != null) {
+        var elements = <T>[];
+        for (var node in list) {
+          var element = build(domParent, parent, node, treeMap);
+          elements.add(element);
+          treeMap.map(node, element);
+        }
+        return elements.isEmpty ? null : elements.first;
+      }
     }
 
     return null;

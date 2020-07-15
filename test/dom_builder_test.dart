@@ -255,7 +255,7 @@ void main() {
       expect(genText.text, equals('txt!'));
     });
 
-    test('generator treeMap: external elements', () {
+    test('generator treeMap: external element', () {
       var generator = TestGenerator();
 
       var treeMap = generator.createDOMTreeMap();
@@ -264,19 +264,56 @@ void main() {
         '<b>BBB</b>',
         (parent) {
           return TestElem('x-tag')..add(TestText('X'));
-        }
+        },
+        '<b>CCC</b>',
+        () {
+          return TestElem('z-tag')..add(TestText('Z'));
+        },
+        () {
+          return '<i>III<i>' ;
+        },
       ]);
 
       var genDiv = treeMap.generate(generator, div);
 
       expect(genDiv, isNotNull);
-      expect(genDiv.text, equals('BBBX'));
+      expect(genDiv.text, equals('BBBXCCCZIII'));
 
       var subNodes = (genDiv as TestElem).nodes;
       expect(subNodes[0].text, equals('BBB'));
       expect(subNodes[1].text, equals('X'));
-      expect(subNodes[0].parent, isNotNull);
-      expect(subNodes[1].parent, isNotNull);
+      expect(subNodes[2].text, equals('CCC'));
+      expect(subNodes[3].text, equals('Z'));
+      expect(subNodes[4].text, equals('III'));
+
+      expect(subNodes.where((e) => e.parent == null).isEmpty, isTrue);
+    });
+
+
+    test('generator treeMap: registered generator', () {
+      var generator = TestGenerator();
+
+      generator.registerElementGenerator(
+          'uc',
+          (domGenerator, tag, parent, attributes, contentHolder) =>
+              TestText(contentHolder.text.toUpperCase()));
+
+      generator.registerElementGenerator(
+          'lc',
+              (domGenerator, tag, parent, attributes, contentHolder) =>
+              TestText(contentHolder.text.toLowerCase()));
+
+      var treeMap = generator.createDOMTreeMap();
+
+      var div = $div( content: [
+        '<uc>BBbb</uc>',
+        '<lc>BBbb</lc>',
+      ]);
+
+      var genDiv = treeMap.generate(generator, div);
+
+      expect(genDiv, isNotNull);
+      expect(genDiv.text, equals('BBBBbbbb'));
     });
 
     test('generator mapped: operations', () {
