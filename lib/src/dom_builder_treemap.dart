@@ -68,6 +68,7 @@ class DOMTreeMap<T> {
     return _elementToDOMNodeMap[element];
   }
 
+  /// Returns [true] if the mapping for [domNode] matches [node].
   bool matchesMapping(DOMNode domNode, T node) {
     return identical( _elementToDOMNodeMap[domNode] , node ) ;
   }

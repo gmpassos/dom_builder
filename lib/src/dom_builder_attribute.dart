@@ -1,6 +1,7 @@
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
+import 'dom_builder_helpers.dart';
 
 class DOMAttribute implements WithValue {
   static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked', 'hidden'};
