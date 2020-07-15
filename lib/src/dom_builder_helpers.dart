@@ -166,10 +166,6 @@ bool hasHTMLEntity(String s) {
   return _PATTERN_HTML_ENTITY.hasMatch(s);
 }
 
-DOMNode $node({content}) {
-  return DOMNode(content: content);
-}
-
 bool _isValid(DOMNodeValidator validate) {
   if (validate != null) {
     try {

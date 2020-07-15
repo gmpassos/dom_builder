@@ -630,6 +630,47 @@ void main() {
       expect(div.buildHTML(),
           equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
     });
+
+
+    test('Helper \$tag', () {
+      var div = $tag('div', attributes: {'foo': 'aaa'}, content: ['wow']);
+
+      expect(div.runtimeType, equals( DIVElement ));
+      expect(div.buildHTML(), equals('<div foo="aaa">wow</div>'));
+    });
+
+    test('Helper \$htmlRoot: div', () {
+      var div = $htmlRoot('''<div foo="aaa">WOW</div>''');
+
+      expect(div.runtimeType, equals( DIVElement ));
+      expect(div.buildHTML(), equals('<div foo="aaa">WOW</div>'));
+    });
+
+    test('Helper \$htmlRoot: text 1', () {
+      var node = $htmlRoot('''WoW''');
+      expect(node.buildHTML(), equals('<span>WoW</span>'));
+    });
+
+    test('Helper \$htmlRoot: text 2', () {
+      var node = $htmlRoot('''WoW<br>!''');
+      expect(node.buildHTML(), equals('<span>WoW<br>!</span>'));
+    });
+
+    test('Helper \$htmlRoot: b+i', () {
+      var node = $htmlRoot('''<b>BB</b><i>II</i>''');
+      expect(node.buildHTML(), equals('<span><b>BB</b><i>II</i></span>'));
+    });
+
+    test('Helper \$tags', () {
+      var node = $tags('b', ['aa','bb']) ;
+      expect(node.map((e) => e.buildHTML()), equals(['<b>aa</b>','<b>bb</b>']));
+    });
+
+    test('Helper \$tags +generator', () {
+      var node = $tags<String>('b', ['aa','bb'], (e) => e.toUpperCase()) ;
+      expect(node.map((e) => e.buildHTML()), equals(['<b>AA</b>','<b>BB</b>']));
+    });
+
   });
 }
 
