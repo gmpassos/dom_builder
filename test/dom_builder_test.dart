@@ -359,6 +359,7 @@ void main() {
       var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
 
       expect(mergeU, isNotNull);
+
       expect(copyU.domNode.parent, isNull);
       expect(copyU.nodeCast<TestElem>().parent, isNull);
       expect(copyU.domNode.nodes.length, equals(0));
@@ -373,6 +374,11 @@ void main() {
       expect(mergeU.domNode.nodes.where((e) => e.parent == null).isEmpty , isTrue);
       expect(mergeU.nodeCast<TestElem>().nodes.where((e) => e.parent == null).isEmpty , isFalse);
       expect(mergeU.domNode, equals(uNode));
+
+      expect(mergeU.domNode.hasOnlyTextNodes, isTrue);
+      expect(mergeU.domNode.hasOnlyElementNodes, isFalse);
+      expect(div.hasOnlyTextNodes, isFalse);
+      expect(div.hasOnlyElementNodes, isTrue);
 
       var mergeU2 = treeMap.mergeNearStringNodes(uNode, copyU2.domNode);
       expect(mergeU2, isNotNull);
