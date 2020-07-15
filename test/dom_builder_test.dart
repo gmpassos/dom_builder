@@ -344,15 +344,41 @@ void main() {
       expect(copyU.domNode.text, equals('UUUX'));
       expect(copyU.node.text, equals('UUUX'));
 
+      var copyU2 = treeMap.duplicateByDOMNode(copyU.domNode);
+      expect(copyU2, isNotNull);
+      expect(copyU2.domNode.parent, isNotNull);
+      expect(copyU2.node.parent, isNotNull);
+      treeMap.matchesMapping(copyU2.domNode, copyU.node);
+      expect(copyU2.domNode.text, equals('UUUX'));
+      expect(copyU2.node.text, equals('UUUX'));
+
       expect(div.buildHTML(),
-          equals('<div><u>UUU</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
-      expect(genDiv.text, equals('UUUUUUXBBBIII'));
+          equals('<div><u>UUU</u><u>UUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
+      expect(genDiv.text, equals('UUUUUUXUUUXBBBIII'));
 
-      var merge = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
+      var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
 
-      expect(merge, isNotNull);
-      expect(merge.domNode.text, equals('UUUUUUX'));
-      expect(merge.node.text, equals('UUUUUUX'));
+      expect(mergeU, isNotNull);
+      expect(copyU.domNode.parent, isNull);
+      expect(copyU.nodeCast<TestElem>().parent, isNull);
+      expect(copyU.domNode.nodes.length, equals(0));
+      expect(copyU.nodeCast<TestElem>().nodes.length, equals(0));
+
+      expect(div.buildHTML(),
+          equals('<div><u>UUUUUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
+      expect(mergeU.domNode.text, equals('UUUUUUX'));
+      expect(mergeU.node.text, equals('UUUUUUX'));
+      expect(mergeU.domNode.parent, isNotNull);
+      expect(mergeU.node.parent, isNotNull);
+      expect(mergeU.domNode.nodes.where((e) => e.parent == null).isEmpty , isTrue);
+      expect(mergeU.nodeCast<TestElem>().nodes.where((e) => e.parent == null).isEmpty , isFalse);
+      expect(mergeU.domNode, equals(uNode));
+
+      var mergeU2 = treeMap.mergeNearStringNodes(uNode, copyU2.domNode);
+      expect(mergeU2, isNotNull);
+      expect(div.buildHTML(),
+          equals('<div><u>UUUUUUXUUUX</u><b>BBB</b><i>III</i></div>'));
+
 
       expect(treeMap.emptyByDOMNode(div), isTrue);
       expect(div.buildHTML(), equals('<div></div>'));
