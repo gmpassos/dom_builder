@@ -1,4 +1,4 @@
-## dev
+## 1.0.11
 
 - `DOMElement`: fix `absorbNode`.
 - Removed helper `$node`
