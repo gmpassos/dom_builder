@@ -229,7 +229,7 @@ enum CSSUnit {
   vh,
   vmin,
   vmax,
-  pct,
+  percent,
 }
 
 CSSUnit parseCSSUnit(String unit, [CSSUnit def]) {
@@ -266,8 +266,8 @@ CSSUnit parseCSSUnit(String unit, [CSSUnit def]) {
       return CSSUnit.vmin;
     case 'vmax':
       return CSSUnit.vmax;
-    case 'pct':
-      return CSSUnit.pct;
+    case '%':
+      return CSSUnit.percent;
     default:
       return def;
   }
@@ -306,15 +306,15 @@ String getCSSUnitName(CSSUnit unit, [CSSUnit def]) {
       return 'vmin';
     case CSSUnit.vmax:
       return 'vmax';
-    case CSSUnit.pct:
-      return 'pct';
+    case CSSUnit.percent:
+      return '%';
     default:
       return null;
   }
 }
 
 class CSSLength extends CSSValue {
-  static final RegExp PATTERN = RegExp(r'\s*(\d+)(\w*)\s*', multiLine: false);
+  static final RegExp PATTERN = RegExp(r'\s*(\d+)(\%|\w+)?\s*', multiLine: false);
 
   num _value;
 

@@ -25,11 +25,11 @@ void main() {
 
     test('CSS parse 1', () {
       var css = CSS(
-          'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.50); width: 10px; height: 20px;');
+          'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.50); width: 10vw; height: 20%;');
       expect(
           css.style,
           equals(
-              'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.5); width: 10px; height: 20px;'));
+              'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.5); width: 10vw; height: 20%;'));
 
       expect(css.color.name, equals('color'));
       var color = css.color.value as CSSColorRGB ;
@@ -46,13 +46,26 @@ void main() {
       expect(backgroundColor.alpha, equals(0.50));
       expect(backgroundColor.toString(), equals('rgba(0, 255, 0, 0.5)'));
 
+      expect(css.width.name, equals('width'));
+      var width = css.width.value ;
+      expect(width.value, equals(10));
+      expect(width.unit, equals(CSSUnit.vw));
+
+      expect(css.height.name, equals('height'));
+      var height = css.height.value ;
+      expect(height.value, equals(20));
+      expect(height.unit, equals(CSSUnit.percent));
+
       color.green = 128 ;
       color.blue = 200 ;
+
+      width.unit = CSSUnit.percent;
+      height.unit = CSSUnit.vh;
 
       expect(
           css.style,
           equals(
-              'color: rgb(255, 128, 200); background-color: rgba(0, 255, 0, 0.5); width: 10px; height: 20px;'));
+              'color: rgb(255, 128, 200); background-color: rgba(0, 255, 0, 0.5); width: 10%; height: 20vh;'));
     });
   });
 }
