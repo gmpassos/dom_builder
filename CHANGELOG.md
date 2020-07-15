@@ -1,3 +1,12 @@
+## 1.0.10
+
+- `DOMElement`: added `isCompatibleForMerge`.
+- `DOMGenerator`: added `ignoreAttributeEquivalence`.
+- `DOMTreeMap`: added: `matchesMapping`.
+- `DOMTreeMap`: fixed `duplicateByDOMNode`, `mergeNearNodes`.
+- `DOMNodeRuntime`: fixed `mergeNode`, `isPreviousNode`, `isNextNode`.
+- Fix `$br` for `amount` = `0`.
+
 ## 1.0.9
 
 - dartfmt.
