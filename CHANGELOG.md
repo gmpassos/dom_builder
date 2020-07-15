@@ -1,3 +1,8 @@
+## dev
+
+- Removed helper `$node`
+- dartfmt.
+
 ## 1.0.10
 
 - `DOMElement`: added `isCompatibleForMerge`.
