@@ -201,9 +201,10 @@ abstract class DOMGenerator<T> {
     var externalElement = domElement.externalElement;
 
     if (!canHandleExternalElement(externalElement)) {
-      var parsedElement = _parseExternalElement(domParent, parent, domElement, externalElement, treeMap);
+      var parsedElement = _parseExternalElement(
+          domParent, parent, domElement, externalElement, treeMap);
       if (parsedElement != null) {
-        return parsedElement ;
+        return parsedElement;
       }
     }
 
@@ -222,8 +223,13 @@ abstract class DOMGenerator<T> {
     return null;
   }
 
-  T _parseExternalElement(DOMElement domParent, T parent, ExternalElementNode domElement, dynamic externalElement, DOMTreeMap<T> treeMap) {
-    if (externalElement == null) return null ;
+  T _parseExternalElement(
+      DOMElement domParent,
+      T parent,
+      ExternalElementNode domElement,
+      dynamic externalElement,
+      DOMTreeMap<T> treeMap) {
+    if (externalElement == null) return null;
 
     if (externalElement is T) {
       treeMap.map(domElement, externalElement);
@@ -243,10 +249,12 @@ abstract class DOMGenerator<T> {
       return build(domParent, parent, externalElement, treeMap);
     } else if (externalElement is DOMElementGenerator) {
       var element = externalElement(parent);
-      return _parseExternalElement(domParent, parent, domElement, element, treeMap);
+      return _parseExternalElement(
+          domParent, parent, domElement, element, treeMap);
     } else if (externalElement is DOMElementGeneratorFunction) {
       var element = externalElement();
-      return _parseExternalElement(domParent, parent, domElement, element, treeMap);
+      return _parseExternalElement(
+          domParent, parent, domElement, element, treeMap);
     } else if (externalElement is String) {
       var list = DOMNode.parseNodes(externalElement);
 

@@ -248,7 +248,7 @@ class DOMNodeMapping<T> {
 
   final T node;
 
-  E nodeCast<E>() => node as E ;
+  E nodeCast<E>() => node as E;
 
   DOMNodeMapping(this.treeMap, this.domNode, this.node);
 }

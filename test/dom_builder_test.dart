@@ -270,7 +270,7 @@ void main() {
           return TestElem('z-tag')..add(TestText('Z'));
         },
         () {
-          return '<i>III<i>' ;
+          return '<i>III<i>';
         },
       ]);
 
@@ -289,7 +289,6 @@ void main() {
       expect(subNodes.where((e) => e.parent == null).isEmpty, isTrue);
     });
 
-
     test('generator treeMap: registered generator', () {
       var generator = TestGenerator();
 
@@ -300,12 +299,12 @@ void main() {
 
       generator.registerElementGenerator(
           'lc',
-              (domGenerator, tag, parent, attributes, contentHolder) =>
+          (domGenerator, tag, parent, attributes, contentHolder) =>
               TestText(contentHolder.text.toLowerCase()));
 
       var treeMap = generator.createDOMTreeMap();
 
-      var div = $div( content: [
+      var div = $div(content: [
         '<uc>BBbb</uc>',
         '<lc>BBbb</lc>',
       ]);
