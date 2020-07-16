@@ -1,6 +1,7 @@
 ## 1.0.13
 
 - More `CSS` support: `CSSBorder`.
+- Preserve CSS entries order.
 - dartfmt.
 
 ## 1.0.12

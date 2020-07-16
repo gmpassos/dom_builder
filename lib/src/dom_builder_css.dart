@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:swiss_knife/swiss_knife.dart';
 
 class CSS {
@@ -74,46 +76,44 @@ class CSS {
     }
   }
 
-  CSSEntry<CSSColor> _color;
+  final LinkedHashMap<String, CSSEntry> _entries = LinkedHashMap();
 
-  CSSEntry<CSSColor> get color => _color;
+  CSSEntry<V> _getEntry<V>(String name) => _entries[name] as CSSEntry<V>;
 
-  set color(dynamic value) {
-    _color = CSSEntry.from('color', value);
+  void _addEntry<V>(String name, CSSEntry<V> value) {
+    assert(name != null);
+    if (value == null) {
+      _entries.remove(name);
+    }
+    assert(name == value.name);
+    _entries[name] = value;
   }
 
-  CSSEntry<CSSColor> _backgroundColor;
+  CSSEntry<CSSColor> get color => _getEntry<CSSColor>('color');
 
-  CSSEntry<CSSColor> get backgroundColor => _backgroundColor;
+  set color(dynamic value) =>
+      _addEntry('color', CSSEntry<CSSColor>.from('color', value));
 
-  set backgroundColor(dynamic value) {
-    _backgroundColor = CSSEntry.from('background-color', value);
-    ;
-  }
+  CSSEntry<CSSColor> get backgroundColor =>
+      _getEntry<CSSColor>('background-color');
 
-  CSSEntry<CSSLength> _width;
+  set backgroundColor(dynamic value) => _addEntry(
+      'background-color', CSSEntry<CSSColor>.from('background-color', value));
 
-  CSSEntry<CSSLength> get width => _width;
+  CSSEntry<CSSLength> get width => _getEntry<CSSLength>('width');
 
-  set width(dynamic value) {
-    _width = CSSEntry.from('width', value);
-  }
+  set width(dynamic value) =>
+      _addEntry('width', CSSEntry<CSSLength>.from('width', value));
 
-  CSSEntry<CSSLength> _height;
+  CSSEntry<CSSLength> get height => _getEntry<CSSLength>('height');
 
-  CSSEntry<CSSLength> get height => _height;
+  set height(dynamic value) =>
+      _addEntry('height', CSSEntry<CSSLength>.from('height', value));
 
-  set height(dynamic value) {
-    _height = CSSEntry.from('height', value);
-  }
+  CSSEntry<CSSBorder> get border => _getEntry<CSSBorder>('border');
 
-  CSSEntry<CSSBorder> _border;
-
-  CSSEntry<CSSBorder> get border => _border;
-
-  set border(dynamic value) {
-    _border = CSSEntry.from('border', value);
-  }
+  set border(dynamic value) =>
+      _addEntry('border', CSSEntry<CSSBorder>.from('border', value));
 
   String get style => toString();
 
@@ -128,11 +128,9 @@ class CSS {
   @override
   String toString() {
     var s = StringBuffer();
-    _append(s, _width);
-    _append(s, _height);
-    _append(s, _color);
-    _append(s, _backgroundColor);
-    _append(s, _border);
+    for (var entry in _entries.values) {
+      _append(s, entry);
+    }
     return s.toString();
   }
 }
@@ -732,7 +730,9 @@ String getCSSBorderStyleName(CSSBorderStyle borderStyle) {
 
 class CSSBorder extends CSSValue {
   static final RegExp PATTERN = RegExp(
-      r'\s*(\d+\w+)?\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*',
+      r'\s*(\d+\w+)?'
+      r'\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)'
+      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*',
       multiLine: false,
       caseSensitive: false);
 

@@ -20,7 +20,7 @@ void main() {
       expect(
           css.style,
           equals(
-              'width: 10px; color: rgb(255, 0, 0); background-color: rgb(0, 255, 0);'));
+              'color: rgb(255, 0, 0); background-color: rgb(0, 255, 0); width: 10px;'));
     });
 
     test('CSS parse 1', () {
