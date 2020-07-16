@@ -12,7 +12,7 @@
 [![Funding](https://img.shields.io/liberapay/patrons/gmpassos.svg?logo=liberapay)](https://liberapay.com/gmpassos/donate)
 
 
-Helpers to generate DOM elements or HTML (Web and Native support).
+Helpers to generate and manipulated DOM elements or HTML (Web and Native support).
 
 ## Usage
 
@@ -27,7 +27,7 @@ void main() {
 
   var div = $divHTML('<div class="container"><span>Builder</span></div>')
       .insertAt( 0, $span( id: 's1', content: 'The ' ) )
-      .insertAfter( 's1' , $span( id: 's2', content: 'DOM ', style: 'font-weight: bold' ) )
+      .insertAfter( '#s1' , $span( id: 's2', content: 'DOM ', style: 'font-weight: bold' ) )
   ;
 
   print( div.buildHTML( withIdent: true ) ) ;
@@ -40,7 +40,19 @@ void main() {
   //   <span id="s2" style="font-weight: bold">DOM </span>
   //   <span>Builder</span>
   // </div>
-  
+
+
+  div.select('#s1').remove() ;
+  print( div.buildHTML( withIdent: true ) ) ;
+
+  ////////////
+  // Output //
+  ////////////
+  // <div class="container">
+  //   <span id="s2" style="font-weight: bold">DOM </span>
+  //   <span>Builder</span>
+  // </div>
+
 }
 
 ```

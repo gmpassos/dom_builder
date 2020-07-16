@@ -14,6 +14,9 @@ void main() {
     ])
   ]);
 
+  // Moves down Joe's row, placing it after Smith's row:
+  div.select('tbody').select('tr').moveDown() ;
+
   print('===============');
   print(div.buildHTML(withIdent: true));
   print('===============');
@@ -30,8 +33,8 @@ void main() {
             <tr><th>Name</th><th>Age</th></tr>
           </thead>
           <tbody>
-            <tr><td>Joe</td><td>21</td></tr>
             <tr><td>Smith</td><td>30</td></tr>
+            <tr><td>Joe</td><td>21</td></tr>
           </tbody>
         </table>
       '''));

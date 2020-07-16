@@ -5,7 +5,28 @@ void main() {
   group('dom_builder', () {
     setUp(() {});
 
-    test('Basic div', () {
+    test('Basic div 1', () {
+      var div = $divHTML('<div class="container"><span>Builder</span></div>')
+          .insertAt( 0, $span( id: 's1', content: 'The ' ) )
+          .insertAfter( '#s1' , $span( id: 's2', content: 'DOM ', style: 'font-weight: bold' ) )
+      ;
+
+      expect(div, isNotNull);
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div class="container"><span id="s1">The </span><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
+
+      div.select('#s1').remove() ;
+
+      expect(
+          div.buildHTML(),
+          equals(
+              '<div class="container"><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
+
+    });
+
+    test('Basic div 2', () {
       var div =
           $div(id: 'd1', classes: 'container', style: 'background-color: blue');
 
