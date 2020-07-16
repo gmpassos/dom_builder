@@ -18,7 +18,7 @@ Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native 
 
 You can generate a DOM tree using HTML, Object Orientation or manipulating an already instantiated DOM tree.
 
-A simple usage example:
+A simple usage example, that can work in any platform (Web or Native):
 
 ```dart
 import 'package:dom_builder/dom_builder.dart';
@@ -70,7 +70,7 @@ class BootstrapNavbarToggler {
   static DOMGenerator domGenerator = DOMGenerator.dartHTML() ;
 
   Element render() {
-    var button = $button( classes: 'navbar-toggler', type: 'button', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
+    var button = $button( type: 'button', classes: 'navbar-toggler', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
         content: $span( classes: 'navbar-toggler-icon')
     );
 
@@ -81,7 +81,7 @@ class BootstrapNavbarToggler {
 
 ```
 
-## Mixing real DOM Elements with Builder (`dart:html`):
+## Mixing real DOM Elements with virtual `DOMElement` (`dart:html`):
 
 ```dart
 import 'dart:html' ;
