@@ -12,7 +12,7 @@
 [![Funding](https://img.shields.io/liberapay/patrons/gmpassos.svg?logo=liberapay)](https://liberapay.com/gmpassos/donate)
 
 
-Helpers to generate and manipulated DOM elements or HTML (Web and Native support).
+Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native support).
 
 ## Usage
 

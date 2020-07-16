@@ -1,6 +1,6 @@
-## dev
+## 1.0.12
 
-- Added `CSS`.
+- Added initial `CSS` support.
 
 ## 1.0.11
 

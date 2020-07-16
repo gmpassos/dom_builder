@@ -1,5 +1,5 @@
 name: dom_builder
-description: Helpers to generate DOM elements or HTML (Web and Native support).
+description: Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native support).
 version: 1.0.12
 homepage: https://github.com/gmpassos/dom_builder
 
