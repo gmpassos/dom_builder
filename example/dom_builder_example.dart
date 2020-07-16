@@ -15,7 +15,7 @@ void main() {
   ]);
 
   // Moves down Joe's row, placing it after Smith's row:
-  div.select('tbody').select('tr').moveDown() ;
+  div.select('tbody').select('tr').moveDown();
 
   print('===============');
   print(div.buildHTML(withIdent: true));

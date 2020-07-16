@@ -496,7 +496,7 @@ class CSSColorRGBA extends CSSColorRGB {
   double _alpha;
 
   CSSColorRGBA(int red, int green, int blue, double alpha)
-      : _alpha = _normalizeDouble( _clip(alpha, 0, 1, 1) ),
+      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1)),
         super(red, green, blue);
 
   factory CSSColorRGBA.from(dynamic color) => CSSColorRGB.from(color);
@@ -514,7 +514,7 @@ class CSSColorRGBA extends CSSColorRGB {
 
   @override
   String get args {
-    var a = _doubleToStr(_alpha) ;
+    var a = _doubleToStr(_alpha);
     return '${super.args}, $a';
   }
 
@@ -612,7 +612,7 @@ class CSSColorHEXAlpha extends CSSColorHEX {
   factory CSSColorHEXAlpha(String hexColor) => CSSColorHEXAlpha.parse(hexColor);
 
   CSSColorHEXAlpha._(int red, int green, int blue, double alpha)
-      : _alpha = _normalizeDouble( _clip(alpha, 0, 1, 1) ),
+      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1)),
         super._(red, green, blue);
 
   factory CSSColorHEXAlpha.from(dynamic color) => CSSColorHEX.from(color);
@@ -632,7 +632,7 @@ class CSSColorHEXAlpha extends CSSColorHEX {
   String toString() {
     var colorHEX = super.toString();
     if (alpha != 1) {
-      var nA = Math.round( alpha * 255 ).toInt();
+      var nA = Math.round(alpha * 255).toInt();
       var a = _toHex(nA);
       return '$colorHEX$a';
     } else {
@@ -646,7 +646,7 @@ int _parseHex(String hex) => int.parse(hex, radix: 16);
 String _toHex(int n) => n.toRadixString(16).padLeft(2, '0');
 
 String _doubleToStr(double d, [int precision = 1000]) {
-  return _normalizeDouble(d, precision).toString() ;
+  return _normalizeDouble(d, precision).toString();
 }
 
 double _normalizeDouble(double d, [int precision = 1000]) {

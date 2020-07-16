@@ -7,9 +7,9 @@ void main() {
 
     test('Basic div 1', () {
       var div = $divHTML('<div class="container"><span>Builder</span></div>')
-          .insertAt( 0, $span( id: 's1', content: 'The ' ) )
-          .insertAfter( '#s1' , $span( id: 's2', content: 'DOM ', style: 'font-weight: bold' ) )
-      ;
+          .insertAt(0, $span(id: 's1', content: 'The '))
+          .insertAfter('#s1',
+              $span(id: 's2', content: 'DOM ', style: 'font-weight: bold'));
 
       expect(div, isNotNull);
       expect(
@@ -17,19 +17,17 @@ void main() {
           equals(
               '<div class="container"><span id="s1">The </span><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
 
-      div.select('#s1').remove() ;
+      div.select('#s1').remove();
 
       expect(
           div.buildHTML(),
           equals(
               '<div class="container"><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
 
-
-      var span = div.select(['#s1','#s2']) as DOMElement ;
+      var span = div.select(['#s1', '#s2']) as DOMElement;
 
       expect(span, isNotNull);
       expect(span.tag, equals('span'));
-
     });
 
     test('Basic div 2', () {
@@ -42,27 +40,26 @@ void main() {
           equals(
               '<div id="d1" class="container" style="background-color: blue"></div>'));
 
-      div.add(['<b>BBB</b>', $br(), '<b>CCC</b>']) ;
+      div.add(['<b>BBB</b>', $br(), '<b>CCC</b>']);
 
       expect(
           div.buildHTML(),
           equals(
               '<div id="d1" class="container" style="background-color: blue"><b>BBB</b><br><b>CCC</b></div>'));
 
-      div.add('<u>UUUUUU</u>') ;
+      div.add('<u>UUUUUU</u>');
 
       expect(
           div.buildHTML(),
           equals(
               '<div id="d1" class="container" style="background-color: blue"><b>BBB</b><br><b>CCC</b><u>UUUUUU</u></div>'));
 
-      div.add('Some &nbsp; Text') ;
+      div.add('Some &nbsp; Text');
 
       expect(
           div.buildHTML(),
           equals(
               '<div id="d1" class="container" style="background-color: blue"><b>BBB</b><br><b>CCC</b><u>UUUUUU</u><span>Some &nbsp; Text</span></div>'));
-
     });
 
     test('Basic generic tag', () {
@@ -467,7 +464,8 @@ void main() {
               '<div><u>UUU</u><u>UUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUUUUXUUUXBBBIII'));
 
-      var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode, onlyCompatibles: true);
+      var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode,
+          onlyCompatibles: true);
 
       expect(mergeU, isNotNull);
 
