@@ -418,7 +418,7 @@ void main() {
               '<div><u>UUU</u><u>UUUX</u><u>UUUX</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUUUUXUUUXBBBIII'));
 
-      var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode);
+      var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode, onlyCompatibles: true);
 
       expect(mergeU, isNotNull);
 
