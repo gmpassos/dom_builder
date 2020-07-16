@@ -731,7 +731,10 @@ String getCSSBorderStyleName(CSSBorderStyle borderStyle) {
 }
 
 class CSSBorder extends CSSValue {
-  static final RegExp PATTERN = RegExp(r'\s*(\d+\w+)?\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*', multiLine: false, caseSensitive: false);
+  static final RegExp PATTERN = RegExp(
+      r'\s*(\d+\w+)?\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*',
+      multiLine: false,
+      caseSensitive: false);
 
   CSSLength _width;
 

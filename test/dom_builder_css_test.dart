@@ -174,6 +174,5 @@ void main() {
       var css = CSS('border: dashed rgb(255,0,0)');
       expect(css.style, equals('border: dashed rgb(255, 0, 0);'));
     });
-
   });
 }
