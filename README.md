@@ -18,7 +18,7 @@ Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native 
 
 You can generate a DOM tree using HTML, Object Orientation or manipulating an already instantiated DOM tree.
 
-A simple usage example, that can work in any platform (Web or Native):
+Here's a simple usage example, that can work in any platform (Web or Native):
 
 ```dart
 import 'package:dom_builder/dom_builder.dart';
@@ -59,7 +59,7 @@ void main() {
 
 ## Generating a real DOM Element (`dart:html`):
 
-As example let's create a Bootstrap Navbar toggler:
+As example, let's create a Bootstrap `navbar-toggler`:
 
 ```dart
 import 'dart:html' ;
@@ -81,7 +81,7 @@ class BootstrapNavbarToggler {
 
 ```
 
-## Mixing real DOM Elements with virtual `DOMElement` (`dart:html`):
+## Mixing real DOM Element (`dart:html`) with virtual `DOMElement`:
 
 ```dart
 import 'dart:html' ;
@@ -148,6 +148,17 @@ class TitleComponent {
       return content.buildDOM(domGenerator) ;
 ```
 
+## See Also
+
+See some related projects:
+
+- [Bones_UI][bones_ui]: A simple and easy Web User Interface framework for Dart.
+- [Bones_UI_Bootstrap][bones_ui_bootstrap]: Adds Bootstrap [Bones_UI][bones_ui].
+- [Bootstrap][bootstrap]: Build fast and responsive sites. 
+
+[bones_ui]: https://github.com/Colossus-Services/bones_ui
+[bones_ui_bootstrap]: https://github.com/Colossus-Services/bones_ui_bootstrap
+[bootstrap]: https://getbootstrap.com/
 
 ## Features and bugs
 
