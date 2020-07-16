@@ -20,16 +20,16 @@ void main() {
       expect(
           css.style,
           equals(
-              'color: rgb(255, 0, 0); background-color: rgb(0, 255, 0); width: 10px;'));
+              'width: 10px; color: rgb(255, 0, 0); background-color: rgb(0, 255, 0);'));
     });
 
     test('CSS parse 1', () {
       var css = CSS(
-          'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.50); width: 10vw; height: 20%;');
+          'width: 10vw; height: 20%; color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.50);');
       expect(
           css.style,
           equals(
-              'color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.5); width: 10vw; height: 20%;'));
+              'width: 10vw; height: 20%; color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.5);'));
 
       expect(css.color.name, equals('color'));
       var color = css.color.value as CSSColorRGB;
@@ -65,7 +65,7 @@ void main() {
       expect(
           css.style,
           equals(
-              'color: rgb(255, 128, 200); background-color: rgba(0, 255, 0, 0.5); width: 10%; height: 20vh;'));
+              'width: 10%; height: 20vh; color: rgb(255, 128, 200); background-color: rgba(0, 255, 0, 0.5);'));
     });
 
     test('CSS colors RGB', () {
@@ -159,5 +159,21 @@ void main() {
 
       expect(css.style, equals('color: #ff8011;'));
     });
+
+    test('CSS border 1', () {
+      var css = CSS('border: 11px dotted #f00;');
+      expect(css.style, equals('border: 11px dotted #ff0000;'));
+    });
+
+    test('CSS border 2', () {
+      var css = CSS('border: solid');
+      expect(css.style, equals('border: solid;'));
+    });
+
+    test('CSS border 3', () {
+      var css = CSS('border: dashed rgb(255,0,0)');
+      expect(css.style, equals('border: dashed rgb(255, 0, 0);'));
+    });
+
   });
 }

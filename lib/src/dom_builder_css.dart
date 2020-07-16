@@ -64,6 +64,11 @@ class CSS {
           height = entry;
           break;
         }
+      case 'border':
+        {
+          border = entry;
+          break;
+        }
       default:
         throw StateError('Unknown CSS entry: $entry');
     }
@@ -102,6 +107,14 @@ class CSS {
     _height = CSSEntry.from('height', value);
   }
 
+  CSSEntry<CSSBorder> _border;
+
+  CSSEntry<CSSBorder> get border => _border;
+
+  set border(dynamic value) {
+    _border = CSSEntry.from('border', value);
+  }
+
   String get style => toString();
 
   void _append(StringBuffer s, CSSEntry entry) {
@@ -115,10 +128,11 @@ class CSS {
   @override
   String toString() {
     var s = StringBuffer();
-    _append(s, _color);
-    _append(s, _backgroundColor);
     _append(s, _width);
     _append(s, _height);
+    _append(s, _color);
+    _append(s, _backgroundColor);
+    _append(s, _border);
     return s.toString();
   }
 }
@@ -205,6 +219,8 @@ abstract class CSSValue {
         return CSSLength.from(value);
       case 'height':
         return CSSLength.from(value);
+      case 'border':
+        return CSSBorder.from(value);
       default:
         throw StateError("Can't parse CSS value with name '$name': $value");
     }
@@ -638,6 +654,142 @@ class CSSColorHEXAlpha extends CSSColorHEX {
     } else {
       return colorHEX;
     }
+  }
+}
+
+enum CSSBorderStyle {
+  dotted,
+  dashed,
+  solid,
+  double,
+  groove,
+  ridge,
+  inset,
+  outset,
+  none,
+  hidden
+}
+
+CSSBorderStyle parseCSSBorderStyle(String borderStyle) {
+  if (borderStyle == null) return null;
+
+  borderStyle = borderStyle.trim().toLowerCase();
+
+  switch (borderStyle) {
+    case 'dotted':
+      return CSSBorderStyle.dotted;
+    case 'dashed':
+      return CSSBorderStyle.dashed;
+    case 'solid':
+      return CSSBorderStyle.solid;
+    case 'double':
+      return CSSBorderStyle.double;
+    case 'groove':
+      return CSSBorderStyle.groove;
+    case 'ridge':
+      return CSSBorderStyle.ridge;
+    case 'inset':
+      return CSSBorderStyle.inset;
+    case 'outset':
+      return CSSBorderStyle.outset;
+    case 'none':
+      return CSSBorderStyle.none;
+    case 'hidden':
+      return CSSBorderStyle.hidden;
+    default:
+      return null;
+  }
+}
+
+String getCSSBorderStyleName(CSSBorderStyle borderStyle) {
+  if (borderStyle == null) return null;
+
+  switch (borderStyle) {
+    case CSSBorderStyle.dotted:
+      return 'dotted';
+    case CSSBorderStyle.dashed:
+      return 'dashed';
+    case CSSBorderStyle.solid:
+      return 'solid';
+    case CSSBorderStyle.double:
+      return 'double';
+    case CSSBorderStyle.groove:
+      return 'groove';
+    case CSSBorderStyle.ridge:
+      return 'ridge';
+    case CSSBorderStyle.inset:
+      return 'inset';
+    case CSSBorderStyle.outset:
+      return 'outset';
+    case CSSBorderStyle.none:
+      return 'none';
+    case CSSBorderStyle.hidden:
+      return 'hidden';
+    default:
+      return null;
+  }
+}
+
+class CSSBorder extends CSSValue {
+  static final RegExp PATTERN = RegExp(r'\s*(\d+\w+)?\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*', multiLine: false, caseSensitive: false);
+
+  CSSLength _width;
+
+  CSSBorderStyle _style;
+
+  CSSColor _color;
+
+  CSSBorder(this._width, CSSBorderStyle style, [this._color])
+      : _style = style ?? CSSBorderStyle.solid;
+
+  factory CSSBorder.from(dynamic value) {
+    if (value == null) return null;
+
+    if (value is CSSBorder) return value;
+
+    if (value is String) return CSSBorder.parse(value);
+
+    return null;
+  }
+
+  factory CSSBorder.parse(String value) {
+    if (value == null) return null;
+
+    var match = PATTERN.firstMatch(value);
+    if (match == null) return null;
+
+    var widthStr = match.group(1);
+    var styleStr = match.group(2);
+    var colorStr = match.group(3);
+
+    var width = CSSLength.parse(widthStr);
+    var style = parseCSSBorderStyle(styleStr);
+    var color = CSSColor.parse(colorStr);
+
+    return CSSBorder(width, style, color);
+  }
+
+  CSSLength get width => _width;
+
+  set width(CSSLength value) {
+    _width = value;
+  }
+
+  CSSBorderStyle get style => _style;
+
+  set style(CSSBorderStyle value) {
+    _style = value ?? CSSBorderStyle.solid;
+  }
+
+  CSSColor get color => _color;
+
+  set color(CSSColor value) {
+    _color = value;
+  }
+
+  @override
+  String toString() {
+    return '${_width != null ? '$_width ' : ''}${getCSSBorderStyleName(_style)}${_color != null ? ' $color' : ''}';
   }
 }
 

@@ -1,3 +1,8 @@
+## 1.0.13
+
+- More `CSS` support: `CSSBorder`.
+- dartfmt.
+
 ## 1.0.12
 
 - Added initial `CSS` support.
