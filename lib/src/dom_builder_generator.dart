@@ -3,7 +3,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_generator_none.dart'
-    if (dart.library.html) "dom_builder_generator_dart_html.dart";
+    if (dart.library.html) 'dom_builder_generator_dart_html.dart';
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
