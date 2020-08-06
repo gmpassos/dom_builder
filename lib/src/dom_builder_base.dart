@@ -1,6 +1,7 @@
 import 'dart:collection';
 import 'dart:math';
 
+import 'package:dom_builder/dom_builder.dart';
 import 'package:html/dom.dart' as html_dom;
 import 'package:swiss_knife/swiss_knife.dart';
 
@@ -312,11 +313,11 @@ class DOMNode {
   ///
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
-  T buildDOM<T>([DOMGenerator<T> generator]) {
+  T buildDOM<T>({DOMGenerator<T> generator, T parent}) {
     if (isCommented) return null;
 
     generator ??= defaultDomGenerator;
-    return generator.generate(this);
+    return generator.generate(this, parent: parent);
   }
 
   /// Returns the content of this node as text.
@@ -1235,6 +1236,8 @@ class DOMElement extends DOMNode {
   /// Returns the attribute `class`.
   String get classes => getAttributeValue('class');
 
+  set classes(dynamic value) => setAttribute('class', value);
+
   /// Returns the list of class names of the attribute `class`.
   List<String> get classesList {
     var attribute = getAttribute('class');
@@ -1242,13 +1245,36 @@ class DOMElement extends DOMNode {
     return attribute.values ?? [];
   }
 
+  /// Sets the [List] of classes.
+  set classesList(List value) => setAttribute('class', value);
+
   /// Adds a [className] to attribute `class`.
   void addClass(String className) {
     appendToAttribute('class', className);
   }
 
-  /// Returns the attribute `style`.
-  String get style => getAttributeValue('style');
+  /// Returns the attribute `style` as [CSS].
+  CSS get style {
+    var attr = getAttribute('style');
+    if (attr == null) {
+      var css = CSS();
+      setAttribute('style', css);
+      attr = getAttribute('style');
+    }
+
+    var cssHandler = attr.valueHandler as DOMAttributeValueCSS;
+    return cssHandler.css;
+  }
+
+  set style(dynamic value) => setAttribute('style', value);
+
+  String get styleText {
+    var attr = getAttribute('style');
+    if (attr == null) return null;
+    return attr.value;
+  }
+
+  set styleText(String value) => setAttribute('style', value);
 
   /// Returns [true] if attribute `class` has the [className].
   bool containsClass(String className) {
@@ -1265,7 +1291,7 @@ class DOMElement extends DOMNode {
   Map<String, dynamic> get attributes => hasEmptyAttributes
       ? {}
       : _attributes.map((key, value) =>
-          MapEntry(key, value.isListValue ? value.values : value.value));
+          MapEntry(key, value.isCollection ? value.values : value.value));
 
   /// Returns the attributes names with values.
   Iterable<String> get attributesNames => hasAttributes ? _attributes.keys : [];
@@ -1330,7 +1356,7 @@ class DOMElement extends DOMNode {
       return setAttribute(name, value);
     }
 
-    if (attr.isListValue) {
+    if (attr.isCollection) {
       attr.appendValue(value);
     } else {
       attr.setValue(value);

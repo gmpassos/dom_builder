@@ -29,6 +29,9 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
+  bool containsNode(T parent, T node) => false;
+
+  @override
   void setAttributes(DOMElement domElement, T element) {
     _noDartHTML();
   }

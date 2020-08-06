@@ -18,6 +18,6 @@ class BootstrapNavbarToggler {
         },
         content: $span(classes: 'navbar-toggler-icon'));
 
-    return button.buildDOM(domGenerator);
+    return button.buildDOM(generator: domGenerator);
   }
 }

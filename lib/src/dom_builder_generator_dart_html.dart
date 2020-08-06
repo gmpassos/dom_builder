@@ -96,6 +96,17 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   bool isTextNode(Node node) => node is Text;
 
   @override
+  bool containsNode(Node parent, Node node) {
+    if (parent == null || node == null) return false;
+
+    if (parent is Node) {
+      return parent.contains(node);
+    }
+
+    return false;
+  }
+
+  @override
   String getNodeText(Node node) {
     if (node == null) return null;
     return node.text;

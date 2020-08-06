@@ -69,9 +69,9 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element nodes: $element");
   }
 
-  T generate(DOMElement root, {DOMTreeMap<T> treeMap}) {
+  T generate(DOMElement root, {DOMTreeMap<T> treeMap, T parent}) {
     treeMap ??= createGenericDOMTreeMap();
-    return build(null, null, root, treeMap);
+    return build(null, parent, root, treeMap);
   }
 
   DOMTreeMap<T> createDOMTreeMap() => DOMTreeMap<T>(this);
@@ -166,12 +166,16 @@ abstract class DOMGenerator<T> {
 
     if (element == null) {
       element = createElement(domElement.tag);
-      treeMap.map(domElement, element);
-      onElementCreated(element);
-
       if (element == null) {
         throw StateError("Can't create element for tag: ${domElement.tag}");
       }
+
+      if (parent != null) {
+        addChildToElement(parent, element);
+      }
+
+      treeMap.map(domElement, element);
+      onElementCreated(element);
 
       setAttributes(domElement, element);
 
@@ -181,9 +185,7 @@ abstract class DOMGenerator<T> {
         var node = domElement.nodeByIndex(i);
         build(domElement, element, node, treeMap);
       }
-    }
-
-    if (parent != null) {
+    } else if (parent != null) {
       addChildToElement(parent, element);
     }
 
@@ -204,6 +206,10 @@ abstract class DOMGenerator<T> {
       var parsedElement = _parseExternalElement(
           domParent, parent, domElement, externalElement, treeMap);
       if (parsedElement != null) {
+        if (parent != null && !containsNode(parent, parsedElement)) {
+          addChildToElement(parent, parsedElement);
+        }
+
         return parsedElement;
       }
     }
@@ -285,6 +291,8 @@ abstract class DOMGenerator<T> {
   bool isTextNode(T node);
 
   bool isElementNode(T node) => node != null && !isTextNode(node);
+
+  bool containsNode(T parent, T node);
 
   void setAttributes(DOMElement domElement, T element) {
     for (var attrName in domElement.attributesNames) {

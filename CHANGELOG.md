@@ -1,3 +1,11 @@
+## 1.0.14
+
+- Many improvements into CSS support.
+- Added `CSSURL`, `CSSColorName`, `CSSGeneric`, `CSSCalc`.
+- Added abstract class DOMAttributeValue for: `DOMAttributeValueBoolean`, `DOMAttributeValueString`, `DOMAttributeValueList`, `DOMAttributeValueSet`, `DOMAttributeValueCSS`.
+- `DOMNode.buildDOM` now accepts a `T parent` parameter.
+- swiss_knife: ^2.5.8
+
 ## 1.0.13
 
 - More `CSS` support: `CSSBorder`.

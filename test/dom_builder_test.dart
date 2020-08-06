@@ -241,7 +241,7 @@ void main() {
       var div = $tagHTML(
           '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
 
-      var genDiv = div.buildDOM(generator) as TestElem;
+      var genDiv = div.buildDOM(generator: generator) as TestElem;
 
       expect(genDiv, isNotNull);
 
@@ -517,7 +517,7 @@ void main() {
       var text = TestText('text element');
       div.add(text);
 
-      var genDiv = div.buildDOM(generator) as TestElem;
+      var genDiv = div.buildDOM(generator: generator) as TestElem;
 
       expect(genDiv, isNotNull);
 
@@ -670,8 +670,10 @@ void main() {
       expect(attributeClass.containsValue('c2'), isTrue);
       expect(attributeClass.containsValue('Z'), isFalse);
       expect(attributeClass.isBoolean, isFalse);
-      expect(attributeClass.isListValue, isTrue);
+      expect(attributeClass.isList, isFalse);
       expect(attributeClass.isSet, isTrue);
+      expect(attributeClass.isCollection, isTrue);
+
       attributeClass.setValue('c3 c4');
       expect(attributeClass.value, equals('c3 c4'));
       expect(attributeClass.values, equals(['c3', 'c4']));
@@ -722,8 +724,9 @@ void main() {
       expect(attributeClass.containsValue('c2'), isTrue);
       expect(attributeClass.containsValue('Z'), isFalse);
       expect(attributeClass.isBoolean, isFalse);
-      expect(attributeClass.isListValue, isTrue);
+      expect(attributeClass.isList, isFalse);
       expect(attributeClass.isSet, isTrue);
+      expect(attributeClass.isCollection, isTrue);
 
       var attributeFoo = div.getAttribute('foo');
       expect(attributeFoo.value, equals('111'));
@@ -731,8 +734,9 @@ void main() {
       expect(attributeFoo.containsValue('111'), isTrue);
       expect(attributeFoo.containsValue('Z'), isFalse);
       expect(attributeFoo.isBoolean, isFalse);
-      expect(attributeFoo.isListValue, isFalse);
+      expect(attributeFoo.isList, isFalse);
       expect(attributeFoo.isSet, isFalse);
+      expect(attributeFoo.isCollection, isFalse);
 
       var attributeBar = div.getAttribute('bar');
       expect(attributeBar.value, equals('2'));
@@ -740,8 +744,9 @@ void main() {
       expect(attributeBar.containsValue('2'), isTrue);
       expect(attributeBar.containsValue('Z'), isFalse);
       expect(attributeBar.isBoolean, isFalse);
-      expect(attributeBar.isListValue, isFalse);
+      expect(attributeBar.isList, isFalse);
       expect(attributeBar.isSet, isFalse);
+      expect(attributeBar.isCollection, isFalse);
 
       var attributeBaz = div.getAttribute('baz');
       expect(attributeBaz, isNull);
@@ -752,8 +757,9 @@ void main() {
       expect(attributeHidden.containsValue('true'), isTrue);
       expect(attributeHidden.containsValue('Z'), isFalse);
       expect(attributeHidden.isBoolean, isTrue);
-      expect(attributeHidden.isListValue, isFalse);
+      expect(attributeHidden.isList, isFalse);
       expect(attributeHidden.isSet, isFalse);
+      expect(attributeHidden.isCollection, isFalse);
 
       div.setAttribute('hidden', 'true');
       expect(
@@ -1015,6 +1021,17 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   bool isTextNode(TestNode node) => node is TestText;
+
+  @override
+  bool containsNode(TestNode parent, TestNode node) {
+    if (parent == null || node == null) return false;
+
+    if (parent is TestElem) {
+      return parent.nodes.contains(node);
+    }
+
+    return false;
+  }
 
   @override
   TestElem createElement(String tag) {
