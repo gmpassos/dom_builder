@@ -19,6 +19,22 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  String getElementTag(Node element) {
+    if (element is Element) {
+      return element.tagName;
+    }
+    return null;
+  }
+
+  @override
+  Map<String, String> getElementAttributes(Node element) {
+    if (element is Element) {
+      return Map.fromEntries(element.attributes.entries);
+    }
+    return null;
+  }
+
+  @override
   Node getNodeParent(Node node) {
     return node.parent;
   }
@@ -63,19 +79,6 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     var attributesSignature =
         entries.map((e) => '${e.key}=${e.value}').toList();
     return attributesSignature.join('\n');
-  }
-
-  static Map<String, String> getElementAttributes(Element element) {
-    if (element == null) return null;
-
-    var attributes = <String, String>{};
-
-    for (var name in element.getAttributeNames()) {
-      var value = element.getAttribute(name);
-      attributes[name] = value;
-    }
-
-    return attributes;
   }
 
   @override

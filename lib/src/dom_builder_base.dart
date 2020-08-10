@@ -1597,30 +1597,22 @@ class DOMElement extends DOMNode {
       var attributeClass = _attributes['class'];
       var attributeStyle = _attributes['style'];
 
-      if (attributeId != null) {
-        html += ' ' + attributeId.buildHTML();
-      }
-
-      if (attributeClass != null) {
-        html += ' ' + attributeClass.buildHTML();
-      }
-
-      if (attributeStyle != null) {
-        html += ' ' + attributeStyle.buildHTML();
-      }
+      html = DOMAttribute.append(html, ' ', attributeId);
+      html = DOMAttribute.append(html, ' ', attributeClass);
+      html = DOMAttribute.append(html, ' ', attributeStyle);
 
       var attributesNormal = _attributes.values.where((v) =>
           v != null && v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
 
       for (var attr in attributesNormal) {
-        html += ' ' + attr.buildHTML();
+        html = DOMAttribute.append(html, ' ', attr);
       }
 
       var attributesBoolean = _attributes.values.where((v) =>
           v != null && v.hasValue && !_isPriorityAttribute(v) && v.isBoolean);
 
       for (var attr in attributesBoolean) {
-        html += ' ' + attr.buildHTML();
+        html = DOMAttribute.append(html, ' ', attr);
       }
     }
 

@@ -32,6 +32,13 @@ class DOMAttribute implements WithValue {
     return name.trim().toLowerCase();
   }
 
+  static String append(String s, String delimiter, DOMAttribute attribute) {
+    if (attribute == null) return s;
+    var append = attribute.buildHTML();
+    if (append == null || append.isEmpty) return s;
+    return s + delimiter + append;
+  }
+
   final String name;
 
   final DOMAttributeValue _valueHandler;

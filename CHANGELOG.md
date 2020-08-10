@@ -1,3 +1,10 @@
+## 1.0.15
+
+- `DOMGenerator`: New `revert` feature.
+- `DOMGenerator`: `registerElementGenerator` now receives a class `ElementGenerator`, that implements `generate` and `revert`.
+- `DOMGenerator`: Added `getElementTag` and `getElementAttributes`.
+- DOMAttribute fix: Avoid adicional space to HTML tags when `DOMAttribute.buildHTML()` generates an empty string (usually false boolean attributes). 
+
 ## 1.0.14
 
 - Many improvements into CSS support.

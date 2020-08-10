@@ -69,6 +69,14 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element nodes: $element");
   }
 
+  String getElementTag(T element) {
+    throw UnsupportedError("Can't get element tag: $element");
+  }
+
+  Map<String, String> getElementAttributes(T element) {
+    throw UnsupportedError("Can't get element attributes: $element");
+  }
+
   T generate(DOMElement root, {DOMTreeMap<T> treeMap, T parent}) {
     treeMap ??= createGenericDOMTreeMap();
     return build(null, parent, root, treeMap);
@@ -320,8 +328,8 @@ abstract class DOMGenerator<T> {
 
     buildNodes(domElement, contentHolder, domElement.content, treeMap);
 
-    var element =
-        generator(this, tag, parent, domElement.domAttributes, contentHolder);
+    var element = generator.generate(
+        this, tag, parent, domElement.domAttributes, contentHolder);
 
     treeMap.mapTree(domElement, element);
 
@@ -330,9 +338,10 @@ abstract class DOMGenerator<T> {
     return element;
   }
 
-  bool registerElementGenerator(
-      String tag, ElementGenerator<T> elementGenerator) {
-    if (tag == null || elementGenerator == null) return false;
+  bool registerElementGenerator(ElementGenerator<T> elementGenerator) {
+    if (elementGenerator == null) return false;
+    var tag = elementGenerator.tag;
+    if (tag == null) return false;
     tag = tag.toLowerCase().trim();
     if (tag.isEmpty) return false;
     _elementsGenerators[tag] = elementGenerator;
@@ -357,13 +366,105 @@ abstract class DOMGenerator<T> {
 
   DOMNodeRuntime<T> createDOMNodeRuntime(
       DOMTreeMap<T> treeMap, DOMNode domNode, T node);
+
+  DOMNode revert(T node) {
+    return _revertImp(null, null, node);
+  }
+
+  DOMNode _revertImp(DOMElement domParent, T parent, T node) {
+    if (isTextNode(node)) {
+      return _revert_TextNode(domParent, parent, node);
+    } else if (isElementNode(node)) {
+      return _revert_DOMElement(domParent, parent, node);
+    } else {
+      return null;
+    }
+  }
+
+  TextNode _revert_TextNode(DOMElement domParent, T parent, T node) {
+    var domNode = TextNode(getNodeText(node));
+    domParent.add(domNode);
+    return domNode;
+  }
+
+  DOMElement _revert_DOMElement(DOMElement domParent, T parent, T node) {
+    var tag = getElementTag(node);
+    if (tag == null) {
+      return null;
+    }
+
+    tag = tag.trim().toLowerCase();
+
+    if (tag.isEmpty) {
+      return null;
+    }
+
+    DOMElement domNode;
+
+    var generator = _elementsGenerators[tag];
+
+    if (generator != null) {
+      domNode = generator.revert(domParent, parent, node);
+    } else {
+      var attributes = getElementAttributes(node);
+      domNode = DOMElement(tag, attributes: attributes);
+    }
+
+    if (domParent != null) {
+      domParent.add(domNode);
+    }
+
+    var children = getElementNodes(node);
+
+    if (children != null && children.isNotEmpty) {
+      for (var child in children) {
+        if (child != null) {
+          _revertImp(domNode, node, child);
+        }
+      }
+    }
+
+    return domNode;
+  }
 }
 
-typedef ElementGenerator<T> = T Function(
+abstract class ElementGenerator<T> {
+  String get tag;
+
+  T generate(DOMGenerator<T> domGenerator, String tag, T parent,
+      Map<String, DOMAttribute> attributes, T contentHolder);
+
+  DOMElement revert(DOMElement domParent, T parent, T node);
+}
+
+typedef ElementGeneratorFunction<T> = T Function(
     DOMGenerator<T> domGenerator,
     String tag,
     T parent,
     Map<String, DOMAttribute> attributes,
     T contentHolder);
+
+typedef ElementRevertFunction<T> = DOMElement Function(
+    DOMElement domParent, T parent, T node);
+
+class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
+  @override
+  final String tag;
+  final ElementGeneratorFunction<T> generator;
+  final ElementRevertFunction<T> reverter;
+
+  ElementGeneratorFunctions(this.tag, this.generator, [this.reverter]);
+
+  @override
+  T generate(DOMGenerator<T> domGenerator, String tag, T parent,
+      Map<String, DOMAttribute> attributes, T contentHolder) {
+    return generator(domGenerator, tag, parent, attributes, contentHolder);
+  }
+
+  @override
+  DOMElement revert(DOMElement domParent, T parent, T node) {
+    return reverter(domParent, parent, node);
+  }
+}
 
 abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
