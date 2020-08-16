@@ -258,12 +258,12 @@ class DOMNode {
 
   /// Generates a HTML from this node tree.
   ///
-  /// [withIdent] If [true] will generate a indented HTML.
+  /// [withIndent] If [true] will generate a indented HTML.
   String buildHTML(
-      {bool withIdent = false,
-      String parentIdent = '',
-      String ident = '  ',
-      bool disableIdent = false,
+      {bool withIndent = false,
+      String parentIndent = '',
+      String indent = '  ',
+      bool disableIndent = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     if (isCommented) return '';
@@ -274,10 +274,10 @@ class DOMNode {
       DOMNode prev;
       for (var node in _content) {
         var subHtml = node.buildHTML(
-            withIdent: withIdent,
-            parentIdent: parentIdent + ident,
-            ident: ident,
-            disableIdent: disableIdent,
+            withIndent: withIndent,
+            parentIndent: parentIndent + indent,
+            indent: indent,
+            disableIndent: disableIndent,
             parentNode: parentNode,
             previousNode: prev);
         if (subHtml != null) {
@@ -1025,10 +1025,10 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   String buildHTML(
-      {bool withIdent = false,
-      String parentIdent = '',
-      String ident = '  ',
-      bool disableIdent = false,
+      {bool withIndent = false,
+      String parentIndent = '',
+      String indent = '  ',
+      bool disableIndent = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     return _text.replaceAll('\xa0', '&nbsp;');
@@ -1629,7 +1629,7 @@ class DOMElement extends DOMNode {
     return '</$tag>';
   }
 
-  static bool _tagAllowsInnerIdent(String tag) {
+  static bool _tagAllowsInnerIndent(String tag) {
     if (_isStringTagName(tag)) return false;
 
     switch (tag) {
@@ -1644,44 +1644,44 @@ class DOMElement extends DOMNode {
 
   @override
   String buildHTML(
-      {bool withIdent = false,
-      String parentIdent = '',
-      String ident = '  ',
-      bool disableIdent = false,
+      {bool withIndent = false,
+      String parentIndent = '',
+      String indent = '  ',
+      bool disableIndent = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
-    disableIdent ??= false;
-    if (!disableIdent && !_tagAllowsInnerIdent(tag)) {
-      disableIdent = true;
+    disableIndent ??= false;
+    if (!disableIndent && !_tagAllowsInnerIndent(tag)) {
+      disableIndent = true;
     }
 
-    var allowIdent =
-        withIdent && isNotEmpty && hasOnlyElementNodes && !disableIdent;
+    var allowIndent =
+        withIndent && isNotEmpty && hasOnlyElementNodes && !disableIndent;
 
-    var innerIdent = allowIdent ? parentIdent + ident : '';
-    var innerBreakLine = allowIdent ? '\n' : '';
+    var innerIndent = allowIndent ? parentIndent + indent : '';
+    var innerBreakLine = allowIndent ? '\n' : '';
 
-    if (parentIdent.isNotEmpty &&
+    if (parentIndent.isNotEmpty &&
         previousNode != null &&
         previousNode.isStringElement) {
-      parentIdent = '';
+      parentIndent = '';
     }
 
     if (_NO_CONTENT_TAG.contains(tag)) {
-      var html = parentIdent + buildOpenTagHTML();
+      var html = parentIndent + buildOpenTagHTML();
       return html;
     }
 
-    var html = parentIdent + buildOpenTagHTML() + innerBreakLine;
+    var html = parentIndent + buildOpenTagHTML() + innerBreakLine;
 
     if (isNotEmptyObject(_content)) {
       DOMNode prev;
       for (var node in _content) {
         var subElement = node.buildHTML(
-            withIdent: withIdent,
-            parentIdent: innerIdent,
-            ident: ident,
-            disableIdent: disableIdent,
+            withIndent: withIndent,
+            parentIndent: innerIndent,
+            indent: indent,
+            disableIndent: disableIndent,
             parentNode: this,
             previousNode: prev);
         if (subElement != null) {
@@ -1691,7 +1691,7 @@ class DOMElement extends DOMNode {
       }
     }
 
-    html += (allowIdent ? parentIdent : '') + buildCloseTagHTML();
+    html += (allowIndent ? parentIndent : '') + buildCloseTagHTML();
 
     return html;
   }
@@ -1807,10 +1807,10 @@ class ExternalElementNode extends DOMNode {
 
   @override
   String buildHTML(
-      {bool withIdent = false,
-      String parentIdent = '',
-      String ident = '  ',
-      bool disableIdent = false,
+      {bool withIndent = false,
+      String parentIndent = '',
+      String indent = '  ',
+      bool disableIndent = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     if (externalElement == null) return '';

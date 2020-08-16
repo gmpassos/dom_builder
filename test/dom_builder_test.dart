@@ -172,7 +172,7 @@ void main() {
           equals(
               '<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span><span>Final Text</span></div>'));
       expect(
-          div.buildHTML(withIdent: true),
+          div.buildHTML(withIndent: true),
           equals(
               '<div class="container">\n  <span class="s1">Span Text<div class="d2">more text</div></span>\n  <span>Final Text</span>\n</div>'));
     });
@@ -280,8 +280,8 @@ void main() {
         </table>
       '''));
 
-      expect(div.buildHTML(withIdent: true),
-          equals(div2.buildHTML(withIdent: true)));
+      expect(div.buildHTML(withIndent: true),
+          equals(div2.buildHTML(withIndent: true)));
     });
 
     test('Basic input', () {
@@ -298,7 +298,7 @@ void main() {
           equals(
               '<div><label>Some Label</label><input type="text" value="Some Text"><br><textarea>Title:\nText block.</textarea></div>'));
       expect(
-          div.buildHTML(withIdent: true),
+          div.buildHTML(withIndent: true),
           equals(
               '<div>\n  <label>Some Label</label>\n  <input type="text" value="Some Text">\n  <br>\n  <textarea>Title:\nText block.</textarea>\n</div>'));
     });
@@ -308,7 +308,7 @@ void main() {
 
       expect(div, isNotNull);
       expect(div.buildHTML(), equals('<div>AAA<hr>BBB<p>CCC</div>'));
-      expect(div.buildHTML(withIdent: true),
+      expect(div.buildHTML(withIndent: true),
           equals('<div>AAA<hr>BBB<p>CCC</div>'));
     });
 
@@ -525,6 +525,34 @@ void main() {
       var node = $tags<String>('b', ['aa', 'bb'], (e) => e.toUpperCase());
       expect(
           node.map((e) => e.buildHTML()), equals(['<b>AA</b>', '<b>BB</b>']));
+    });
+
+    test('Helper \$div', () {
+      var node = $div(
+          id: 'id1',
+          classes: 'content',
+          style: 'width: 100px ; height: 200px',
+          attributes: {'navigate': 'home'},
+          content: '<span>Foo</span>');
+
+      expect(
+          node.buildHTML(),
+          equals(
+              '<div id="id1" class="content" style="width: 100px; height: 200px" navigate="home"><span>Foo</span></div>'));
+    });
+
+    test('Helper \$divInline', () {
+      var node = $divInline(
+          id: 'id1',
+          classes: 'content',
+          style: 'width: 100px ; height: 200px',
+          attributes: {'navigate': 'home'},
+          content: '<span>Foo</span>');
+
+      expect(
+          node.buildHTML(),
+          equals(
+              '<div id="id1" class="content" style="display: inline-block; width: 100px; height: 200px" navigate="home"><span>Foo</span></div>'));
     });
   });
 }

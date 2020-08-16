@@ -317,7 +317,7 @@ void main() {
       var genDiv = div.buildDOM(generator: generator) as TestElem;
       expect(genDiv, isNotNull);
 
-      DOMElement div2 = generator.revert(genDiv);
+      DOMElement div2 = generator.revert(div.treeMap, genDiv);
       expect(div2, isNotNull);
 
       expect(div2.buildHTML(), equals(div.buildHTML()));
@@ -350,7 +350,12 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
   }
 
   @override
-  DOMElement revert(DOMElement domParent, TestElem parent, TestElem node) {
+  DOMElement revert(
+      DOMGenerator<dynamic> domGenerator,
+      DOMTreeMap<dynamic> treeMap,
+      DOMElement domParent,
+      TestElem parent,
+      TestElem node) {
     var tag = node.tag;
     var prevClass = node.attributes['class'];
 

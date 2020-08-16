@@ -18,7 +18,7 @@ void main() {
   div.select('tbody').select('tr').moveDown();
 
   print('===============');
-  print(div.buildHTML(withIdent: true));
+  print(div.buildHTML(withIndent: true));
   print('===============');
 
   // Equivalent:

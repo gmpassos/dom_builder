@@ -1,3 +1,10 @@
+## 1.0.16
+
+- Added `CSS.parseList`.
+- Added new base class `DOMAttributeValueCollection`.
+- Improved `DOMGenerator.revert`.
+- Fix typo.
+
 ## 1.0.15
 
 - `DOMGenerator`: New `revert` feature.

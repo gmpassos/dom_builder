@@ -15,11 +15,17 @@ class DOMAttribute implements WithValue {
     'style': '; '
   };
 
+  static String getAttributeDelimiter(String name) =>
+      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
+
   static final Map<String, Pattern>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
     'class': RegExp(r'\s+'),
     'style': RegExp(r'\s*;\s*')
   };
+
+  static RegExp getAttributeDelimiterPattern(String name) =>
+      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
 
   static bool hasAttribute(DOMAttribute attribute) =>
       attribute != null && attribute.hasValue;
@@ -91,7 +97,7 @@ class DOMAttribute implements WithValue {
 
   bool get isSet => _valueHandler is DOMAttributeValueSet;
 
-  bool get isCollection => isList || isSet;
+  bool get isCollection => _valueHandler is DOMAttributeValueCollection;
 
   @override
   bool get hasValue => _valueHandler.hasAttributeValue;
@@ -111,7 +117,14 @@ class DOMAttribute implements WithValue {
 
   void setValue(dynamic value) => _valueHandler.setAttributeValue(value);
 
-  void appendValue(dynamic value) => _valueHandler.appendAttributeValue(value);
+  void appendValue(dynamic value) {
+    if (_valueHandler is DOMAttributeValueCollection) {
+      var valueCollection = _valueHandler as DOMAttributeValueCollection;
+      return valueCollection.appendAttributeValue(value);
+    } else {
+      _valueHandler.setAttributeValue(value);
+    }
+  }
 
   String buildHTML() {
     if (isBoolean) {
@@ -142,11 +155,13 @@ abstract class DOMAttributeValue {
 
   bool get hasAttributeValue;
 
-  bool containsAttributeValue(String value);
+  int get length;
+
+  bool equalsAttributeValue(dynamic value);
+
+  bool containsAttributeValue(dynamic value);
 
   void setAttributeValue(dynamic value);
-
-  void appendAttributeValue(dynamic value) => setAttributeValue(value);
 
   @override
   String toString();
@@ -161,15 +176,21 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
   bool get hasAttributeValue => _value;
 
   @override
+  int get length => _value != null ? 1 : 0;
+
+  @override
   String get asAttributeValue => _value.toString();
 
   @override
   List<String> get asAttributeValues => [asAttributeValue];
 
   @override
-  bool containsAttributeValue(String value) {
+  bool equalsAttributeValue(dynamic value) {
     return _value == parseBool(value, false);
   }
+
+  @override
+  bool containsAttributeValue(value) => equalsAttributeValue(value);
 
   @override
   void setAttributeValue(dynamic value) {
@@ -191,6 +212,9 @@ class DOMAttributeValueString extends DOMAttributeValue {
   bool get hasAttributeValue => _value != null && _value.isNotEmpty;
 
   @override
+  int get length => _value != null ? _value.length : 0;
+
+  @override
   String get asAttributeValue => hasAttributeValue ? _value.toString() : null;
 
   @override
@@ -198,8 +222,15 @@ class DOMAttributeValueString extends DOMAttributeValue {
       hasAttributeValue ? [asAttributeValue] : null;
 
   @override
-  bool containsAttributeValue(String value) {
-    return hasAttributeValue && _value == value;
+  bool equalsAttributeValue(dynamic value) {
+    if (_value == null) return !hasAttributeValue;
+    return hasAttributeValue && _value == parseString(value);
+  }
+
+  @override
+  bool containsAttributeValue(value) {
+    if (value == null) return false;
+    return hasAttributeValue && _value.contains(value);
   }
 
   @override
@@ -213,7 +244,25 @@ class DOMAttributeValueString extends DOMAttributeValue {
   }
 }
 
-class DOMAttributeValueList extends DOMAttributeValue {
+abstract class DOMAttributeValueCollection extends DOMAttributeValue {
+  bool containsAttributeValueEntry(dynamic value);
+
+  String getAttributeValueEntry(dynamic name);
+
+  void appendAttributeValue(dynamic value);
+
+  String removeAttributeValueEntry(dynamic name);
+
+  void removeAttributeValueAllEntries(List entries) {
+    if (entries == null || !hasAttributeValue) return;
+
+    for (var entry in entries) {
+      removeAttributeValueEntry(entry);
+    }
+  }
+}
+
+class DOMAttributeValueList extends DOMAttributeValueCollection {
   List<String> _values;
   final String delimiter;
   final Pattern delimiterPattern;
@@ -239,17 +288,15 @@ class DOMAttributeValueList extends DOMAttributeValue {
   }
 
   @override
+  int get length => _values != null ? _values.length : 0;
+
+  @override
   String get asAttributeValue => hasAttributeValue
       ? (_values.length == 1 ? _values[0] : _values.join(delimiter))
       : null;
 
   @override
   List<String> get asAttributeValues => hasAttributeValue ? _values : null;
-
-  @override
-  bool containsAttributeValue(String value) {
-    return hasAttributeValue && _values.contains(value);
-  }
 
   @override
   void setAttributeValue(dynamic value) {
@@ -276,12 +323,62 @@ class DOMAttributeValueList extends DOMAttributeValue {
   }
 
   @override
+  bool equalsAttributeValue(dynamic value) {
+    if (value == null) return !hasAttributeValue;
+    if (!hasAttributeValue) return false;
+    var valuesList = parseListOfStrings(value, delimiterPattern);
+    return isEqualsList(_values, valuesList);
+  }
+
+  @override
+  bool containsAttributeValue(dynamic value) {
+    if (value == null) return false;
+    if (!hasAttributeValue) return false;
+    var valuesList = parseListOfStrings(value, delimiterPattern);
+    if (valuesList == null || valuesList.isEmpty) return false;
+
+    for (var entry in valuesList) {
+      if (!_values.contains(entry)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  bool containsAttributeValueEntry(dynamic entry) {
+    if (entry == null) return false;
+    if (!hasAttributeValue) return false;
+    var entryStr = parseString(entry);
+    return entryStr != null && _values.contains(entryStr);
+  }
+
+  @override
+  String getAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+    var idx = _values.indexOf(entry);
+    return idx >= 0 ? _values[idx] : null;
+  }
+
+  @override
+  String removeAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+    var idx = _values.indexOf(entry);
+    return idx >= 0 ? _values.removeAt(idx) : null;
+  }
+
+  @override
   String toString() {
     return 'DOMAttributeValueList{_values: $_values, delimiter: $delimiter, delimiterPattern: $delimiterPattern}';
   }
 }
 
-class DOMAttributeValueSet extends DOMAttributeValue {
+class DOMAttributeValueSet extends DOMAttributeValueCollection {
   LinkedHashSet<String> _values;
   final String delimiter;
   final Pattern delimiterPattern;
@@ -308,6 +405,9 @@ class DOMAttributeValueSet extends DOMAttributeValue {
   }
 
   @override
+  int get length => _values != null ? _values.length : 0;
+
+  @override
   String get asAttributeValue => hasAttributeValue
       ? (_values.length == 1 ? _values.first : _values.join(delimiter))
       : null;
@@ -315,11 +415,6 @@ class DOMAttributeValueSet extends DOMAttributeValue {
   @override
   List<String> get asAttributeValues =>
       hasAttributeValue ? _values.toList() : null;
-
-  @override
-  bool containsAttributeValue(String value) {
-    return hasAttributeValue && _values.contains(value);
-  }
 
   @override
   void setAttributeValue(dynamic value) {
@@ -344,12 +439,55 @@ class DOMAttributeValueSet extends DOMAttributeValue {
   }
 
   @override
+  bool equalsAttributeValue(dynamic value) {
+    if (value == null) return !hasAttributeValue;
+    var valuesSet = Set.from(parseListOfStrings(value, delimiterPattern));
+    return isEqualsSet(_values ?? {}, valuesSet);
+  }
+
+  @override
+  bool containsAttributeValue(dynamic value) {
+    if (!hasAttributeValue || value == null) {
+      return null;
+    }
+    var valuesList = parseListOfStrings(value, delimiterPattern);
+    return _values.containsAll(valuesList);
+  }
+
+  @override
+  bool containsAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+    var entryStr = parseString(entry);
+    return _values.contains(entryStr);
+  }
+
+  @override
+  String getAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+    var entryStr = parseString(entry);
+    return _values.contains(entryStr) ? entry : null;
+  }
+
+  @override
+  String removeAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+    var entryStr = parseString(entry);
+    return _values.remove(entryStr) ? entryStr : null;
+  }
+
+  @override
   String toString() {
     return 'DOMAttributeValueSet{_values: $_values, delimiter: $delimiter, delimiterPattern: $delimiterPattern}';
   }
 }
 
-class DOMAttributeValueCSS extends DOMAttributeValue {
+class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   CSS _css;
 
   DOMAttributeValueCSS(dynamic values) {
@@ -362,14 +500,13 @@ class DOMAttributeValueCSS extends DOMAttributeValue {
   bool get hasAttributeValue => _css.isNoEmpty;
 
   @override
+  int get length => _css.length;
+
+  @override
   String get asAttributeValue => hasAttributeValue ? _css.toString() : null;
 
   @override
   List<String> get asAttributeValues => _css.entriesAsString;
-
-  @override
-  bool containsAttributeValue(String value) =>
-      _css.entriesAsString.contains(value);
 
   @override
   void setAttributeValue(dynamic value) {
@@ -377,12 +514,83 @@ class DOMAttributeValueCSS extends DOMAttributeValue {
   }
 
   @override
-  void appendAttributeValue(value) {
+  void appendAttributeValue(dynamic value) {
+    if (value == null) return;
+
     var entries = CSS(value).entries;
     if (entries.isEmpty) return;
 
-    var entry = entries.first;
-    _css.put(entry.name, entry);
+    _css.putAll(entries);
+  }
+
+  @override
+  bool equalsAttributeValue(dynamic value) {
+    if (value == null) !hasAttributeValue;
+    var css = CSS(value);
+    return this.css == css;
+  }
+
+  @override
+  bool containsAttributeValue(dynamic value) {
+    if (value == null) return false;
+    var css = CSS(value);
+    if (css.isEmpty) return false;
+    if (!hasAttributeValue) return false;
+
+    for (var entry in css.entries) {
+      if (!_css.containsEntry(entry)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  @override
+  bool containsAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+
+    var cssEntry = CSSEntry.parse(entry);
+    if (cssEntry == null) {
+      return null;
+    }
+
+    var cssEntry2 = _css.getEntry(cssEntry.name);
+    return cssEntry == cssEntry2;
+  }
+
+  @override
+  String getAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+
+    var cssEntry = CSSEntry.parse(entry);
+    var name = cssEntry != null ? cssEntry.name : entry.trim();
+
+    var cssEntry2 = _css.getEntry(name);
+    return cssEntry2.toString();
+  }
+
+  @override
+  String removeAttributeValueEntry(dynamic entry) {
+    if (!hasAttributeValue || entry == null) {
+      return null;
+    }
+
+    var cssEntry = CSSEntry.parse(entry);
+    if (cssEntry == null) return null;
+
+    var name = cssEntry.name;
+
+    var cssEntry2 = _css.getEntry(name);
+
+    if (cssEntry == cssEntry2) {
+      return _css.removeEntry(name).toString();
+    }
+    return null;
   }
 
   @override

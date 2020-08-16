@@ -12,6 +12,8 @@ class CSS {
 
     if (css is String) {
       return CSS.parse(css) ?? CSS._();
+    } else if (css is List) {
+      return CSS.parseList(css) ?? CSS._();
     }
 
     throw StateError("Can't parse CSS: $css");
@@ -19,15 +21,11 @@ class CSS {
 
   factory CSS.parse(String css) {
     var entries = _parseEntriesList(css);
+    return CSS.parseList(entries);
+  }
 
-    /*
-    var entries = css
-        .split(ENTRIES_DELIMITER)
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty);
-
-    if (entries.isEmpty) return null;
-    */
+  factory CSS.parseList(List<String> entries) {
+    if (entries == null || entries.isEmpty) return null;
 
     var cssEntries =
         entries.map((e) => CSSEntry.parse(e)).where((e) => e != null).toList();
@@ -100,6 +98,8 @@ class CSS {
 
   bool get isNoEmpty => !isEmpty;
 
+  int get length => _entries.length;
+
   void putAll(List<CSSEntry> entries) {
     if (entries == null || entries.isEmpty) return;
     for (var entry in entries) {
@@ -165,6 +165,18 @@ class CSS {
           break;
         }
     }
+  }
+
+  CSSEntry<V> removeEntry<V extends CSSValue>(String name) {
+    var entry = _entries.remove(name);
+    return entry;
+  }
+
+  bool containsEntry<V extends CSSValue>(CSSEntry<V> entry) {
+    if (entry == null) return false;
+    var name = entry.name;
+    var entry2 = _getEntry(name);
+    return entry2 != null && entry2 == entry;
   }
 
   CSSEntry<V> getEntry<V extends CSSValue>(String name) => _getEntry(name);
