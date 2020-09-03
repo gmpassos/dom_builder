@@ -1,3 +1,4 @@
+import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
@@ -60,6 +61,79 @@ abstract class DOMNodeRuntime<T> {
   void setAttribute(String name, String value);
 
   void removeAttribute(String name);
+
+  /// Gets runtime `style` of [node] as [CSS].
+  CSS get style {
+    return CSS(getAttribute('style'));
+  }
+
+  /// Sets runtime `style` of [node] parsed as [CSS].
+  set style(dynamic cssText) {
+    var css = CSS(cssText);
+    setAttribute('style', css.style);
+  }
+
+  /// Gets a runtime [style] [CSSEntry] for [name] from [node].
+  CSSEntry getStyleEntry(String name) {
+    var style = this.style;
+    return style.getEntry(name);
+  }
+
+  /// Gets a runtime [style] property for [name] from [node].
+  String getStyleProperty(String name) {
+    var entry = getStyleEntry(name);
+    return entry != null ? entry.valueAsString : null;
+  }
+
+  String setStyleProperty(String name, String value) {
+    var style = this.style;
+    var prev = style.getAsString(name);
+    style.put(name, value);
+    this.style = style;
+    return prev;
+  }
+
+  void setStyleProperties(Map<String, String> properties) {
+    var style = this.style;
+    style.putAllProperties(properties);
+    this.style = style;
+  }
+
+  CSSEntry removeStyleEntry(String name) {
+    var style = this.style;
+    var entry = style.removeEntry(name);
+    this.style = style;
+    return entry;
+  }
+
+  String removeStyleProperty(String name) {
+    var entry = removeStyleEntry(name);
+    return entry != null ? entry.valueAsString : null;
+  }
+
+  List<CSSEntry> removeStyleEntries(List<String> names) {
+    if (names == null || names.isEmpty) return [];
+
+    var style = this.style;
+
+    var removed = <CSSEntry>[];
+
+    for (var name in names) {
+      var entry = style.removeEntry(name);
+      if (entry != null) {
+        removed.add(entry);
+      }
+    }
+
+    this.style = style;
+    return removed;
+  }
+
+  Map<String, String> removeStyleProperties(List<String> names) {
+    var removed = removeStyleEntries(names);
+    return Map.fromEntries(
+        removed.map((e) => MapEntry(e.name, e.valueAsString)));
+  }
 
   List<T> get children;
 

@@ -17,6 +17,11 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
+  void removeChildFromElement(T element, T child) {
+    _noDartHTML();
+  }
+
+  @override
   T createElement(String tag) {
     _noDartHTML();
     return null;
@@ -32,7 +37,8 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   bool containsNode(T parent, T node) => false;
 
   @override
-  void setAttributes(DOMElement domElement, T element) {
+  void setAttributes(DOMElement domElement, T element,
+      {bool preserveClass = false, bool preserveStyle = false}) {
     _noDartHTML();
   }
 
@@ -51,6 +57,12 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   @override
   void setAttribute(T element, String attrName, String attrVal) {
     _noDartHTML();
+  }
+
+  @override
+  String getAttribute(T element, String attrName) {
+    _noDartHTML();
+    return null;
   }
 
   @override

@@ -1,3 +1,11 @@
+## 1.0.17
+
+- `DOMNodeRuntime`: Can manipulate CSS/style.
+- Added `DOMContext` and `Viewport` for `DOMGenerator`.
+- `CSS`: now is capable to convert viewport units to pixel units, based into [DOMContext] [Viewport].
+- Better `CSSLength`, `CSSBorder`, `CSSColorRGB`, `CSSColorHEX` and `CSSURL` parsing. 
+- swiss_knife: ^2.5.12
+
 ## 1.0.16
 
 - Added `CSS.parseList`.

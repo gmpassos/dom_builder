@@ -110,12 +110,14 @@ void main() {
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
           'uc',
-          (domGenerator, tag, parent, attributes, contentHolder) =>
+          (domGenerator, tag, parent, attributes, contentHolder,
+                  contentNodes) =>
               TestText(contentHolder.text.toUpperCase())));
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
           'lc',
-          (domGenerator, tag, parent, attributes, contentHolder) =>
+          (domGenerator, tag, parent, attributes, contentHolder,
+                  contentNodes) =>
               TestText(contentHolder.text.toLowerCase())));
 
       var treeMap = generator.createDOMTreeMap();
@@ -333,8 +335,13 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
   TestNodeGenerator(this.tag, this.classes);
 
   @override
-  TestElem generate(DOMGenerator<dynamic> domGenerator, String tag, parent,
-      Map<String, DOMAttribute> attributes, contentHolder) {
+  TestElem generate(
+      DOMGenerator<dynamic> domGenerator,
+      String tag,
+      parent,
+      Map<String, DOMAttribute> attributes,
+      contentHolder,
+      List<DOMNode> contentNodes) {
     var attributesAsString =
         attributes.map((key, value) => MapEntry(key, value.value));
 
@@ -369,6 +376,10 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
 }
 
 abstract class TestNode {
+  static int instanceIDCount = 0;
+
+  final int instanceID = ++instanceIDCount;
+
   TestNode parent;
 
   String get text;
@@ -376,7 +387,7 @@ abstract class TestNode {
   TestNode copy();
 }
 
-class TestText implements TestNode {
+class TestText extends TestNode {
   @override
   TestNode parent;
 
@@ -394,6 +405,16 @@ class TestText implements TestNode {
   TestElem get asTestElem => TestElem('span')..add(TestText(text));
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TestText &&
+          runtimeType == other.runtimeType &&
+          _text == other._text;
+
+  @override
+  int get hashCode => instanceID;
+
+  @override
   String toString() {
     return _text;
   }
@@ -402,7 +423,7 @@ class TestText implements TestNode {
   TestText copy() => TestText(_text);
 }
 
-class TestElem implements TestNode {
+class TestElem extends TestNode {
   @override
   TestNode parent;
   final String tag;
@@ -437,6 +458,8 @@ class TestElem implements TestNode {
   void addAll(Iterable<TestNode> nodes) {
     _nodes.addAll(nodes);
   }
+
+  bool contains(TestNode node) => _nodes.contains(node);
 
   void add(TestNode node) {
     _nodes.add(node);
@@ -495,7 +518,7 @@ class TestElem implements TestNode {
           text == other.text;
 
   @override
-  int get hashCode => tag.hashCode ^ text.hashCode;
+  int get hashCode => tag.hashCode ^ instanceID;
 
   @override
   String toString() {
@@ -535,8 +558,15 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   void addChildToElement(TestNode element, TestNode child) {
-    if (element is TestElem) {
+    if (element is TestElem && !element.contains(child)) {
       element.add(child);
+    }
+  }
+
+  @override
+  void removeChildFromElement(TestNode element, TestNode child) {
+    if (element is TestElem) {
+      element.remove(child);
     }
   }
 
@@ -605,6 +635,14 @@ class TestGenerator extends DOMGenerator<TestNode> {
     if (element is TestElem) {
       element.attributes[attrName] = attrVal;
     }
+  }
+
+  @override
+  String getAttribute(TestNode element, String attrName) {
+    if (element is TestElem) {
+      return element.attributes[attrName];
+    }
+    return null;
   }
 
   @override

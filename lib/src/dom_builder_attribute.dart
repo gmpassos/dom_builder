@@ -1,11 +1,13 @@
 import 'dart:collection';
 
+import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_css.dart';
 import 'dom_builder_helpers.dart';
 
+/// Represents a [DOMElement] attribute entry (`name` and [DOMAttributeValue]).
 class DOMAttribute implements WithValue {
   static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked', 'hidden'};
   static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
@@ -107,6 +109,11 @@ class DOMAttribute implements WithValue {
 
   List<String> get values => _valueHandler.asAttributeValues;
 
+  String getValue([DOMContext domContext]) =>
+      _valueHandler.getAttributeValue(domContext);
+
+  int get valueLength => _valueHandler.length;
+
   bool containsValue(dynamic value) =>
       _valueHandler.containsAttributeValue(value);
 
@@ -148,19 +155,29 @@ class DOMAttribute implements WithValue {
   }
 }
 
+/// Base class for [DOMAttribute] value.
 abstract class DOMAttributeValue {
   String get asAttributeValue;
 
   List<String> get asAttributeValues;
 
+  /// Returns the attribute value.
+  ///
+  /// [domContext] Optional context, used by [DOMGenerator].
+  String getAttributeValue([DOMContext domContext]) => asAttributeValue;
+
+  /// Returns [true] if has a value.
   bool get hasAttributeValue;
 
   int get length;
 
+  /// Parses [value] and returns [true] if is equals to this instance value.
   bool equalsAttributeValue(dynamic value);
 
+  /// Parses [value] and returns [true] if this instance contains it.
   bool containsAttributeValue(dynamic value);
 
+  /// Parses [value] and sets this instances value.
   void setAttributeValue(dynamic value);
 
   @override
@@ -203,6 +220,7 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
   }
 }
 
+/// A [DOMAttributeValue] of type [String].
 class DOMAttributeValueString extends DOMAttributeValue {
   String _value;
 
@@ -244,6 +262,7 @@ class DOMAttributeValueString extends DOMAttributeValue {
   }
 }
 
+/// Base [DOMAttributeValue] class for collections.
 abstract class DOMAttributeValueCollection extends DOMAttributeValue {
   bool containsAttributeValueEntry(dynamic value);
 
@@ -262,6 +281,7 @@ abstract class DOMAttributeValueCollection extends DOMAttributeValue {
   }
 }
 
+/// A [DOMAttributeValue] of type [List].
 class DOMAttributeValueList extends DOMAttributeValueCollection {
   List<String> _values;
   final String delimiter;
@@ -378,6 +398,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 }
 
+/// A [DOMAttributeValue] of type [Set].
 class DOMAttributeValueSet extends DOMAttributeValueCollection {
   LinkedHashSet<String> _values;
   final String delimiter;
@@ -487,6 +508,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 }
 
+/// A [DOMAttributeValue] of type [CSS].
 class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   CSS _css;
 
@@ -507,6 +529,14 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
 
   @override
   List<String> get asAttributeValues => _css.entriesAsString;
+
+  @override
+  String getAttributeValue([DOMContext domContext]) {
+    if (hasAttributeValue) {
+      return _css.toString(domContext);
+    }
+    return null;
+  }
 
   @override
   void setAttributeValue(dynamic value) {

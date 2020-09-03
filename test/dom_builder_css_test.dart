@@ -297,6 +297,32 @@ void main() {
       var css2 = CSS('width: calc( 100% )');
       print(css2);
       expect(css2.style, equals('width: 100%'));
+
+      var css3 = CSS('height: calc(100%-20px)');
+      print(css3);
+      expect(css3.style, equals('height: calc(100% - 20px)'));
+    });
+
+    test('CSS multiple', () {
+      var css = CSS(
+          'background-color: #333; text-align: center; box-shadow: 2px 2px 4px #f00; scrollbar-color: #000 #666;');
+      print(css);
+      expect(
+          css.style,
+          equals(
+              'background-color: #333333; text-align: center; box-shadow: 2px 2px 4px #f00; scrollbar-color: #000 #666'));
+
+      expect(css.get('background-color'),
+          equals(CSSValue.parseByName('#333333', 'background-color')));
+
+      expect(css.get('text-align'),
+          equals(CSSValue.parseByName('center', 'text-align')));
+
+      expect(css.get('box-shadow'),
+          equals(CSSValue.parseByName('2px 2px 4px #f00', 'box-shadow')));
+
+      expect(css.get('scrollbar-color'),
+          equals(CSSValue.parseByName('#000 #666', 'scrollbar-color')));
     });
   });
 }

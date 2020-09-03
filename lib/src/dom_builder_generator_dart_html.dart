@@ -116,9 +116,16 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  void addChildToElement(Node node, Node child) {
-    if (node is Element) {
-      node.children.add(child);
+  void addChildToElement(Node element, Node child) {
+    if (element is Element && !element.nodes.contains(child)) {
+      element.append(child);
+    }
+  }
+
+  @override
+  void removeChildFromElement(Node element, Node child) {
+    if (element is Element) {
+      element.children.remove(child);
     }
   }
 
@@ -148,6 +155,14 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  String getAttribute(Node node, String attrName) {
+    if (node is Element) {
+      return node.getAttribute(attrName);
+    }
+    return null;
+  }
+
+  @override
   Element createElement(String tag) {
     return dart_html.createElement(tag);
   }
@@ -168,10 +183,26 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   void registerEventListeners(
       DOMTreeMap<Node> treeMap, DOMElement domElement, Node element) {
     if (element is Element) {
-      element.onClick.listen((event) {
-        var domEvent = createDOMMouseEvent(treeMap, event);
-        domElement.onClick.add(domEvent);
-      });
+      if (domElement.hasOnClickListener) {
+        element.onClick.listen((event) {
+          var domEvent = createDOMMouseEvent(treeMap, event);
+          domElement.onClick.add(domEvent);
+        });
+      }
+
+      if (domElement.hasOnMouseOverListener) {
+        element.onMouseOver.listen((event) {
+          var domEvent = createDOMMouseEvent(treeMap, event);
+          domElement.onMouseOver.add(domEvent);
+        });
+      }
+
+      if (domElement.hasOnMouseOutListener) {
+        element.onMouseOut.listen((event) {
+          var domEvent = createDOMMouseEvent(treeMap, event);
+          domElement.onMouseOut.add(domEvent);
+        });
+      }
     }
   }
 

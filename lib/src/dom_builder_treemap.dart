@@ -1,6 +1,7 @@
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
+import 'dom_builder_context.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
 
@@ -11,17 +12,19 @@ class DOMTreeMap<T> {
 
   DOMTreeMap(this.domGenerator);
 
-  T generate(DOMGenerator<T> domGenerator, DOMNode root) {
-    var rootElement = domGenerator.build(null, null, root, this);
-    _rootDOMNode = root;
-    _rootElement = rootElement;
-    map(root, rootElement);
-    return rootElement;
-  }
+  T generate(DOMGenerator<T> domGenerator, DOMNode root,
+          {T parent, DOMContext<T> context}) =>
+      domGenerator.generate(root,
+          parent: parent, treeMap: this, context: context);
 
   DOMNode _rootDOMNode;
 
   T _rootElement;
+
+  void setRoot(DOMNode rootDOMNode, T rootElement) {
+    _rootDOMNode = rootDOMNode;
+    _rootElement = rootElement;
+  }
 
   /// The root [DOMNode] of this tree.
   DOMNode get rootDOMNode => _rootDOMNode;
@@ -32,6 +35,10 @@ class DOMTreeMap<T> {
   final Map<DOMNode, T> _domNodeToElementMap = {};
 
   final Map<T, DOMNode> _elementToDOMNodeMap = {};
+
+  Iterable<T> get mappedElements => _domNodeToElementMap.values;
+
+  Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
 
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element) {
@@ -63,15 +70,33 @@ class DOMTreeMap<T> {
   }
 
   /// Returns the mapped element [T] associated with [domNode].
-  T getMappedElement(DOMNode domNode) {
+  ///
+  /// [checkParents] If true, also checks for mapped [domNode.parent].
+  T getMappedElement(DOMNode domNode, {bool checkParents}) {
     if (domNode == null) return null;
-    return _domNodeToElementMap[domNode];
+    var element = _domNodeToElementMap[domNode];
+    if (element != null) return element;
+
+    checkParents ??= false;
+    if (!checkParents) return null;
+
+    var parent = domNode.parent;
+    return getMappedElement(parent, checkParents: true);
   }
 
   /// Returns the mapped [DOMNode] associated with [element].
-  DOMNode getMappedDOMNode(T element) {
+  ///
+  /// [checkParents] If true, also checks for mapped [element.parent].
+  DOMNode getMappedDOMNode(T element, {bool checkParents}) {
     if (element == null) return null;
-    return _elementToDOMNodeMap[element];
+    var domNode = _elementToDOMNodeMap[element];
+    if (domNode != null) return domNode;
+
+    checkParents ??= false;
+    if (!checkParents) return null;
+
+    var parent = domGenerator.getNodeParent(element);
+    return getMappedDOMNode(parent, checkParents: true);
   }
 
   /// Returns [true] if [domNode] is mapped by this instance.
@@ -84,6 +109,32 @@ class DOMTreeMap<T> {
   bool isMappedElement(T element) {
     if (element == null) return false;
     return _elementToDOMNodeMap.containsKey(element);
+  }
+
+  /// Returns [domNode] or recursively a [domNode.parent] that is mapped.
+  ///
+  /// If [domNode] hierarchy doesn't have a mapped node, will return null.
+  DOMNode asMappedDOMNode(DOMNode domNode) {
+    if (domNode == null) return null;
+    if (isMappedDOMNode(domNode)) {
+      return domNode;
+    }
+    var parent = domNode.parent;
+    if (parent == null) return null;
+    return asMappedDOMNode(parent);
+  }
+
+  /// Returns [element] or recursively a [element.parent] that is mapped.
+  ///
+  /// If [element] hierarchy doesn't have a mapped node, will return null.
+  T asMappedElement(T element) {
+    if (element == null) return null;
+    if (isMappedElement(element)) {
+      return element;
+    }
+    var parent = domGenerator.getNodeParent(element);
+    if (parent == null) return null;
+    return asMappedElement(parent);
   }
 
   /// Returns [true] if the mapping for [domNode] matches [node].

@@ -1,5 +1,6 @@
 import 'dart:collection';
 
+import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 class CSS {
@@ -84,6 +85,8 @@ class CSS {
 
   CSS._();
 
+  CSS copy() => CSS(style);
+
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -100,6 +103,13 @@ class CSS {
 
   int get length => _entries.length;
 
+  void putAllProperties(Map<String, dynamic> properties) {
+    if (properties == null || properties.isEmpty) return;
+    for (var entry in properties.entries) {
+      put(entry.key, entry.value);
+    }
+  }
+
   void putAll(List<CSSEntry> entries) {
     if (entries == null || entries.isEmpty) return;
     for (var entry in entries) {
@@ -112,13 +122,18 @@ class CSS {
     _putImpl(entry.name, entry);
   }
 
-  void put<V extends CSSValue>(String name, dynamic value) {
+  void put(String name, dynamic value) {
     _putImpl(name, value);
   }
 
   void _putImpl(String name, dynamic value) {
     name = CSSEntry.normalizeName(name);
     if (name == null) return;
+
+    if (value == null) {
+      removeEntry(name);
+      return;
+    }
 
     switch (name) {
       case 'color':
@@ -184,6 +199,11 @@ class CSS {
   V get<V extends CSSValue>(String name) {
     var entry = _getEntry(name);
     return entry != null ? entry.value : null;
+  }
+
+  String getAsString<V extends CSSValue>(String name) {
+    var entry = _getEntry(name);
+    return entry != null ? entry.valueAsString : null;
   }
 
   List<CSSEntry> getPossibleEntries() {
@@ -267,7 +287,7 @@ class CSS {
       _entries.values.map((e) => e.toString(false)).toList();
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     var s = StringBuffer();
 
     var cssEntries = _entries.values;
@@ -277,18 +297,20 @@ class CSS {
     for (var i = 0; i < length; i++) {
       var cssEntry = cssEntries.elementAt(i);
       var finalEntry = i == finalIndex;
-      _append(s, cssEntry, !finalEntry);
+      _append(s, cssEntry, !finalEntry, domContext);
     }
 
     return s.toString();
   }
 
-  void _append(StringBuffer s, CSSEntry entry, bool withDelimiter) {
+  void _append(StringBuffer s, CSSEntry entry, bool withDelimiter,
+      DOMContext domContext) {
     if (entry == null) return;
     if (s.isNotEmpty) {
       s.write(' ');
     }
-    s.write(entry.toString(withDelimiter));
+    var style = entry.toString(withDelimiter, domContext);
+    s.write(style);
   }
 }
 
@@ -365,11 +387,13 @@ class CSSEntry<V extends CSSValue> {
       _sampleValue != null ? _sampleValue.toString() : '';
 
   @override
-  String toString([bool withDelimiter]) {
+  String toString([bool withDelimiter, DOMContext domContext]) {
+    var valueStr = value.toString(domContext);
+
     if (withDelimiter != null && withDelimiter) {
-      return '$name: $value;';
+      return '$name: $valueStr;';
     } else {
-      return '$name: $value';
+      return '$name: $valueStr';
     }
   }
 }
@@ -427,7 +451,7 @@ abstract class CSSValue {
   bool get isCalc => _calc != null;
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     return isCalc ? _calc.toString() : null;
   }
 
@@ -539,7 +563,7 @@ class CSSCalc extends CSSValue {
   String get operationSymbol => getCalcOperationSymbol(operation);
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     if (hasOperation) {
       return 'calc($a $operationSymbol $b)';
     } else {
@@ -595,8 +619,8 @@ class CSSGeneric extends CSSValue {
   }
 
   @override
-  String toString() {
-    return super.toString() ?? '$_value';
+  String toString([DOMContext domContext]) {
+    return super.toString(domContext) ?? '$_value';
   }
 
   @override
@@ -623,6 +647,13 @@ enum CSSUnit {
   vmin,
   vmax,
   percent,
+}
+
+bool isCSSViewportUnit(CSSUnit unit) {
+  return unit == CSSUnit.vw ||
+      unit == CSSUnit.vh ||
+      unit == CSSUnit.vmin ||
+      unit == CSSUnit.vmax;
 }
 
 CSSUnit parseCSSUnit(String unit, [CSSUnit def]) {
@@ -708,7 +739,7 @@ String getCSSUnitName(CSSUnit unit, [CSSUnit def]) {
 
 class CSSLength extends CSSValue {
   static final RegExp PATTERN =
-      RegExp(r'\s*(\d+)(\%|\w+)?\s*', multiLine: false);
+      RegExp(r'^\s*(\d+)(\%|\w+)?\s*$', multiLine: false);
 
   num _value;
 
@@ -757,6 +788,12 @@ class CSSLength extends CSSValue {
     return CSSLength(n, unit);
   }
 
+  /// Returns [true] if [unit] is of type `px`.
+  bool get isPx => _unit == CSSUnit.px;
+
+  /// Returns [true] if [unit] is of type `%`.
+  bool get isPercent => _unit == CSSUnit.percent;
+
   num get value => _value;
 
   set value(num value) {
@@ -770,8 +807,19 @@ class CSSLength extends CSSValue {
   }
 
   @override
-  String toString() {
-    return super.toString() ?? '$_value${getCSSUnitName(_unit)}';
+  String toString([DOMContext domContext]) {
+    return super.toString(domContext) ?? _resolveValue(domContext);
+  }
+
+  String _resolveValue(DOMContext domContext) {
+    if (domContext != null &&
+        domContext.resolveCSSViewportUnit &&
+        isCSSViewportUnit(_unit) &&
+        domContext.viewport != null) {
+      return domContext.resolveCSSViewportUnitValue(_value, unit);
+    } else {
+      return '$_value${getCSSUnitName(_unit)}';
+    }
   }
 
   @override
@@ -880,7 +928,7 @@ abstract class CSSColor extends CSSValue {
 
 class CSSColorRGB extends CSSColor {
   static final RegExp PATTERN_RGB = RegExp(
-      r'\s*(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)\s*',
+      r'^\s*(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)\s*$',
       multiLine: false);
 
   int _red;
@@ -956,7 +1004,7 @@ class CSSColorRGB extends CSSColor {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     return 'rgb($args)';
   }
 
@@ -997,7 +1045,7 @@ class CSSColorRGBA extends CSSColorRGB {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     if (alpha == 1) return super.toString();
     return 'rgba($args)';
   }
@@ -1008,7 +1056,7 @@ class CSSColorRGBA extends CSSColorRGB {
 
 class CSSColorHEX extends CSSColorRGB {
   static final RegExp PATTERN_HEX = RegExp(
-      r'(?:^([0-9a-f]{6-8})$|\s*#([0-9a-f]{3,8})\s*)',
+      r'(?:^([0-9a-f]{6-8})$|^\s*#([0-9a-f]{3,8})\s*$)',
       multiLine: false,
       caseSensitive: false);
 
@@ -1081,7 +1129,7 @@ class CSSColorHEX extends CSSColorRGB {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     var r = _toHex(red);
     var g = _toHex(green);
     var b = _toHex(blue);
@@ -1119,7 +1167,7 @@ class CSSColorHEXAlpha extends CSSColorHEX {
   bool get hasAlpha => _alpha != 1;
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     var colorHEX = super.toString();
     if (alpha != 1) {
       var nA = Math.round(alpha * 255).toInt();
@@ -1330,7 +1378,7 @@ class CSSColorName extends CSSColorRGB {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     return '$name';
   }
 }
@@ -1410,9 +1458,9 @@ String getCSSBorderStyleName(CSSBorderStyle borderStyle) {
 
 class CSSBorder extends CSSValue {
   static final RegExp PATTERN = RegExp(
-      r'\s*(\d+\w+)?'
+      r'^\s*(\d+\w+)?'
       r'\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)'
-      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*',
+      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*$',
       multiLine: false,
       caseSensitive: false);
 
@@ -1471,14 +1519,14 @@ class CSSBorder extends CSSValue {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     return '${_size != null ? '$_size ' : ''}${getCSSBorderStyleName(_style)}${_color != null ? ' $color' : ''}';
   }
 }
 
 class CSSURL extends CSSValue {
   static final RegExp PATTERN = RegExp(
-      r'''\s*url\("(.*?)"|'(.*?)'|(.*?)\)\s*''',
+      r'''^\s*url\(\s*(?:"(.*?)"|'(.*?)'|(.*?))\s*\)\s*$''',
       caseSensitive: false, multiLine: false);
 
   final String url;
@@ -1511,7 +1559,7 @@ class CSSURL extends CSSValue {
   }
 
   @override
-  String toString() {
+  String toString([DOMContext domContext]) {
     if (!url.contains('"')) {
       return 'url("$url")';
     } else if (!url.contains("'")) {

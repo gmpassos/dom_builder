@@ -723,12 +723,14 @@ class DOMNode {
     return nodeWhere((n) => n is DOMElement && n.id == id);
   }
 
+  /// Returns a node [T] that has attribute [id].
   T selectByID<T extends DOMNode>(String id) {
     if (id == null || isEmpty) return null;
     if (id.startsWith('#')) id = id.substring(1);
     return selectWhere((n) => n is DOMElement && n.id == id);
   }
 
+  /// Returns a node [T] that is equals to [node].
   T nodeEquals<T extends DOMNode>(DOMNode node) {
     if (node == null || isEmpty) return null;
     return nodeWhere((n) => n == node);
@@ -745,6 +747,7 @@ class DOMNode {
     return _content.firstWhere(nodeSelector, orElse: () => null);
   }
 
+  /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> nodesWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return [];
     var nodeSelector = asNodeSelector(selector);
@@ -757,6 +760,7 @@ class DOMNode {
     destiny.addAll(_content.where(nodeSelector).whereType<T>());
   }
 
+  /// Returns a [T] child node that matches [selector].
   T selectWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return null;
     var nodeSelector = asNodeSelector(selector);
@@ -772,6 +776,22 @@ class DOMNode {
     return null;
   }
 
+  /// Returns a parent [T] that matches [selector].
+  T selectParentWhere<T extends DOMNode>(dynamic selector) {
+    if (selector == null) return null;
+    var nodeSelector = asNodeSelector(selector);
+    if (nodeSelector == null) return null;
+
+    var node = this;
+
+    while (node != null) {
+      if (nodeSelector(node)) return node;
+      node = node._parent;
+    }
+    return null;
+  }
+
+  /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> selectAllWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return [];
     var nodeSelector = asNodeSelector(selector);
@@ -802,6 +822,9 @@ class DOMNode {
     }
   }
 
+  /// Returns a node [T] that matches [selector].
+  ///
+  /// [selector] can by a [num], used as a node index.
   T select<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return null;
 
@@ -812,6 +835,7 @@ class DOMNode {
     }
   }
 
+  /// Returns the index of a child node that matches [selector].
   int indexOf(dynamic selector) {
     if (selector is num) {
       if (selector < 0) return -1;
@@ -832,6 +856,9 @@ class DOMNode {
     return _content.indexOf(node);
   }
 
+  /// Adds each entry of [iterable] to [content].
+  ///
+  /// [elementGenerator] Optional element generator, that is called for each entry of [iterable].
   DOMNode addEach<T>(Iterable<T> iterable,
       [ContentGenerator<T> elementGenerator]) {
     if (elementGenerator != null) {
@@ -868,6 +895,7 @@ class DOMNode {
     return this;
   }
 
+  /// Parses [html] and add it to [content].
   DOMNode addHTML(String html) {
     var list = $html(html);
     _addListToContent(list);
@@ -895,6 +923,7 @@ class DOMNode {
     _addToContent(node);
   }
 
+  /// Inserts [entry] at index of child node that matches [indexSelector].
   DOMNode insertAt(dynamic indexSelector, dynamic entry) {
     var idx = indexOf(indexSelector);
 
@@ -911,6 +940,7 @@ class DOMNode {
     return this;
   }
 
+  /// Inserts [entry] after index of child node that matches [indexSelector].
   DOMNode insertAfter(dynamic indexSelector, dynamic entry) {
     var idx = indexOf(indexSelector);
 
@@ -1075,6 +1105,7 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 // DOMElement:
 //
 
+/// A node for HTML elements.
 class DOMElement extends DOMNode {
   static final Set<String> _NO_CONTENT_TAG = {'p', 'hr', 'br', 'input'};
 
@@ -1293,6 +1324,29 @@ class DOMElement extends DOMNode {
       : _attributes.map((key, value) =>
           MapEntry(key, value.isCollection ? value.values : value.value));
 
+  Map<String, String> get attributesAsString => hasEmptyAttributes
+      ? {}
+      : _attributes.map((key, value) => MapEntry(key, value.value));
+
+  static const Set<String> POSSIBLE_GLOBAL_ATTRIBUTES = {
+    'id',
+    'navigate',
+    'action',
+    'uilayout',
+    'oneventkeypress',
+    'oneventclick'
+  };
+
+  Map<String, String> get possibleAttributes {
+    var attributes = attributesAsString;
+
+    for (var attr in POSSIBLE_GLOBAL_ATTRIBUTES) {
+      attributes.putIfAbsent(attr, () => '');
+    }
+
+    return attributes;
+  }
+
   /// Returns the attributes names with values.
   Iterable<String> get attributesNames => hasAttributes ? _attributes.keys : [];
 
@@ -1314,16 +1368,31 @@ class DOMElement extends DOMNode {
     return text;
   }
 
-  String getAttributeValue(String name) {
+  /// Returns attribute value for [name].
+  ///
+  /// [domContext] Optional context used by [DOMGenerator].
+  String getAttributeValue(String name, [DOMContext domContext]) {
     var attr = getAttribute(name);
-    return attr != null ? attr.value : null;
+    return attr != null ? attr.getValue(domContext) : null;
   }
 
+  /// Returns [true] if attribute for [name] exists.
+  ///
+  /// [domContext] Optional context used by [DOMGenerator].
+  bool hasAttributeValue(String name, [DOMContext domContext]) {
+    var attr = getAttribute(name);
+    if (attr == null) return false;
+    var value = attr.getValue(domContext);
+    return value != null && value.isNotEmpty;
+  }
+
+  /// Returns [DOMAttribute] entry for [name].
   DOMAttribute getAttribute(String name) {
     if (hasEmptyAttributes) return null;
     return _attributes[name];
   }
 
+  /// Sets attribute for [name], parsing [value].
   DOMElement setAttribute(String name, dynamic value) {
     if (name == null) return null;
 
@@ -1346,6 +1415,8 @@ class DOMElement extends DOMNode {
     return this;
   }
 
+  /// Appends [value] to attribute of [name].
+  /// Useful for attributes like `class` and `style`.
   DOMElement appendToAttribute(String name, dynamic value) {
     // ignore: prefer_collection_literals
     _attributes ??= LinkedHashMap();
@@ -1365,6 +1436,7 @@ class DOMElement extends DOMNode {
     return this;
   }
 
+  /// Add [attributes] to this instance.
   DOMElement addAllAttributes(Map<String, dynamic> attributes) {
     if (isNotEmptyObject(attributes)) {
       for (var entry in attributes.entries) {
@@ -1422,6 +1494,7 @@ class DOMElement extends DOMNode {
     return removedAny;
   }
 
+  /// Applies [id], [classes] and [style] to this instance.
   T apply<T extends DOMElement>({id, classes, style}) {
     if (id != null) {
       setAttribute('id', id);
@@ -1438,6 +1511,7 @@ class DOMElement extends DOMNode {
     return this;
   }
 
+  /// Applies [id], [classes] and [style] to children nodes that matches [selector].
   T applyWhere<T extends DOMElement>(dynamic selector, {id, classes, style}) {
     var all = selectAllWhere(selector);
 
@@ -1505,6 +1579,8 @@ class DOMElement extends DOMNode {
     }
   }
 
+  /// Merges this node with [other]. Useful for consecutive text elements like
+  /// `b`, `i` and `span`.
   @override
   bool merge(DOMNode other, {bool onlyConsecutive = true}) {
     onlyConsecutive ??= true;
@@ -1532,6 +1608,7 @@ class DOMElement extends DOMNode {
     }
   }
 
+  /// Returns [true] if [other] is compatible to call [merge].
   @override
   bool isCompatibleForMerge(DOMNode other) {
     if (other is DOMElement) {
@@ -1732,9 +1809,35 @@ class DOMElement extends DOMNode {
 
   EventStream<DOMMouseEvent> _onClick;
 
+  /// Returns [true] if has any [onClick] listener registered.
+  bool get hasOnClickListener => _onClick != null;
+
+  /// Event handler for `click` events.
   EventStream<DOMMouseEvent> get onClick {
     _onClick ??= EventStream();
     return _onClick;
+  }
+
+  EventStream<DOMMouseEvent> _onMouseOver;
+
+  /// Returns [true] if has any [onMouseOver] listener registered.
+  bool get hasOnMouseOverListener => _onMouseOver != null;
+
+  /// Event handler for click `mouseOver` events.
+  EventStream<DOMMouseEvent> get onMouseOver {
+    _onMouseOver ??= EventStream();
+    return _onMouseOver;
+  }
+
+  EventStream<DOMMouseEvent> _onMouseOut;
+
+  /// Returns [true] if has any [onMouseOut] listener registered.
+  bool get hasOnMouseOutListener => _onMouseOut != null;
+
+  /// Event handler for click `mouseOut` events.
+  EventStream<DOMMouseEvent> get onMouseOut {
+    _onMouseOut ??= EventStream();
+    return _onMouseOut;
   }
 }
 
@@ -1742,8 +1845,10 @@ class DOMElement extends DOMNode {
 // Events:
 //
 
+/// Base class for [DOMElement] events.
 class DOMEvent {}
 
+/// Represents a mouse event.
 class DOMMouseEvent<T> extends DOMEvent {
   final DOMTreeMap<T> treeMap;
 
@@ -1799,6 +1904,7 @@ class DOMMouseEvent<T> extends DOMEvent {
 // ExternalElementNode:
 //
 
+/// Class wrapper for a external element as a [DOMNode].
 class ExternalElementNode extends DOMNode {
   final dynamic externalElement;
 
@@ -1840,6 +1946,7 @@ class ExternalElementNode extends DOMNode {
 // DIVElement:
 //
 
+/// Class for a `div` element.
 class DIVElement extends DOMElement {
   factory DIVElement.from(dynamic entry) {
     if (entry == null) return null;
