@@ -385,6 +385,8 @@ abstract class TestNode {
   String get text;
 
   TestNode copy();
+
+  String outerHTML();
 }
 
 class TestText extends TestNode {
@@ -421,6 +423,9 @@ class TestText extends TestNode {
 
   @override
   TestText copy() => TestText(_text);
+
+  @override
+  String outerHTML() => _text;
 }
 
 class TestElem extends TestNode {
@@ -504,9 +509,23 @@ class TestElem extends TestNode {
 
   final Map<String, String> attributes = {};
 
-  String get asHTML {
-    // BAD HTML:
-    return '<$tag $attributes>$_nodes</$tag>';
+  String get asHTML => outerHTML();
+
+  @override
+  String outerHTML() {
+    var attrs =
+        attributes.entries.map((e) => '${e.key}="${e.value}"').join(' ');
+    if (attrs.isNotEmpty) attrs = ' $attrs';
+
+    var html = '<$tag$attrs>';
+
+    for (var node in _nodes) {
+      html += node.outerHTML();
+    }
+
+    html += '</$tag>';
+
+    return html;
   }
 
   @override
@@ -546,6 +565,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
       return element.tag;
     }
     return null;
+  }
+
+  @override
+  String getElementOuterHTML(TestNode element) {
+    return element.outerHTML();
   }
 
   @override

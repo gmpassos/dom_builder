@@ -245,6 +245,19 @@ void main() {
       expect(color4 == color3, isFalse);
     });
 
+    test('CSSLength', () {
+      expect(CSSLength.parse('101px').toString(), equals('101px'));
+      expect(CSSLength.parse('101px'), equals(CSSLength(101, CSSUnit.px)));
+
+      expect(CSSLength.parse('102').toString(), equals('102px'));
+      expect(CSSLength.parse('102'), equals(CSSLength(102, CSSUnit.px)));
+
+      expect(CSSLength.parse('75%').toString(), equals('75%'));
+      expect(CSSLength.parse('75%'), equals(CSSLength(75, CSSUnit.percent)));
+
+      expect(CSSLength.parse('1.5em'), equals(CSSLength(1.5, CSSUnit.em)));
+    });
+
     test('CSS border 1', () {
       var css = CSS('border: 11px dotted #f00;');
       expect(css.style, equals('border: 11px dotted #ff0000'));

@@ -64,6 +64,23 @@ class Viewport {
   String get vmaxAsPx => '${vmax}px';
 
   @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is Viewport &&
+          runtimeType == other.runtimeType &&
+          deviceWidth == other.deviceWidth &&
+          deviceHeight == other.deviceHeight &&
+          width == other.width &&
+          height == other.height;
+
+  @override
+  int get hashCode =>
+      deviceWidth.hashCode ^
+      deviceHeight.hashCode ^
+      width.hashCode ^
+      height.hashCode;
+
+  @override
   String toString() {
     return 'Viewport{deviceWidth: $deviceWidth, deviceHeight: $deviceHeight, width: $width, height: $height}';
   }
@@ -213,6 +230,20 @@ class DOMContext<T> {
       DOMContext<T> context) onPreElementCreated;
 
   void Function(DOMTreeMap<T> treeMap) preFinalizeGeneratedTree;
+
+  String resolveSource(String url) {
+    if (parent != null) {
+      var resolvedURL = parent.resolveSource(url);
+      if (resolvedURL != null) {
+        return resolvedURL;
+      }
+    }
+
+    if (_domGenerator != null) {
+      return domGenerator.resolveSource(url);
+    }
+    return url;
+  }
 
   @override
   String toString() {

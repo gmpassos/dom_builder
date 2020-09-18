@@ -264,6 +264,7 @@ class DOMNode {
       String parentIndent = '',
       String indent = '  ',
       bool disableIndent = false,
+      bool xhtml = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     if (isCommented) return '';
@@ -278,6 +279,7 @@ class DOMNode {
             parentIndent: parentIndent + indent,
             indent: indent,
             disableIndent: disableIndent,
+            xhtml: xhtml,
             parentNode: parentNode,
             previousNode: prev);
         if (subHtml != null) {
@@ -1059,9 +1061,12 @@ class TextNode extends DOMNode implements WithValue {
       String parentIndent = '',
       String indent = '  ',
       bool disableIndent = false,
+      bool xhtml = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
-    return _text.replaceAll('\xa0', '&nbsp;');
+    var nbsp = xhtml ? '&#160;' : '&nbsp;';
+
+    return _text.replaceAll('\xa0', nbsp);
   }
 
   @override
@@ -1666,7 +1671,7 @@ class DOMElement extends DOMNode {
     return false;
   }
 
-  String buildOpenTagHTML() {
+  String buildOpenTagHTML({bool openCloseTag = false}) {
     var html = '<$tag';
 
     if (hasAttributes) {
@@ -1693,7 +1698,7 @@ class DOMElement extends DOMNode {
       }
     }
 
-    html += '>';
+    html += openCloseTag ? '/>' : '>';
 
     return html;
   }
@@ -1725,6 +1730,7 @@ class DOMElement extends DOMNode {
       String parentIndent = '',
       String indent = '  ',
       bool disableIndent = false,
+      bool xhtml = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     disableIndent ??= false;
@@ -1745,7 +1751,7 @@ class DOMElement extends DOMNode {
     }
 
     if (_NO_CONTENT_TAG.contains(tag)) {
-      var html = parentIndent + buildOpenTagHTML();
+      var html = parentIndent + buildOpenTagHTML(openCloseTag: xhtml);
       return html;
     }
 
@@ -1759,6 +1765,7 @@ class DOMElement extends DOMNode {
             parentIndent: innerIndent,
             indent: indent,
             disableIndent: disableIndent,
+            xhtml: xhtml,
             parentNode: this,
             previousNode: prev);
         if (subElement != null) {
@@ -1917,6 +1924,7 @@ class ExternalElementNode extends DOMNode {
       String parentIndent = '',
       String indent = '  ',
       bool disableIndent = false,
+      bool xhtml = false,
       DOMNode parentNode,
       DOMNode previousNode}) {
     if (externalElement == null) return '';

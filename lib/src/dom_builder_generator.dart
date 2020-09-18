@@ -88,6 +88,10 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element tag: $element");
   }
 
+  String getElementOuterHTML(T element) {
+    throw UnsupportedError("Can't get element outerHTML: $element");
+  }
+
   Map<String, String> getElementAttributes(T element) {
     throw UnsupportedError("Can't get element attributes: $element");
   }
@@ -102,15 +106,21 @@ abstract class DOMGenerator<T> {
       {DOMTreeMap<T> treeMap,
       T parent,
       DOMContext<T> context,
-      bool finalizeTree = true}) {
+      bool finalizeTree = true,
+      bool setTreeMapRoot = true}) {
     treeMap ??= createGenericDOMTreeMap();
     context ??= _domContext;
+    setTreeMapRoot ??= true;
 
-    treeMap.setRoot(root, null);
+    if (setTreeMapRoot) {
+      treeMap.setRoot(root, null);
+    }
 
     var rootElement = build(null, parent, root, treeMap, context);
 
-    treeMap.setRoot(root, rootElement);
+    if (setTreeMapRoot) {
+      treeMap.setRoot(root, rootElement);
+    }
 
     _callFinalizeGeneratedTree(treeMap, context, finalizeTree);
 
@@ -122,9 +132,11 @@ abstract class DOMGenerator<T> {
       {DOMTreeMap<T> treeMap,
       T rootParent,
       DOMContext<T> context,
-      bool finalizeTree = true}) {
+      bool finalizeTree = true,
+      bool setTreeMapRoot = true}) {
     treeMap ??= createGenericDOMTreeMap();
     context ??= _domContext;
+    setTreeMapRoot ??= true;
 
     if (rootElement == null && domRoot != null) {
       rootElement = treeMap.getMappedElement(domRoot);
@@ -141,7 +153,7 @@ abstract class DOMGenerator<T> {
       build(domRoot, rootElement, node, treeMap, context);
     }
 
-    if (domRoot != null) {
+    if (domRoot != null && setTreeMapRoot) {
       treeMap.setRoot(domRoot, rootElement);
     }
 
@@ -445,10 +457,33 @@ abstract class DOMGenerator<T> {
           attrVal =
               attrVal != null && attrVal.isNotEmpty ? '$prev $attrVal' : prev;
         }
+      } else if ((attrName == 'src' || attrName == 'href') &&
+          attrVal != null &&
+          attrVal.isNotEmpty) {
+        var attrVal2 = resolveSource(attrVal);
+
+        if (attrVal2 != null && attrVal != attrVal2) {
+          setAttribute(element, '$attrName-original', attrVal);
+          attrVal = attrVal2;
+        }
       }
 
       setAttribute(element, attrName, attrVal);
     }
+  }
+
+  /// [Function] used by [resolveSource].
+  String Function(String url) sourceResolver;
+
+  /// Resolves any source attribute.
+  String resolveSource(String url) {
+    if (sourceResolver != null) {
+      var urlResolved = sourceResolver(url);
+      if (urlResolved != null) {
+        return urlResolved;
+      }
+    }
+    return url;
   }
 
   void setAttribute(T element, String attrName, String attrVal);
@@ -597,9 +632,27 @@ abstract class DOMGenerator<T> {
     return domNode;
   }
 
+  /// Resets instances and generated tree.
+  void reset() {
+    _generatedHTMLTrees.clear();
+  }
+
+  bool populateGeneratedHTMLTrees = false;
+
+  final List<String> _generatedHTMLTrees = [];
+
+  List<String> get generatedHTMLTrees => List.from(_generatedHTMLTrees);
+
   void _callFinalizeGeneratedTree(
       DOMTreeMap<T> treeMap, DOMContext<T> context, bool finalizeTree) {
     if (finalizeTree ?? true) {
+      var rootElement = treeMap.rootElement;
+
+      if (rootElement != null && (populateGeneratedHTMLTrees ?? false)) {
+        var html = getElementOuterHTML(rootElement);
+        _generatedHTMLTrees.add(html);
+      }
+
       if (context != null && context.preFinalizeGeneratedTree != null) {
         context.preFinalizeGeneratedTree(treeMap);
       }
@@ -693,3 +746,352 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
 }
 
 abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
+
+/// Delegates operations to another [DOMGenerator].
+class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
+  final DOMGenerator<T> domGenerator;
+
+  DOMGeneratorDelegate(this.domGenerator);
+
+  @override
+  void reset() => domGenerator.reset();
+
+  @override
+  void addChildToElement(T element, T child) =>
+      domGenerator.addChildToElement(element, child);
+
+  @override
+  List<T> addExternalElementToElement(T element, externalElement) =>
+      domGenerator.addExternalElementToElement(element, externalElement);
+
+  @override
+  T appendElementText(T element, String text) =>
+      domGenerator.appendElementText(element, text);
+
+  @override
+  String buildElementHTML(T element) => domGenerator.buildElementHTML(element);
+
+  @override
+  bool canHandleExternalElement(externalElement) =>
+      domGenerator.canHandleExternalElement(externalElement);
+
+  @override
+  bool containsNode(T parent, T node) =>
+      domGenerator.containsNode(parent, node);
+
+  @override
+  DOMNodeRuntime<T> createDOMNodeRuntime(
+          DOMTreeMap<T> treeMap, DOMNode domNode, T node) =>
+      domGenerator.createDOMNodeRuntime(treeMap, domNode, node);
+
+  @override
+  T createElement(String tag) => domGenerator.createElement(tag);
+
+  @override
+  T createTextNode(String text) => domGenerator.createTextNode(text);
+
+  @override
+  String getAttribute(T element, String attrName) =>
+      domGenerator.getAttribute(element, attrName);
+
+  @override
+  String getNodeText(T node) => domGenerator.getNodeText(node);
+
+  @override
+  bool isTextNode(T node) => domGenerator.isTextNode(node);
+
+  @override
+  void removeChildFromElement(T element, T child) =>
+      domGenerator.removeChildFromElement(element, child);
+
+  @override
+  void setAttribute(T element, String attrName, String attrVal) =>
+      domGenerator.setAttribute(element, attrName, attrVal);
+
+  @override
+  void onElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
+          DOMContext<T> context) =>
+      domGenerator.onElementCreated(treeMap, domElement, element, context);
+
+  @override
+  void registerEventListeners(
+          DOMTreeMap<T> treeMap, DOMElement domElement, T element) =>
+      domGenerator.registerEventListeners(treeMap, domElement, element);
+
+  @override
+  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
+      domGenerator.createDOMMouseEvent(treeMap, event);
+
+  @override
+  bool cancelEvent(dynamic event, {bool stopImmediatePropagation = false}) =>
+      domGenerator.cancelEvent(event,
+          stopImmediatePropagation: stopImmediatePropagation);
+
+  @override
+  void finalizeGeneratedTree(DOMTreeMap<T> treeMap) =>
+      domGenerator.finalizeGeneratedTree(treeMap);
+
+  @override
+  Viewport get viewport => domGenerator.viewport;
+
+  @override
+  Map<String, ElementGenerator<T>> get registeredElementsGenerators =>
+      domGenerator.registeredElementsGenerators;
+
+  @override
+  int get registeredElementsGeneratorsLength =>
+      domGenerator.registeredElementsGeneratorsLength;
+
+  @override
+  DOMContext<T> get domContext => domGenerator.domContext;
+
+  @override
+  set domContext(DOMContext<T> value) => domGenerator.domContext = value;
+
+  @override
+  T buildElement(DOMElement domParent, T parent, DOMElement domElement,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.buildElement(
+          domParent, parent, domElement, treeMap, context);
+
+  @override
+  List<T> buildNodes(DOMElement domParent, T parent, List<DOMNode> domNodes,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.buildNodes(domParent, parent, domNodes, treeMap, context);
+
+  @override
+  void _callFinalizeGeneratedTree(
+          DOMTreeMap<T> treeMap, DOMContext<T> context, bool finalizeTree) =>
+      domGenerator._callFinalizeGeneratedTree(treeMap, context, finalizeTree);
+
+  @override
+  void _callOnElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement,
+          T element, DOMContext<T> context) =>
+      domGenerator._callOnElementCreated(treeMap, domElement, element, context);
+
+  @override
+  Map<String, ElementGenerator<T>> get _elementsGenerators =>
+      domGenerator._elementsGenerators;
+
+  @override
+  Set<String> get _ignoreAttributeEquivalence =>
+      domGenerator._ignoreAttributeEquivalence;
+
+  @override
+  T _parseExternalElement(
+          DOMElement domParent,
+          T parent,
+          ExternalElementNode domElement,
+          externalElement,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator._parseExternalElement(
+          domParent, parent, domElement, externalElement, treeMap, context);
+
+  @override
+  DOMNode _revertImp(
+          DOMTreeMap<T> treeMap, DOMElement domParent, T parent, T node) =>
+      domGenerator._revertImp(treeMap, domParent, parent, node);
+
+  @override
+  DOMElement _revert_DOMElement(
+          DOMTreeMap<T> treeMap, DOMElement domParent, T parent, T node) =>
+      domGenerator._revert_DOMElement(treeMap, domParent, parent, node);
+
+  @override
+  TextNode _revert_TextNode(DOMElement domParent, T parent, T node) =>
+      domGenerator._revert_TextNode(domParent, parent, node);
+
+  @override
+  T build(DOMElement domParent, T parent, DOMNode domNode,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.build(domParent, parent, domNode, treeMap, context);
+
+  @override
+  T buildExternalElement(
+          DOMElement domParent,
+          T parent,
+          ExternalElementNode domElement,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator.buildExternalElement(
+          domParent, parent, domElement, treeMap, context);
+
+  @override
+  T buildText(DOMElement domParent, T parent, TextNode domNode,
+          DOMTreeMap<T> treeMap) =>
+      domGenerator.buildText(domParent, parent, domNode, treeMap);
+
+  @override
+  void clearIgnoredAttributesEquivalence() =>
+      domGenerator.clearIgnoredAttributesEquivalence();
+
+  @override
+  DOMTreeMap<T> createDOMTreeMap() => domGenerator.createDOMTreeMap();
+
+  @override
+  DOMTreeMap<T> createGenericDOMTreeMap() =>
+      domGenerator.createGenericDOMTreeMap();
+
+  @override
+  T createWithRegisteredElementGenerator(
+          DOMElement domParent,
+          T parent,
+          DOMElement domElement,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator.createWithRegisteredElementGenerator(
+          domParent, parent, domElement, treeMap, context);
+
+  @override
+  T generate(DOMNode root,
+          {DOMTreeMap<T> treeMap,
+          T parent,
+          DOMContext<T> context,
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.generate(root,
+          treeMap: treeMap,
+          parent: parent,
+          context: context,
+          finalizeTree: finalizeTree,
+          setTreeMapRoot: setTreeMapRoot);
+
+  @override
+  T generateFromHTML(String htmlRoot,
+          {DOMTreeMap<T> treeMap,
+          DOMElement domParent,
+          T parent,
+          DOMContext<T> context,
+          bool finalizeTree = true}) =>
+      domGenerator.generateFromHTML(htmlRoot,
+          treeMap: treeMap,
+          domParent: domParent,
+          parent: parent,
+          context: context,
+          finalizeTree: finalizeTree);
+
+  @override
+  DOMTreeMap<T> generateMapped(DOMElement root,
+          {T parent, DOMContext<T> context}) =>
+      domGenerator.generateMapped(root, parent: parent, context: context);
+
+  @override
+  List<T> generateNodes(List<DOMNode> nodes, {DOMContext<T> context}) =>
+      domGenerator.generateNodes(nodes, context: context);
+
+  @override
+  T generateWithRoot(DOMElement domRoot, T rootElement, List<DOMNode> nodes,
+          {DOMTreeMap<T> treeMap,
+          T rootParent,
+          DOMContext<T> context,
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.generateWithRoot(domRoot, rootElement, nodes,
+          treeMap: treeMap,
+          rootParent: rootParent,
+          context: context,
+          finalizeTree: finalizeTree,
+          setTreeMapRoot: setTreeMapRoot);
+
+  @override
+  String getDOMNodeText(TextNode domNode) =>
+      domGenerator.getDOMNodeText(domNode);
+
+  @override
+  Map<String, String> getElementAttributes(T element) =>
+      domGenerator.getElementAttributes(element);
+
+  @override
+  List<T> getElementNodes(T element) => domGenerator.getElementNodes(element);
+
+  @override
+  String getElementTag(T element) => domGenerator.getElementTag(element);
+
+  @override
+  String getElementOuterHTML(T element) =>
+      domGenerator.getElementOuterHTML(element);
+
+  @override
+  List<String> getIgnoredAttributesEquivalence() =>
+      domGenerator.getIgnoredAttributesEquivalence();
+
+  @override
+  T getNodeParent(T node) => domGenerator.getNodeParent(node);
+
+  @override
+  void ignoreAttributeEquivalence(String attributeName) =>
+      domGenerator.ignoreAttributeEquivalence(attributeName);
+
+  @override
+  bool isElementGeneratorTag(String tag) =>
+      domGenerator.isElementGeneratorTag(tag);
+
+  @override
+  bool isElementNode(T node) => domGenerator.isElementNode(node);
+
+  @override
+  bool isEquivalentNode(DOMNode domNode, T node) =>
+      domGenerator.isEquivalentNode(domNode, node);
+
+  @override
+  bool isEquivalentNodeType(DOMNode domNode, T node) =>
+      domGenerator.isEquivalentNodeType(domNode, node);
+
+  @override
+  bool isIgnoreAttributeEquivalence(String attributeName) =>
+      domGenerator.isIgnoreAttributeEquivalence(attributeName);
+
+  @override
+  bool registerElementGenerator(ElementGenerator<T> elementGenerator) =>
+      domGenerator.registerElementGenerator(elementGenerator);
+
+  @override
+  bool registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) =>
+      domGenerator.registerElementGeneratorFrom(otherGenerator);
+
+  @override
+  bool removeIgnoredAttributeEquivalence(String attributeName) =>
+      domGenerator.removeIgnoredAttributeEquivalence(attributeName);
+
+  @override
+  DOMNode revert(DOMTreeMap<T> treeMap, T node) =>
+      domGenerator.revert(treeMap, node);
+
+  @override
+  void setAttributes(DOMElement domElement, T element,
+          {bool preserveClass = false, bool preserveStyle = false}) =>
+      domGenerator.setAttributes(domElement, element,
+          preserveClass: preserveClass, preserveStyle: preserveStyle);
+
+  @override
+  DOMContext<T> get _domContext => domGenerator._domContext;
+
+  @override
+  set _domContext(DOMContext<T> domContext) =>
+      domGenerator._domContext = domContext;
+
+  @override
+  List<String> get _generatedHTMLTrees => domGenerator._generatedHTMLTrees;
+
+  @override
+  List<String> get generatedHTMLTrees => domGenerator.generatedHTMLTrees;
+
+  @override
+  bool get populateGeneratedHTMLTrees =>
+      domGenerator.populateGeneratedHTMLTrees;
+
+  @override
+  set populateGeneratedHTMLTrees(bool populate) =>
+      domGenerator.populateGeneratedHTMLTrees = populate;
+
+  @override
+  String Function(String url) get sourceResolver => domGenerator.sourceResolver;
+
+  @override
+  set sourceResolver(String Function(String url) sourceResolver) =>
+      domGenerator.sourceResolver = sourceResolver;
+
+  @override
+  String resolveSource(String url) => domGenerator.resolveSource(url);
+}

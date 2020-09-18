@@ -739,7 +739,7 @@ String getCSSUnitName(CSSUnit unit, [CSSUnit def]) {
 
 class CSSLength extends CSSValue {
   static final RegExp PATTERN =
-      RegExp(r'^\s*(\d+)(\%|\w+)?\s*$', multiLine: false);
+      RegExp(r'^\s*(-?\d+(?:\.\d+)?)(\%|\w+)?\s*$', multiLine: false);
 
   num _value;
 
@@ -782,7 +782,17 @@ class CSSLength extends CSSValue {
     var match = PATTERN.firstMatch(value);
     if (match == null) return null;
 
-    var n = int.parse(match.group(1));
+    var nStr = match.group(1);
+
+    num n;
+    if (isInt(nStr)) {
+      n = parseInt(nStr);
+    } else if (isDouble(nStr)) {
+      n = parseDouble(nStr);
+    } else {
+      return null;
+    }
+
     var unit = parseCSSUnit(match.group(2));
 
     return CSSLength(n, unit);

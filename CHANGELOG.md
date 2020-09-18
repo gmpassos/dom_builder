@@ -1,3 +1,14 @@
+## 1.0.18
+
+- Added option to generate XHTML.
+- Added `resolveSource`, to translate any `src` or `href` attribute.
+- Added `DOMGeneratorDelegate`.
+- Fix `CSSLength`, to parse double.
+- swiss_knife: ^2.5.14
+- pedantic: ^1.9.2
+- test: ^1.15.4
+- test_coverage: ^0.4.3
+
 ## 1.0.17
 
 - `DOMNodeRuntime`: Can manipulate CSS/style.

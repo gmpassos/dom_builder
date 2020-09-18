@@ -27,6 +27,15 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  String getElementOuterHTML(Node element) {
+    if (element is Element) {
+      return element.outerHtml;
+    } else {
+      return element.text;
+    }
+  }
+
+  @override
   Map<String, String> getElementAttributes(Node element) {
     if (element is Element) {
       return Map.fromEntries(element.attributes.entries);
