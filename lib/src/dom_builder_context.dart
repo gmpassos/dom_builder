@@ -128,11 +128,20 @@ class DOMContext<T> {
   Viewport viewport;
 
   /// If [true] will resolve any viewport [CSSUnit] to `px` when
-  /// generating DOM tree.
+  /// generating a DOM tree.
   bool _resolveCSSViewportUnit = false;
 
-  DOMContext({this.parent, this.viewport, bool resolveCSSViewportUnit}) {
+  /// If [true] will resolve any [CSSURL] when
+  /// generating a DOM tree.
+  bool _resolveCSSURL = false;
+
+  DOMContext(
+      {this.parent,
+      this.viewport,
+      bool resolveCSSViewportUnit,
+      bool resolveCSSURL}) {
     this.resolveCSSViewportUnit = resolveCSSViewportUnit;
+    this.resolveCSSURL = resolveCSSURL;
   }
 
   bool get resolveCSSViewportUnit => _resolveCSSViewportUnit;
@@ -143,11 +152,29 @@ class DOMContext<T> {
 
   /// Resolves a Viewport [CSSUnit] (`vw`, `vh`, `vmin`, `vmax`) [value]
   /// to a `px` value as [String].
-  String resolveCSSViewportUnitValue(num value, CSSUnit unit) {
+  String resolveCSSViewportUnitValue(num value, CSSUnit unit,
+      {bool originalValueAsComment = true}) {
     if (viewport == null) {
       return resolveCSSUnitValue(value, unit);
     }
 
+    var resolvedViewportValue =
+        _resolveCSSViewportUnitValueImpl(value, unit, viewport);
+    if (resolvedViewportValue == null) {
+      return resolveCSSUnitValue(value, unit);
+    }
+
+    if (originalValueAsComment ?? true) {
+      var originalValue = resolveCSSUnitValue(value, unit);
+      resolvedViewportValue +=
+          ' /* DOMContext-original-value: $originalValue */';
+    }
+
+    return resolvedViewportValue;
+  }
+
+  String _resolveCSSViewportUnitValueImpl(
+      num value, CSSUnit unit, Viewport viewport) {
     var ratio = value / 100;
 
     switch (unit) {
@@ -160,13 +187,30 @@ class DOMContext<T> {
       case CSSUnit.vmax:
         return '${ratio * viewport.vmax}px';
       default:
-        return resolveCSSUnitValue(value, unit);
+        return null;
     }
   }
 
   /// Resolves a [CSSUnit] [value] to a [String]
   String resolveCSSUnitValue(num value, CSSUnit unit) {
     return '$value${getCSSUnitName(unit)}';
+  }
+
+  bool get resolveCSSURL => _resolveCSSURL;
+
+  set resolveCSSURL(bool value) {
+    _resolveCSSURL = value ?? false;
+  }
+
+  /// The resolver [Function] for [CSSURL].
+  String Function(String url) cssURLResolver;
+
+  /// Resolves a [CSSURL] [value]
+  String resolveCSSURLValue(String url) {
+    if (cssURLResolver != null) {
+      return cssURLResolver(url);
+    }
+    return url;
   }
 
   static final String defaultNamedElementAttribute = 'name';

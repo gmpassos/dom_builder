@@ -40,9 +40,10 @@ class DOMAttribute implements WithValue {
     return name.trim().toLowerCase();
   }
 
-  static String append(String s, String delimiter, DOMAttribute attribute) {
+  static String append(String s, String delimiter, DOMAttribute attribute,
+      [DOMContext domContext]) {
     if (attribute == null) return s;
-    var append = attribute.buildHTML();
+    var append = attribute.buildHTML(domContext);
     if (append == null || append.isEmpty) return s;
     return s + delimiter + append;
   }
@@ -133,12 +134,12 @@ class DOMAttribute implements WithValue {
     }
   }
 
-  String buildHTML() {
+  String buildHTML([DOMContext domContext]) {
     if (isBoolean) {
       return _valueHandler.hasAttributeValue ? name : '';
     }
 
-    var htmlValue = _valueHandler.asAttributeValue;
+    var htmlValue = _valueHandler.getAttributeValue(domContext);
 
     if (htmlValue != null) {
       var html = '$name=';
@@ -320,7 +321,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
 
   @override
   void setAttributeValue(dynamic value) {
-    var valuesList = parseListOfStrings(value, delimiterPattern);
+    var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
     if (valuesList == null || valuesList.isEmpty) {
       _values = [];
@@ -439,7 +440,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
 
   @override
   void setAttributeValue(dynamic value) {
-    var valuesList = parseListOfStrings(value, delimiterPattern);
+    var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
     if (valuesList == null || valuesList.isEmpty) {
       // ignore: prefer_collection_literals

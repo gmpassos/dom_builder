@@ -96,6 +96,11 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element attributes: $element");
   }
 
+  Map<String, String> revertElementAttributes(
+      T element, Map<String, String> attributes) {
+    return attributes;
+  }
+
   /// Generates an element [T] using [root].
   ///
   /// [treeMap] Tree to populate. If [null] calls [createGenericDOMTreeMap] to define [DOMTreeMap] instance.
@@ -317,6 +322,8 @@ abstract class DOMGenerator<T> {
       addChildToElement(parent, element);
     }
 
+    domElement.notifyElementGenerated(element);
+
     return element;
   }
 
@@ -352,6 +359,8 @@ abstract class DOMGenerator<T> {
           addChildToElement(parent, parsedElement);
         }
 
+        domElement.notifyElementGenerated(parsedElement);
+
         return parsedElement;
       }
     }
@@ -361,10 +370,16 @@ abstract class DOMGenerator<T> {
       if (isEmptyObject(children)) return null;
       var node = children.first;
       treeMap.map(domElement, node);
+
+      domElement.notifyElementGenerated(node);
+
       return node;
     } else if (externalElement is T) {
       treeMap.map(domElement, externalElement);
       addChildToElement(parent, externalElement);
+
+      domElement.notifyElementGenerated(externalElement);
+
       return externalElement;
     }
 
@@ -610,6 +625,7 @@ abstract class DOMGenerator<T> {
       hasChildrenElements = generator.hasChildrenElements;
     } else {
       var attributes = getElementAttributes(node);
+      attributes = revertElementAttributes(node, attributes);
       domNode = DOMElement(tag, attributes: attributes);
     }
 
@@ -1001,6 +1017,11 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   @override
   Map<String, String> getElementAttributes(T element) =>
       domGenerator.getElementAttributes(element);
+
+  @override
+  Map<String, String> revertElementAttributes(
+          T element, Map<String, String> attributes) =>
+      domGenerator.revertElementAttributes(element, attributes);
 
   @override
   List<T> getElementNodes(T element) => domGenerator.getElementNodes(element);

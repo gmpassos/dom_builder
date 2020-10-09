@@ -1,3 +1,23 @@
+## 1.0.19
+
+- Added `CSSNumber`.
+- Added `CSSBackground`.
+- `CSS`:
+  - Added support to parse comments.
+  - Added support to CSS `background` and `opacity`.
+- `CSSColorName`: support for name `transparent`.
+- `CSSBorder`: improve parsing.
+- `DOMNode`:
+  - Added `onGenerate` event.
+  - Added `containsNode`.
+  - Added `root` getter.
+- Added helper `$img`.
+- Added helper `$divCenteredContent`: A div that centers vertically and horizontally content.
+- Fix `DOMElement.buildHTML` for self-closing tags.
+- Improved `DOMElement.possibleAttributes`.
+- `DOMGenerator`: added `revertElementAttributes`.
+- `DOMContext`: Added `resolveCSSURL` and `cssURLResolver`.
+
 ## 1.0.18
 
 - Added option to generate XHTML.

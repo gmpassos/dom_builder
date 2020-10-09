@@ -1,3 +1,4 @@
+import 'package:dom_builder/dom_builder.dart';
 import 'package:dom_builder/src/dom_builder_css.dart';
 import 'package:test/test.dart';
 
@@ -245,6 +246,18 @@ void main() {
       expect(color4 == color3, isFalse);
     });
 
+    test('CSS colors named', () {
+      var color1 = CSSColor.from('red');
+      var color2 = CSSColor.from('blue');
+      var color3 = CSSColor.from('black');
+      var color4 = CSSColor.from('white');
+
+      expect(color1.asCSSColorHEX, equals(CSSColor.from('#ff0000')));
+      expect(color2.asCSSColorHEX, equals(CSSColor.from('#0000ff')));
+      expect(color3.asCSSColorHEX, equals(CSSColor.from('#000000')));
+      expect(color4.asCSSColorHEX, equals(CSSColor.from('#ffffff')));
+    });
+
     test('CSSLength', () {
       expect(CSSLength.parse('101px').toString(), equals('101px'));
       expect(CSSLength.parse('101px'), equals(CSSLength(101, CSSUnit.px)));
@@ -273,7 +286,12 @@ void main() {
       expect(css.style, equals('border: dashed rgb(255, 0, 0)'));
     });
 
-    test('CSS url', () {
+    test('CSS border 4', () {
+      var css = CSS('border: 10px dashed red');
+      expect(css.style, equals('border: 10px dashed red'));
+    });
+
+    test('CSS url 1', () {
       var css = CSS('foo-src:   url("http://host/foo.txt")  ');
       print(css);
 
@@ -282,6 +300,203 @@ void main() {
       var cssValue = css.get('foo-src');
 
       expect(cssValue, equals(CSSURL('http://host/foo.txt')));
+    });
+
+    test('CSS url 2', () {
+      var css = CSS('foo-src: url("http://host/foo.txt") ; width: 20px');
+      print(css);
+
+      expect(css.style,
+          equals('foo-src: url("http://host/foo.txt"); width: 20px'));
+
+      expect(css.get('foo-src'), equals(CSSURL('http://host/foo.txt')));
+
+      expect(css.getAsString('foo-src'), 'url("http://host/foo.txt")');
+    });
+
+    test('CSS background color', () {
+      var css = CSS('background: #ff0000 ; width: 20px');
+      print(css);
+
+      expect(css.style, equals('background: #ff0000; width: 20px'));
+
+      expect(css.get('background'),
+          equals(CSSBackground.color(CSSColor.parse('#ff0000'))));
+
+      expect(css.getAsString('background'), '#ff0000');
+    });
+
+    test('CSS background url', () {
+      var css = CSS('background: url("assets/foo.png") ; width: 20px');
+      print(css);
+
+      expect(
+          css.style, equals('background: url("assets/foo.png"); width: 20px'));
+
+      expect(css.get('background'),
+          equals(CSSBackground.url(CSSURL('assets/foo.png'))));
+
+      expect(css.getAsString('background'), 'url("assets/foo.png")');
+    });
+
+    test('CSS background url props 1', () {
+      var css = CSS('background: url("assets/foo.png") no-repeat; width: 20px');
+      print(css);
+
+      expect(css.style,
+          equals('background: url("assets/foo.png") no-repeat; width: 20px'));
+
+      var background = css.background.value;
+      expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
+
+      expect(background.hasImages, isTrue);
+      expect(background.imagesLength, equals(1));
+
+      var image = background.firstImage;
+
+      expect(image.url.toString(), equals('url("assets/foo.png")'));
+      expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
+
+      expect(background.toString(), 'url("assets/foo.png") no-repeat');
+    });
+
+    test('CSS background url props 2', () {
+      var css =
+          CSS('background: url("assets/foo.png") no-repeat #f00; width: 20px');
+      print(css);
+
+      expect(
+          css.style,
+          equals(
+              'background: url("assets/foo.png") no-repeat #ff0000; width: 20px'));
+
+      var background = css.background.value;
+      expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
+
+      expect(background.hasImages, isTrue);
+      expect(background.imagesLength, equals(1));
+
+      expect(background.color.toString(), equals('#ff0000'));
+
+      var image = background.firstImage;
+
+      expect(image.url.toString(), equals('url("assets/foo.png")'));
+      expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
+
+      expect(background.toString(), 'url("assets/foo.png") no-repeat #ff0000');
+    });
+
+    test('CSS background url props 3', () {
+      var css = CSS(
+          'background: url("assets/foo.png") center no-repeat fixed #f00; width: 20px');
+      print(css);
+
+      expect(
+          css.style,
+          equals(
+              'background: url("assets/foo.png") center no-repeat fixed #ff0000; width: 20px'));
+
+      var background = css.background.value;
+      expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
+
+      expect(background.hasImages, isTrue);
+      expect(background.imagesLength, equals(1));
+
+      expect(background.color.toString(), equals('#ff0000'));
+
+      var image = background.firstImage;
+
+      expect(image.url.toString(), equals('url("assets/foo.png")'));
+      expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
+      expect(image.attachment, equals(CSSBackgroundAttachment.fixed));
+      expect(image.position, equals('center'));
+
+      expect(background.toString(),
+          'url("assets/foo.png") center no-repeat fixed #ff0000');
+    });
+
+    test('CSS background urls 1', () {
+      var css = CSS(
+          'background: url("assets/foo1.png"), url("assets/foo2.png")  ;  width: 20px');
+      print(css);
+
+      expect(
+          css.style,
+          equals(
+              'background: url("assets/foo1.png"), url("assets/foo2.png"); width: 20px'));
+
+      var background = css.background.value;
+      expect(
+          background,
+          equals(CSSBackground.images([
+            CSSBackgroundImage.url(CSSURL('assets/foo.png')),
+            CSSBackgroundImage.url(CSSURL('assets/foo.png'))
+          ])));
+
+      expect(background.hasImages, isTrue);
+      expect(background.imagesLength, equals(2));
+
+      var image1 = background.getImage(0);
+      var image2 = background.getImage(1);
+
+      expect(image1.url.toString(), equals('url("assets/foo1.png")'));
+      expect(image2.url.toString(), equals('url("assets/foo2.png")'));
+
+      expect(background.toString(),
+          'url("assets/foo1.png"), url("assets/foo2.png")');
+    });
+
+    test('CSS background urls 2', () {
+      var css = CSS(
+          'background: url("assets/foo1.png"), url("assets/foo2.png") #00ff00 ;  width: 20px');
+      print(css);
+
+      expect(
+          css.style,
+          equals(
+              'background: url("assets/foo1.png"), url("assets/foo2.png") #00ff00; width: 20px'));
+
+      var background = css.background.value;
+      expect(
+          background,
+          equals(CSSBackground.images([
+            CSSBackgroundImage.url(CSSURL('assets/foo.png')),
+            CSSBackgroundImage.url(CSSURL('assets/foo.png'))
+          ], CSSColor.parse('#00ff00'))));
+
+      expect(background.color, equals(CSSColor.parse('#00ff00')));
+
+      expect(background.hasImages, isTrue);
+      expect(background.imagesLength, equals(2));
+
+      var image1 = background.getImage(0);
+      var image2 = background.getImage(1);
+
+      expect(image1.url.toString(), equals('url("assets/foo1.png")'));
+      expect(image2.url.toString(), equals('url("assets/foo2.png")'));
+
+      expect(background.toString(),
+          'url("assets/foo1.png"), url("assets/foo2.png") #00ff00');
+    });
+
+    test('CSS background linear-gradient', () {
+      var css = CSS(
+          'background: linear-gradient(to left, #333, #333 50% , #eee 75% , #333 75%) ; width: 20px');
+      print(css);
+
+      expect(
+          css.style,
+          equals(
+              'background: linear-gradient(to left, #333, #333 50%, #eee 75%, #333 75%); width: 20px'));
+
+      expect(
+          css.get('background'),
+          equals(CSSBackground.image(CSSBackgroundImage.gradient(
+              CSSBackgroundGradient('linear-gradient',
+                  ['to left', '#333', '#333 50%', '#eee 75%', '#333 75%'])))));
+
+      expect(css.getAsString('background'),
+          'linear-gradient(to left, #333, #333 50%, #eee 75%, #333 75%)');
     });
 
     test('CSS generic', () {
@@ -336,6 +551,99 @@ void main() {
 
       expect(css.get('scrollbar-color'),
           equals(CSSValue.parseByName('#000 #666', 'scrollbar-color')));
+    });
+
+    test('CSS multiple 2', () {
+      var css = CSS(
+          'background-color: transparent; float: right; font-size: 0.7rem; font-weight: 700; line-height: 1; color: #000; text-shadow: 0 1px 0 #fff; opacity: 0.5;');
+      var css2 = CSS(
+          'background-color: transparent; float: right; font-size: .7rem; font-weight: 700; line-height: 1; color: #000000; text-shadow: 0 1px 0 #fff; opacity: .5;');
+
+      expect(
+          css.style,
+          equals(
+              'background-color: transparent; float: right; font-size: 0.7rem; font-weight: 700; line-height: 1; color: #000000; text-shadow: 0 1px 0 #fff; opacity: 0.5'));
+
+      expect(css2.style, equals(css.style));
+
+      expect(css.get<CSSColor>('background-color').hasAlpha, isTrue);
+
+      expect(css.get('font-size'), equals(CSSLength(0.7, CSSUnit.rem)));
+
+      expect(css.get('opacity'), equals(CSSNumber(0.5)));
+    });
+
+    test('CSS comments', () {
+      var css1 = CSS('max-width: 80vw /* foo */; width: 200px; height: 50vh;');
+
+      expect(css1.toString(),
+          equals('max-width: 80vw/* foo */; width: 200px; height: 50vh'));
+
+      var css2 = CSS('max-width: 80vw /* foo */;');
+
+      expect(css2.toString(), equals('max-width: 80vw/* foo */'));
+
+      var css3 = CSS('width: 20px; max-width: 80vw /* foo */;');
+
+      expect(css3.toString(), equals('width: 20px; max-width: 80vw/* foo */'));
+    });
+
+    test('CSS DOMContext 1', () {
+      var domContext = DOMContext(
+          resolveCSSViewportUnit: true, viewport: Viewport(800, 600, 810, 610));
+
+      var css = CSS('width: 80vw;');
+
+      expect(css.toString(), equals('width: 80vw'));
+
+      expect(css.toString(domContext),
+          equals('width: 640.0px /* DOMContext-original-value: 80vw */'));
+
+      expect(CSS.parse(css.toString()).toString(), equals('width: 80vw'));
+
+      print(css.toString(domContext));
+      print(CSS.parse(css.toString(domContext)).toString());
+
+      expect(CSS.parse(css.toString(domContext)).toString(),
+          equals('width: 80vw'));
+    });
+
+    test('CSS DOMContext 2', () {
+      var domContext = DOMContext(
+          resolveCSSViewportUnit: true, viewport: Viewport(800, 600, 810, 610));
+
+      var div = $div(style: 'width: 80vw;', content: 'x');
+
+      expect(div.buildHTML(), equals('<div style="width: 80vw">x</div>'));
+
+      expect(
+          div.buildHTML(domContext: domContext),
+          equals(
+              '<div style="width: 640.0px /* DOMContext-original-value: 80vw */">x</div>'));
+    });
+
+    test('CSS DOMContext 3', () {
+      var domContext = DOMContext(
+          resolveCSSViewportUnit: true, viewport: Viewport(800, 600, 810, 610));
+
+      var css = CSS('max-width: 80vw; width: 200px; height: 50vh;');
+
+      expect(css.toString(),
+          equals('max-width: 80vw; width: 200px; height: 50vh'));
+
+      expect(
+          css.toString(domContext),
+          equals(
+              'max-width: 640.0px /* DOMContext-original-value: 80vw */; width: 200px; height: 300.0px /* DOMContext-original-value: 50vh */'));
+
+      expect(CSS.parse(css.toString()).toString(),
+          equals('max-width: 80vw; width: 200px; height: 50vh'));
+
+      print(css.toString(domContext));
+      print(CSS.parse(css.toString(domContext)).toString());
+
+      expect(CSS.parse(css.toString(domContext)).toString(),
+          equals('max-width: 80vw; width: 200px; height: 50vh'));
     });
   });
 }

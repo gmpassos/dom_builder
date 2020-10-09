@@ -28,8 +28,26 @@ class CSS {
   factory CSS.parseList(List<String> entries) {
     if (entries == null || entries.isEmpty) return null;
 
-    var cssEntries =
-        entries.map((e) => CSSEntry.parse(e)).where((e) => e != null).toList();
+    var cssEntries = <CSSEntry>[];
+
+    var comment;
+
+    for (var i = 0; i < entries.length; ++i) {
+      var e = entries[i];
+      if (e == null) continue;
+      e = e.trim();
+      if (e.isEmpty) continue;
+
+      if (e.startsWith('/*') && e.endsWith('*/')) {
+        comment = e;
+      } else {
+        var entry = CSSEntry.parse(e, comment);
+        if (entry != null) {
+          cssEntries.add(entry);
+        }
+        comment = null;
+      }
+    }
 
     var o = CSS._();
     o.putAll(cssEntries);
@@ -37,50 +55,113 @@ class CSS {
   }
 
   static List<String> _parseEntriesList(String css) {
-    var delimiter = RegExp('[;"\']');
+    var delimiter = RegExp('[;"\'\/]');
 
     var entries = <String>[];
     var cursor = 0;
+    var entryStart = 0;
+    int commentStart;
+    String comment;
 
     while (cursor < css.length) {
       var idx = css.indexOf(delimiter, cursor);
 
       if (idx < 0) {
-        var entryStr = css.substring(cursor).trim();
+        var entryStr = css.substring(entryStart);
         if (entryStr.isNotEmpty) {
-          entries.add(entryStr);
+          if (comment != null) {
+            entryStr =
+                _cutString(entryStr, entryStart, commentStart, comment.length);
+            entries.add(comment);
+          }
+          entries.add(entryStr.trim());
         }
+        entryStart = css.length;
         break;
       }
 
       var c = css.substring(idx, idx + 1);
 
       if (c == ';') {
-        var entryStr = css.substring(cursor, idx).trim();
+        var entryStr = css.substring(entryStart, idx);
         if (entryStr.isNotEmpty) {
-          entries.add(entryStr);
+          if (comment != null) {
+            entryStr =
+                _cutString(entryStr, entryStart, commentStart, comment.length);
+            entries.add(comment);
+          }
+          entries.add(entryStr.trim());
         }
-        cursor = idx + 1;
+        entryStart = cursor = idx + 1;
+        comment = null;
+      } else if (c == '/') {
+        var c2 = idx + 2 <= css.length ? css.substring(idx + 1, idx + 2) : '';
+
+        if (c2 == '*') {
+          var idx2 = css.indexOf('*/', idx + 2);
+
+          if (idx2 > 0) {
+            commentStart = idx;
+            comment = css.substring(idx, idx2 + 2);
+            cursor = idx2 + 2;
+          } else {
+            var entryStr = css.substring(entryStart, idx);
+            if (entryStr.isNotEmpty) {
+              if (comment != null) {
+                entryStr = _cutString(
+                    entryStr, entryStart, commentStart, comment.length);
+                entries.add(comment);
+              }
+              entries.add(entryStr.trim());
+            }
+            entryStart = css.length;
+            break;
+          }
+        } else {
+          cursor = idx + 1;
+        }
       } else {
         var idx2 = css.indexOf(c, idx + 1);
-        var idx3 = idx2 >= 0 ? css.indexOf(delimiter, idx2 + 1) : -1;
 
-        if (idx2 < 0 || idx3 < 0) {
-          var entryStr = css.substring(cursor).trim();
+        if (idx2 < 0) {
+          var entryStr = css.substring(entryStart);
           if (entryStr.isNotEmpty) {
-            entries.add(entryStr);
+            if (comment != null) {
+              entryStr = _cutString(
+                  entryStr, entryStart, commentStart, comment.length);
+              entries.add(comment);
+            }
+            entries.add(entryStr.trim());
           }
+          entryStart = css.length;
           break;
         }
 
-        var entryStr = css.substring(cursor, idx3).trim();
-        if (entryStr.isNotEmpty) {
-          entries.add(entryStr);
-        }
-        cursor = idx3 + 1;
+        cursor = idx2 + 1;
       }
     }
+
+    if (entryStart < css.length) {
+      var entryStr = css.substring(entryStart);
+      if (entryStr.isNotEmpty) {
+        if (comment != null) {
+          entryStr =
+              _cutString(entryStr, entryStart, commentStart, comment.length);
+          entries.add(comment);
+        }
+        entries.add(entryStr.trim());
+      }
+    }
+
     return entries;
+  }
+
+  static String _cutString(
+      String entryStr, int entryStart, int commentStart, int length) {
+    commentStart -= entryStart;
+    var prefix = entryStr.substring(0, commentStart);
+    var suffix = entryStr.substring(commentStart + length);
+    return prefix + suffix;
   }
 
   CSS._();
@@ -146,6 +227,11 @@ class CSS {
           backgroundColor = value;
           break;
         }
+      case 'background':
+        {
+          background = value;
+          break;
+        }
       case 'width':
         {
           width = value;
@@ -159,6 +245,11 @@ class CSS {
       case 'border':
         {
           border = value;
+          break;
+        }
+      case 'opacity':
+        {
+          opacity = value;
           break;
         }
       default:
@@ -214,6 +305,7 @@ class CSS {
       _getEntry('width', sampleValue: CSSLength(1)),
       _getEntry('height', sampleValue: CSSLength(1)),
       _getEntry('border', sampleValue: CSSBorder.parse('1px solid #000000')),
+      _getEntry('opacity', sampleValue: CSSNumber(1)),
     ];
 
     var map = LinkedHashMap<String, CSSEntry>.fromEntries(
@@ -264,6 +356,12 @@ class CSS {
   set backgroundColor(dynamic value) => _addEntry(
       'background-color', CSSEntry<CSSColor>.from('background-color', value));
 
+  CSSEntry<CSSBackground> get background =>
+      _getEntry<CSSBackground>('background');
+
+  set background(dynamic value) => _addEntry(
+      'background', CSSEntry<CSSBackground>.from('background', value));
+
   CSSEntry<CSSLength> get width => _getEntry<CSSLength>('width');
 
   set width(dynamic value) =>
@@ -278,6 +376,11 @@ class CSS {
 
   set border(dynamic value) =>
       _addEntry('border', CSSEntry<CSSBorder>.from('border', value));
+
+  CSSEntry<CSSNumber> get opacity => _getEntry<CSSNumber>('opacity');
+
+  set opacity(dynamic value) =>
+      _addEntry('opacity', CSSEntry<CSSNumber>.from('opacity', value));
 
   String get style => toString();
 
@@ -328,27 +431,29 @@ class CSSEntry<V extends CSSValue> {
 
   V _sampleValue;
 
-  CSSEntry(String name, V value, [V sampleValue])
-      : this._(normalizeName(name), value, sampleValue);
+  String _comment;
 
-  CSSEntry._(this.name, this._value, [this._sampleValue]);
+  CSSEntry(String name, V value, [V sampleValue, String comment])
+      : this._(normalizeName(name), value, sampleValue, comment);
 
-  factory CSSEntry.from(String name, dynamic value) {
+  CSSEntry._(this.name, this._value, [this._sampleValue, this._comment]);
+
+  factory CSSEntry.from(String name, dynamic value, [String comment]) {
     if (value == null) return null;
 
     if (value is CSSEntry) {
-      return CSSEntry(name, value.value);
+      return CSSEntry(name, value.value, null, comment);
     } else if (value is CSSValue) {
-      return CSSEntry(name, value as V);
+      return CSSEntry(name, value as V, null, comment);
     } else if (value is String) {
       var cssValue = CSSValue.parseByName(value, name);
-      return CSSEntry(name, cssValue as V);
+      return CSSEntry(name, cssValue as V, null, comment);
     }
 
     return null;
   }
 
-  factory CSSEntry.parse(String entry) {
+  factory CSSEntry.parse(String entry, [String comment]) {
     if (entry == null) return null;
 
     var idx = entry.indexOf(PAIR_DELIMITER);
@@ -358,7 +463,25 @@ class CSSEntry<V extends CSSValue> {
     var value = entry.substring(idx + 1).trim();
 
     var cssValue = CSSValue.from(value, name) as V;
-    return CSSEntry._(name, cssValue);
+
+    if (comment != null && comment.contains('DOMContext-original-value:')) {
+      var idx = comment.indexOf('DOMContext-original-value:');
+      var originalValueStr = comment.substring(idx + 26).trim();
+      if (originalValueStr.endsWith('*/')) {
+        originalValueStr =
+            originalValueStr.substring(0, originalValueStr.length - 2).trim();
+      }
+
+      if (originalValueStr.isNotEmpty) {
+        var originalValue = CSSValue.from(originalValueStr, name) as V;
+        if (originalValue != null) {
+          cssValue = originalValue;
+          comment = null;
+        }
+      }
+    }
+
+    return CSSEntry._(name, cssValue, null, comment);
   }
 
   @override
@@ -390,11 +513,25 @@ class CSSEntry<V extends CSSValue> {
   String toString([bool withDelimiter, DOMContext domContext]) {
     var valueStr = value.toString(domContext);
 
-    if (withDelimiter != null && withDelimiter) {
-      return '$name: $valueStr;';
-    } else {
-      return '$name: $valueStr';
+    var commentStr = '';
+    if (_comment != null && _comment.isNotEmpty) {
+      commentStr = _comment;
+      if (!commentStr.startsWith('/*')) {
+        commentStr = '/*$commentStr';
+      }
+      if (!commentStr.endsWith('*/')) {
+        commentStr = '$commentStr*/';
+      }
     }
+
+    String s;
+    if (withDelimiter != null && withDelimiter) {
+      s = '$name: $valueStr$commentStr;';
+    } else {
+      s = '$name: $valueStr$commentStr';
+    }
+
+    return s;
   }
 }
 
@@ -405,6 +542,9 @@ abstract class CSSValue {
     }
 
     CSSValue cssValue;
+
+    cssValue = CSSNumber.from(value);
+    if (cssValue != null) return cssValue;
 
     cssValue = CSSLength.from(value);
     if (cssValue != null) return cssValue;
@@ -429,12 +569,16 @@ abstract class CSSValue {
         return CSSColor.from(value);
       case 'background-color':
         return CSSColor.from(value);
+      case 'background':
+        return CSSBackground.from(value);
       case 'width':
         return CSSLength.from(value);
       case 'height':
         return CSSLength.from(value);
       case 'border':
         return CSSBorder.from(value);
+      case 'opacity':
+        return CSSNumber.from(value);
       default:
         return CSSValue.from(value);
     }
@@ -739,7 +883,7 @@ String getCSSUnitName(CSSUnit unit, [CSSUnit def]) {
 
 class CSSLength extends CSSValue {
   static final RegExp PATTERN =
-      RegExp(r'^\s*(-?\d+(?:\.\d+)?)(\%|\w+)?\s*$', multiLine: false);
+      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(\%|\w+)?\s*$', multiLine: false);
 
   num _value;
 
@@ -842,6 +986,85 @@ class CSSLength extends CSSValue {
 
   @override
   int get hashCode => isCalc ? super.hashCode : _value.hashCode ^ _unit.index;
+}
+
+class CSSNumber extends CSSValue {
+  static final RegExp PATTERN =
+      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*$', multiLine: false);
+
+  num _value;
+
+  CSSNumber(num value) : _value = value ?? 0;
+
+  CSSNumber.fromCalc(CSSCalc calc) : super.fromCalc(calc);
+
+  factory CSSNumber.from(dynamic value) {
+    if (value == null) return null;
+
+    if (value is CSSNumber) return value;
+
+    if (value is String) {
+      var calc = CSSCalc.parse(value);
+
+      if (calc != null) {
+        if (!calc.hasOperation) {
+          var calcNumber = CSSNumber.parse(calc.a);
+          if (calcNumber.toString() == calc.a) {
+            return calcNumber;
+          }
+        }
+
+        return CSSNumber.fromCalc(calc);
+      } else {
+        return CSSNumber.parse(value);
+      }
+    }
+
+    return null;
+  }
+
+  factory CSSNumber.parse(String value) {
+    if (value == null) return null;
+
+    var match = PATTERN.firstMatch(value);
+    if (match == null) return null;
+
+    var nStr = match.group(1);
+
+    num n;
+    if (isInt(nStr)) {
+      n = parseInt(nStr);
+    } else if (isDouble(nStr)) {
+      n = parseDouble(nStr);
+    } else {
+      return null;
+    }
+
+    return CSSNumber(n);
+  }
+
+  num get value => _value;
+
+  set value(num value) {
+    _value = value ?? 0;
+  }
+
+  @override
+  String toString([DOMContext domContext]) {
+    return super.toString(domContext) ?? _resolveValue(domContext);
+  }
+
+  String _resolveValue(DOMContext domContext) {
+    return '$_value';
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CSSNumber && _value == other._value && calc == other.calc);
+
+  @override
+  int get hashCode => isCalc ? super.hashCode : _value.hashCode;
 }
 
 abstract class CSSColor extends CSSValue {
@@ -1197,6 +1420,7 @@ class CSSColorHEXAlpha extends CSSColorHEX {
 
 class CSSColorName extends CSSColorRGB {
   static const Map<String, String> COLORS_NAMES = {
+    'transparent': '#00000000',
     'aliceblue': '#f0f8ff',
     'antiquewhite': '#faebd7',
     'aqua': '#00ffff',
@@ -1349,9 +1573,11 @@ class CSSColorName extends CSSColorRGB {
 
   final String name;
 
+  double _alpha;
+
   factory CSSColorName(String hexColor) => CSSColorName.parse(hexColor);
 
-  CSSColorName._(this.name, int red, int green, int blue)
+  CSSColorName._(this.name, int red, int green, int blue, double alpha)
       : super(red, green, blue);
 
   factory CSSColorName.from(dynamic color) {
@@ -1379,18 +1605,32 @@ class CSSColorName extends CSSColorRGB {
     var r = hex.substring(1, 3);
     var g = hex.substring(3, 5);
     var b = hex.substring(5, 7);
+    var a = hex.length > 7 ? hex.substring(7, Math.min(9, hex.length)) : null;
 
     var nR = _parseHex(r);
     var nG = _parseHex(g);
     var nB = _parseHex(b);
+    var nA = a != null ? _parseHex(a) / 255 : 1.0;
 
-    return CSSColorName._(color, nR, nG, nB);
+    return CSSColorName._(color, nR, nG, nB, nA);
   }
+
+  double get alpha => _alpha;
+
+  set alpha(double value) {
+    _alpha = _normalizeDouble(_clip(value, 0, 1, 1));
+  }
+
+  @override
+  bool get hasAlpha => _alpha != 1;
 
   @override
   String toString([DOMContext domContext]) {
     return '$name';
   }
+
+  @override
+  CSSColorRGBA get asCSSColorRGBA => CSSColorRGBA(red, green, blue, _alpha);
 }
 
 enum CSSBorderStyle {
@@ -1468,9 +1708,9 @@ String getCSSBorderStyleName(CSSBorderStyle borderStyle) {
 
 class CSSBorder extends CSSValue {
   static final RegExp PATTERN = RegExp(
-      r'^\s*(\d+\w+)?'
+      r'^\s*((?:-?\d+(?:\.\d+)?|-?\.\d+)(?:\%|\w+)?)?'
       r'\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)'
-      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}))?\s*$',
+      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}|\w{3,}))?\s*$',
       multiLine: false,
       caseSensitive: false);
 
@@ -1481,7 +1721,7 @@ class CSSBorder extends CSSValue {
   CSSColor _color;
 
   CSSBorder(this._size, CSSBorderStyle style, [this._color])
-      : _style = style ?? CSSBorderStyle.solid;
+      : _style = style ?? CSSBorderStyle.none;
 
   factory CSSBorder.from(dynamic value) {
     if (value == null) return null;
@@ -1534,6 +1774,506 @@ class CSSBorder extends CSSValue {
   }
 }
 
+enum CSSBackgroundRepeat { repeat, repeatX, repeatY, noRepeat, space, round }
+
+CSSBackgroundRepeat parseCSSBackgroundRepeat(String repeat) {
+  if (repeat == null) return null;
+
+  repeat = repeat.trim().toLowerCase();
+
+  switch (repeat) {
+    case 'repeat':
+      return CSSBackgroundRepeat.repeat;
+    case 'repeat-x':
+      return CSSBackgroundRepeat.repeatX;
+    case 'repeat-y':
+      return CSSBackgroundRepeat.repeatY;
+    case 'no-repeat':
+      return CSSBackgroundRepeat.noRepeat;
+    case 'space':
+      return CSSBackgroundRepeat.space;
+    case 'round':
+      return CSSBackgroundRepeat.round;
+    default:
+      return null;
+  }
+}
+
+String getCSSBackgroundRepeatName(CSSBackgroundRepeat repeat) {
+  if (repeat == null) return null;
+
+  switch (repeat) {
+    case CSSBackgroundRepeat.repeat:
+      return 'repeat';
+    case CSSBackgroundRepeat.repeatX:
+      return 'repeat-x';
+    case CSSBackgroundRepeat.repeatY:
+      return 'repeat-y';
+    case CSSBackgroundRepeat.noRepeat:
+      return 'no-repeat';
+    case CSSBackgroundRepeat.space:
+      return 'space';
+    case CSSBackgroundRepeat.round:
+      return 'round';
+    default:
+      return null;
+  }
+}
+
+enum CSSBackgroundBox { borderBox, paddingBox, contentBox }
+
+CSSBackgroundBox parseCSSBackgroundBox(String clip) {
+  if (clip == null) return null;
+
+  clip = clip.trim().toLowerCase();
+
+  switch (clip) {
+    case 'border-box':
+      return CSSBackgroundBox.borderBox;
+    case 'padding-box':
+      return CSSBackgroundBox.paddingBox;
+    case 'content-box':
+      return CSSBackgroundBox.contentBox;
+    default:
+      return null;
+  }
+}
+
+String getCSSBackgroundBoxName(CSSBackgroundBox clip) {
+  if (clip == null) return null;
+
+  switch (clip) {
+    case CSSBackgroundBox.borderBox:
+      return 'border-box';
+    case CSSBackgroundBox.paddingBox:
+      return 'padding-box';
+    case CSSBackgroundBox.contentBox:
+      return 'content-box';
+    default:
+      return null;
+  }
+}
+
+enum CSSBackgroundAttachment { scroll, fixed, local }
+
+CSSBackgroundAttachment parseCSSBackgroundAttachment(String attachment) {
+  if (attachment == null) return null;
+
+  attachment = attachment.trim().toLowerCase();
+
+  switch (attachment) {
+    case 'scroll':
+      return CSSBackgroundAttachment.scroll;
+    case 'fixed':
+      return CSSBackgroundAttachment.fixed;
+    case 'local':
+      return CSSBackgroundAttachment.local;
+    default:
+      return null;
+  }
+}
+
+String getCSSBackgroundAttachmentName(CSSBackgroundAttachment clip) {
+  if (clip == null) return null;
+
+  switch (clip) {
+    case CSSBackgroundAttachment.scroll:
+      return 'scroll';
+    case CSSBackgroundAttachment.fixed:
+      return 'fixed';
+    case CSSBackgroundAttachment.local:
+      return 'local';
+    default:
+      return null;
+  }
+}
+
+RegExpDialect _REGEXP_BACKGROUND_DIALECT = RegExpDialect({
+  'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
+  'pos': r'$d(?:\%|\w+)',
+  'pos_pair': r'$pos(?:\s+$pos)?',
+  'color_rgba': r'(?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*$d\s*)?\))',
+  'color_hex': r'#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})',
+  'color': r'(?:$color_rgba|$color_hex)',
+  'quote': r'''(?:"[^"]*"|'[^']*')''',
+  'url': r'''(?:url\(\s*(?:$quote|[^\)]*?)\s*\))''',
+  'gradient_type':
+      r'(?:linear-gradient|radial-gradient|repeating-linear-gradient|repeating-radial-gradient)',
+  'gradient': r'''(?:$gradient_type\(\s*(?:$color|[^\(\)]+?)+\s*\))''',
+  'gradient_capture':
+      r'''(?:($gradient_type)\(\s*((?:$color|[^\(\)]+?)+)\s*\))''',
+  'attachment': r'(?:scroll|fixed|local)',
+  'box': r'(?:border-box|padding-box|content-box)',
+  'repeat': r'(?:repeat|repeat-x|repeat-y|no-repeat|space|round)',
+  'position':
+      r'(?:(?:left|right|center)(?:\s+(?:top|center|bottom))?|$pos_pair)',
+  'size': r'(?:auto|cover|contain|$pos_pair)',
+  'position_size': r'$position(?:\s*/\s*$size)?',
+  'position_size_capture': r'($position)(?:\s*/\s*($size))?',
+  'image_prop': r'(?:$repeat|$attachment|$box(?:\s+$box)?|$position_size)',
+  'image_prop_capture':
+      r'(?:($repeat)|($attachment)|($box)(?:\s+($box))?|$position_size_capture)',
+  'image_src': r'(?:$gradient|$url)',
+  'image': r'(?:$image_src(?:\s+$image_prop)*)',
+  'image_layers': r'$image(?:\s*,\s*$image)*',
+}, multiLine: false, caseSensitive: false);
+
+class CSSBackgroundGradient {
+  final String type;
+
+  final List<String> parameters;
+
+  CSSBackgroundGradient(this.type, this.parameters);
+
+  @override
+  String toString() {
+    return '$type(${parameters.join(', ')})';
+  }
+}
+
+class CSSBackgroundImage {
+  static final RegExp PATTERN_URL = _REGEXP_BACKGROUND_DIALECT
+      .getPattern(r'^\s*($url)((?:\s+$image_prop)+)?\s*$');
+  static final RegExp PATTERN_GRADIENT = _REGEXP_BACKGROUND_DIALECT
+      .getPattern(r'^\s*$gradient_capture((?:\s+$image_prop)+)?\s*$');
+
+  static final RegExp PATTERN_PROPS_CAPTURE =
+      _REGEXP_BACKGROUND_DIALECT.getPattern(r'(?:^\s*|\s+)$image_prop_capture');
+
+  final CSSURL url;
+  final CSSBackgroundGradient gradient;
+  final CSSBackgroundBox origin;
+  final CSSBackgroundBox clip;
+  final CSSBackgroundAttachment attachment;
+  final CSSBackgroundRepeat repeat;
+  final String position;
+  final String size;
+
+  CSSBackgroundImage.url(this.url,
+      {this.origin,
+      this.clip,
+      this.attachment,
+      this.repeat,
+      this.position,
+      this.size})
+      : gradient = null;
+
+  CSSBackgroundImage.gradient(this.gradient,
+      {this.origin,
+      this.clip,
+      this.attachment,
+      this.repeat,
+      this.position,
+      this.size})
+      : url = null;
+
+  factory CSSBackgroundImage.from(dynamic value) {
+    if (value == null) return null;
+
+    if (value is CSSBackgroundImage) return value;
+
+    if (value is String) return CSSBackgroundImage.parse(value);
+
+    return null;
+  }
+
+  factory CSSBackgroundImage.parse(String value) {
+    if (value == null) return null;
+
+    CSSURL url;
+    CSSBackgroundGradient gradient;
+
+    CSSBackgroundRepeat repeat;
+    CSSBackgroundAttachment attachment;
+    CSSBackgroundBox origin;
+    CSSBackgroundBox clip;
+    String position;
+    String size;
+
+    String propsStr;
+
+    var match = PATTERN_URL.firstMatch(value);
+    if (match != null) {
+      var urlStr = match.group(1);
+      url = CSSURL.parse(urlStr);
+      propsStr = match.group(2);
+    } else {
+      match = PATTERN_GRADIENT.firstMatch(value);
+      if (match != null) {
+        var gradientTypeStr = match.group(1);
+        var gradientParamsStr = match.group(2);
+        var parameters = parseListOfStrings(
+            gradientParamsStr, ARGUMENT_LIST_DELIMITER, true);
+        gradient = CSSBackgroundGradient(gradientTypeStr, parameters);
+        propsStr = match.group(3);
+      }
+    }
+
+    if (propsStr != null) {
+      var propsMatches = PATTERN_PROPS_CAPTURE.allMatches(propsStr);
+
+      for (var m in propsMatches) {
+        var repeatStr = m.group(1);
+        var attachmentStr = m.group(2);
+        var box1Str = m.group(3);
+        var box2Str = m.group(4);
+        var positionStr = m.group(5);
+        var sizeStr = m.group(6);
+
+        if (repeatStr != null) {
+          repeat = parseCSSBackgroundRepeat(repeatStr);
+        }
+
+        if (attachmentStr != null) {
+          attachment = parseCSSBackgroundAttachment(attachmentStr);
+        }
+
+        if (box1Str != null) {
+          origin = parseCSSBackgroundBox(box1Str);
+        }
+
+        if (box2Str != null) {
+          clip = parseCSSBackgroundBox(box2Str);
+        }
+
+        if (positionStr != null) {
+          position = positionStr;
+        }
+
+        if (sizeStr != null) {
+          size = sizeStr;
+        }
+      }
+    }
+
+    if (url != null) {
+      return CSSBackgroundImage.url(url,
+          origin: origin,
+          clip: clip,
+          repeat: repeat,
+          attachment: attachment,
+          position: position,
+          size: size);
+    } else if (gradient != null) {
+      return CSSBackgroundImage.gradient(gradient,
+          origin: origin,
+          clip: clip,
+          repeat: repeat,
+          attachment: attachment,
+          position: position,
+          size: size);
+    }
+
+    return null;
+  }
+
+  @override
+  String toString([DOMContext domContext]) {
+    var params = _toStringParameters(domContext);
+    if (url != null) {
+      var urlStr = url.toString(domContext);
+      return '$urlStr$params';
+    } else if (gradient != null) {
+      var gradientStr = gradient.toString();
+      return '$gradientStr$params';
+    } else {
+      return '';
+    }
+  }
+
+  String _toStringParameters(DOMContext domContext) {
+    var s = '';
+
+    if (isNotEmptyString(position)) {
+      s += ' ';
+      s += position;
+      if (isNotEmptyString(size)) {
+        s += ' / ';
+        s += size;
+      }
+    }
+
+    if (repeat != null) {
+      s += ' ';
+      s += getCSSBackgroundRepeatName(repeat);
+    }
+
+    if (attachment != null) {
+      s += ' ';
+      s += getCSSBackgroundAttachmentName(attachment);
+    }
+
+    if (origin != null) {
+      s += ' ';
+      s += getCSSBackgroundBoxName(origin);
+
+      if (clip != null) {
+        s += ' ';
+        s += getCSSBackgroundBoxName(clip);
+      }
+    }
+
+    return s;
+  }
+}
+
+class CSSBackground extends CSSValue {
+  static final RegExp PATTERN_COLOR =
+      _REGEXP_BACKGROUND_DIALECT.getPattern(r'^\s*($color)\s*$');
+  static final RegExp PATTERN_IMAGE = _REGEXP_BACKGROUND_DIALECT
+      .getPattern(r'^\s*($image)(?:\s+($color))?\s*$');
+  static final RegExp PATTERN_COLOR_IMAGE =
+      _REGEXP_BACKGROUND_DIALECT.getPattern(r'^\s*($color)\s+($image)\s*$');
+  static final RegExp PATTERN_IMAGES = _REGEXP_BACKGROUND_DIALECT
+      .getPattern(r'^\s*($image_layers)(?:\s+($color))?\s*$');
+
+  static final RegExp PATTERN_IMAGE_CAPTURE =
+      _REGEXP_BACKGROUND_DIALECT.getPattern(r'(?:^\s*|\s+)($image)');
+
+  CSSColor _color;
+  List<CSSBackgroundImage> _images;
+
+  CSSBackground.color(CSSColor color) : _color = color;
+
+  CSSBackground.image(CSSBackgroundImage image, [CSSColor color])
+      : _color = color,
+        _images = [image];
+
+  CSSBackground.images(List<CSSBackgroundImage> images, [CSSColor color])
+      : _color = color,
+        _images = images;
+
+  CSSBackground.url(CSSURL url,
+      {CSSBackgroundBox origin,
+      CSSBackgroundBox clip,
+      CSSBackgroundAttachment attachment,
+      CSSBackgroundRepeat repeat,
+      String position,
+      String size,
+      CSSColor color})
+      : _color = color,
+        _images = [
+          CSSBackgroundImage.url(url,
+              origin: origin,
+              clip: clip,
+              attachment: attachment,
+              repeat: repeat,
+              position: position,
+              size: size)
+        ];
+
+  CSSBackground.gradient(
+    CSSBackgroundGradient gradient, {
+    CSSBackgroundBox origin,
+    CSSBackgroundBox clip,
+    CSSBackgroundAttachment attachment,
+    CSSBackgroundRepeat repeat,
+    String position,
+    String size,
+    CSSColor color,
+  })  : _color = color,
+        _images = [
+          CSSBackgroundImage.gradient(gradient,
+              origin: origin,
+              clip: clip,
+              attachment: attachment,
+              repeat: repeat,
+              position: position,
+              size: size)
+        ];
+
+  factory CSSBackground.from(dynamic value) {
+    if (value == null) return null;
+
+    if (value is CSSBackground) return value;
+
+    if (value is String) return CSSBackground.parse(value);
+
+    return null;
+  }
+
+  factory CSSBackground.parse(String value) {
+    if (value == null) return null;
+
+    var match = PATTERN_COLOR.firstMatch(value);
+    if (match != null) {
+      var colorStr = match.group(1);
+      var color = CSSColor.parse(colorStr);
+      return CSSBackground.color(color);
+    }
+
+    match = PATTERN_IMAGE.firstMatch(value);
+    if (match != null) {
+      var imageStr = match.group(1);
+      var colorStr = match.group(2);
+      var color = CSSColor.parse(colorStr);
+
+      var bgImage = CSSBackgroundImage.parse(imageStr);
+      return CSSBackground.image(bgImage, color);
+    }
+
+    match = PATTERN_COLOR_IMAGE.firstMatch(value);
+    if (match != null) {
+      var colorStr = match.group(1);
+      var color = CSSColor.parse(colorStr);
+      var imageStr = match.group(2);
+
+      var bgImage = CSSBackgroundImage.parse(imageStr);
+      return CSSBackground.image(bgImage, color);
+    }
+
+    match = PATTERN_IMAGES.firstMatch(value);
+    if (match != null) {
+      var imagesStr = match.group(1);
+      var colorStr = match.group(2);
+      var color = CSSColor.parse(colorStr);
+
+      var matches = PATTERN_IMAGE_CAPTURE.allMatches(imagesStr);
+      var images =
+          matches.map((m) => CSSBackgroundImage.parse(m.group(1))).toList();
+
+      return CSSBackground.images(images, color);
+    }
+
+    return null;
+  }
+
+  CSSColor get color => _color;
+
+  set color(CSSColor value) {
+    _color = value;
+  }
+
+  List<CSSBackgroundImage> get images => _images.toList();
+
+  bool get hasImages => _images != null && _images.isNotEmpty;
+
+  int get imagesLength => _images != null ? _images.length : 0;
+
+  CSSBackgroundImage get firstImage => hasImages ? _images[0] : null;
+
+  CSSBackgroundImage getImage(int idx) => hasImages ? _images[idx] : null;
+
+  @override
+  String toString([DOMContext domContext]) {
+    var hasColor = _color != null;
+    var hasImages = isNotEmptyObject(_images);
+
+    if (hasImages) {
+      var s = _images.map((e) => e.toString(domContext)).join(', ');
+      if (hasColor) {
+        s += ' ';
+        s += _color.toString(domContext);
+      }
+      return s;
+    } else if (hasColor) {
+      return _color.toString(domContext);
+    }
+
+    return '';
+  }
+}
+
 class CSSURL extends CSSValue {
   static final RegExp PATTERN = RegExp(
       r'''^\s*url\(\s*(?:"(.*?)"|'(.*?)'|(.*?))\s*\)\s*$''',
@@ -1557,7 +2297,7 @@ class CSSURL extends CSSValue {
 
   factory CSSURL.parse(String url) {
     if (url == null) return null;
-    url = url.trim().toLowerCase();
+    url = url.trim();
     if (url.isEmpty) return null;
 
     var match = PATTERN.firstMatch(url);
@@ -1570,12 +2310,21 @@ class CSSURL extends CSSValue {
 
   @override
   String toString([DOMContext domContext]) {
+    var url = _resolveValue(domContext);
     if (!url.contains('"')) {
       return 'url("$url")';
     } else if (!url.contains("'")) {
       return "url('$url')";
     } else {
       return 'url($url)';
+    }
+  }
+
+  String _resolveValue(DOMContext domContext) {
+    if (domContext != null && domContext.resolveCSSURL) {
+      return domContext.resolveCSSURLValue(url);
+    } else {
+      return url;
     }
   }
 

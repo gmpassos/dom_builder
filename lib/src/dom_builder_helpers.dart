@@ -6,6 +6,8 @@ import 'dom_builder_base.dart';
 
 final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+');
 
+final RegExp ARGUMENT_LIST_DELIMITER = RegExp(r'\s*,\s*');
+
 final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
 
 /// Parses [s] as a flat [List<String>].
@@ -421,6 +423,21 @@ DIVElement $divInline(
 /// Creates a `div` node from HTML.
 DIVElement $divHTML(dynamic html) => $tagHTML(html);
 
+/// Creates a `div` that centers vertically and horizontally using `display` `table` and `table-cell`.
+DIVElement $divCenteredContent(
+    {String width = '100%', String height = '100%', dynamic content}) {
+  var cssDimension = '';
+  if (isNotEmptyString(width)) cssDimension += 'width: $width;';
+  if (isNotEmptyString(height)) cssDimension += 'height: $height;';
+
+  return $div(
+      style: 'display: table;$cssDimension',
+      content: $div(
+          style:
+              'display: table-cell; text-align: center; vertical-align: middle;',
+          content: content));
+}
+
 /// Creates a `span` node.
 DOMElement $span(
         {DOMNodeValidator validate,
@@ -454,7 +471,10 @@ DOMElement $button(
         id: id,
         classes: classes,
         style: style,
-        attributes: {if (type != null) 'type': type, ...?attributes},
+        attributes: {
+          'type': isNotEmptyString(type) ? type : 'button',
+          ...?attributes
+        },
         content: content,
         commented: commented);
 
@@ -512,6 +532,7 @@ INPUTElement $input(
     classes,
     style,
     type,
+    placeholder,
     Map<String, String> attributes,
     value,
     bool commented}) {
@@ -522,12 +543,37 @@ INPUTElement $input(
       id: id,
       name: name,
       type: type,
+      placeholder: placeholder,
       classes: classes,
       style: style,
       attributes: attributes,
       value: value,
       commented: commented);
 }
+
+/// Creates an `img` node.
+DOMElement $img(
+        {DOMNodeValidator validate,
+        id,
+        classes,
+        style,
+        Map<String, String> attributes,
+        String src,
+        String title,
+        content,
+        bool commented}) =>
+    $tag('img',
+        validate: validate,
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: {
+          if (src != null) 'src': src,
+          if (title != null) 'title': title,
+          ...?attributes
+        },
+        content: content,
+        commented: commented);
 
 /// Creates an `a` node.
 DOMElement $a(

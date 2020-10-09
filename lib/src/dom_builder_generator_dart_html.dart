@@ -38,7 +38,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   @override
   Map<String, String> getElementAttributes(Node element) {
     if (element is Element) {
-      return Map.fromEntries(element.attributes.entries);
+      var attributes = Map.fromEntries(element.attributes.entries);
+      return attributes;
     }
     return null;
   }
@@ -68,9 +69,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     if (domNode is TextNode) {
       return domNode.text == node.toString();
     } else if (domNode is DOMElement && node is Element) {
-      var domAttributesSign = _toAttributesSignature(domNode.attributes.map(
-          (key, value) =>
-              MapEntry(key, value is List ? value.join(' ') : value)));
+      var domAttributesSign =
+          _toAttributesSignature(domNode.attributesAsString);
       var attributesSign = _toAttributesSignature(getElementAttributes(node));
       return domAttributesSign == attributesSign;
     }
