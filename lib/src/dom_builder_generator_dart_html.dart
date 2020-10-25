@@ -2,7 +2,9 @@ import 'dart:html';
 
 import 'package:swiss_knife/swiss_knife.dart';
 
+import 'dom_builder_actions.dart';
 import 'dom_builder_base.dart';
+import 'dom_builder_context.dart';
 import 'dom_builder_dart_html.dart' as dart_html;
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
@@ -10,6 +12,10 @@ import 'dom_builder_treemap.dart';
 
 /// [DOMGenerator] based in `dart:html`.
 class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
+  DOMGeneratorDartHTMLImpl() {
+    domActionExecutor = DOMActionExecutorDartHTML();
+  }
+
   @override
   List<Node> getElementNodes(Node node) {
     if (node is Element) {
@@ -189,8 +195,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  void registerEventListeners(
-      DOMTreeMap<Node> treeMap, DOMElement domElement, Node element) {
+  void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
+      Node element, DOMContext<Node> context) {
     if (element is Element) {
       if (domElement.hasOnClickListener) {
         element.onClick.listen((event) {
@@ -637,6 +643,109 @@ bool _isElementWithSRC(Element element) {
   if (element is ImageButtonInputElement) return true;
 
   return false;
+}
+
+class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
+  @override
+  Node selectByID(String id, Node target, Node self, DOMTreeMap treeMap,
+      DOMContext context) {
+    if (self is Element) {
+      var sel = _selectByID(self, id);
+      if (sel != null) return sel;
+    }
+
+    if (target is Element) {
+      var sel = _selectByID(target, id);
+      if (sel != null) return sel;
+    }
+
+    if (treeMap != null) {
+      var element = treeMap.rootElement;
+      if (element is Element) {
+        var sel = _selectByID(element, id);
+        if (sel != null) return sel;
+      }
+    }
+
+    var sel = document.querySelector('#$id');
+    sel ??= _selectByID(document.documentElement, id);
+
+    return sel;
+  }
+
+  Element _selectByID(Element element, String id) =>
+      element.querySelector('#$id');
+
+  @override
+  Node callShow(Node target) {
+    if (target is Element) {
+      target.hidden = false;
+
+      if (target.style.display == 'none') {
+        target.style.display = '';
+      }
+
+      if (target.style.visibility == 'hidden') {
+        target.style.visibility = '';
+      }
+    }
+    return target;
+  }
+
+  @override
+  Node callHide(Node target) {
+    if (target is Element) {
+      target.hidden = true;
+    }
+    return target;
+  }
+
+  @override
+  Node callRemove(Node target) {
+    target.remove();
+    return target;
+  }
+
+  @override
+  Node callClear(Node target) {
+    if (target is Element) {
+      target.nodes.clear();
+    }
+    return target;
+  }
+
+  @override
+  Node callAddClass(Node target, List<String> classes) {
+    if (target is Element) {
+      target.classes.addAll(classes);
+    }
+    return target;
+  }
+
+  @override
+  Node callRemoveClass(Node target, List<String> classes) {
+    if (target is Element) {
+      target.classes.removeAll(classes);
+    }
+    return target;
+  }
+
+  @override
+  Node callSetClass(Node target, List<String> classes) {
+    if (target is Element) {
+      target.classes.clear();
+      target.classes.addAll(classes);
+    }
+    return target;
+  }
+
+  @override
+  Node callClearClass(Node target) {
+    if (target is Element) {
+      target.classes.clear();
+    }
+    return target;
+  }
 }
 
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {

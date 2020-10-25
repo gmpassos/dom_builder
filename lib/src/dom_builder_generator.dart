@@ -21,6 +21,17 @@ abstract class DOMGenerator<T> {
     return _dartHTML as DOMGeneratorDartHTML<T>;
   }
 
+  DOMActionExecutor<T> _domActionExecutor;
+
+  DOMActionExecutor<T> get domActionExecutor => _domActionExecutor;
+
+  set domActionExecutor(DOMActionExecutor<T> value) {
+    _domActionExecutor = value;
+    if (_domActionExecutor != null) {
+      _domActionExecutor.domGenerator = this;
+    }
+  }
+
   DOMContext<T> _domContext;
 
   DOMContext<T> get domContext => _domContext;
@@ -540,7 +551,7 @@ abstract class DOMGenerator<T> {
       }
     }
 
-    var element = generator.generate(this, tag, parent,
+    var element = generator.generate(this, treeMap, tag, domParent, parent,
         domElement.domAttributes, contentHolder, domElement.content);
 
     treeMap.mapTree(domElement, element);
@@ -572,8 +583,25 @@ abstract class DOMGenerator<T> {
     return true;
   }
 
-  void registerEventListeners(
-      DOMTreeMap<T> treeMap, DOMElement domElement, T element) {}
+  void resolveActionAttribute(DOMTreeMap<T> treeMap, DOMElement domElement,
+      T element, DOMContext<T> context) {
+    if (_domActionExecutor == null || domElement.tag == 'form') return;
+
+    var actionValue = domElement.getAttributeValue('action', domContext);
+    if (isEmptyString(actionValue)) return;
+
+    var domAction = _domActionExecutor.parse(actionValue);
+
+    if (domAction != null) {
+      domElement.onClick.listen((event) {
+        var target = domElement.getRuntimeNode();
+        domAction.execute(target, treeMap: treeMap, context: context);
+      });
+    }
+  }
+
+  void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
+      T element, DOMContext<T> context) {}
 
   DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
       null;
@@ -692,7 +720,9 @@ abstract class ElementGenerator<T> {
 
   T generate(
       DOMGenerator<T> domGenerator,
+      DOMTreeMap<T> treeMap,
       String tag,
+      DOMElement domParent,
       T parent,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
@@ -745,7 +775,9 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
   @override
   T generate(
       DOMGenerator<T> domGenerator,
+      DOMTreeMap<T> treeMap,
       String tag,
+      DOMElement domParent,
       T parent,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
@@ -830,9 +862,16 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.onElementCreated(treeMap, domElement, element, context);
 
   @override
-  void registerEventListeners(
-          DOMTreeMap<T> treeMap, DOMElement domElement, T element) =>
-      domGenerator.registerEventListeners(treeMap, domElement, element);
+  void resolveActionAttribute(DOMTreeMap<T> treeMap, DOMElement domElement,
+      T element, DOMContext<T> context) {
+    domGenerator.resolveActionAttribute(treeMap, domElement, element, context);
+  }
+
+  @override
+  void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
+          T element, DOMContext<T> context) =>
+      domGenerator.registerEventListeners(
+          treeMap, domElement, element, context);
 
   @override
   DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
@@ -1115,4 +1154,19 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 
   @override
   String resolveSource(String url) => domGenerator.resolveSource(url);
+
+  @override
+  DOMActionExecutor<T> get domActionExecutor => domGenerator.domActionExecutor;
+
+  @override
+  set domActionExecutor(DOMActionExecutor<T> value) =>
+      domGenerator.domActionExecutor = value;
+
+  @override
+  DOMActionExecutor<T> get _domActionExecutor =>
+      domGenerator._domActionExecutor;
+
+  @override
+  set _domActionExecutor(DOMActionExecutor<T> value) =>
+      domGenerator._domActionExecutor = value;
 }

@@ -58,6 +58,13 @@ class DOMAttribute implements WithValue {
     name = normalizeName(name);
     if (name == null) return null;
 
+    if (value is String) {
+      var template = DOMTemplate.parse(value);
+      if (!template.hasOnlyContent) {
+        return DOMAttribute(name, DOMAttributeValueTemplate(value));
+      }
+    }
+
     if (name == 'style') {
       return DOMAttribute(name, DOMAttributeValueCSS(value));
     }
@@ -152,7 +159,7 @@ class DOMAttribute implements WithValue {
 
   @override
   String toString() {
-    return 'DOMAttribute{name: $name, _value: $_valueHandler}';
+    return hasValue ? value : '';
   }
 }
 
@@ -260,6 +267,23 @@ class DOMAttributeValueString extends DOMAttributeValue {
   @override
   String toString() {
     return 'DOMAttributeValueString{_value: $_value}';
+  }
+}
+
+/// Attribute value when has template syntax: {{...}}
+class DOMAttributeValueTemplate extends DOMAttributeValueString {
+  DOMTemplate _template;
+
+  DOMAttributeValueTemplate(dynamic value) : super(value) {
+    _template = DOMTemplate.parse(value);
+  }
+
+  DOMTemplate get template => _template;
+
+  @override
+  void setAttributeValue(dynamic value) {
+    super.setAttributeValue(value);
+    _template = DOMTemplate.parse(value);
   }
 }
 

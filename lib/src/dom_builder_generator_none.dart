@@ -1,4 +1,6 @@
+import 'dom_builder_actions.dart';
 import 'dom_builder_base.dart';
+import 'dom_builder_context.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
@@ -91,6 +93,33 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
 
   @override
   T createTextNode(String text) {
+    _noDartHTML();
+    return null;
+  }
+}
+
+class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
+  void _noDartHTML() {
+    throw UnsupportedError('DOMActionExecutorDartHTML: dart:html not loaded');
+  }
+
+  @override
+  T execute(DOMAction action, T target, T self,
+      {DOMTreeMap treeMap, DOMContext context}) {
+    _noDartHTML();
+    return null;
+  }
+
+  @override
+  T call(String name, List<String> parameters, T target, T self,
+      DOMTreeMap treeMap, DOMContext context) {
+    _noDartHTML();
+    return null;
+  }
+
+  @override
+  T selectByID(
+      String id, T target, T self, DOMTreeMap treeMap, DOMContext context) {
     _noDartHTML();
     return null;
   }

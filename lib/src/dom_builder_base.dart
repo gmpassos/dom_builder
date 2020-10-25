@@ -46,7 +46,8 @@ NodeSelector asNodeSelector(dynamic selector) {
       }
       // class
       else if (str.startsWith('.')) {
-        return (n) => n is DOMElement && n.containsClass(str.substring(1));
+        var classes = str.substring(1).split('.');
+        return (n) => n is DOMElement && n.containsAllClasses(classes);
       }
       // tag
       else {
@@ -795,6 +796,45 @@ class DOMNode {
     return selectWhere((n) => n is DOMElement && n.id == id);
   }
 
+  /// Returns a node [T] that has all [classes].
+  T selectWithAllClass<T extends DOMNode>(List<String> classes) {
+    if (isEmptyObject(classes) || isEmpty) return null;
+
+    classes = classes
+        .where((c) => c != null)
+        .map((c) => c.trim())
+        .where((c) => c.isNotEmpty)
+        .toList();
+
+    return selectWhere((n) => n is DOMElement && n.containsAllClasses(classes));
+  }
+
+  /// Returns a node [T] that has any of [classes].
+  T selectWithAnyClass<T extends DOMNode>(List<String> classes) {
+    if (isEmptyObject(classes) || isEmpty) return null;
+
+    classes = classes
+        .where((c) => c != null)
+        .map((c) => c.trim())
+        .where((c) => c.isNotEmpty)
+        .toList();
+
+    return selectWhere((n) => n is DOMElement && n.containsAnyClass(classes));
+  }
+
+  /// Returns a node [T] that is one of [tags].
+  T selectByTag<T extends DOMNode>(List<String> tags) {
+    if (isEmptyObject(tags) || isEmpty) return null;
+
+    tags = tags
+        .where((c) => c != null)
+        .map((c) => c.trim())
+        .where((c) => c.isNotEmpty)
+        .toList();
+
+    return selectWhere((n) => n is DOMElement && tags.contains(n.tag));
+  }
+
   /// Returns a node [T] that is equals to [node].
   T nodeEquals<T extends DOMNode>(DOMNode node) {
     if (node == null || isEmpty) return null;
@@ -1388,6 +1428,38 @@ class DOMElement extends DOMNode {
     var attribute = getAttribute('class');
     if (attribute == null) return false;
     return attribute.containsValue(className);
+  }
+
+  /// Returns [true] if attribute `class` has all [classes].
+  bool containsAllClasses(Iterable<String> classes) {
+    var attribute = getAttribute('class');
+    if (attribute == null) return false;
+
+    if (classes == null || classes.isEmpty) return false;
+
+    for (var c in classes) {
+      if (!attribute.containsValue(c)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /// Returns [true] if attribute `class` has any of [classes].
+  bool containsAnyClass(Iterable<String> classes) {
+    var attribute = getAttribute('class');
+    if (attribute == null) return false;
+
+    if (classes == null || classes.isEmpty) return false;
+
+    for (var c in classes) {
+      if (attribute.containsValue(c)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   LinkedHashMap<String, DOMAttribute> _attributes;

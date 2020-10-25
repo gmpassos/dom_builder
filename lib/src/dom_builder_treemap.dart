@@ -41,7 +41,7 @@ class DOMTreeMap<T> {
   Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
 
   /// Maps in this instance the pair [domNode] and [element].
-  void map(DOMNode domNode, T element) {
+  void map(DOMNode domNode, T element, {DOMContext<T> context}) {
     if (domNode == null || element == null) return;
 
     _domNodeToElementMap[domNode] = element;
@@ -50,7 +50,8 @@ class DOMTreeMap<T> {
     domNode.treeMap = this;
 
     if (domNode is DOMElement) {
-      domGenerator.registerEventListeners(this, domNode, element);
+      domGenerator.resolveActionAttribute(this, domNode, element, context);
+      domGenerator.registerEventListeners(this, domNode, element, context);
     }
   }
 
@@ -342,5 +343,5 @@ class DOMTreeMapDummy<T> extends DOMTreeMap<T> {
   DOMTreeMapDummy(DOMGenerator<T> domGenerator) : super(domGenerator);
 
   @override
-  void map(DOMNode domNode, T element) {}
+  void map(DOMNode domNode, T element, {DOMContext<T> context}) {}
 }

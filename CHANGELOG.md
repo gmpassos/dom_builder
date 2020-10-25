@@ -1,3 +1,12 @@
+## 1.0.20
+
+- `DOMTemplate`: support to template syntax, using `{{...}}` blocks.
+- Added `DOMAction` and `DOMActionExecutor`, that can perform operations over `DOMElement` based into a simple syntax.
+- `DOMNode`:
+  - Added `selectWithAllClass`, `selectWithAnyClass`, `selectByTag`.
+  - Added `containsAllClasses` and `containsAnyClass`.
+- `CSSColor`: added `inverse` getter.
+
 ## 1.0.19
 
 - Added `CSSNumber`.

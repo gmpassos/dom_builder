@@ -1140,6 +1140,8 @@ abstract class CSSColor extends CSSValue {
 
   bool get hasAlpha => false;
 
+  CSSColor get inverse => asCSSColorRGB.inverse;
+
   String get args;
 
   String get argsNoAlpha;
@@ -1224,6 +1226,14 @@ class CSSColorRGB extends CSSColor {
 
   set blue(int value) {
     _blue = _clip(value, 0, 255, 0);
+  }
+
+  @override
+  CSSColorRGB get inverse {
+    var r = clipNumber(255 - red, 0, 255);
+    var g = clipNumber(255 - green, 0, 255);
+    var b = clipNumber(255 - blue, 0, 255);
+    return CSSColorRGB(r, g, b);
   }
 
   @override
@@ -1359,6 +1369,14 @@ class CSSColorHEX extends CSSColorRGB {
     }
 
     return null;
+  }
+
+  @override
+  CSSColorHEX get inverse {
+    var r = clipNumber(255 - red, 0, 255);
+    var g = clipNumber(255 - green, 0, 255);
+    var b = clipNumber(255 - blue, 0, 255);
+    return CSSColorHEX._(r, g, b);
   }
 
   @override
