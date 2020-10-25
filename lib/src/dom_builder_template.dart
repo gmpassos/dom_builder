@@ -5,7 +5,7 @@ final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
   'c': r'\s*\}\}',
   'key': r'\w[\w-]*',
   'var': r'$key(?:\.$key)*',
-  'tag': r'$o([\:\!\?\/\#\.]|[\?\*][:!])?($var)?$c',
+  'tag': r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.)?($var)?$c',
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMTemplate {
@@ -65,6 +65,12 @@ abstract class DOMTemplate {
 
               stack.add(cursor);
               cursor = o;
+              break;
+            }
+          case '.':
+            {
+              var o = DOMTemplateBlockVar(DOMTemplateVariable([]));
+              cursor.add(o);
               break;
             }
           case '/':
@@ -182,7 +188,7 @@ abstract class DOMTemplate {
     return root;
   }
 
-  String build(Map context, {ElementHTMLProvider elementProvider});
+  String build(dynamic context, {ElementHTMLProvider elementProvider});
 
   bool add(DOMTemplate entry) {
     throw UnsupportedError("Type can't have content: $runtimeType");
@@ -213,7 +219,7 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
@@ -247,37 +253,92 @@ class DOMTemplateVariable {
 
   String get keysFull => keys.join('.');
 
-  dynamic get(Map context) {
-    if (context == null || context.isEmpty) return null;
+  dynamic get(dynamic context) {
+    if (context == null || isEmptyObject(context)) return null;
 
     var length = keys.length;
-    if (length == 0) return null;
+    if (length == 0) return context;
 
-    var value = context[keys[0]];
+    dynamic value = _get(context, keys[0]);
 
     for (var i = 1; i < length; ++i) {
       var k = keys[i];
-      value = value[k];
+      value = _get(value, k);
     }
 
     return value;
   }
 
-  dynamic getResolved(Map context) {
+  dynamic _get(dynamic context, String key) {
+    if (context == null || isEmptyObject(context) || isEmptyString(key)) {
+      return null;
+    }
+
+    if (context is Iterable) {
+      context = (context as Iterable).toList();
+    }
+
+    if (context is Map) {
+      if (context.containsKey(key)) {
+        return context[key];
+      } else if (isInt(key)) {
+        var n = parseInt(key);
+        return context[n];
+      }
+    } else if (context is List) {
+      int idx;
+      if (isInt(key)) {
+        idx = parseInt(key);
+      } else {
+        key = key.trim();
+        if (isInt(key)) {
+          idx = parseInt(key);
+        }
+      }
+      if (idx != null) {
+        return idx < context.length ? context[idx] : null;
+      }
+    } else if (context is Set) {
+      if (context.contains(key)) {
+        return true;
+      } else if (isInt(key)) {
+        var n = parseInt(key);
+        return context.contains(n);
+      }
+    }
+
+    return null;
+  }
+
+  dynamic getResolved(dynamic context) {
     var value = get(context);
     return evaluateObject(context, value);
   }
 
-  String getResolvedAsString(Map context) {
+  String getResolvedAsString(dynamic context) {
     var value = getResolved(context);
     return DOMTemplateVariable.valueToString(value);
   }
 
   static String valueToString(dynamic value) {
-    return value != null ? value.toString() : '';
+    if (value == null) return '';
+
+    if (value is String) {
+      return value;
+    } else if (value is List) {
+      return value.map(valueToString).join(',');
+    } else if (value is Map) {
+      return value
+          .map((key, value) =>
+              MapEntry(key, '${valueToString(key)}: ${valueToString(value)}'))
+          .values
+          .join('; ');
+    } else {
+      return '$value';
+    }
   }
 
-  static dynamic evaluateObject(Map context, dynamic value) {
+  static dynamic evaluateObject(dynamic context, dynamic value) {
     if (value == null) return null;
 
     if (value is String) {
@@ -305,7 +366,7 @@ class DOMTemplateVariable {
     }
   }
 
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     var value = getResolved(context);
     return evaluateValue(value);
   }
@@ -338,7 +399,8 @@ class DOMTemplateContent extends DOMTemplate {
   bool get isEmpty => isEmptyString(content);
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) => content;
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) =>
+      content;
 }
 
 class DOMTemplateBlockVar extends DOMTemplateNode {
@@ -351,7 +413,7 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   }
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     return variable.getResolvedAsString(context);
   }
 }
@@ -362,7 +424,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   DOMTemplateBlockQuery(this.query);
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     if (elementProvider == null) return '';
     var element = elementProvider(query);
 
@@ -390,10 +452,10 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 
   DOMTemplateBlockCondition elseCondition;
 
-  bool evaluate(Map context);
+  bool evaluate(dynamic context);
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     if (evaluate(context)) {
       return buildContent(context, elementProvider: elementProvider);
     } else {
@@ -410,7 +472,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
     }
   }
 
-  String buildContent(Map context, {ElementHTMLProvider elementProvider}) {
+  String buildContent(dynamic context, {ElementHTMLProvider elementProvider}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
@@ -427,7 +489,7 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return variable.evaluate(context);
   }
 }
@@ -437,7 +499,7 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return !variable.evaluate(context);
   }
 }
@@ -452,7 +514,7 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElse([DOMTemplateNode content]) : super(null, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return true;
   }
 }
@@ -463,7 +525,7 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return variable.evaluate(context);
   }
 }
@@ -474,7 +536,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return !variable.evaluate(context);
   }
 }
@@ -485,7 +547,7 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
       : super(variable, contentElse);
 
   @override
-  String build(Map context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     var value = variable.getResolved(context);
     if (variable.evaluateValue(value)) {
       return DOMTemplateVariable.valueToString(value);
@@ -501,12 +563,12 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(Map context) {
+  bool evaluate(dynamic context) {
     return variable.evaluate(context);
   }
 
   @override
-  String buildContent(Map context, {ElementHTMLProvider elementProvider}) {
+  String buildContent(dynamic context, {ElementHTMLProvider elementProvider}) {
     var value = variable.getResolved(context);
 
     if (value is List) {

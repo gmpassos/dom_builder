@@ -1,3 +1,9 @@
+## 1.0.21
+
+- `DOMTemplate`:
+  - Added support to `{{.}}` syntax.
+  - Better resolution of variables.
+
 ## 1.0.20
 
 - `DOMTemplate`: support to template syntax, using `{{...}}` blocks.

@@ -232,6 +232,56 @@ void main() {
       expect(s3, equals('Routes:!'));
     });
 
+    test('parse: ifList 2', () {
+      var template = DOMTemplate.parse('Route 1: {{routes.1.name}}!');
+      expect(template.nodes.length, equals(3));
+
+      var s1 = template.build({
+        'routes': [
+          {'name': 'Home'},
+          {'name': 'About'}
+        ]
+      });
+      expect(s1, equals('Route 1: About!'));
+
+      var s2 = template.build({'routes': []});
+      expect(s2, equals('Route 1: !'));
+
+      var s3 = template.build({});
+      expect(s3, equals('Route 1: !'));
+
+      var s4 = template.build({
+        'routes': [
+          {'name': 'Home'}
+        ]
+      });
+      expect(s4, equals('Route 1: !'));
+    });
+
+    test('parse: ifList 3', () {
+      var template = DOMTemplate.parse('Routes:{{*:routes}} [{{.}}]{{/}}!');
+      expect(template.nodes.length, equals(3));
+
+      var s1 = template.build({
+        'routes': [
+          {'name': 'Home'},
+          {'name': 'About'}
+        ]
+      });
+      expect(s1, equals('Routes: [name: Home] [name: About]!'));
+
+      var s2 = template.build({'routes': []});
+      expect(s2, equals('Routes:!'));
+
+      var s3 = template.build({});
+      expect(s3, equals('Routes:!'));
+
+      var s4 = template.build({
+        'routes': ['Home', 'About']
+      });
+      expect(s4, equals('Routes: [Home] [About]!'));
+    });
+
     test('parse: ifList_else 1', () {
       var template = DOMTemplate.parse(
           'Routes:{{*:routes}} [{{name}}]{{?}} NO ROUTES{{/}}!');
