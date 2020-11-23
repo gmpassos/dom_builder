@@ -9,13 +9,20 @@ import 'dom_builder_helpers.dart';
 
 /// Represents a [DOMElement] attribute entry (`name` and [DOMAttributeValue]).
 class DOMAttribute implements WithValue {
-  static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {'checked', 'hidden'};
+  static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {
+    'checked',
+    'hidden',
+    'selected'
+  };
   static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
 
   static final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
     'class': ' ',
     'style': '; '
   };
+
+  static bool isBooleanAttribute(String attrName) =>
+      _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(attrName);
 
   static String getAttributeDelimiter(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];

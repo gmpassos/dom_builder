@@ -99,6 +99,10 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element tag: $element");
   }
 
+  String getElementValue(T element) {
+    throw UnsupportedError("Can't get element value: $element");
+  }
+
   String getElementOuterHTML(T element) {
     throw UnsupportedError("Can't get element outerHTML: $element");
   }
@@ -468,7 +472,8 @@ abstract class DOMGenerator<T> {
   void setAttributes(DOMElement domElement, T element,
       {bool preserveClass = false, bool preserveStyle = false}) {
     for (var attrName in domElement.attributesNames) {
-      var attrVal = domElement.getAttributeValue(attrName, _domContext);
+      var attr = domElement.getAttribute(attrName);
+      var attrVal = attr.getValue(_domContext);
 
       if (preserveClass && attrName == 'class') {
         var prev = getAttribute(element, attrName);
@@ -491,6 +496,10 @@ abstract class DOMGenerator<T> {
         if (attrVal2 != null && attrVal != attrVal2) {
           setAttribute(element, '$attrName-original', attrVal);
           attrVal = attrVal2;
+        }
+      } else if (attr.isBoolean && DOMAttribute.isBooleanAttribute(attrName)) {
+        if (attrVal != 'true') {
+          continue;
         }
       }
 
@@ -593,9 +602,29 @@ abstract class DOMGenerator<T> {
     var domAction = _domActionExecutor.parse(actionValue);
 
     if (domAction != null) {
-      domElement.onClick.listen((event) {
+      EventStream<DOMEvent> eventStream = domElement.onClick;
+
+      var tag = domElement.tag;
+      if (tag == 'select' || tag == 'input' || tag == 'textarea') {
+        eventStream = domElement.onChange;
+      }
+
+      eventStream.listen((event) {
         var target = domElement.getRuntimeNode();
-        domAction.execute(target, treeMap: treeMap, context: context);
+        var elementValue = getElementValue(element);
+
+        var context2 = context?.copy() ?? DOMContext();
+
+        var variables = context2.variables;
+        variables['event'] = {
+          'target': domElement,
+          'value': elementValue,
+          'event': '$event'
+        };
+
+        context2.variables = variables;
+
+        domAction.execute(target, treeMap: treeMap, context: context2);
       });
     }
   }
@@ -605,6 +634,8 @@ abstract class DOMGenerator<T> {
 
   DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
       null;
+
+  DOMEvent createDOMEvent(DOMTreeMap<T> treeMap, dynamic event) => null;
 
   bool cancelEvent(dynamic event, {bool stopImmediatePropagation = false}) =>
       false;
@@ -878,6 +909,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.createDOMMouseEvent(treeMap, event);
 
   @override
+  DOMEvent createDOMEvent(DOMTreeMap<T> treeMap, event) =>
+      domGenerator.createDOMEvent(treeMap, event);
+
+  @override
   bool cancelEvent(dynamic event, {bool stopImmediatePropagation = false}) =>
       domGenerator.cancelEvent(event,
           stopImmediatePropagation: stopImmediatePropagation);
@@ -1067,6 +1102,9 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 
   @override
   String getElementTag(T element) => domGenerator.getElementTag(element);
+
+  @override
+  String getElementValue(T element) => domGenerator.getElementValue(element);
 
   @override
   String getElementOuterHTML(T element) =>

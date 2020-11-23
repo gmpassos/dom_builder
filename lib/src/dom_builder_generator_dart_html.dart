@@ -33,6 +33,26 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  String getElementValue(Node element) {
+    if (element == null) return null;
+
+    if (element is InputElement) {
+      return element.value;
+    } else if (element is TextAreaElement) {
+      return element.value;
+    } else if (element is SelectElement) {
+      return element.value;
+    } else if (element is CheckboxInputElement) {
+      return '${element.checked ?? false}';
+    } else if (element is FileUploadInputElement) {
+      var files = element.files ?? [];
+      return files.isNotEmpty ? files.join(',') : '';
+    }
+
+    return element.text;
+  }
+
+  @override
   String getElementOuterHTML(Node element) {
     if (element is Element) {
       return element.outerHtml;
@@ -205,6 +225,13 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
         });
       }
 
+      if (domElement.hasOnChangeListener) {
+        element.onChange.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event);
+          domElement.onChange.add(domEvent);
+        });
+      }
+
       if (domElement.hasOnMouseOverListener) {
         element.onMouseOver.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event);
@@ -242,6 +269,18 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
           event.ctrlKey,
           event.shiftKey,
           event.metaKey);
+    }
+
+    return null;
+  }
+
+  @override
+  DOMEvent createDOMEvent(DOMTreeMap<Node> treeMap, event) {
+    if (event is Event) {
+      Node eventTarget = event.target;
+      var domTarget = treeMap.getMappedDOMNode(eventTarget);
+
+      return DOMEvent(treeMap, event, eventTarget, domTarget);
     }
 
     return null;
@@ -744,6 +783,18 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
     if (target is Element) {
       target.classes.clear();
     }
+    return target;
+  }
+
+  @override
+  Node callLocale(Node target, List<String> parameters, DOMContext context) {
+    var variables = context?.variables ?? {};
+    var event = variables['event'] ?? {};
+    var locale = event['value'] ?? '';
+
+    print(
+        '>>>>>>>>>>>>>>>>>> LOCALE: $locale >> $parameters > $context > vars: $variables');
+
     return target;
   }
 }

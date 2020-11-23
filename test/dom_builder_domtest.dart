@@ -243,6 +243,12 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
+  String getElementValue(TestNode element) {
+    if (element == null) return null;
+    return element.text;
+  }
+
+  @override
   String getElementOuterHTML(TestNode element) {
     return element.outerHTML();
   }

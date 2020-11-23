@@ -2000,6 +2000,17 @@ class DOMElement extends DOMNode {
     return _onClick;
   }
 
+  EventStream<DOMEvent> _onChange;
+
+  /// Returns [true] if has any [onChange] listener registered.
+  bool get hasOnChangeListener => _onChange != null;
+
+  /// Event handler for `change` events.
+  EventStream<DOMEvent> get onChange {
+    _onChange ??= EventStream();
+    return _onChange;
+  }
+
   EventStream<DOMMouseEvent> _onMouseOver;
 
   /// Returns [true] if has any [onMouseOver] listener registered.
@@ -2028,19 +2039,28 @@ class DOMElement extends DOMNode {
 //
 
 /// Base class for [DOMElement] events.
-class DOMEvent {}
-
-/// Represents a mouse event.
-class DOMMouseEvent<T> extends DOMEvent {
+class DOMEvent<T> {
   final DOMTreeMap<T> treeMap;
+  final dynamic event;
+  final dynamic eventTarget;
+  final DOMNode target;
+
+  DOMEvent(this.treeMap, this.event, this.eventTarget, this.target);
 
   DOMGenerator<T> get domGenerator => treeMap.domGenerator;
 
-  final dynamic event;
-  final dynamic eventTarget;
+  bool cancel({bool stopImmediatePropagation = false}) =>
+      domGenerator.cancelEvent(event,
+          stopImmediatePropagation: stopImmediatePropagation ?? false);
 
-  final DOMNode target;
+  @override
+  String toString() {
+    return '$event';
+  }
+}
 
+/// Represents a mouse event.
+class DOMMouseEvent<T> extends DOMEvent<T> {
   final Point<num> client;
 
   final Point<num> offset;
@@ -2062,10 +2082,10 @@ class DOMMouseEvent<T> extends DOMEvent {
   final bool metaKey;
 
   DOMMouseEvent(
-      this.treeMap,
-      this.event,
-      this.eventTarget,
-      this.target,
+      DOMTreeMap treeMap,
+      dynamic event,
+      dynamic eventTarget,
+      DOMNode target,
       this.client,
       this.offset,
       this.page,
@@ -2075,8 +2095,10 @@ class DOMMouseEvent<T> extends DOMEvent {
       this.altKey,
       this.ctrlKey,
       this.shiftKey,
-      this.metaKey);
+      this.metaKey)
+      : super(treeMap, event, eventTarget, target);
 
+  @override
   bool cancel({bool stopImmediatePropagation = false}) =>
       domGenerator.cancelEvent(event,
           stopImmediatePropagation: stopImmediatePropagation ?? false);

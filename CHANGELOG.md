@@ -1,3 +1,12 @@
+## 1.0.22
+
+- `DOMTemplate`:
+  - added `locale` call action.
+  - Added multiple actions using `;` delimiter.
+  - Added variable comparison.
+- `DOMElement`: added `onChange` events.
+- swiss_knife: ^2.5.18
+
 ## 1.0.21
 
 - `DOMTemplate`:

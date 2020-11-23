@@ -63,5 +63,28 @@ void main() {
       action.execute(TestElem('div')..attributes['id'] = 'foo');
       expect(executor.log, equals(['#foo', 'show()']));
     });
+
+    test('parse: call ; sel -> call', () {
+      var action = DOMAction.parse(executor, 'location(en); #foo.hide()');
+
+      var list = action as DOMActionList;
+      expect(list.actions.length, equals(2));
+
+      var location = list.actions[0] as DOMActionCall;
+      expect(location.name, equals('location'));
+      expect(location.parameters, equals(['en']));
+
+      var sel = list.actions[1] as DOMActionSelect;
+      expect(sel.id, equals('foo'));
+
+      var call = sel.next as DOMActionCall;
+
+      expect(call.name, equals('hide'));
+      expect(call.parameters, equals([]));
+
+      executor.clearLog();
+      action.execute(TestElem('div')..attributes['id'] = 'foo');
+      expect(executor.log, equals(['location(en)', '#foo', 'hide()']));
+    });
   });
 }

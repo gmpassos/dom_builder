@@ -4,8 +4,11 @@ final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
   'o': r'\{\{\s*',
   'c': r'\s*\}\}',
   'key': r'\w[\w-]*',
+  'quote': r'''(?:"[^"]*"|'[^']*')''',
   'var': r'$key(?:\.$key)*',
-  'tag': r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.)?($var)?$c',
+  'cmp': r'(?:==|!=)',
+  'tag':
+      r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.)?($var)?(?:($cmp)(?:($quote)|($var)))?$c',
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMTemplate {
@@ -46,6 +49,9 @@ abstract class DOMTemplate {
 
       var type = m.group(1);
       var key = m.group(2);
+      var cmp = m.group(3);
+      var valueQuote = m.group(4);
+      var valueVar = m.group(5);
 
       if (type == null) {
         if (key != null) {
@@ -101,10 +107,27 @@ abstract class DOMTemplate {
           case ':':
             {
               var variable = DOMTemplateVariable.parse(key);
-              var o = DOMTemplateBlockIf(variable);
-              cursor.add(o);
+
+              DOMTemplateBlockIf block;
+
+              if (cmp != null) {
+                dynamic value;
+
+                if (valueQuote != null) {
+                  value = DOMTemplateContent(
+                      valueQuote.substring(1, valueQuote.length - 1));
+                } else if (valueVar != null) {
+                  value = DOMTemplateVariable.parse(valueVar);
+                }
+
+                block = DOMTemplateBlockIfCmp(variable, cmp, value);
+              } else {
+                block = DOMTemplateBlockIf(variable);
+              }
+
+              cursor.add(block);
               stack.add(cursor);
-              cursor = o;
+              cursor = block;
               break;
             }
           case '?:':
@@ -491,6 +514,71 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
   @override
   bool evaluate(dynamic context) {
     return variable.evaluate(context);
+  }
+}
+
+enum DOMTemplateCmp { eq, notEq }
+
+DOMTemplateCmp parseDOMTemplateCmp(dynamic cmp) {
+  if (cmp == null) return null;
+
+  if (cmp is DOMTemplateCmp) return cmp;
+
+  var s = cmp.toString().trim().toLowerCase();
+
+  switch (s) {
+    case ':':
+    case 'eq':
+    case '=':
+    case '==':
+      return DOMTemplateCmp.eq;
+    case 'neq':
+    case 'noteq':
+    case '!':
+    case '!=':
+      return DOMTemplateCmp.notEq;
+    default:
+      return null;
+  }
+}
+
+class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
+  final DOMTemplateCmp cmp;
+  final dynamic value;
+
+  DOMTemplateBlockIfCmp(DOMTemplateVariable variable, dynamic cmp, this.value,
+      [DOMTemplateNode content])
+      : cmp = parseDOMTemplateCmp(cmp),
+        super(variable, content);
+
+  @override
+  bool evaluate(dynamic context) {
+    switch (cmp) {
+      case DOMTemplateCmp.eq:
+        return matchesEq(context);
+      case DOMTemplateCmp.notEq:
+        return !matchesEq(context);
+      default:
+        throw StateError("Can't handle: $cmp");
+    }
+  }
+
+  bool matchesEq(dynamic context) {
+    var varValueStr = variable.getResolvedAsString(context);
+    var valueStr = getValueAsString(context);
+    return varValueStr == valueStr;
+  }
+
+  String getValueAsString(dynamic context) {
+    if (value is DOMTemplateContent) {
+      var valueContent = value as DOMTemplateContent;
+      return valueContent.content;
+    } else if (value is DOMTemplateVariable) {
+      var valueVar = value as DOMTemplateVariable;
+      return valueVar.getResolvedAsString(context);
+    } else {
+      return value.toString();
+    }
   }
 }
 

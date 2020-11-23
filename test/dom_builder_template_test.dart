@@ -333,5 +333,44 @@ void main() {
       var s2 = template.build({'ok': false}, elementProvider: elementProvider);
       expect(s2, equals('Element: !'));
     });
+
+    test('parse: ifEq{ var } 1', () {
+      var template = DOMTemplate.parse(
+          'Hello! Good {{:period=="am"}}morning{{?:period=="pm"}}afternoon{{?}}day{{/}}!');
+      expect(template.nodes.length, equals(3));
+
+      var s1 = template.build({'period': 'am'});
+      expect(s1, equals('Hello! Good morning!'));
+
+      var s2 = template.build({'period': 'pm'});
+      expect(s2, equals('Hello! Good afternoon!'));
+
+      var s3 = template.build({'period': ''});
+      expect(s3, equals('Hello! Good day!'));
+    });
+
+    test('parse: ifEq{ var } 2', () {
+      var template = DOMTemplate.parse(
+          'Hello! Period: {{:period==hourPeriod}}match{{?}}no match{{/}}!');
+      expect(template.nodes.length, equals(3));
+
+      var s1 = template.build({'period': 'am', 'hourPeriod': 'am'});
+      expect(s1, equals('Hello! Period: match!'));
+
+      var s2 = template.build({'period': 'am', 'hourPeriod': 'pm'});
+      expect(s2, equals('Hello! Period: no match!'));
+    });
+
+    test('parse: ifNotEq{ var } 2', () {
+      var template = DOMTemplate.parse(
+          'Hello! Period: {{:period!=hourPeriod}}diff{{?}}eq{{/}}!');
+      expect(template.nodes.length, equals(3));
+
+      var s1 = template.build({'period': 'am', 'hourPeriod': 'am'});
+      expect(s1, equals('Hello! Period: eq!'));
+
+      var s2 = template.build({'period': 'am', 'hourPeriod': 'pm'});
+      expect(s2, equals('Hello! Period: diff!'));
+    });
   });
 }

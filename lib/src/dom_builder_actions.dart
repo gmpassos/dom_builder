@@ -60,6 +60,8 @@ abstract class DOMActionExecutor<T> {
       case 'clearclass':
       case 'clearclasses':
         return callClearClass(self);
+      case 'locale':
+        return callLocale(self, parameters, context);
       default:
         return null;
     }
@@ -94,6 +96,10 @@ abstract class DOMActionExecutor<T> {
   }
 
   T callClearClass(T target) {
+    throw UnimplementedError();
+  }
+
+  T callLocale(T target, List<String> parameters, DOMContext context) {
     throw UnimplementedError();
   }
 
@@ -140,16 +146,26 @@ abstract class DOMAction<T> {
 
     var matches = _REGEXP_ACTION_CAPTURE.allMatches(actionLine);
 
+    var actions = <DOMAction<T>>[];
+
     DOMAction<T> rootAction;
     DOMAction<T> lastAction;
 
     var endPos = 0;
     for (var match in matches) {
-      if (match.start != endPos) {
-        throw ArgumentError("Can't parse DOMAction line: $actionLine");
-      }
-
       var part = match.group(0);
+
+      if (match.start > endPos) {
+        var prevChar = actionLine.substring(endPos, match.start).trim();
+
+        if (prevChar == ';') {
+          actions.add(rootAction);
+          rootAction = null;
+          lastAction = null;
+        } else {
+          throw ArgumentError("Can't parse DOMAction line: $actionLine");
+        }
+      }
 
       var sel = match.group(1);
       var call = match.group(2);
@@ -179,6 +195,11 @@ abstract class DOMAction<T> {
       lastAction = action;
 
       endPos = match.end;
+    }
+
+    if (actions.isNotEmpty) {
+      actions.add(rootAction);
+      return DOMActionList(executor, actions);
     }
 
     return rootAction;
@@ -234,9 +255,32 @@ abstract class DOMAction<T> {
   String toString() {
     var s = actionString();
     if (next != null) {
-      s += '.' + toString();
+      s += '.' + next.toString();
     }
     return s;
+  }
+}
+
+class DOMActionList<T> extends DOMAction<T> {
+  final List<DOMAction<T>> actions;
+
+  DOMActionList(DOMActionExecutor<T> executor, this.actions) : super(executor);
+
+  @override
+  T execute(T target, {T self, DOMTreeMap treeMap, DOMContext context}) {
+    T result;
+
+    for (var action in actions) {
+      result = action.execute(target,
+          self: self, treeMap: treeMap, context: context);
+    }
+
+    return result;
+  }
+
+  @override
+  String actionString() {
+    return actions.join(';');
   }
 }
 
