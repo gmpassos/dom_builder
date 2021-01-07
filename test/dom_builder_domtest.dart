@@ -14,6 +14,7 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
       String tag,
       DOMElement domParent,
       parent,
+      DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       contentHolder,
       List<DOMNode> contentNodes) {

@@ -181,7 +181,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   @override
   void setAttribute(Node node, String attrName, String attrVal) {
     if (node is Element) {
-      if (attrVal == null) {
+      if (node is OptionElement && attrName == 'selected') {
+        var sel = (attrVal ?? '').toLowerCase() == 'true';
+        node.selected = sel;
+      } else if (attrVal == null) {
         node.removeAttribute(attrName);
       } else {
         node.setAttribute(attrName, attrVal);

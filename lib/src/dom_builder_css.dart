@@ -415,6 +415,10 @@ class CSS {
     var style = entry.toString(withDelimiter, domContext);
     s.write(style);
   }
+
+  CSSValue operator [](String key) => get(key);
+
+  void operator []=(String key, value) => put(key, value);
 }
 
 class CSSEntry<V extends CSSValue> {

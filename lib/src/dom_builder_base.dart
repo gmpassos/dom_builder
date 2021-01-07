@@ -94,7 +94,7 @@ class DOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>');
       } else {
-        return [TextNode(entry)];
+        return [_toTextNode(entry)];
       }
     } else if (entry is num || entry is bool) {
       return [TextNode(entry.toString())];
@@ -136,7 +136,7 @@ class DOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>');
       } else {
-        return TextNode(entry);
+        return _toTextNode(entry);
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
@@ -169,7 +169,7 @@ class DOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>').single;
       } else {
-        return TextNode(entry);
+        return _toTextNode(entry);
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
@@ -183,7 +183,7 @@ class DOMNode {
 
   factory DOMNode._fromHtmlNode(html_dom.Node entry) {
     if (entry is html_dom.Text) {
-      return TextNode(entry.text);
+      return _toTextNode(entry.text);
     } else if (entry is html_dom.Element) {
       return DOMNode._fromHtmlNodeElement(entry);
     }
@@ -896,6 +896,13 @@ class DOMNode {
     return null;
   }
 
+  /// Returns a child node of type [T].
+  T selectByType<T extends DOMNode>() => selectWhere((n) => n is T);
+
+  /// Returns a [List<T>] of children nodes that are of type [T].
+  List<T> selectAllByType<T extends DOMNode>() =>
+      selectAllWhere((n) => n is T).whereType<T>().toList();
+
   /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> selectAllWhere<T extends DOMNode>(dynamic selector) {
     if (selector == null || isEmpty) return [];
@@ -1000,6 +1007,21 @@ class DOMNode {
     return this;
   }
 
+  DOMNode addAsTag<T>(String tag, T entry,
+      [ContentGenerator<T> elementGenerator]) {
+    if (elementGenerator != null) {
+      var elem = elementGenerator(entry);
+      var tagElem = $tag(tag, content: elem);
+      _addImpl(tagElem);
+    } else {
+      var tagElem = $tag(tag, content: entry);
+      _addImpl(tagElem);
+    }
+
+    normalizeContent();
+    return this;
+  }
+
   /// Parses [html] and add it to [content].
   DOMNode addHTML(String html) {
     var list = $html(html);
@@ -1076,6 +1098,19 @@ class DOMNode {
     if (_content.isEmpty) return [];
     var content2 = _content.map((e) => e.copy()).toList();
     return content2;
+  }
+}
+
+DOMNode _toTextNode(String text) {
+  if (text == null || text.isEmpty) {
+    return TextNode('');
+  }
+
+  if (DOMTemplate.possiblyATemplate(text)) {
+    var template = DOMTemplate.tryParse(text);
+    return template != null ? TemplateNode(template) : TextNode(text);
+  } else {
+    return TextNode(text);
   }
 }
 
@@ -1198,6 +1233,146 @@ class TextNode extends DOMNode implements WithValue {
   }
 }
 
+/// Represents a template node in DOM.
+class TemplateNode extends DOMNode implements WithValue {
+  DOMTemplateNode _template;
+
+  TemplateNode(DOMTemplateNode template)
+      : _template = template ?? DOMTemplateNode([]),
+        super._(false, false);
+
+  @override
+  String get text => isNotEmpty ? _template.toString() : '';
+
+  set text(String value) {
+    _template = DOMTemplate.parse(value ?? '');
+  }
+
+  DOMTemplate get template => _template;
+
+  set template(DOMTemplate value) {
+    _template = value;
+  }
+
+  @override
+  bool get isEmpty => _template != null ? _template.isEmpty : true;
+
+  @override
+  bool get hasValue => _template != null && _template.isNotEmpty;
+
+  @override
+  bool absorbNode(DOMNode other) {
+    if (other is TextNode) {
+      text += other.text;
+      other.text = '';
+      return true;
+    } else if (other is TemplateNode) {
+      _template.addAll(other._template.nodes);
+      other._template.clear();
+      return true;
+    } else if (other is DOMElement) {
+      text += other.text;
+      other.clearNodes();
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  void clearNodes() {
+    _template.clear();
+    super.clearNodes();
+  }
+
+  @override
+  bool merge(DOMNode other, {bool onlyConsecutive = true}) {
+    onlyConsecutive ??= true;
+
+    if (onlyConsecutive) {
+      if (isPreviousNode(other)) {
+        return other.merge(this, onlyConsecutive: false);
+      } else if (!isNextNode(other)) {
+        return false;
+      }
+    }
+
+    if (other is TextNode) {
+      other.remove();
+      absorbNode(other);
+      return true;
+    } else if (other is TemplateNode) {
+      other.remove();
+      absorbNode(other);
+      return true;
+    } else if (other is DOMElement &&
+        other.isStringElement &&
+        (other.isEmpty || other.hasOnlyTextNodes)) {
+      other.remove();
+      absorbNode(other);
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  bool isCompatibleForMerge(DOMNode other) {
+    return other is TextNode || other is TemplateNode;
+  }
+
+  @override
+  bool get isStringElement => true;
+
+  @override
+  bool get hasOnlyTextNodes => true;
+
+  @override
+  bool get hasOnlyElementNodes => false;
+
+  @override
+  bool get isWhiteSpaceContent => DOMNode.REGEXP_WHITE_SPACE.hasMatch(text);
+
+  @override
+  String buildHTML(
+      {bool withIndent = false,
+      String parentIndent = '',
+      String indent = '  ',
+      bool disableIndent = false,
+      bool xhtml = false,
+      DOMNode parentNode,
+      DOMNode previousNode,
+      DOMContext domContext}) {
+    var nbsp = xhtml ? '&#160;' : '&nbsp;';
+
+    return text.replaceAll('\xa0', nbsp);
+  }
+
+  @override
+  String get value => text;
+
+  bool equals(Object other) =>
+      identical(this, other) ||
+      other is TemplateNode &&
+          runtimeType == other.runtimeType &&
+          _template == other._template;
+
+  @override
+  TemplateNode copy() {
+    return TemplateNode(DOMTemplate.parse(text));
+  }
+
+  @override
+  List<DOMNode> copyContent() {
+    return null;
+  }
+
+  @override
+  String toString() {
+    return text;
+  }
+}
+
 //
 // ContentGenerator:
 //
@@ -1284,6 +1459,14 @@ class DOMElement extends DOMNode {
           classes: classes,
           style: style,
           rows: content,
+          commented: commented);
+    } else if (tag == 'caption') {
+      return CAPTIONElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
           commented: commented);
     } else if (tag == 'tbody') {
       return TBODYElement(
@@ -2306,15 +2489,35 @@ class TEXTAREAElement extends DOMElement implements WithValue {
 // TABLEElement:
 //
 
-List createTableContent(content, head, body, foot, {bool header, bool footer}) {
+CAPTIONElement createTableCaption(dynamic caption) {
+  var nodes = DOMNode.parseNodes(caption);
+  if (nodes != null && nodes.isNotEmpty) {
+    if (nodes.length == 1) {
+      var first = nodes.first;
+      if (first is CAPTIONElement) {
+        return first;
+      }
+    }
+
+    return CAPTIONElement(content: nodes);
+  }
+  return null;
+}
+
+List createTableContent(content, caption, head, body, foot,
+    {bool header, bool footer}) {
   if (content == null) {
     return [
+      createTableCaption(caption),
       createTableEntry(head, header: true),
       createTableEntry(body),
       createTableEntry(foot, footer: true)
     ];
   } else if (content is List) {
     if (listMatchesAll(content, (e) => e is html_dom.Node)) {
+      var caption = content.firstWhere(
+          (e) => e is html_dom.Element && e.localName == 'caption',
+          orElse: () => null);
       var thread = content.firstWhere(
           (e) => e is html_dom.Element && e.localName == 'thead',
           orElse: () => null);
@@ -2326,6 +2529,7 @@ List createTableContent(content, head, body, foot, {bool header, bool footer}) {
           orElse: () => null);
 
       var list = [
+        DOMNode.from(caption),
         DOMNode.from(thread),
         DOMNode.from(tbody),
         DOMNode.from(tfoot)
@@ -2346,6 +2550,8 @@ TABLENode createTableEntry(dynamic entry, {bool header, bool footer}) {
   footer ??= false;
 
   if (entry is THEADElement) {
+    return entry;
+  } else if (entry is CAPTIONElement) {
     return entry;
   } else if (entry is TBODYElement) {
     return entry;
@@ -2419,9 +2625,25 @@ TRowElement createTableRow(dynamic rowCells, [bool header]) {
   var tr = TRowElement();
 
   if (header) {
-    tr.addEachAsTag('th', iterable);
+    for (var e in iterable) {
+      if (e is THElement) {
+        tr.add(e);
+      } else if (e is TDElement) {
+        tr.add(e.asTHElement());
+      } else {
+        tr.addAsTag('th', e);
+      }
+    }
   } else {
-    tr.addEachAsTag('td', iterable);
+    for (var e in iterable) {
+      if (e is TDElement) {
+        tr.add(e);
+      } else if (e is THElement) {
+        tr.add(e.asTDElement());
+      } else {
+        tr.addAsTag('td', e);
+      }
+    }
   }
 
   return tr;
@@ -2496,6 +2718,7 @@ class TABLEElement extends DOMElement {
       id,
       classes,
       style,
+      caption,
       head,
       body,
       foot,
@@ -2506,7 +2729,7 @@ class TABLEElement extends DOMElement {
             id: id,
             classes: classes,
             style: style,
-            content: createTableContent(content, head, body, foot),
+            content: createTableContent(content, caption, head, body, foot),
             commented: commented);
 
   @override
@@ -2551,6 +2774,44 @@ class THEADElement extends TABLENode {
   THEADElement copy() {
     return THEADElement(
         attributes: attributes, commented: isCommented, rows: copyContent());
+  }
+}
+
+class CAPTIONElement extends TABLENode {
+  factory CAPTIONElement.from(dynamic entry) {
+    if (entry == null) return null;
+    if (entry is CAPTIONElement) return entry;
+
+    if (entry is DOMElement) {
+      _checkTag('caption', entry);
+      return CAPTIONElement(
+          attributes: entry._attributes,
+          content: entry._content,
+          commented: entry.isCommented);
+    }
+
+    return null;
+  }
+
+  CAPTIONElement(
+      {Map<String, dynamic> attributes,
+      id,
+      classes,
+      style,
+      content,
+      bool commented})
+      : super._('caption',
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            commented: commented);
+
+  @override
+  CAPTIONElement copy() {
+    return CAPTIONElement(
+        attributes: attributes, commented: isCommented, content: copyContent());
   }
 }
 
@@ -2712,6 +2973,11 @@ class THElement extends TABLENode {
     return THElement(
         attributes: attributes, commented: isCommented, content: copyContent());
   }
+
+  TDElement asTDElement() {
+    return TDElement(
+        attributes: attributes, commented: isCommented, content: copyContent());
+  }
 }
 
 class TDElement extends TABLENode {
@@ -2748,6 +3014,11 @@ class TDElement extends TABLENode {
   @override
   TDElement copy() {
     return TDElement(
+        attributes: attributes, commented: isCommented, content: copyContent());
+  }
+
+  THElement asTHElement() {
+    return THElement(
         attributes: attributes, commented: isCommented, content: copyContent());
   }
 }

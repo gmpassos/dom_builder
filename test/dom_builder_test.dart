@@ -1,6 +1,8 @@
 import 'package:dom_builder/dom_builder.dart';
 import 'package:test/test.dart';
 
+import 'dom_builder_domtest.dart';
+
 void main() {
   group('dom_builder', () {
     setUp(() {});
@@ -553,6 +555,56 @@ void main() {
           node.buildHTML(),
           equals(
               '<div id="id1" class="content" style="display: inline-block; width: 100px; height: 200px" navigate="home"><span>Foo</span></div>'));
+    });
+
+    test('Select: options 1', () {
+      var node = $div(
+          content:
+              '<select><option value="v1">Val 1</option><option value="v2">Val 2</option></select>');
+
+      expect(
+          node.buildHTML(),
+          equals(
+              '<div><select><option value="v1">Val 1</option><option value="v2">Val 2</option></select></div>'));
+    });
+
+    test('Select: options 2', () {
+      var node = $div(
+          content:
+              '<select><option value="v1">Val 1</option><option value="v2" selected>Val 2</option></select>');
+
+      expect(
+          node.buildHTML(),
+          equals(
+              '<div><select><option value="v1">Val 1</option><option value="v2" selected>Val 2</option></select></div>'));
+    });
+
+    test('Content: template', () {
+      var templateSource = '{{:locale=="en"}}YES{{?}}OUI{{/}}';
+      var node = $div(content: templateSource);
+
+      var context = DOMContext<TestNode>();
+
+      expect(node.buildHTML(domContext: context),
+          equals('<div>$templateSource</div>'));
+
+      var generator = TestGenerator();
+
+      context.putVariable('locale', 'en');
+
+      var gen1 = generator.generate(node, context: context);
+      expect(
+          '$gen1',
+          equals(
+              'TestElem{tag: div, nodes: [YES], text: YES, attributes: {}}'));
+
+      context.putVariable('locale', 'fr');
+
+      var gen2 = generator.generate(node, context: context);
+      expect(
+          '$gen2',
+          equals(
+              'TestElem{tag: div, nodes: [OUI], text: OUI, attributes: {}}'));
     });
   });
 }

@@ -1,3 +1,15 @@
+## 1.0.23
+
+- Table:
+  - Added support to table caption.
+  - Added `colspan` and `rowspan` to helpers.
+  - Added `thsStyle` and `tdsStyle` to `$table` helper. 
+- `DOMTemplate`:
+  - Added `tryParse` and `possiblyATemplate`.
+  - Now `TextNode` with a template code is mapped to `TemplateNode`.
+  - `toString()` now re-builds the template text code.
+  - Improved tests.
+
 ## 1.0.22
 
 - `DOMTemplate`:

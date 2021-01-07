@@ -97,7 +97,11 @@ class DOMAttribute implements WithValue {
 
       if (attrBoolean) {
         if (value != null) {
-          return DOMAttribute(name, DOMAttributeValueBoolean(value));
+          // An empty value for a boolean attribute should be treated as true:
+          var attrValue = (value is String && value.isEmpty)
+              ? DOMAttributeValueBoolean(true)
+              : DOMAttributeValueBoolean(value);
+          return DOMAttribute(name, attrValue);
         }
         return null;
       } else {

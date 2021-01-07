@@ -270,6 +270,14 @@ class DOMContext<T> {
 
   set variables(Map<String, dynamic> value) => _variables = value;
 
+  void putVariable(String key, dynamic value) {
+    _variables ??= {};
+    _variables[key] = value;
+  }
+
+  dynamic getVariable(String key, dynamic value) =>
+      _variables != null ? _variables[key] : null;
+
   void Function(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
       DOMContext<T> context) onPreElementCreated;
 

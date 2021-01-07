@@ -36,8 +36,6 @@ abstract class DOMActionExecutor<T> {
     name = name.trim().toLowerCase();
     if (name.isEmpty) return null;
 
-    self ??= target;
-
     switch (name) {
       case 'show':
         return callShow(self);

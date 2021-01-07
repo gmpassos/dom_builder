@@ -169,7 +169,12 @@ abstract class DOMGenerator<T> {
       addChildToElement(rootParent, rootElement);
     }
 
+    treeMap.map(domRoot, rootElement);
+
     for (var node in nodes) {
+      if (!domRoot.containsNode(node)) {
+        domRoot.add(node);
+      }
       build(domRoot, rootElement, node, treeMap, context);
     }
 
@@ -188,7 +193,8 @@ abstract class DOMGenerator<T> {
       DOMElement domParent,
       T parent,
       DOMContext<T> context,
-      bool finalizeTree = true}) {
+      bool finalizeTree = true,
+      bool setTreeMapRoot = true}) {
     var root = $htmlRoot(htmlRoot,
         defaultTagDisplayInlineBlock: false,
         defaultRootTag: parent != null ? 'dom-builder-html-root' : null);
@@ -200,13 +206,15 @@ abstract class DOMGenerator<T> {
           treeMap: treeMap,
           rootParent: rootParent,
           context: context,
-          finalizeTree: finalizeTree);
+          finalizeTree: finalizeTree,
+          setTreeMapRoot: setTreeMapRoot);
     } else {
       return generate(root,
           treeMap: treeMap,
           parent: parent,
           context: context,
-          finalizeTree: finalizeTree);
+          finalizeTree: finalizeTree,
+          setTreeMapRoot: setTreeMapRoot);
     }
   }
 
@@ -258,6 +266,8 @@ abstract class DOMGenerator<T> {
       return buildElement(domParent, parent, domNode, treeMap, context);
     } else if (domNode is TextNode) {
       return buildText(domParent, parent, domNode, treeMap);
+    } else if (domNode is TemplateNode) {
+      return buildTemplate(domParent, parent, domNode, treeMap, context);
     } else if (domNode is ExternalElementNode) {
       return buildExternalElement(domParent, parent, domNode, treeMap, context);
     } else {
@@ -272,6 +282,29 @@ abstract class DOMGenerator<T> {
     }
 
     var text = getDOMNodeText(domNode);
+
+    T textNode;
+    if (parent != null) {
+      textNode = appendElementText(parent, text);
+    } else {
+      textNode = createTextNode(text);
+    }
+
+    if (textNode != null) {
+      treeMap.map(domNode, textNode);
+    }
+
+    return textNode;
+  }
+
+  T buildTemplate(DOMElement domParent, T parent, TemplateNode domNode,
+      DOMTreeMap<T> treeMap, DOMContext<T> context) {
+    if (domParent != null) {
+      domNode.parent = domParent;
+    }
+
+    var variables = context.variables;
+    var text = domNode.template.build(variables);
 
     T textNode;
     if (parent != null) {
@@ -560,8 +593,16 @@ abstract class DOMGenerator<T> {
       }
     }
 
-    var element = generator.generate(this, treeMap, tag, domParent, parent,
-        domElement.domAttributes, contentHolder, domElement.content);
+    var element = generator.generate(
+        this,
+        treeMap,
+        tag,
+        domParent,
+        parent,
+        domElement,
+        domElement.domAttributes,
+        contentHolder,
+        domElement.content);
 
     treeMap.mapTree(domElement, element);
 
@@ -755,6 +796,7 @@ abstract class ElementGenerator<T> {
       String tag,
       DOMElement domParent,
       T parent,
+      DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
       List<DOMNode> contentNodes);
@@ -810,6 +852,7 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
       String tag,
       DOMElement domParent,
       T parent,
+      DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
       List<DOMNode> contentNodes) {
@@ -1013,6 +1056,11 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.buildText(domParent, parent, domNode, treeMap);
 
   @override
+  T buildTemplate(DOMElement domParent, T parent, TemplateNode domNode,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.buildTemplate(domParent, parent, domNode, treeMap, context);
+
+  @override
   void clearIgnoredAttributesEquivalence() =>
       domGenerator.clearIgnoredAttributesEquivalence();
 
@@ -1053,13 +1101,15 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           DOMElement domParent,
           T parent,
           DOMContext<T> context,
-          bool finalizeTree = true}) =>
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
       domGenerator.generateFromHTML(htmlRoot,
           treeMap: treeMap,
           domParent: domParent,
           parent: parent,
           context: context,
-          finalizeTree: finalizeTree);
+          finalizeTree: finalizeTree,
+          setTreeMapRoot: setTreeMapRoot);
 
   @override
   DOMTreeMap<T> generateMapped(DOMElement root,

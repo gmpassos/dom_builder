@@ -25,12 +25,35 @@ abstract class DOMTemplate {
 
   bool get isNotEmpty => !isEmpty;
 
+  /// Returns [true] if [s] can be a templace code, has `{{` and `}}`.
+  static bool possiblyATemplate(String s) {
+    var idx = s.indexOf('{{');
+    if (idx < 0) return false;
+    var idx2 = s.indexOf('}}', idx);
+    return idx2 > 0;
+  }
+
   static final RegExp REGEXP_TAG = _TEMPLATE_DIALECT.getPattern(r'$tag');
   static final RegExp REGEXP_QUERY = _TEMPLATE_DIALECT.getPattern(r'$query');
 
+  /// Tries to parse [s].
+  ///
+  /// Returns [null] if [s] has no template or a not valid template code.
+  static DOMTemplateNode tryParse(String s) {
+    return _parse(s, true);
+  }
+
+  /// Parses [s] and returns a DOMTemplateNode.
+  ///
+  /// Throws [StateError] if [s] is not a valid template.
   static DOMTemplateNode parse(String s) {
+    return _parse(s, false);
+  }
+
+  static DOMTemplateNode _parse(String s, bool tryParsing) {
     var matches = REGEXP_TAG.allMatches(s);
     if (matches == null || matches.isEmpty) {
+      if (tryParsing) return null;
       return DOMTemplateNode([DOMTemplateContent(s)]);
     }
 
@@ -83,15 +106,18 @@ abstract class DOMTemplate {
             {
               if (cursor is DOMTemplateBlock) {
                 if (key != null && cursor.variable.keysFull != key) {
+                  if (tryParsing) return null;
                   throw StateError(
                       'Error paring! Current block with different key: ${cursor.variable.keysFull} != $key');
                 }
               } else {
+                if (tryParsing) return null;
                 throw StateError(
                     'Error paring! No block open: $cursor > $stack');
               }
 
-              while (cursor is DOMTemplateBlockElseCondition) {
+              while ((cursor is DOMTemplateBlockElseCondition) ||
+                  (cursor is DOMTemplateBlockIfCmp && cursor.elseIf)) {
                 cursor = stack.removeLast();
               }
 
@@ -100,7 +126,11 @@ abstract class DOMTemplate {
               break;
             }
           default:
-            throw StateError('Error paring block type: $type > ${m.group(0)}');
+            {
+              if (tryParsing) return null;
+              throw StateError(
+                  'Error paring block type: $type > ${m.group(0)}');
+            }
         }
       } else {
         switch (type) {
@@ -120,7 +150,7 @@ abstract class DOMTemplate {
                   value = DOMTemplateVariable.parse(valueVar);
                 }
 
-                block = DOMTemplateBlockIfCmp(variable, cmp, value);
+                block = DOMTemplateBlockIfCmp(false, variable, cmp, value);
               } else {
                 block = DOMTemplateBlockIf(variable);
               }
@@ -135,17 +165,48 @@ abstract class DOMTemplate {
               var condition = cursor as DOMTemplateBlockCondition;
 
               var variable = DOMTemplateVariable.parse(key);
-              var o = DOMTemplateBlockElseIf(variable);
-              condition.elseCondition = o;
+
+              DOMTemplateBlockCondition block;
+
+              if (cmp != null) {
+                dynamic value;
+
+                if (valueQuote != null) {
+                  value = DOMTemplateContent(
+                      valueQuote.substring(1, valueQuote.length - 1));
+                } else if (valueVar != null) {
+                  value = DOMTemplateVariable.parse(valueVar);
+                }
+
+                block = DOMTemplateBlockIfCmp(true, variable, cmp, value);
+              } else {
+                block = DOMTemplateBlockElseIf(variable);
+              }
+
+              condition.elseCondition = block;
 
               stack.add(cursor);
-              cursor = o;
+              cursor = block;
               break;
             }
           case '!':
             {
               var variable = DOMTemplateVariable.parse(key);
               var o = DOMTemplateBlockNot(variable);
+              cursor.add(o);
+              stack.add(cursor);
+              cursor = o;
+              break;
+            }
+          case '?!':
+            {
+              var condition = cursor as DOMTemplateBlockCondition;
+
+              var variable = DOMTemplateVariable.parse(key);
+              var o = DOMTemplateBlockElseNot(variable);
+
+              condition.elseCondition = o;
+
               cursor.add(o);
               stack.add(cursor);
               cursor = o;
@@ -180,19 +241,25 @@ abstract class DOMTemplate {
             {
               if (cursor is DOMTemplateBlock) {
                 if (key != null && cursor.variable.keysFull != key) {
+                  if (tryParsing) return null;
                   throw StateError(
                       'Error paring! Current block with different key: ${cursor.variable.keysFull} != $key');
                 }
               } else {
+                if (tryParsing) return null;
                 throw StateError(
-                    'Error paring! No block open: $cursor > $stack');
+                    'Error paring! No block open: $cursor > $stack <${s.length < 100 ? s : s.substring(0, 100) + '...'}>');
               }
 
               cursor = stack.removeLast();
               break;
             }
           default:
-            throw StateError('Error paring block type: $type > ${m.group(0)}');
+            {
+              if (tryParsing) return null;
+              throw StateError(
+                  'Error paring block type: $type > ${m.group(0)}');
+            }
         }
       }
     }
@@ -205,8 +272,11 @@ abstract class DOMTemplate {
     }
 
     if (stack.isNotEmpty) {
-      throw StateError('Error paring! Block still open: $stack');
+      if (tryParsing) return null;
+      throw StateError('Error parsing! Block still open: $stack');
     }
+
+    if (tryParsing && root.isEmpty) return null;
 
     return root;
   }
@@ -216,6 +286,9 @@ abstract class DOMTemplate {
   bool add(DOMTemplate entry) {
     throw UnsupportedError("Type can't have content: $runtimeType");
   }
+
+  @override
+  String toString();
 }
 
 typedef ElementHTMLProvider = String Function(String query);
@@ -257,6 +330,23 @@ class DOMTemplateNode extends DOMTemplate {
     if (entry == null) return false;
     nodes.add(entry);
     return true;
+  }
+
+  bool addAll(List<DOMTemplate> entries) {
+    if (entries == null || entries.isEmpty) return false;
+    nodes.addAll(entries);
+    return true;
+  }
+
+  void clear() {
+    nodes.clear();
+  }
+
+  @override
+  String toString() => _toStringNodes();
+
+  String _toStringNodes() {
+    return nodes != null && nodes.isNotEmpty ? nodes.join() : '';
   }
 }
 
@@ -424,6 +514,11 @@ class DOMTemplateContent extends DOMTemplate {
   @override
   String build(dynamic context, {ElementHTMLProvider elementProvider}) =>
       content;
+
+  @override
+  String toString() {
+    return content ?? '';
+  }
 }
 
 class DOMTemplateBlockVar extends DOMTemplateNode {
@@ -438,6 +533,11 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   @override
   String build(dynamic context, {ElementHTMLProvider elementProvider}) {
     return variable.getResolvedAsString(context);
+  }
+
+  @override
+  String toString() {
+    return '{{${variable.keys.isEmpty ? '.' : variable.keysFull}}}';
   }
 }
 
@@ -457,6 +557,11 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
     } else {
       return element ?? '';
     }
+  }
+
+  @override
+  String toString() {
+    return '{{$query}}';
   }
 }
 
@@ -505,6 +610,14 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 
     return s.toString();
   }
+
+  String _toStringRest() {
+    if (elseCondition != null) {
+      return elseCondition.toString();
+    } else {
+      return '{{/}}';
+    }
+  }
 }
 
 class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
@@ -515,9 +628,25 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
   bool evaluate(dynamic context) {
     return variable.evaluate(context);
   }
+
+  @override
+  String toString() {
+    return '{{:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+  }
 }
 
 enum DOMTemplateCmp { eq, notEq }
+
+String getDOMTemplateCmp_operator(DOMTemplateCmp cmp) {
+  switch (cmp) {
+    case DOMTemplateCmp.eq:
+      return '==';
+    case DOMTemplateCmp.notEq:
+      return '!=';
+    default:
+      return '';
+  }
+}
 
 DOMTemplateCmp parseDOMTemplateCmp(dynamic cmp) {
   if (cmp == null) return null;
@@ -543,10 +672,13 @@ DOMTemplateCmp parseDOMTemplateCmp(dynamic cmp) {
 }
 
 class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
+  final bool elseIf;
+
   final DOMTemplateCmp cmp;
   final dynamic value;
 
-  DOMTemplateBlockIfCmp(DOMTemplateVariable variable, dynamic cmp, this.value,
+  DOMTemplateBlockIfCmp(
+      this.elseIf, DOMTemplateVariable variable, dynamic cmp, this.value,
       [DOMTemplateNode content])
       : cmp = parseDOMTemplateCmp(cmp),
         super(variable, content);
@@ -580,6 +712,26 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
       return value.toString();
     }
   }
+
+  String toStringValue() {
+    if (value is DOMTemplateContent) {
+      var valueContent = value as DOMTemplateContent;
+      var content = valueContent.content;
+      return content.contains('"') ? "'$content'" : '"$content"';
+    } else if (value is DOMTemplateVariable) {
+      var valueVar = value as DOMTemplateVariable;
+      return valueVar.keysFull;
+    } else {
+      return value.toString();
+    }
+  }
+
+  @override
+  String toString() {
+    return '{{${elseIf ? '?' : ''}:${variable.keysFull}${getDOMTemplateCmp_operator(cmp)}${toStringValue()}}}' +
+        _toStringNodes() +
+        _toStringRest();
+  }
 }
 
 class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
@@ -589,6 +741,11 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
   @override
   bool evaluate(dynamic context) {
     return !variable.evaluate(context);
+  }
+
+  @override
+  String toString() {
+    return '{{!${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }
 
@@ -605,6 +762,11 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   bool evaluate(dynamic context) {
     return true;
   }
+
+  @override
+  String toString() {
+    return '{{?}}' + _toStringNodes() + _toStringRest();
+  }
 }
 
 class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
@@ -616,6 +778,11 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
   bool evaluate(dynamic context) {
     return variable.evaluate(context);
   }
+
+  @override
+  String toString() {
+    return '{{?:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+  }
 }
 
 class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
@@ -626,6 +793,11 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
   @override
   bool evaluate(dynamic context) {
     return !variable.evaluate(context);
+  }
+
+  @override
+  String toString() {
+    return '{{?!:${variable.keysFull}}' + _toStringRest();
   }
 }
 
@@ -642,6 +814,11 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
     } else {
       return super.build(context, elementProvider: elementProvider);
     }
+  }
+
+  @override
+  String toString() {
+    return '{{?${variable.keysFull}}}' + _toStringNodes() + '{{/}}';
   }
 }
 
@@ -670,5 +847,10 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
     } else {
       return super.buildContent(value, elementProvider: elementProvider);
     }
+  }
+
+  @override
+  String toString() {
+    return '{{*:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }

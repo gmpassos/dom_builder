@@ -3,6 +3,7 @@ import 'package:html/parser.dart' as html_parse;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
+import 'dom_builder_css.dart';
 
 final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+');
 
@@ -76,7 +77,29 @@ List<DOMNode> parseHTML(String html) {
     var node = parsed.nodes[0];
     return [DOMNode.from(node)];
   } else {
-    return parsed.nodes.map((e) => DOMNode.from(e)).toList();
+    var list = parsed.nodes.toList();
+
+    while (list.isNotEmpty) {
+      var o = list[0];
+      if (o is html_dom.Text && o.text.trim().isEmpty) {
+        list.removeAt(0);
+      } else {
+        break;
+      }
+    }
+
+    while (list.isNotEmpty) {
+      var i = list.length - 1;
+      var o = list[i];
+      if (o is html_dom.Text && o.text.trim().isEmpty) {
+        list.removeAt(i);
+      } else {
+        break;
+      }
+    }
+
+    var domList = list.map((e) => DOMNode.from(e)).toList();
+    return domList;
   }
 }
 
@@ -239,7 +262,11 @@ TABLEElement $table(
     id,
     classes,
     style,
+    thsStyle,
+    tdsStyle,
+    trsStyle,
     Map<String, String> attributes,
+    caption,
     head,
     body,
     foot,
@@ -248,15 +275,39 @@ TABLEElement $table(
     return null;
   }
 
-  return TABLEElement(
+  var tableElement = TABLEElement(
       id: id,
       classes: classes,
       style: style,
       attributes: attributes,
+      caption: caption,
       head: head,
       body: body,
       foot: foot,
       commented: commented);
+
+  if (thsStyle != null) {
+    var css = CSS(thsStyle);
+    tableElement
+        .selectAllByType<THElement>()
+        .forEach((e) => e.style.putAll(css.entries));
+  }
+
+  if (tdsStyle != null) {
+    var css = CSS(tdsStyle);
+    tableElement
+        .selectAllByType<TDElement>()
+        .forEach((e) => e.style.putAll(css.entries));
+  }
+
+  if (trsStyle != null) {
+    var css = CSS(trsStyle);
+    tableElement
+        .selectAllByType<TRowElement>()
+        .forEach((e) => e.style.putAll(css.entries));
+  }
+
+  return tableElement;
 }
 
 /// Creates a `thread` node.
@@ -278,6 +329,33 @@ THEADElement $thead(
       style: style,
       attributes: attributes,
       rows: rows,
+      commented: commented);
+}
+
+/// Creates a `caption` node.
+CAPTIONElement $caption(
+    {DOMNodeValidator validate,
+    id,
+    classes,
+    style,
+    String captionSide,
+    Map<String, String> attributes,
+    content,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+
+  return CAPTIONElement(
+      id: id,
+      classes: classes,
+      style: isNotEmptyString(captionSide)
+          ? (isNotEmptyString(style)
+              ? 'caption-side: $captionSide; $style'
+              : 'caption-side: $captionSide;')
+          : style,
+      attributes: attributes,
+      content: content,
       commented: commented);
 }
 
@@ -354,6 +432,9 @@ DOMElement $td(
         classes,
         style,
         Map<String, String> attributes,
+        int colspan,
+        int rowspan,
+        String headers,
         content,
         bool commented}) =>
     $tag('td',
@@ -361,7 +442,12 @@ DOMElement $td(
         id: id,
         classes: classes,
         style: style,
-        attributes: attributes,
+        attributes: {
+          if (colspan != null) 'colspan': '$colspan',
+          if (rowspan != null) 'rowspan': '$rowspan',
+          if (headers != null) 'headers': headers,
+          ...?attributes,
+        },
         content: content,
         commented: commented);
 
@@ -372,6 +458,10 @@ DOMElement $th(
         classes,
         style,
         Map<String, String> attributes,
+        int colspan,
+        int rowspan,
+        String abbr,
+        String scope,
         content,
         bool commented}) =>
     $tag('td',
@@ -379,7 +469,13 @@ DOMElement $th(
         id: id,
         classes: classes,
         style: style,
-        attributes: attributes,
+        attributes: {
+          if (colspan != null) 'colspan': '$colspan',
+          if (rowspan != null) 'rowspan': '$rowspan',
+          if (abbr != null) 'abbr': abbr,
+          if (scope != null) 'scope': scope,
+          ...?attributes,
+        },
         content: content,
         commented: commented);
 

@@ -44,6 +44,20 @@ class DOMTreeMap<T> {
   void map(DOMNode domNode, T element, {DOMContext<T> context}) {
     if (domNode == null || element == null) return;
 
+    var prevElement = _domNodeToElementMap[domNode];
+    var prevDomNode = _elementToDOMNodeMap[element];
+
+    if (prevElement != null || prevDomNode != null) {
+      var samePrevElement = identical(prevElement, element);
+      var samePrevDomNode = identical(prevDomNode, domNode);
+      if (samePrevElement && samePrevDomNode) {
+        return;
+      } else {
+        print(
+            'WARNING> Mapping to different instances: $prevElement ; $prevDomNode');
+      }
+    }
+
     _domNodeToElementMap[domNode] = element;
     _elementToDOMNodeMap[element] = domNode;
 
@@ -159,7 +173,6 @@ class DOMTreeMap<T> {
       var node = nodes[i];
 
       if (domGenerator.isEquivalentNode(domNode, node)) {
-        map(domNode, node);
         mapTree(domNode, node);
       }
     }
