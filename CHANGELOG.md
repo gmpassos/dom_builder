@@ -1,3 +1,12 @@
+## 1.0.24
+
+- Added support to content as `Future`.
+  - When a `Future` is completed, the result will be inserted in the generated DOM tree.
+- Added `DOMAsync` for async nodes.
+  - With support for `loading` content, that will be replaced by result of async content.
+- Added interfaces `AsDOMElement` and `AsDOMNode`.
+- Added `$select` and `$option` helpers.
+
 ## 1.0.23
 
 - Table:

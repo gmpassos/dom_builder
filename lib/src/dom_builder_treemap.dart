@@ -41,7 +41,8 @@ class DOMTreeMap<T> {
   Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
 
   /// Maps in this instance the pair [domNode] and [element].
-  void map(DOMNode domNode, T element, {DOMContext<T> context}) {
+  void map(DOMNode domNode, T element,
+      {DOMContext<T> context, bool allowOverwrite}) {
     if (domNode == null || element == null) return;
 
     var prevElement = _domNodeToElementMap[domNode];
@@ -53,8 +54,11 @@ class DOMTreeMap<T> {
       if (samePrevElement && samePrevDomNode) {
         return;
       } else {
-        print(
-            'WARNING> Mapping to different instances: $prevElement ; $prevDomNode');
+        allowOverwrite ??= false;
+        if (!allowOverwrite) {
+          print(
+              'WARNING> Mapping to different instances: $prevElement ; $prevDomNode');
+        }
       }
     }
 
@@ -356,5 +360,6 @@ class DOMTreeMapDummy<T> extends DOMTreeMap<T> {
   DOMTreeMapDummy(DOMGenerator<T> domGenerator) : super(domGenerator);
 
   @override
-  void map(DOMNode domNode, T element, {DOMContext<T> context}) {}
+  void map(DOMNode domNode, T element,
+      {DOMContext<T> context, bool allowOverwrite}) {}
 }

@@ -277,6 +277,21 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
+  void replaceChildElement(
+      TestNode element, TestNode child1, List<TestNode> child2) {
+    if (element is TestElem) {
+      var idx = element.indexOf(child1);
+      if (idx >= 0) {
+        element.removeAt(idx);
+        for (var i = 0; i < child2.length; ++i) {
+          var e = child2[i];
+          element.insertAt(idx + i, e);
+        }
+      }
+    }
+  }
+
+  @override
   bool canHandleExternalElement(externalElement) {
     return externalElement is TestElem || externalElement is TestText;
   }
@@ -327,7 +342,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  TestElem createElement(String tag) {
+  TestElem createElement(String tag, [DOMElement domElement]) {
     return TestElem(tag);
   }
 

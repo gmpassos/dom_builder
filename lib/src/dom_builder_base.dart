@@ -73,12 +73,43 @@ NodeSelector asNodeSelector(dynamic selector) {
 }
 
 /// Represents a DOM Node.
-class DOMNode {
+class DOMNode implements AsDOMNode {
+  /// Converts [nodes] to a text [String].
+  static String toText(dynamic nodes) {
+    if (nodes == null) return '';
+
+    if (nodes is String) {
+      return nodes;
+    } else if (nodes is DOMNode) {
+      return nodes.text;
+    } else if (nodes is html_dom.Node) {
+      return nodes.text;
+    } else if (nodes is Iterable) {
+      if (nodes.isEmpty) {
+        return '';
+      } else if (nodes.length == 1) {
+        return toText(nodes.first);
+      } else {
+        return nodes.map(toText).join('');
+      }
+    } else if (nodes is Map) {
+      return toText(nodes.values);
+    } else {
+      return nodes.toString();
+    }
+  }
+
   /// Parses [entry] to a list of nodes.
   static List<DOMNode> parseNodes(entry) {
     if (entry == null) return null;
 
-    if (entry is DOMNode) {
+    if (entry is AsDOMNode) {
+      var node = entry.asDOMNode;
+      return node != null ? [node] : null;
+    } else if (entry is AsDOMElement) {
+      var element = entry.asDOMElement;
+      return element != null ? [element] : null;
+    } else if (entry is DOMNode) {
       return [entry];
     } else if (entry is html_dom.Node) {
       return [DOMNode.from(entry)];
@@ -250,6 +281,9 @@ class DOMNode {
     }
   }
 
+  @override
+  DOMNode get asDOMNode => this;
+
   /// Returns the [parent] [DOMNode] of generated tree (by [DOMGenerator]).
   DOMNode get parent => _parent;
 
@@ -361,7 +395,11 @@ class DOMNode {
   /// Returns the content of this node as text.
   String get text {
     if (isEmpty) return '';
-    return _content.map((e) => e.text).join('');
+    if (_content.length == 1) {
+      return _content[0].text;
+    } else {
+      return _content.map((e) => e.text).join('');
+    }
   }
 
   List<DOMNode> _content;
@@ -1390,7 +1428,7 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 //
 
 /// A node for HTML elements.
-class DOMElement extends DOMNode {
+class DOMElement extends DOMNode implements AsDOMElement {
   static final Set<String> _SELF_CLOSING_TAGS = {
     'hr',
     'br',
@@ -1436,6 +1474,21 @@ class DOMElement extends DOMNode {
           style: style,
           value: content,
           commented: commented);
+    } else if (tag == 'select') {
+      return SELECTElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          options: content,
+          commented: commented);
+    } else if (tag == 'option') {
+      return OPTIONElement(
+        attributes: attributes,
+        classes: classes,
+        style: style,
+        text: DOMNode.toText(content),
+      );
     } else if (tag == 'textarea') {
       return TEXTAREAElement(
           attributes: attributes,
@@ -1547,6 +1600,9 @@ class DOMElement extends DOMNode {
       setContent(content);
     }
   }
+
+  @override
+  DOMElement get asDOMElement => this;
 
   /// Returns [true] if [tag] is one of [tags].
   bool isTagOneOf(Iterable<String> tags) {
@@ -1729,6 +1785,21 @@ class DOMElement extends DOMNode {
   String getAttributeValue(String name, [DOMContext domContext]) {
     var attr = getAttribute(name);
     return attr != null ? attr.getValue(domContext) : null;
+  }
+
+  /// Calls [getAttributeValue] and returns parsed as [bool].
+  bool getAttributeValueAsBool(String name, [DOMContext domContext]) {
+    return parseBool(getAttributeValue(name, domContext));
+  }
+
+  /// Calls [getAttributeValue] and returns parsed as [int].
+  int getAttributeValueAsInt(String name, [DOMContext domContext]) {
+    return parseInt(getAttributeValue(name, domContext));
+  }
+
+  /// Calls [getAttributeValue] and returns parsed as [double].
+  double getAttributeValueAsDouble(String name, [DOMContext domContext]) {
+    return parseDouble(getAttributeValue(name, domContext));
   }
 
   /// Returns [true] if attribute for [name] exists.
@@ -2339,6 +2410,10 @@ class ExternalElementNode extends DOMNode {
 class DIVElement extends DOMElement {
   factory DIVElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is DIVElement) return entry;
 
     if (entry is DOMElement) {
@@ -2381,6 +2456,10 @@ class DIVElement extends DOMElement {
 class INPUTElement extends DOMElement implements WithValue {
   factory INPUTElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is INPUTElement) return entry;
 
     if (entry is DOMElement) {
@@ -2430,12 +2509,250 @@ class INPUTElement extends DOMElement implements WithValue {
 }
 
 //
+// SELECTElement:
+//
+
+class SELECTElement extends DOMElement {
+  factory SELECTElement.from(dynamic entry) {
+    if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
+    if (entry is SELECTElement) return entry;
+
+    if (entry is DOMElement) {
+      _checkTag('select', entry);
+      return SELECTElement(
+          attributes: entry._attributes,
+          options: OPTIONElement.toOptions(entry.content),
+          commented: entry.isCommented);
+    }
+
+    return null;
+  }
+
+  SELECTElement(
+      {Map<String, dynamic> attributes,
+      id,
+      name,
+      type,
+      classes,
+      style,
+      options,
+      bool commented})
+      : super._('select',
+            id: id,
+            classes: classes,
+            style: style,
+            attributes: {
+              ...?attributes,
+              if (name != null) 'name': name,
+              if (type != null) 'type': type,
+            },
+            content: OPTIONElement.toOptions(options),
+            commented: commented);
+
+  @override
+  SELECTElement copy() {
+    return SELECTElement(
+        attributes: attributes, options: content, commented: isCommented);
+  }
+
+  bool get hasOptions => isNotEmpty;
+
+  List<OPTIONElement> get options =>
+      content?.whereType<OPTIONElement>()?.toList() ?? [];
+
+  void addOption(dynamic option) => add(OPTIONElement.from(option));
+
+  void addOptions(dynamic options) => addAll(OPTIONElement.toOptions(options));
+
+  OPTIONElement getOption(dynamic option) {
+    if (option == null) return null;
+    if (option is OPTIONElement) {
+      return getOptionByValue(option.value);
+    }
+    return getOptionByValue(option.toString());
+  }
+
+  OPTIONElement getOptionByValue(dynamic value) {
+    if (value == null) return null;
+    return options.firstWhere((e) => e.value == value, orElse: () => null);
+  }
+
+  OPTIONElement getOptionByIndex(int index) {
+    return index != null && index < options.length ? options[index] : null;
+  }
+
+  OPTIONElement get selectedOption => content
+      ?.whereType<OPTIONElement>()
+      ?.firstWhere((e) => e.selected, orElse: () => null);
+
+  String get selectedValue => selectedOption?.value;
+
+  bool get hasSelection => selectedOption != null;
+
+  void unselectAllOptions() {
+    for (var opt in options) {
+      opt.selected = false;
+    }
+  }
+
+  OPTIONElement selectOption(dynamic option, [bool selected = true]) {
+    var elem = getOption(option);
+
+    if (elem != null) {
+      selected ??= true;
+      elem.selected = selected;
+      return elem;
+    }
+
+    return null;
+  }
+}
+
+//
+// OPTIONElement:
+//
+
+class OPTIONElement extends DOMElement implements WithValue {
+  static List<OPTIONElement> toOptions(dynamic options) {
+    if (options == null) return [];
+    if (options is OPTIONElement) return [options];
+
+    if (options is Iterable) {
+      return options.map((e) => OPTIONElement.from(e)).toList();
+    } else if (options is Map) {
+      return options.values.map((e) => OPTIONElement.from(e)).toList();
+    } else {
+      return [OPTIONElement.from(options)];
+    }
+  }
+
+  factory OPTIONElement.from(dynamic entry) {
+    if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
+    if (entry is OPTIONElement) return entry;
+
+    if (entry is DOMElement) {
+      _checkTag('option', entry);
+      return OPTIONElement(
+        attributes: entry._attributes,
+        value: entry.value,
+        label: entry.getAttributeValue('label'),
+        selected: entry.getAttributeValueAsBool('selected'),
+        text: entry.text,
+      );
+    }
+
+    dynamic value;
+    dynamic text;
+
+    if (entry is String || entry is num || entry is bool) {
+      value = text = entry.toString();
+    } else if (entry is TextNode) {
+      value = text = entry.text;
+    } else if (entry is MapEntry) {
+      value = entry.key;
+      text = entry.value;
+    } else if (entry is Pair) {
+      value = entry.a;
+      text = entry.b;
+    } else if (entry is Iterable) {
+      if (entry.length == 1) {
+        value = text = entry.first?.toString();
+      } else if (entry.length >= 2) {
+        var l = entry.toList();
+        value = l[0];
+        text = l[1];
+      }
+    } else {
+      value = text = entry.toString();
+    }
+
+    var valueStr = parseString(value);
+    var textStr = parseString(text);
+
+    if (isNotEmptyString(valueStr, trim: true) ||
+        isNotEmptyString(textStr, trim: true)) {
+      return OPTIONElement(
+        value: valueStr,
+        text: textStr,
+      );
+    }
+
+    return null;
+  }
+
+  OPTIONElement(
+      {Map<String, dynamic> attributes,
+      classes,
+      style,
+      dynamic value,
+      String label,
+      bool selected,
+      String text})
+      : super._(
+          'option',
+          classes: classes,
+          style: style,
+          attributes: {
+            ...?attributes,
+            if (value != null) 'value': parseString(value),
+            if (label != null) 'label': label,
+            if (selected != null) 'selected': parseBool(selected),
+          },
+          content: TextNode(text),
+        );
+
+  @override
+  OPTIONElement copy() {
+    return OPTIONElement(
+      attributes: attributes,
+      text: text,
+    );
+  }
+
+  @override
+  bool get hasValue => isNotEmptyObject(value);
+
+  @override
+  String get value => getAttributeValue('value');
+
+  set value(String val) => setAttribute('value', val);
+
+  String get label => getAttributeValue('label');
+
+  set label(String label) => setAttribute('label', label);
+
+  bool get selected => getAttributeValueAsBool('selected');
+
+  set selected(bool sel) {
+    sel ??= false;
+
+    if (sel) {
+      setAttribute('selected', sel);
+    } else {
+      removeAttribute('selected');
+    }
+  }
+}
+
+//
 // TEXTAREAElement:
 //
 
 class TEXTAREAElement extends DOMElement implements WithValue {
   factory TEXTAREAElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TEXTAREAElement) return entry;
 
     if (entry is DOMElement) {
@@ -2700,6 +3017,10 @@ abstract class TABLENode extends DOMElement {
 class TABLEElement extends DOMElement {
   factory TABLEElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TABLEElement) return entry;
 
     if (entry is DOMElement) {
@@ -2742,6 +3063,10 @@ class TABLEElement extends DOMElement {
 class THEADElement extends TABLENode {
   factory THEADElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is THEADElement) return entry;
 
     if (entry is DOMElement) {
@@ -2780,6 +3105,10 @@ class THEADElement extends TABLENode {
 class CAPTIONElement extends TABLENode {
   factory CAPTIONElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is CAPTIONElement) return entry;
 
     if (entry is DOMElement) {
@@ -2818,6 +3147,10 @@ class CAPTIONElement extends TABLENode {
 class TBODYElement extends TABLENode {
   factory TBODYElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TBODYElement) return entry;
 
     if (entry is DOMElement) {
@@ -2856,6 +3189,10 @@ class TBODYElement extends TABLENode {
 class TFOOTElement extends TABLENode {
   factory TFOOTElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TFOOTElement) return entry;
 
     if (entry is DOMElement) {
@@ -2894,6 +3231,10 @@ class TFOOTElement extends TABLENode {
 class TRowElement extends TABLENode {
   factory TRowElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TRowElement) return entry;
 
     if (entry is DOMElement) {
@@ -2940,6 +3281,10 @@ class TRowElement extends TABLENode {
 class THElement extends TABLENode {
   factory THElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is THElement) return entry;
 
     if (entry is DOMElement) {
@@ -2983,6 +3328,10 @@ class THElement extends TABLENode {
 class TDElement extends TABLENode {
   factory TDElement.from(dynamic entry) {
     if (entry == null) return null;
+    if (entry is html_dom.Node) {
+      entry = DOMNode.from(entry);
+    }
+
     if (entry is TDElement) return entry;
 
     if (entry is DOMElement) {
@@ -3021,4 +3370,58 @@ class TDElement extends TABLENode {
     return THElement(
         attributes: attributes, commented: isCommented, content: copyContent());
   }
+}
+
+/// A [DOMNode] that will be defined in the future.
+class DOMAsync extends DOMNode {
+  /// A Future that returns the final node content.
+  final Future future;
+
+  /// A [Function] that returns the [Future] that defines this node content.
+  final Future Function() function;
+
+  /// Content to be showed while [future]/[function] is being executed.
+  final dynamic loading;
+
+  DOMAsync({this.loading, this.future, this.function}) : super._(false, false);
+
+  DOMAsync.future(Future future, [dynamic loading])
+      : this(future: future, loading: loading);
+
+  DOMAsync.function(Future Function() function, [dynamic loading])
+      : this(function: function, loading: loading);
+
+  Future _resolvedFuture;
+
+  /// Resolves the actual [Future] that will define this node content.
+  Future get resolveFuture {
+    if (_resolvedFuture != null) return _resolvedFuture;
+
+    if (future != null) {
+      _resolvedFuture = future;
+    } else if (function != null) {
+      _resolvedFuture = function();
+    }
+
+    if (_resolvedFuture == null) {
+      throw StateError("Can't resolve Future!");
+    }
+
+    return _resolvedFuture;
+  }
+
+  @override
+  DOMAsync copy() {
+    return DOMAsync(loading: loading, future: future, function: function);
+  }
+}
+
+/// Interface for objects that can be cast as [DOMNode].
+abstract class AsDOMNode {
+  DOMNode get asDOMNode;
+}
+
+/// Interface for objects that can be cast as [DOMElement].
+abstract class AsDOMElement {
+  DOMElement get asDOMElement;
 }

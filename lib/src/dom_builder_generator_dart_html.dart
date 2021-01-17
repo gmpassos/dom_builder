@@ -165,6 +165,20 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  void replaceChildElement(Node element, Node child1, List<Node> child2) {
+    if (element is Element) {
+      var idx = element.nodes.indexOf(child1);
+      if (idx >= 0) {
+        element.nodes.removeAt(idx);
+        for (var i = 0; i < child2.length; ++i) {
+          var e = child2[i];
+          element.nodes.insert(idx + i, e);
+        }
+      }
+    }
+  }
+
+  @override
   bool canHandleExternalElement(externalElement) {
     return externalElement is Node;
   }
@@ -201,8 +215,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  Element createElement(String tag) {
-    return dart_html.createElement(tag);
+  Element createElement(String tag, [DOMElement domElement]) {
+    return dart_html.createElement(tag, domElement);
   }
 
   @override

@@ -534,6 +534,19 @@ DIVElement $divCenteredContent(
           content: content));
 }
 
+/// Creates a `div` node with `display: inline-block`.
+DOMAsync $asyncContent({
+  DOMNodeValidator validate,
+  final dynamic loading,
+  Future future,
+  final Future Function() function,
+}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+  return DOMAsync(loading: loading, future: future, function: function);
+}
+
 /// Creates a `span` node.
 DOMElement $span(
         {DOMNodeValidator validate,
@@ -645,6 +658,58 @@ INPUTElement $input(
       attributes: attributes,
       value: value,
       commented: commented);
+}
+
+/// Creates an `select` node.
+SELECTElement $select(
+    {DOMNodeValidator validate,
+    id,
+    name,
+    classes,
+    style,
+    Map<String, String> attributes,
+    options,
+    selected,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+  var selectElement = SELECTElement(
+      id: id,
+      name: name,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      options: options,
+      commented: commented);
+
+  selectElement.selectOption(selected);
+
+  return selectElement;
+}
+
+/// Creates an `option` node.
+OPTIONElement $option(
+    {DOMNodeValidator validate,
+    classes,
+    style,
+    Map<String, String> attributes,
+    dynamic value,
+    String label,
+    bool selected,
+    dynamic text,
+    dynamic valueAndText}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+  return OPTIONElement(
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      value: value ?? valueAndText,
+      label: label,
+      selected: selected,
+      text: DOMNode.toText(text ?? valueAndText));
 }
 
 /// Creates an `img` node.

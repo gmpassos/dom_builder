@@ -270,6 +270,8 @@ abstract class DOMGenerator<T> {
       return buildTemplate(domParent, parent, domNode, treeMap, context);
     } else if (domNode is ExternalElementNode) {
       return buildExternalElement(domParent, parent, domNode, treeMap, context);
+    } else if (domNode is DOMAsync) {
+      return buildDOMAsyncElement(domParent, parent, domNode, treeMap, context);
     } else {
       throw StateError("Can't build node of type: ${domNode.runtimeType}");
     }
@@ -341,9 +343,9 @@ abstract class DOMGenerator<T> {
       if (_domContext != null) {
         element = _domContext.resolveNamedElement(
             domParent, parent, domElement, treeMap);
-        element ??= createElement(domElement.tag);
+        element ??= createElement(domElement.tag, domElement);
       } else {
-        element = createElement(domElement.tag);
+        element = createElement(domElement.tag, domElement);
       }
 
       if (element == null) {
@@ -386,6 +388,24 @@ abstract class DOMGenerator<T> {
 
   void onElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
       DOMContext<T> context) {}
+
+  T buildDOMAsyncElement(DOMElement domParent, T parent, DOMAsync domElement,
+      DOMTreeMap<T> treeMap, DOMContext<T> context) {
+    if (domParent != null) {
+      domElement.parent = domParent;
+    }
+
+    var parsedElement = _parseExternalElement(
+        domParent, parent, domElement, domElement, treeMap, context);
+
+    if (parent != null && !containsNode(parent, parsedElement)) {
+      addChildToElement(parent, parsedElement);
+    }
+
+    domElement.notifyElementGenerated(parsedElement);
+
+    return parsedElement;
+  }
 
   T buildExternalElement(
       DOMElement domParent,
@@ -434,13 +454,8 @@ abstract class DOMGenerator<T> {
     return null;
   }
 
-  T _parseExternalElement(
-      DOMElement domParent,
-      T parent,
-      ExternalElementNode domElement,
-      dynamic externalElement,
-      DOMTreeMap<T> treeMap,
-      DOMContext<T> context) {
+  T _parseExternalElement(DOMElement domParent, T parent, DOMNode domElement,
+      dynamic externalElement, DOMTreeMap<T> treeMap, DOMContext<T> context) {
     if (externalElement == null) return null;
 
     if (externalElement is T) {
@@ -457,6 +472,9 @@ abstract class DOMGenerator<T> {
         treeMap.map(node, element);
       }
       return elements.isEmpty ? null : elements.first;
+    } else if (externalElement is DOMAsync) {
+      return generateDOMAsyncElement(
+          domParent, parent, externalElement, treeMap, context);
     } else if (externalElement is DOMNode) {
       return build(domParent, parent, externalElement, treeMap, context);
     } else if (externalElement is DOMElementGenerator) {
@@ -467,6 +485,9 @@ abstract class DOMGenerator<T> {
       var element = externalElement();
       return _parseExternalElement(
           domParent, parent, domElement, element, treeMap, context);
+    } else if (externalElement is Future) {
+      return generateFutureElement(
+          domParent, parent, domElement, externalElement, treeMap, context);
     } else if (externalElement is String) {
       var list = DOMNode.parseNodes(externalElement);
 
@@ -484,15 +505,120 @@ abstract class DOMGenerator<T> {
     return null;
   }
 
+  T generateDOMAsyncElement(DOMElement domParent, T parent, DOMAsync domAsync,
+      DOMTreeMap<T> treeMap, DOMContext<T> context) {
+    T templateElement;
+    if (domAsync.loading != null) {
+      var nodes = DOMNode.parseNodes(domAsync.loading);
+
+      if (nodes != null && nodes.isNotEmpty) {
+        var rootNode;
+        if (nodes.length == 1) {
+          rootNode = nodes.first;
+        } else {
+          rootNode = $div(content: rootNode);
+        }
+
+        templateElement =
+            build(domParent, parent, nodes.first, treeMap, context);
+      }
+    }
+
+    templateElement ??= createElement('template');
+
+    var future = domAsync.resolveFuture;
+
+    return _generateFutureElementImpl(
+        domParent, parent, domAsync, templateElement, future, treeMap, context);
+  }
+
+  T generateFutureElement(
+      DOMElement domParent,
+      T parent,
+      ExternalElementNode domElement,
+      Future future,
+      DOMTreeMap<T> treeMap,
+      DOMContext<T> context) {
+    var templateElement = createElement('template');
+    return _generateFutureElementImpl(domParent, parent, domElement,
+        templateElement, future, treeMap, context);
+  }
+
+  T _generateFutureElementImpl(
+      DOMElement domParent,
+      T parent,
+      DOMNode domElement,
+      T templateElement,
+      Future future,
+      DOMTreeMap<T> treeMap,
+      DOMContext<T> context) {
+    future.then((futureResult) {
+      var resolvedElement = resolveFutureElement(domParent, parent, domElement,
+          templateElement, futureResult, treeMap, context);
+      attachFutureElement(domParent, parent, domElement, templateElement,
+          resolvedElement, treeMap, context);
+    });
+    return templateElement;
+  }
+
+  dynamic resolveFutureElement(
+      DOMElement domParent,
+      T parent,
+      DOMNode domElement,
+      T templateElement,
+      dynamic futureResult,
+      DOMTreeMap<T> treeMap,
+      DOMContext<T> context) {
+    if (!canHandleExternalElement(futureResult)) {
+      return _parseExternalElement(
+          domParent, parent, domElement, futureResult, treeMap, context);
+    }
+    return futureResult;
+  }
+
+  void attachFutureElement(
+      DOMElement domParent,
+      T parent,
+      DOMNode domElement,
+      T templateElement,
+      dynamic futureElementResolved,
+      DOMTreeMap<T> treeMap,
+      DOMContext<T> context) {
+    if (futureElementResolved == null) {
+      return;
+    } else if (futureElementResolved is T) {
+      treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
+      if (parent != null) {
+        replaceChildElement(parent, templateElement, [futureElementResolved]);
+      }
+    } else if (parent != null) {
+      var children = addExternalElementToElement(parent, futureElementResolved);
+
+      if (isEmptyObject(children)) {
+        removeChildFromElement(parent, templateElement);
+      } else {
+        var node = children.first;
+        treeMap.map(domElement, node);
+
+        for (var child in children) {
+          removeChildFromElement(parent, child);
+        }
+        replaceChildElement(parent, templateElement, children);
+      }
+    }
+  }
+
   void addChildToElement(T element, T child);
 
   void removeChildFromElement(T element, T child);
+
+  void replaceChildElement(T element, T child1, List<T> child2);
 
   bool canHandleExternalElement(dynamic externalElement);
 
   List<T> addExternalElementToElement(T element, dynamic externalElement);
 
-  T createElement(String tag);
+  T createElement(String tag, [DOMElement domElement]);
 
   T createTextNode(String text);
 
@@ -907,10 +1033,59 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.createDOMNodeRuntime(treeMap, domNode, node);
 
   @override
-  T createElement(String tag) => domGenerator.createElement(tag);
+  T createElement(String tag, [DOMElement domElement]) =>
+      domGenerator.createElement(tag, domElement);
 
   @override
   T createTextNode(String text) => domGenerator.createTextNode(text);
+
+  @override
+  T generateDOMAsyncElement(DOMElement domParent, T parent, DOMAsync domAsync,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.generateDOMAsyncElement(
+          domParent, parent, domAsync, treeMap, context);
+
+  @override
+  T generateFutureElement(DOMElement domParent, T parent, DOMNode domElement,
+          Future future, DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.generateFutureElement(
+          domParent, parent, domElement, future, treeMap, context);
+
+  @override
+  T _generateFutureElementImpl(
+          DOMElement domParent,
+          T parent,
+          DOMNode domElement,
+          T templateElement,
+          Future future,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator._generateFutureElementImpl(domParent, parent, domElement,
+          templateElement, future, treeMap, context);
+
+  @override
+  dynamic resolveFutureElement(
+          DOMElement domParent,
+          T parent,
+          DOMNode domElement,
+          T templateElement,
+          futureResult,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator.resolveFutureElement(domParent, parent, domElement,
+          templateElement, futureResult, treeMap, context);
+
+  @override
+  void attachFutureElement(
+          DOMElement domParent,
+          T parent,
+          DOMNode domElement,
+          T templateElement,
+          dynamic futureElementResolved,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T> context) =>
+      domGenerator.attachFutureElement(domParent, parent, domElement,
+          templateElement, futureElementResolved, treeMap, context);
 
   @override
   String getAttribute(T element, String attrName) =>
@@ -925,6 +1100,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   @override
   void removeChildFromElement(T element, T child) =>
       domGenerator.removeChildFromElement(element, child);
+
+  @override
+  void replaceChildElement(T element, T child1, List<T> child2) =>
+      domGenerator.replaceChildElement(element, child1, child2);
 
   @override
   void setAttribute(T element, String attrName, String attrVal) =>
@@ -1011,13 +1190,8 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator._ignoreAttributeEquivalence;
 
   @override
-  T _parseExternalElement(
-          DOMElement domParent,
-          T parent,
-          ExternalElementNode domElement,
-          externalElement,
-          DOMTreeMap<T> treeMap,
-          DOMContext<T> context) =>
+  T _parseExternalElement(DOMElement domParent, T parent, DOMNode domElement,
+          externalElement, DOMTreeMap<T> treeMap, DOMContext<T> context) =>
       domGenerator._parseExternalElement(
           domParent, parent, domElement, externalElement, treeMap, context);
 
@@ -1039,6 +1213,12 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   T build(DOMElement domParent, T parent, DOMNode domNode,
           DOMTreeMap<T> treeMap, DOMContext<T> context) =>
       domGenerator.build(domParent, parent, domNode, treeMap, context);
+
+  @override
+  T buildDOMAsyncElement(DOMElement domParent, T parent, DOMAsync domElement,
+          DOMTreeMap<T> treeMap, DOMContext<T> context) =>
+      domGenerator.buildDOMAsyncElement(
+          domParent, parent, domElement, treeMap, context);
 
   @override
   T buildExternalElement(

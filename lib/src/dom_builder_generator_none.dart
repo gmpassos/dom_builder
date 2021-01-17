@@ -24,7 +24,12 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  T createElement(String tag) {
+  void replaceChildElement(T element, T child1, List<T> child2) {
+    _noDartHTML();
+  }
+
+  @override
+  T createElement(String tag, [DOMElement domElement]) {
     _noDartHTML();
     return null;
   }
