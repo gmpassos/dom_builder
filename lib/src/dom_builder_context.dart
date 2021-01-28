@@ -95,6 +95,30 @@ typedef NamedElementGenerator<T> = T Function(
     String tag,
     Map<String, DOMAttribute> attributes);
 
+typedef IntlMessageResolver = String Function(String key,
+    [Map<String, dynamic> parameters]);
+
+/// Converts [resolver] to [IntlMessageResolver].
+IntlMessageResolver toIntlMessageResolver(dynamic resolver) {
+  if (resolver == null) {
+    return null;
+  } else if (resolver is IntlMessageResolver) {
+    return resolver;
+  } else if (resolver is String Function(String key)) {
+    return (k, [p]) => resolver(k);
+  } else if (resolver is dynamic Function(dynamic key)) {
+    return (k, [p]) => parseString(resolver(k));
+  } else if (resolver is String Function()) {
+    return (k, [p]) => resolver();
+  } else if (resolver is dynamic Function()) {
+    return (k, [p]) => resolver();
+  } else if (resolver is Map) {
+    return (k, [p]) => resolver[k];
+  } else {
+    throw ArgumentError('Invalid resolver type: $resolver');
+  }
+}
+
 /// Represents the context of this DOM tree.
 ///
 /// Used by [DOMGenerator] to configure some behaviors,
@@ -110,6 +134,7 @@ class DOMContext<T> {
     context.namedElementAttribute = namedElementAttribute;
     context.namedElementProvider = namedElementProvider;
     context.variables = Map.from(deepCopy(variables));
+    context.intlMessageResolver = intlMessageResolver;
     return context;
   }
 
@@ -120,6 +145,13 @@ class DOMContext<T> {
   set domGenerator(DOMGenerator<T> generator) {
     if (generator == null) throw ArgumentError.notNull('generator');
     _domGenerator = generator;
+  }
+
+  IntlMessageResolver intlMessageResolver;
+
+  String resolveIntlMessage(String key, [Map<String, dynamic> parameters]) {
+    var msgResolver = intlMessageResolver;
+    return msgResolver != null ? msgResolver(key, parameters) : null;
   }
 
   final DOMContext<T> parent;

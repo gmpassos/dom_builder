@@ -1,3 +1,4 @@
+import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
@@ -8,7 +9,7 @@ final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
   'var': r'$key(?:\.$key)*',
   'cmp': r'(?:==|!=)',
   'tag':
-      r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.)?($var)?(?:($cmp)(?:($quote)|($var)))?$c',
+      r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.|intl?:)?($var)?(?:($cmp)(?:($quote)|($var)))?$c',
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMTemplate {
@@ -134,6 +135,13 @@ abstract class DOMTemplate {
         }
       } else {
         switch (type) {
+          case 'int:':
+          case 'intl:':
+            {
+              var o = DOMTemplateIntlMessage(key);
+              cursor.add(o);
+              break;
+            }
           case ':':
             {
               var variable = DOMTemplateVariable.parse(key);
@@ -281,7 +289,9 @@ abstract class DOMTemplate {
     return root;
   }
 
-  String build(dynamic context, {ElementHTMLProvider elementProvider});
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver});
 
   bool add(DOMTemplate entry) {
     throw UnsupportedError("Type can't have content: $runtimeType");
@@ -315,12 +325,16 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
     for (var n in nodes) {
-      s.write(n.build(context, elementProvider: elementProvider));
+      s.write(n.build(context,
+          elementProvider: elementProvider,
+          intlMessageResolver: intlMessageResolver));
     }
     return s.toString();
   }
@@ -503,6 +517,46 @@ class DOMTemplateVariable {
   }
 }
 
+class DOMTemplateIntlMessage extends DOMTemplateNode {
+  final String key;
+
+  DOMTemplateIntlMessage(this.key);
+
+  factory DOMTemplateIntlMessage.parse(String s) {
+    if (s == null) return null;
+    s = s.trim();
+    if (s.isEmpty) return null;
+    return DOMTemplateIntlMessage(s);
+  }
+
+  @override
+  bool get isEmpty => false;
+
+  @override
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
+    if (intlMessageResolver == null) return '';
+
+    Map<String, dynamic> parameters;
+
+    if (context is Map<String, dynamic>) {
+      parameters = context;
+    } else if (context is Map) {
+      parameters =
+          context.map((key, value) => MapEntry('$key', value as dynamic));
+    }
+
+    var s = intlMessageResolver(key, parameters);
+    return s;
+  }
+
+  @override
+  String toString() {
+    return '{{intl:$key}}';
+  }
+}
+
 class DOMTemplateContent extends DOMTemplate {
   final String content;
 
@@ -512,7 +566,9 @@ class DOMTemplateContent extends DOMTemplate {
   bool get isEmpty => isEmptyString(content);
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) =>
+  String build(dynamic context,
+          {ElementHTMLProvider elementProvider,
+          IntlMessageResolver intlMessageResolver}) =>
       content;
 
   @override
@@ -531,7 +587,9 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   }
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
     return variable.getResolvedAsString(context);
   }
 
@@ -547,7 +605,9 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   DOMTemplateBlockQuery(this.query);
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
     if (elementProvider == null) return '';
     var element = elementProvider(query);
 
@@ -583,7 +643,9 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
   bool evaluate(dynamic context);
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
     if (evaluate(context)) {
       return buildContent(context, elementProvider: elementProvider);
     } else {
@@ -807,7 +869,9 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
       : super(variable, contentElse);
 
   @override
-  String build(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String build(dynamic context,
+      {ElementHTMLProvider elementProvider,
+      IntlMessageResolver intlMessageResolver}) {
     var value = variable.getResolved(context);
     if (variable.evaluateValue(value)) {
       return DOMTemplateVariable.valueToString(value);

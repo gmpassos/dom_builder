@@ -301,12 +301,14 @@ abstract class DOMGenerator<T> {
 
   T buildTemplate(DOMElement domParent, T parent, TemplateNode domNode,
       DOMTreeMap<T> treeMap, DOMContext<T> context) {
+    context ??= domContext;
     if (domParent != null) {
       domNode.parent = domParent;
     }
 
     var variables = context.variables;
-    var text = domNode.template.build(variables);
+    var text = domNode.template
+        .build(variables, intlMessageResolver: context?.intlMessageResolver);
 
     T textNode;
     if (parent != null) {
@@ -608,11 +610,42 @@ abstract class DOMGenerator<T> {
     }
   }
 
-  void addChildToElement(T element, T child);
+  bool addChildToElement(T parent, T child);
 
-  void removeChildFromElement(T element, T child);
+  bool removeChildFromElement(T parent, T child);
 
-  void replaceChildElement(T element, T child1, List<T> child2);
+  bool replaceChildElement(T parent, T child1, List<T> child2);
+
+  bool replaceElement(T child1, List<T> child2) {
+    if (child1 == null || child2 == null) return false;
+    var parent = getNodeParent(child1);
+    if (parent == null) return false;
+    return replaceChildElement(parent, child1, child2);
+  }
+
+  List<T> toElements(dynamic elements) {
+    if (elements == null) {
+      return null;
+    } else if (elements is T) {
+      return [elements];
+    } else if (elements is DOMNode) {
+      var e = generate(elements);
+      return [e];
+    } else if (elements is String) {
+      var e = generateFromHTML(elements);
+      return [e];
+    } else if (elements is Function) {
+      var e = elements();
+      return toElements(e);
+    } else if (elements is Iterable) {
+      return elements
+          .expand((e) => toElements(e))
+          .where((e) => e != null)
+          .toList();
+    } else {
+      return null;
+    }
+  }
 
   bool canHandleExternalElement(dynamic externalElement);
 
@@ -728,7 +761,8 @@ abstract class DOMGenerator<T> {
         domElement,
         domElement.domAttributes,
         contentHolder,
-        domElement.content);
+        domElement.content,
+        context);
 
     treeMap.mapTree(domElement, element);
 
@@ -809,6 +843,11 @@ abstract class DOMGenerator<T> {
 
   DOMNodeRuntime<T> createDOMNodeRuntime(
       DOMTreeMap<T> treeMap, DOMNode domNode, T node);
+
+  List<T> castToNodes(List list) {
+    if (list is List<T>) return list;
+    return list.cast<T>();
+  }
 
   /// Reverts [node] to a [DOMNode].
   DOMNode revert(DOMTreeMap<T> treeMap, T node) {
@@ -925,7 +964,8 @@ abstract class ElementGenerator<T> {
       DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
-      List<DOMNode> contentNodes);
+      List<DOMNode> contentNodes,
+      DOMContext<T> context);
 
   DOMElement revert(DOMGenerator<T> domGenerator, DOMTreeMap<T> treeMap,
       DOMElement domParent, T parent, T node);
@@ -939,7 +979,8 @@ typedef ElementGeneratorFunction<T> = T Function(
     T parent,
     Map<String, DOMAttribute> attributes,
     T contentHolder,
-    List<DOMNode> contentNodes);
+    List<DOMNode> contentNodes,
+    DOMContext<T> context);
 
 typedef ElementRevertFunction<T> = DOMElement Function(
     DOMGenerator<T> domGenerator,
@@ -981,9 +1022,10 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
       DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       T contentHolder,
-      List<DOMNode> contentNodes) {
-    return generator(
-        domGenerator, tag, parent, attributes, contentHolder, contentNodes);
+      List<DOMNode> contentNodes,
+      DOMContext<T> context) {
+    return generator(domGenerator, tag, parent, attributes, contentHolder,
+        contentNodes, context);
   }
 
   @override
@@ -1005,8 +1047,8 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   void reset() => domGenerator.reset();
 
   @override
-  void addChildToElement(T element, T child) =>
-      domGenerator.addChildToElement(element, child);
+  bool addChildToElement(T parent, T child) =>
+      domGenerator.addChildToElement(parent, child);
 
   @override
   List<T> addExternalElementToElement(T element, externalElement) =>
@@ -1031,6 +1073,9 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   DOMNodeRuntime<T> createDOMNodeRuntime(
           DOMTreeMap<T> treeMap, DOMNode domNode, T node) =>
       domGenerator.createDOMNodeRuntime(treeMap, domNode, node);
+
+  @override
+  List<T> castToNodes(List list) => domGenerator.castToNodes(list);
 
   @override
   T createElement(String tag, [DOMElement domElement]) =>
@@ -1098,12 +1143,19 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   bool isTextNode(T node) => domGenerator.isTextNode(node);
 
   @override
-  void removeChildFromElement(T element, T child) =>
+  bool removeChildFromElement(T element, T child) =>
       domGenerator.removeChildFromElement(element, child);
 
   @override
-  void replaceChildElement(T element, T child1, List<T> child2) =>
+  bool replaceChildElement(T element, T child1, List<T> child2) =>
       domGenerator.replaceChildElement(element, child1, child2);
+
+  @override
+  bool replaceElement(T child1, List<T> child2) =>
+      domGenerator.replaceElement(child1, child2);
+
+  @override
+  List<T> toElements(elements) => domGenerator.toElements(elements);
 
   @override
   void setAttribute(T element, String attrName, String attrVal) =>

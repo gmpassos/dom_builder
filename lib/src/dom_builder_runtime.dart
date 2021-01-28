@@ -197,6 +197,12 @@ abstract class DOMNodeRuntime<T> {
     return false;
   }
 
+  bool replaceBy(List elements) {
+    if (elements == null) return false;
+    var e = domGenerator.toElements(elements);
+    return domGenerator.replaceElement(node, e);
+  }
+
   int _contentFromIndexBackwardWhere(
       int idx, int steps, bool Function(T node) test) {
     for (var i = Math.min(idx, nodesLength - 1); i >= 0; i--) {

@@ -151,31 +151,36 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  void addChildToElement(Node element, Node child) {
-    if (element is Element && !element.nodes.contains(child)) {
-      element.append(child);
+  bool addChildToElement(Node parent, Node child) {
+    if (parent is Element && !parent.nodes.contains(child)) {
+      parent.append(child);
+      return true;
     }
+    return false;
   }
 
   @override
-  void removeChildFromElement(Node element, Node child) {
-    if (element is Element) {
-      element.children.remove(child);
+  bool removeChildFromElement(Node parent, Node child) {
+    if (parent is Element) {
+      return parent.children.remove(child);
     }
+    return false;
   }
 
   @override
-  void replaceChildElement(Node element, Node child1, List<Node> child2) {
-    if (element is Element) {
-      var idx = element.nodes.indexOf(child1);
+  bool replaceChildElement(Node parent, Node child1, List<Node> child2) {
+    if (parent is Element) {
+      var idx = parent.nodes.indexOf(child1);
       if (idx >= 0) {
-        element.nodes.removeAt(idx);
+        parent.nodes.removeAt(idx);
         for (var i = 0; i < child2.length; ++i) {
           var e = child2[i];
-          element.nodes.insert(idx + i, e);
+          parent.nodes.insert(idx + i, e);
         }
+        return true;
       }
     }
+    return false;
   }
 
   @override
@@ -260,6 +265,20 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
         element.onMouseOut.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event);
           domElement.onMouseOut.add(domEvent);
+        });
+      }
+
+      if (domElement.hasOnLoadListener) {
+        element.onLoad.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event);
+          domElement.onLoad.add(domEvent);
+        });
+      }
+
+      if (domElement.hasOnErrorListener) {
+        element.onError.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event);
+          domElement.onError.add(domEvent);
         });
       }
     }

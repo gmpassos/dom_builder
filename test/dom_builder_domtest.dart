@@ -17,7 +17,8 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
       DOMNode domNode,
       Map<String, DOMAttribute> attributes,
       contentHolder,
-      List<DOMNode> contentNodes) {
+      List<DOMNode> contentNodes,
+      DOMContext<dynamic> context) {
     var attributesAsString =
         attributes.map((key, value) => MapEntry(key, value.value));
 
@@ -263,32 +264,38 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  void addChildToElement(TestNode element, TestNode child) {
-    if (element is TestElem && !element.contains(child)) {
-      element.add(child);
+  bool addChildToElement(TestNode parent, TestNode child) {
+    if (parent is TestElem && !parent.contains(child)) {
+      parent.add(child);
+      return true;
     }
+    return false;
   }
 
   @override
-  void removeChildFromElement(TestNode element, TestNode child) {
-    if (element is TestElem) {
-      element.remove(child);
+  bool removeChildFromElement(TestNode parent, TestNode child) {
+    if (parent is TestElem) {
+      parent.remove(child);
+      return true;
     }
+    return false;
   }
 
   @override
-  void replaceChildElement(
-      TestNode element, TestNode child1, List<TestNode> child2) {
-    if (element is TestElem) {
-      var idx = element.indexOf(child1);
+  bool replaceChildElement(
+      TestNode parent, TestNode child1, List<TestNode> child2) {
+    if (parent is TestElem) {
+      var idx = parent.indexOf(child1);
       if (idx >= 0) {
-        element.removeAt(idx);
+        parent.removeAt(idx);
         for (var i = 0; i < child2.length; ++i) {
           var e = child2[i];
-          element.insertAt(idx + i, e);
+          parent.insertAt(idx + i, e);
         }
       }
+      return true;
     }
+    return false;
   }
 
   @override

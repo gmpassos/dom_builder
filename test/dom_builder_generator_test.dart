@@ -112,14 +112,14 @@ void main() {
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
           'uc',
-          (domGenerator, tag, parent, attributes, contentHolder,
-                  contentNodes) =>
+          (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
+                  domContext) =>
               TestText(contentHolder.text.toUpperCase())));
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
           'lc',
-          (domGenerator, tag, parent, attributes, contentHolder,
-                  contentNodes) =>
+          (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
+                  domContext) =>
               TestText(contentHolder.text.toLowerCase())));
 
       var treeMap = generator.createDOMTreeMap();

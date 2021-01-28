@@ -1,3 +1,9 @@
+## 1.0.25
+
+- `DOMElement`: added event handler `onLoad` and `onError`.
+- `DOMTemplate`: added support to `{{intl:key}}`.
+- swiss_knife: ^2.5.25
+
 ## 1.0.24
 
 - Added support to content as `Future`.

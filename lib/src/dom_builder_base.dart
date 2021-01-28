@@ -362,11 +362,11 @@ class DOMNode implements AsDOMNode {
   ///
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
-  T buildDOM<T>({DOMGenerator<T> generator, T parent}) {
+  T buildDOM<T>({DOMGenerator<T> generator, T parent, DOMContext<T> context}) {
     if (isCommented) return null;
 
     generator ??= defaultDomGenerator;
-    return generator.generate(this, parent: parent);
+    return generator.generate(this, parent: parent, context: context);
   }
 
   EventStream<dynamic> _onGenerate;
@@ -394,7 +394,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns the content of this node as text.
   String get text {
-    if (isEmpty) return '';
+    if (isEmpty || _content == null) return '';
     if (_content.length == 1) {
       return _content[0].text;
     } else {
@@ -661,7 +661,8 @@ class DOMNode implements AsDOMNode {
   bool get isWhiteSpaceContent => false;
 
   /// Returns a copy [List] of children nodes.
-  List<DOMNode> get nodes => isNotEmpty ? List.from(_content).cast() : [];
+  List<DOMNode> get nodes =>
+      isNotEmpty && _content != null ? List.from(_content).cast() : [];
 
   /// Returns the total number of children nodes.
   int get length => allowContent && _content != null ? _content.length : 0;
@@ -885,27 +886,27 @@ class DOMNode implements AsDOMNode {
   }
 
   T nodeWhere<T extends DOMNode>(dynamic selector) {
-    if (selector == null || isEmpty) return null;
+    if (selector == null || isEmpty || _content == null) return null;
     var nodeSelector = asNodeSelector(selector);
     return _content.firstWhere(nodeSelector, orElse: () => null);
   }
 
   /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> nodesWhere<T extends DOMNode>(dynamic selector) {
-    if (selector == null || isEmpty) return [];
+    if (selector == null || isEmpty || _content == null) return [];
     var nodeSelector = asNodeSelector(selector);
     return _content.where(nodeSelector).toList();
   }
 
   void catchNodesWhere<T extends DOMNode>(dynamic selector, List<T> destiny) {
-    if (selector == null || isEmpty) return;
+    if (selector == null || isEmpty || _content == null) return;
     var nodeSelector = asNodeSelector(selector);
     destiny.addAll(_content.where(nodeSelector).whereType<T>());
   }
 
   /// Returns a [T] child node that matches [selector].
   T selectWhere<T extends DOMNode>(dynamic selector) {
-    if (selector == null || isEmpty) return null;
+    if (selector == null || isEmpty || _content == null) return null;
     var nodeSelector = asNodeSelector(selector);
 
     var found = nodeWhere(nodeSelector);
@@ -953,7 +954,7 @@ class DOMNode implements AsDOMNode {
 
   void _selectAllWhereImpl<T extends DOMNode>(
       NodeSelector selector, List<T> all) {
-    if (isEmpty) return;
+    if (isEmpty || _content == null) return;
 
     catchNodesWhere(selector, all);
 
@@ -2286,6 +2287,28 @@ class DOMElement extends DOMNode implements AsDOMElement {
     _onMouseOut ??= EventStream();
     return _onMouseOut;
   }
+
+  EventStream<DOMEvent> _onLoad;
+
+  /// Returns [true] if has any [onLoad] listener registered.
+  bool get hasOnLoadListener => _onLoad != null;
+
+  /// Event handler for `load` events.
+  EventStream<DOMEvent> get onLoad {
+    _onLoad ??= EventStream();
+    return _onLoad;
+  }
+
+  EventStream<DOMEvent> _onError;
+
+  /// Returns [true] if has any [onError] listener registered.
+  bool get hasOnErrorListener => _onError != null;
+
+  /// Event handler for `load` events.
+  EventStream<DOMEvent> get onError {
+    _onError ??= EventStream();
+    return _onError;
+  }
 }
 
 //
@@ -2297,7 +2320,7 @@ class DOMEvent<T> {
   final DOMTreeMap<T> treeMap;
   final dynamic event;
   final dynamic eventTarget;
-  final DOMNode target;
+  final DOMElement target;
 
   DOMEvent(this.treeMap, this.event, this.eventTarget, this.target);
 

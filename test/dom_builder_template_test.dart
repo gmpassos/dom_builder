@@ -1,3 +1,4 @@
+import 'package:dom_builder/dom_builder.dart';
 import 'package:dom_builder/src/dom_builder_template.dart';
 import 'package:test/test.dart';
 
@@ -478,6 +479,49 @@ void main() {
 
       var template2 = DOMTemplate.tryParse(source2);
       expect(template2, isNull);
+    });
+
+    test('intl:hi', () {
+      var source1 = '{{intl:hi}} Joe!';
+
+      var template1 = DOMTemplate.tryParse(source1);
+      expect(template1.nodes.length, equals(2));
+      expect(template1.toString(), equals(source1));
+
+      expect(
+          template1.build({},
+              intlMessageResolver: toIntlMessageResolver({'hi': 'Hi'})),
+          equals('Hi Joe!'));
+
+      expect(
+          template1.build({},
+              intlMessageResolver: toIntlMessageResolver({'hi': 'Olá'})),
+          equals('Olá Joe!'));
+    });
+
+    test('intl:parameters', () {
+      var source1 = '{{intl:hi}} {{intl:child}}!';
+
+      var template1 = DOMTemplate.tryParse(source1);
+      expect(template1.nodes.length, equals(4));
+      expect(template1.toString(), equals(source1));
+
+      var msgResolver = (String key, [Map<String, dynamic> parameters]) {
+        switch (key) {
+          case 'hi':
+            return 'Hello';
+          case 'child':
+            return parameters['n'] > 1 ? 'children' : 'child';
+          default:
+            return '?';
+        }
+      };
+
+      expect(template1.build({'n': 1}, intlMessageResolver: msgResolver),
+          equals('Hello child!'));
+
+      expect(template1.build({'n': 2}, intlMessageResolver: msgResolver),
+          equals('Hello children!'));
     });
   });
 }

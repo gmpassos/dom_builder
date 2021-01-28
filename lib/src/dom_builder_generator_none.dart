@@ -14,18 +14,21 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  void addChildToElement(T element, T child) {
+  bool addChildToElement(T parent, T child) {
     _noDartHTML();
+    return false;
   }
 
   @override
-  void removeChildFromElement(T element, T child) {
+  bool removeChildFromElement(T parent, T child) {
     _noDartHTML();
+    return false;
   }
 
   @override
-  void replaceChildElement(T element, T child1, List<T> child2) {
+  bool replaceChildElement(T parent, T child1, List<T> child2) {
     _noDartHTML();
+    return false;
   }
 
   @override
