@@ -13,7 +13,7 @@ final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMTemplate {
-  factory DOMTemplate.from(dynamic value) {
+  static DOMTemplate/*?*/ from(Object/*?*/ value) {
     if (value == null) return null;
     if (value is DOMTemplate) return value;
     if (value is String) return DOMTemplate.parse(value);
@@ -22,12 +22,12 @@ abstract class DOMTemplate {
 
   DOMTemplate();
 
-  bool get isEmpty;
+  bool/*!*/ get isEmpty;
 
-  bool get isNotEmpty => !isEmpty;
+  bool/*!*/ get isNotEmpty => !isEmpty;
 
   /// Returns [true] if [s] can be a templace code, has `{{` and `}}`.
-  static bool possiblyATemplate(String s) {
+  static bool/*!*/ possiblyATemplate(String s) {
     var idx = s.indexOf('{{');
     if (idx < 0) return false;
     var idx2 = s.indexOf('}}', idx);
@@ -149,7 +149,7 @@ abstract class DOMTemplate {
               DOMTemplateBlockIf block;
 
               if (cmp != null) {
-                dynamic value;
+                Object/*?*/ value;
 
                 if (valueQuote != null) {
                   value = DOMTemplateContent(
@@ -177,7 +177,7 @@ abstract class DOMTemplate {
               DOMTemplateBlockCondition block;
 
               if (cmp != null) {
-                dynamic value;
+                Object/*?*/ value;
 
                 if (valueQuote != null) {
                   value = DOMTemplateContent(
@@ -289,11 +289,11 @@ abstract class DOMTemplate {
     return root;
   }
 
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver});
 
-  bool add(DOMTemplate entry) {
+  bool/*!*/ add(DOMTemplate entry) {
     throw UnsupportedError("Type can't have content: $runtimeType");
   }
 
@@ -309,7 +309,7 @@ class DOMTemplateNode extends DOMTemplate {
   DOMTemplateNode([List<DOMTemplate> nodes]) : nodes = nodes ?? <DOMTemplate>[];
 
   @override
-  bool get isEmpty {
+  bool/*!*/ get isEmpty {
     if (nodes.isEmpty) return true;
     for (var node in nodes) {
       if (node.isNotEmpty) return false;
@@ -317,7 +317,7 @@ class DOMTemplateNode extends DOMTemplate {
     return true;
   }
 
-  bool get hasOnlyContent {
+  bool/*!*/ get hasOnlyContent {
     for (var node in nodes) {
       if (!(node is DOMTemplateContent)) return false;
     }
@@ -325,7 +325,7 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     if (nodes.isEmpty) return '';
@@ -340,13 +340,13 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  bool add(DOMTemplate entry) {
+  bool/*!*/ add(DOMTemplate entry) {
     if (entry == null) return false;
     nodes.add(entry);
     return true;
   }
 
-  bool addAll(List<DOMTemplate> entries) {
+  bool/*!*/ addAll(List<DOMTemplate> entries) {
     if (entries == null || entries.isEmpty) return false;
     nodes.addAll(entries);
     return true;
@@ -369,7 +369,7 @@ class DOMTemplateVariable {
 
   DOMTemplateVariable(this.keys);
 
-  factory DOMTemplateVariable.parse(String s) {
+  static DOMTemplateVariable/*?*/ parse(String s) {
     if (s == null) return null;
     s = s.trim();
     if (s.isEmpty) return null;
@@ -380,13 +380,13 @@ class DOMTemplateVariable {
 
   String get keysFull => keys.join('.');
 
-  dynamic get(dynamic context) {
+  Object/*?*/ get(Object/*?*/ context) {
     if (context == null || isEmptyObject(context)) return null;
 
     var length = keys.length;
     if (length == 0) return context;
 
-    dynamic value = _get(context, keys[0]);
+    Object/*?*/ value = _get(context, keys[0]);
 
     for (var i = 1; i < length; ++i) {
       var k = keys[i];
@@ -396,7 +396,7 @@ class DOMTemplateVariable {
     return value;
   }
 
-  dynamic _get(dynamic context, String key) {
+  Object/*?*/ _get(Object/*?*/ context, String key) {
     if (context == null || isEmptyObject(context) || isEmptyString(key)) {
       return null;
     }
@@ -437,17 +437,17 @@ class DOMTemplateVariable {
     return null;
   }
 
-  dynamic getResolved(dynamic context) {
+  Object/*?*/ getResolved(Object/*?*/ context) {
     var value = get(context);
     return evaluateObject(context, value);
   }
 
-  String getResolvedAsString(dynamic context) {
+  String getResolvedAsString(Object/*?*/ context) {
     var value = getResolved(context);
     return DOMTemplateVariable.valueToString(value);
   }
 
-  static String valueToString(dynamic value) {
+  static String valueToString(Object/*?*/ value) {
     if (value == null) return '';
 
     if (value is String) {
@@ -465,7 +465,7 @@ class DOMTemplateVariable {
     }
   }
 
-  static dynamic evaluateObject(dynamic context, dynamic value) {
+  static Object/*?*/ evaluateObject(Object/*?*/ context, Object/*?*/ value) {
     if (value == null) return null;
 
     if (value is String) {
@@ -482,7 +482,7 @@ class DOMTemplateVariable {
     } else if (value is Function(Map a)) {
       var res = value(context);
       return evaluateObject(context, res);
-    } else if (value is Function(dynamic a)) {
+    } else if (value is Function(Object/*?*/a)) {
       var res = value(context);
       return evaluateObject(context, res);
     } else if (value is Function()) {
@@ -493,12 +493,12 @@ class DOMTemplateVariable {
     }
   }
 
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     var value = getResolved(context);
     return evaluateValue(value);
   }
 
-  bool evaluateValue(value) {
+  bool/*!*/ evaluateValue(value) {
     if (value == null) return false;
 
     if (value is String) {
@@ -522,7 +522,7 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
 
   DOMTemplateIntlMessage(this.key);
 
-  factory DOMTemplateIntlMessage.parse(String s) {
+  static DOMTemplateIntlMessage/*?*/ parse(String s) {
     if (s == null) return null;
     s = s.trim();
     if (s.isEmpty) return null;
@@ -530,10 +530,10 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   }
 
   @override
-  bool get isEmpty => false;
+  bool/*!*/ get isEmpty => false;
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     if (intlMessageResolver == null) return '';
@@ -563,10 +563,10 @@ class DOMTemplateContent extends DOMTemplate {
   DOMTemplateContent(this.content);
 
   @override
-  bool get isEmpty => isEmptyString(content);
+  bool/*!*/ get isEmpty => isEmptyString(content);
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
           {ElementHTMLProvider elementProvider,
           IntlMessageResolver intlMessageResolver}) =>
       content;
@@ -587,7 +587,7 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   }
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     return variable.getResolvedAsString(context);
@@ -605,7 +605,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   DOMTemplateBlockQuery(this.query);
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     if (elementProvider == null) return '';
@@ -640,10 +640,10 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 
   DOMTemplateBlockCondition elseCondition;
 
-  bool evaluate(dynamic context);
+  bool/*!*/ evaluate(Object/*?*/ context);
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     if (evaluate(context)) {
@@ -662,7 +662,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
     }
   }
 
-  String buildContent(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String buildContent(Object/*?*/ context, {ElementHTMLProvider elementProvider}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
@@ -687,7 +687,7 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return variable.evaluate(context);
   }
 
@@ -710,7 +710,7 @@ String getDOMTemplateCmp_operator(DOMTemplateCmp cmp) {
   }
 }
 
-DOMTemplateCmp parseDOMTemplateCmp(dynamic cmp) {
+DOMTemplateCmp parseDOMTemplateCmp(Object/*?*/ cmp) {
   if (cmp == null) return null;
 
   if (cmp is DOMTemplateCmp) return cmp;
@@ -737,16 +737,16 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
   final bool elseIf;
 
   final DOMTemplateCmp cmp;
-  final dynamic value;
+  final Object/*?*/ value;
 
   DOMTemplateBlockIfCmp(
-      this.elseIf, DOMTemplateVariable variable, dynamic cmp, this.value,
+      this.elseIf, DOMTemplateVariable variable, Object/*?*/ cmp, this.value,
       [DOMTemplateNode content])
       : cmp = parseDOMTemplateCmp(cmp),
         super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     switch (cmp) {
       case DOMTemplateCmp.eq:
         return matchesEq(context);
@@ -757,13 +757,13 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
     }
   }
 
-  bool matchesEq(dynamic context) {
+  bool/*!*/ matchesEq(Object/*?*/ context) {
     var varValueStr = variable.getResolvedAsString(context);
     var valueStr = getValueAsString(context);
     return varValueStr == valueStr;
   }
 
-  String getValueAsString(dynamic context) {
+  String getValueAsString(Object/*?*/ context) {
     if (value is DOMTemplateContent) {
       var valueContent = value as DOMTemplateContent;
       return valueContent.content;
@@ -801,7 +801,7 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return !variable.evaluate(context);
   }
 
@@ -821,7 +821,7 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElse([DOMTemplateNode content]) : super(null, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return true;
   }
 
@@ -837,7 +837,7 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return variable.evaluate(context);
   }
 
@@ -853,7 +853,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return !variable.evaluate(context);
   }
 
@@ -869,7 +869,7 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
       : super(variable, contentElse);
 
   @override
-  String build(dynamic context,
+  String build(Object/*?*/ context,
       {ElementHTMLProvider elementProvider,
       IntlMessageResolver intlMessageResolver}) {
     var value = variable.getResolved(context);
@@ -892,12 +892,12 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
-  bool evaluate(dynamic context) {
+  bool/*!*/ evaluate(Object/*?*/ context) {
     return variable.evaluate(context);
   }
 
   @override
-  String buildContent(dynamic context, {ElementHTMLProvider elementProvider}) {
+  String buildContent(Object/*?*/ context, {ElementHTMLProvider elementProvider}) {
     var value = variable.getResolved(context);
 
     if (value is List) {

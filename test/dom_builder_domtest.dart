@@ -305,7 +305,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   List<TestNode> addExternalElementToElement(
-      TestNode element, dynamic externalElement) {
+      TestNode element, Object/*?*/ externalElement) {
     if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);

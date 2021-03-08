@@ -91,7 +91,7 @@ typedef NamedElementGenerator<T> = T Function(
     DOMGenerator<T> domGenerator,
     DOMTreeMap<T> treeMap,
     DOMElement domParent,
-    dynamic parent,
+    Object/*?*/ parent,
     String tag,
     Map<String, DOMAttribute> attributes);
 
@@ -99,14 +99,14 @@ typedef IntlMessageResolver = String Function(String key,
     [Map<String, dynamic> parameters]);
 
 /// Converts [resolver] to [IntlMessageResolver].
-IntlMessageResolver toIntlMessageResolver(dynamic resolver) {
+IntlMessageResolver toIntlMessageResolver(Object/*?*/ resolver) {
   if (resolver == null) {
     return null;
   } else if (resolver is IntlMessageResolver) {
     return resolver;
   } else if (resolver is String Function(String key)) {
     return (k, [p]) => resolver(k);
-  } else if (resolver is dynamic Function(dynamic key)) {
+  } else if (resolver is dynamic Function(Object/*?*/ key)) {
     return (k, [p]) => parseString(resolver(k));
   } else if (resolver is String Function()) {
     return (k, [p]) => resolver();
@@ -161,11 +161,11 @@ class DOMContext<T> {
 
   /// If [true] will resolve any viewport [CSSUnit] to `px` when
   /// generating a DOM tree.
-  bool _resolveCSSViewportUnit = false;
+  bool/*!*/ _resolveCSSViewportUnit = false;
 
   /// If [true] will resolve any [CSSURL] when
   /// generating a DOM tree.
-  bool _resolveCSSURL = false;
+  bool/*!*/ _resolveCSSURL = false;
 
   DOMContext(
       {this.parent,
@@ -176,7 +176,7 @@ class DOMContext<T> {
     this.resolveCSSURL = resolveCSSURL;
   }
 
-  bool get resolveCSSViewportUnit => _resolveCSSViewportUnit;
+  bool/*!*/ get resolveCSSViewportUnit => _resolveCSSViewportUnit;
 
   set resolveCSSViewportUnit(bool value) {
     _resolveCSSViewportUnit = value ?? false;
@@ -228,7 +228,7 @@ class DOMContext<T> {
     return '$value${getCSSUnitName(unit)}';
   }
 
-  bool get resolveCSSURL => _resolveCSSURL;
+  bool/*!*/ get resolveCSSURL => _resolveCSSURL;
 
   set resolveCSSURL(bool value) {
     _resolveCSSURL = value ?? false;
@@ -257,7 +257,7 @@ class DOMContext<T> {
 
   NamedElementGenerator namedElementProvider;
 
-  bool hasNamedElementNameValue(DOMElement domElement) {
+  bool/*!*/ hasNamedElementNameValue(DOMElement domElement) {
     var elementName = getNamedElementNameValue(domElement);
     return elementName != null && elementName.isNotEmpty;
   }
@@ -302,12 +302,12 @@ class DOMContext<T> {
 
   set variables(Map<String, dynamic> value) => _variables = value;
 
-  void putVariable(String key, dynamic value) {
+  void putVariable(String key, Object/*?*/ value) {
     _variables ??= {};
     _variables[key] = value;
   }
 
-  dynamic getVariable(String key, dynamic value) =>
+  dynamic getVariable(String key, Object/*?*/ value) =>
       _variables != null ? _variables[key] : null;
 
   void Function(DOMTreeMap<T> treeMap, DOMNode domElement, T element,

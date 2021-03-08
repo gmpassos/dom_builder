@@ -397,10 +397,10 @@ void main() {
     });
 
     test('Attribute foo', () {
-      var div = $div(attributes: {'foo': 'aaa'});
-      expect(div.buildHTML(), equals('<div foo="aaa"></div>'));
+      var div = $div(attributes: {'title': 'aaa'});
+      expect(div.buildHTML(), equals('<div title="aaa"></div>'));
 
-      var attributeFoo = div.getAttribute('foo');
+      var attributeFoo = div.getAttribute('title');
       expect(attributeFoo.value, equals('aaa'));
       attributeFoo.setValue('bbb');
       expect(attributeFoo.value, equals('bbb'));
@@ -412,14 +412,14 @@ void main() {
       var div = $div(
           id: 'x1',
           classes: 'c1 c2 c2',
-          attributes: {'foo': '111', 'bar': '2', 'hidden': 'true'},
-          content: $span(attributes: {'bar': '222'}, content: 'sub'));
+          attributes: {'title': '111', 'lang': 'en', 'hidden': 'true'},
+          content: $span(attributes: {'lang': '222'}, content: 'sub'));
       expect(
           div.buildHTML(),
           equals(
-              '<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
+              '<div id="x1" class="c1 c2" title="111" lang="en" hidden><span lang="222">sub</span></div>'));
 
-      expect(div.getAttributeValue('foo'), equals('111'));
+      expect(div.getAttributeValue('title'), equals('111'));
       expect(div.getAttributeValue('hidden'), equals('true'));
 
       var attributeClass = div.getAttribute('class');
@@ -432,25 +432,25 @@ void main() {
       expect(attributeClass.isSet, isTrue);
       expect(attributeClass.isCollection, isTrue);
 
-      var attributeFoo = div.getAttribute('foo');
-      expect(attributeFoo.value, equals('111'));
-      expect(attributeFoo.values, equals(['111']));
-      expect(attributeFoo.containsValue('111'), isTrue);
-      expect(attributeFoo.containsValue('Z'), isFalse);
-      expect(attributeFoo.isBoolean, isFalse);
-      expect(attributeFoo.isList, isFalse);
-      expect(attributeFoo.isSet, isFalse);
-      expect(attributeFoo.isCollection, isFalse);
+      var attributeTitle = div.getAttribute('title');
+      expect(attributeTitle.value, equals('111'));
+      expect(attributeTitle.values, equals(['111']));
+      expect(attributeTitle.containsValue('111'), isTrue);
+      expect(attributeTitle.containsValue('Z'), isFalse);
+      expect(attributeTitle.isBoolean, isFalse);
+      expect(attributeTitle.isList, isFalse);
+      expect(attributeTitle.isSet, isFalse);
+      expect(attributeTitle.isCollection, isFalse);
 
-      var attributeBar = div.getAttribute('bar');
-      expect(attributeBar.value, equals('2'));
-      expect(attributeBar.values, equals(['2']));
-      expect(attributeBar.containsValue('2'), isTrue);
-      expect(attributeBar.containsValue('Z'), isFalse);
-      expect(attributeBar.isBoolean, isFalse);
-      expect(attributeBar.isList, isFalse);
-      expect(attributeBar.isSet, isFalse);
-      expect(attributeBar.isCollection, isFalse);
+      var attributeLang = div.getAttribute('lang');
+      expect(attributeLang.value, equals('en'));
+      expect(attributeLang.values, equals(['en']));
+      expect(attributeLang.containsValue('en'), isTrue);
+      expect(attributeLang.containsValue('fr'), isFalse);
+      expect(attributeLang.isBoolean, isFalse);
+      expect(attributeLang.isList, isFalse);
+      expect(attributeLang.isSet, isFalse);
+      expect(attributeLang.isCollection, isFalse);
 
       var attributeBaz = div.getAttribute('baz');
       expect(attributeBaz, isNull);
@@ -469,37 +469,49 @@ void main() {
       expect(
           div.buildHTML(),
           equals(
-              '<div id="x1" class="c1 c2" foo="111" bar="2" hidden><span bar="222">sub</span></div>'));
+              '<div id="x1" class="c1 c2" title="111" lang="en" hidden><span lang="222">sub</span></div>'));
 
       div.setAttribute('hidden', false);
       expect(
           div.buildHTML(),
           equals(
-              '<div id="x1" class="c1 c2" foo="111" bar="2"><span bar="222">sub</span></div>'));
+              '<div id="x1" class="c1 c2" title="111" lang="en"><span lang="222">sub</span></div>'));
 
-      expect(div.removeAttribute('foo'), isTrue);
+      expect(div.removeAttribute('title'), isTrue);
       expect(
           div.buildHTML(),
           equals(
-              '<div id="x1" class="c1 c2" bar="2"><span bar="222">sub</span></div>'));
+              '<div id="x1" class="c1 c2" lang="en"><span lang="222">sub</span></div>'));
 
-      expect(div.removeAttributeDeeply('bar'), isTrue);
+      expect(div.removeAttributeDeeply('lang'), isTrue);
       expect(div.buildHTML(),
           equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
+
+      var div2 = $div(hidden: true, content: 'foo');
+      expect(div2.buildHTML(),
+          equals('<div hidden>foo</div>'));
+
+      var div3 = $div(hidden: false, content: 'foo');
+      expect(div3.buildHTML(),
+          equals('<div>foo</div>'));
+
+      var div4 = $div(content: 'foo');
+      expect(div4.buildHTML(),
+          equals('<div>foo</div>'));
     });
 
     test('Helper \$tag', () {
-      var div = $tag('div', attributes: {'foo': 'aaa'}, content: ['wow']);
+      var div = $tag('div', attributes: {'title': 'aaa'}, content: ['wow']);
 
       expect(div.runtimeType, equals(DIVElement));
-      expect(div.buildHTML(), equals('<div foo="aaa">wow</div>'));
+      expect(div.buildHTML(), equals('<div title="aaa">wow</div>'));
     });
 
     test('Helper \$htmlRoot: div', () {
-      var div = $htmlRoot('''<div foo="aaa">WOW</div>''');
+      var div = $htmlRoot('''<div title="aaa">WOW</div>''');
 
       expect(div.runtimeType, equals(DIVElement));
-      expect(div.buildHTML(), equals('<div foo="aaa">WOW</div>'));
+      expect(div.buildHTML(), equals('<div title="aaa">WOW</div>'));
     });
 
     test('Helper \$htmlRoot: text 1', () {
@@ -534,13 +546,13 @@ void main() {
           id: 'id1',
           classes: 'content',
           style: 'width: 100px ; height: 200px',
-          attributes: {'navigate': 'home'},
+          attributes: {'lang': 'fr'},
           content: '<span>Foo</span>');
 
       expect(
           node.buildHTML(),
           equals(
-              '<div id="id1" class="content" style="width: 100px; height: 200px" navigate="home"><span>Foo</span></div>'));
+              '<div id="id1" class="content" style="width: 100px; height: 200px" lang="fr"><span>Foo</span></div>'));
     });
 
     test('Helper \$divInline', () {
@@ -548,13 +560,13 @@ void main() {
           id: 'id1',
           classes: 'content',
           style: 'width: 100px ; height: 200px',
-          attributes: {'navigate': 'home'},
+          attributes: {'lang': 'pt'},
           content: '<span>Foo</span>');
 
       expect(
           node.buildHTML(),
           equals(
-              '<div id="id1" class="content" style="display: inline-block; width: 100px; height: 200px" navigate="home"><span>Foo</span></div>'));
+              '<div id="id1" class="content" style="display: inline-block; width: 100px; height: 200px" lang="pt"><span>Foo</span></div>'));
     });
 
     test('Select: options 1', () {

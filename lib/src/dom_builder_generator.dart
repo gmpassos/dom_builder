@@ -9,14 +9,14 @@ import 'dom_builder_generator_none.dart'
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
-typedef DOMElementGenerator<T> = T Function(dynamic parent);
+typedef DOMElementGenerator<T> = T Function(Object/*?*/parent);
 typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
 abstract class DOMGenerator<T> {
-  static DOMGeneratorDartHTML _dartHTML;
+  static DOMGeneratorDartHTML/*?*/ _dartHTML;
 
-  static DOMGeneratorDartHTML<T> dartHTML<T>() {
+  static DOMGeneratorDartHTML<T>/*!*/ dartHTML<T>() {
     _dartHTML ??= createDOMGeneratorDartHTML();
     return _dartHTML as DOMGeneratorDartHTML<T>;
   }
@@ -45,7 +45,7 @@ abstract class DOMGenerator<T> {
 
   Viewport get viewport => _domContext?.viewport;
 
-  bool isEquivalentNode(DOMNode domNode, T node) {
+  bool/*!*/ isEquivalentNode(DOMNode domNode, T node) {
     if (!isEquivalentNodeType(domNode, node)) {
       return false;
     }
@@ -58,7 +58,7 @@ abstract class DOMGenerator<T> {
         "Can't determine node equivalency: $domNode == $node");
   }
 
-  bool isEquivalentNodeType(DOMNode domNode, T node) {
+  bool/*!*/ isEquivalentNodeType(DOMNode domNode, T node) {
     if (domNode is TextNode && isTextNode(node)) {
       return true;
     } else {
@@ -69,7 +69,7 @@ abstract class DOMGenerator<T> {
 
   final Set<String> _ignoreAttributeEquivalence = {};
 
-  bool isIgnoreAttributeEquivalence(String attributeName) {
+  bool/*!*/ isIgnoreAttributeEquivalence(String attributeName) {
     return _ignoreAttributeEquivalence.contains(attributeName);
   }
 
@@ -83,7 +83,7 @@ abstract class DOMGenerator<T> {
   void clearIgnoredAttributesEquivalence() =>
       _ignoreAttributeEquivalence.clear();
 
-  bool removeIgnoredAttributeEquivalence(String attributeName) {
+  bool/*!*/ removeIgnoredAttributeEquivalence(String attributeName) {
     return _ignoreAttributeEquivalence.remove(attributeName);
   }
 
@@ -476,7 +476,7 @@ abstract class DOMGenerator<T> {
   }
 
   T _parseExternalElement(DOMElement domParent, T parent, DOMNode domElement,
-      dynamic externalElement, DOMTreeMap<T> treeMap, DOMContext<T> context) {
+      Object/*?*/ externalElement, DOMTreeMap<T> treeMap, DOMContext<T> context) {
     if (externalElement == null) return null;
 
     if (externalElement is T) {
@@ -582,12 +582,12 @@ abstract class DOMGenerator<T> {
     return templateElement;
   }
 
-  dynamic resolveFutureElement(
+  Object/*?*/ resolveFutureElement(
       DOMElement domParent,
       T parent,
       DOMNode domElement,
       T templateElement,
-      dynamic futureResult,
+      Object/*?*/ futureResult,
       DOMTreeMap<T> treeMap,
       DOMContext<T> context) {
     if (!canHandleExternalElement(futureResult)) {
@@ -602,7 +602,7 @@ abstract class DOMGenerator<T> {
       T parent,
       DOMNode domElement,
       T templateElement,
-      dynamic futureElementResolved,
+      Object/*?*/ futureElementResolved,
       DOMTreeMap<T> treeMap,
       DOMContext<T> context) {
     if (futureElementResolved == null) {
@@ -629,20 +629,20 @@ abstract class DOMGenerator<T> {
     }
   }
 
-  bool addChildToElement(T parent, T child);
+  bool/*!*/ addChildToElement(T parent, T child);
 
-  bool removeChildFromElement(T parent, T child);
+  bool/*!*/ removeChildFromElement(T parent, T child);
 
-  bool replaceChildElement(T parent, T child1, List<T> child2);
+  bool/*!*/ replaceChildElement(T parent, T child1, List<T> child2);
 
-  bool replaceElement(T child1, List<T> child2) {
+  bool/*!*/ replaceElement(T child1, List<T> child2) {
     if (child1 == null || child2 == null) return false;
     var parent = getNodeParent(child1);
     if (parent == null) return false;
     return replaceChildElement(parent, child1, child2);
   }
 
-  List<T> toElements(dynamic elements) {
+  List<T> toElements(Object/*?*/ elements) {
     if (elements == null) {
       return null;
     } else if (elements is T) {
@@ -666,19 +666,19 @@ abstract class DOMGenerator<T> {
     }
   }
 
-  bool canHandleExternalElement(dynamic externalElement);
+  bool/*!*/ canHandleExternalElement(Object/*?*/ externalElement);
 
-  List<T> addExternalElementToElement(T element, dynamic externalElement);
+  List<T> addExternalElementToElement(T element, Object/*?*/ externalElement);
 
   T createElement(String tag, [DOMElement domElement]);
 
   T createTextNode(String text);
 
-  bool isTextNode(T node);
+  bool/*!*/ isTextNode(T node);
 
-  bool isElementNode(T node) => node != null && !isTextNode(node);
+  bool/*!*/ isElementNode(T node) => node != null && !isTextNode(node);
 
-  bool containsNode(T parent, T node);
+  bool/*!*/ containsNode(T parent, T node);
 
   void setAttributes(DOMElement domElement, T element,
       {bool preserveClass = false, bool preserveStyle = false}) {
@@ -738,7 +738,7 @@ abstract class DOMGenerator<T> {
 
   final Map<String, ElementGenerator<T>> _elementsGenerators = {};
 
-  bool isElementGeneratorTag(String tag) {
+  bool/*!*/ isElementGeneratorTag(String tag) {
     tag = normalizeTag(tag);
     if (tag == null) return false;
     return _elementsGenerators.containsKey(tag);
@@ -790,7 +790,7 @@ abstract class DOMGenerator<T> {
     return element;
   }
 
-  bool registerElementGenerator(ElementGenerator<T> elementGenerator) {
+  bool/*!*/ registerElementGenerator(ElementGenerator<T> elementGenerator) {
     if (elementGenerator == null) return false;
     var tag = elementGenerator.tag;
     tag = normalizeTag(tag);
@@ -805,7 +805,7 @@ abstract class DOMGenerator<T> {
     return tag.isNotEmpty ? tag : null;
   }
 
-  bool registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) {
+  bool/*!*/ registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) {
     if (otherGenerator == null) return false;
     if (otherGenerator.registeredElementsGeneratorsLength == 0) return false;
     _elementsGenerators.addAll(otherGenerator._elementsGenerators);
@@ -852,16 +852,16 @@ abstract class DOMGenerator<T> {
   void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
       T element, DOMContext<T> context) {}
 
-  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
+  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, Object/*?*/ event) =>
       null;
 
-  DOMEvent createDOMEvent(DOMTreeMap<T> treeMap, dynamic event) => null;
+  DOMEvent createDOMEvent(DOMTreeMap<T> treeMap, Object/*?*/ event) => null;
 
-  bool cancelEvent(dynamic event, {bool stopImmediatePropagation = false}) =>
+  bool/*!*/ cancelEvent(Object/*?*/ event, {bool stopImmediatePropagation = false}) =>
       false;
 
   DOMNodeRuntime<T> createDOMNodeRuntime(
-      DOMTreeMap<T> treeMap, DOMNode domNode, T node);
+      DOMTreeMap<T>/*!*/ treeMap, DOMNode domNode, T/*!*/ node);
 
   List<T> castToNodes(List list) {
     if (list is List<T>) return list;
@@ -937,7 +937,7 @@ abstract class DOMGenerator<T> {
     _generatedHTMLTrees.clear();
   }
 
-  bool populateGeneratedHTMLTrees = false;
+  bool/*!*/ populateGeneratedHTMLTrees = false;
 
   final List<String> _generatedHTMLTrees = [];
 
@@ -968,11 +968,11 @@ abstract class ElementGenerator<T> {
   String get tag;
 
   /// If [true] indicated that this generated element has children nodes.
-  bool get hasChildrenElements => true;
+  bool/*!*/ get hasChildrenElements => true;
 
   /// If [true] will use a `div` as a content holder, with already
   /// generated content to be passed to [generate] call.
-  bool get usesContentHolder => true;
+  bool/*!*/ get usesContentHolder => true;
 
   T generate(
       DOMGenerator<T> domGenerator,
@@ -989,7 +989,7 @@ abstract class ElementGenerator<T> {
   DOMElement revert(DOMGenerator<T> domGenerator, DOMTreeMap<T> treeMap,
       DOMElement domParent, T parent, T node);
 
-  bool isGeneratedElement(T element) => false;
+  bool/*!*/ isGeneratedElement(T element) => false;
 }
 
 typedef ElementGeneratorFunction<T> = T Function(
@@ -1008,7 +1008,7 @@ typedef ElementRevertFunction<T> = DOMElement Function(
     T parent,
     T node);
 
-typedef ElementGeneratedMatchingFunction<T> = bool Function(T element);
+typedef ElementGeneratedMatchingFunction<T> = bool/*!*/ Function(T element);
 
 class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
   @override
@@ -1066,7 +1066,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   void reset() => domGenerator.reset();
 
   @override
-  bool addChildToElement(T parent, T child) =>
+  bool/*!*/ addChildToElement(T parent, T child) =>
       domGenerator.addChildToElement(parent, child);
 
   @override
@@ -1081,11 +1081,11 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   String buildElementHTML(T element) => domGenerator.buildElementHTML(element);
 
   @override
-  bool canHandleExternalElement(externalElement) =>
+  bool/*!*/ canHandleExternalElement(externalElement) =>
       domGenerator.canHandleExternalElement(externalElement);
 
   @override
-  bool containsNode(T parent, T node) =>
+  bool/*!*/ containsNode(T parent, T node) =>
       domGenerator.containsNode(parent, node);
 
   @override
@@ -1128,7 +1128,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           templateElement, future, treeMap, context);
 
   @override
-  dynamic resolveFutureElement(
+  Object/*?*/ resolveFutureElement(
           DOMElement domParent,
           T parent,
           DOMNode domElement,
@@ -1145,7 +1145,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           T parent,
           DOMNode domElement,
           T templateElement,
-          dynamic futureElementResolved,
+          Object/*?*/ futureElementResolved,
           DOMTreeMap<T> treeMap,
           DOMContext<T> context) =>
       domGenerator.attachFutureElement(domParent, parent, domElement,
@@ -1159,18 +1159,18 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   String getNodeText(T node) => domGenerator.getNodeText(node);
 
   @override
-  bool isTextNode(T node) => domGenerator.isTextNode(node);
+  bool/*!*/ isTextNode(T node) => domGenerator.isTextNode(node);
 
   @override
-  bool removeChildFromElement(T element, T child) =>
+  bool/*!*/ removeChildFromElement(T element, T child) =>
       domGenerator.removeChildFromElement(element, child);
 
   @override
-  bool replaceChildElement(T element, T child1, List<T> child2) =>
+  bool/*!*/ replaceChildElement(T element, T child1, List<T> child2) =>
       domGenerator.replaceChildElement(element, child1, child2);
 
   @override
-  bool replaceElement(T child1, List<T> child2) =>
+  bool/*!*/ replaceElement(T child1, List<T> child2) =>
       domGenerator.replaceElement(child1, child2);
 
   @override
@@ -1198,7 +1198,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           treeMap, domElement, element, context);
 
   @override
-  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, dynamic event) =>
+  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<T> treeMap, Object/*?*/ event) =>
       domGenerator.createDOMMouseEvent(treeMap, event);
 
   @override
@@ -1206,7 +1206,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.createDOMEvent(treeMap, event);
 
   @override
-  bool cancelEvent(dynamic event, {bool stopImmediatePropagation = false}) =>
+  bool/*!*/ cancelEvent(Object/*?*/ event, {bool stopImmediatePropagation = false}) =>
       domGenerator.cancelEvent(event,
           stopImmediatePropagation: stopImmediatePropagation);
 
@@ -1423,34 +1423,34 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.ignoreAttributeEquivalence(attributeName);
 
   @override
-  bool isElementGeneratorTag(String tag) =>
+  bool/*!*/ isElementGeneratorTag(String tag) =>
       domGenerator.isElementGeneratorTag(tag);
 
   @override
-  bool isElementNode(T node) => domGenerator.isElementNode(node);
+  bool/*!*/ isElementNode(T node) => domGenerator.isElementNode(node);
 
   @override
-  bool isEquivalentNode(DOMNode domNode, T node) =>
+  bool/*!*/ isEquivalentNode(DOMNode domNode, T node) =>
       domGenerator.isEquivalentNode(domNode, node);
 
   @override
-  bool isEquivalentNodeType(DOMNode domNode, T node) =>
+  bool/*!*/ isEquivalentNodeType(DOMNode domNode, T node) =>
       domGenerator.isEquivalentNodeType(domNode, node);
 
   @override
-  bool isIgnoreAttributeEquivalence(String attributeName) =>
+  bool/*!*/ isIgnoreAttributeEquivalence(String attributeName) =>
       domGenerator.isIgnoreAttributeEquivalence(attributeName);
 
   @override
-  bool registerElementGenerator(ElementGenerator<T> elementGenerator) =>
+  bool/*!*/ registerElementGenerator(ElementGenerator<T> elementGenerator) =>
       domGenerator.registerElementGenerator(elementGenerator);
 
   @override
-  bool registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) =>
+  bool/*!*/ registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) =>
       domGenerator.registerElementGeneratorFrom(otherGenerator);
 
   @override
-  bool removeIgnoredAttributeEquivalence(String attributeName) =>
+  bool/*!*/ removeIgnoredAttributeEquivalence(String attributeName) =>
       domGenerator.removeIgnoredAttributeEquivalence(attributeName);
 
   @override

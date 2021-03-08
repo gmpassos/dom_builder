@@ -7,17 +7,17 @@ import 'dom_builder_treemap.dart';
 
 /// Wraps the actual generated node [T] and allows some operations over it.
 abstract class DOMNodeRuntime<T> {
-  final DOMTreeMap<T> treeMap;
+  final DOMTreeMap<T>/*!*/ treeMap;
 
-  DOMGenerator<T> get domGenerator => treeMap.domGenerator;
+  DOMGenerator<T/*!*/> get domGenerator => treeMap.domGenerator;
 
   final DOMNode domNode;
 
-  final T node;
+  final T/*!*/ node;
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
-  DOMNodeRuntime<T> get parentRuntime {
+  DOMNodeRuntime<T/*!*/> get parentRuntime {
     var domNodeParent = domNode != null ? domNode.parent : null;
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
@@ -25,24 +25,24 @@ abstract class DOMNodeRuntime<T> {
         treeMap, domNodeParent, nodeParent);
   }
 
-  bool get hasParent {
+  bool/*!*/ get hasParent {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null;
   }
 
   String get tagName;
 
-  bool get isStringElement;
+  bool/*!*/ get isStringElement;
 
   List<String> get classes;
 
   void addClass(String className);
 
-  bool removeClass(String className);
+  bool/*!*/ removeClass(String className);
 
   void clearClasses();
 
-  bool get exists => domNode != null && node != null;
+  bool/*!*/ get exists => domNode != null && node != null;
 
   String get text;
 
@@ -54,7 +54,7 @@ abstract class DOMNodeRuntime<T> {
 
   String operator [](String name) => getAttribute(name);
 
-  void operator []=(String name, dynamic value) => setAttribute(name, value);
+  void operator []=(String name, Object/*?*/ value) => setAttribute(name, value);
 
   String getAttribute(String name);
 
@@ -68,7 +68,7 @@ abstract class DOMNodeRuntime<T> {
   }
 
   /// Sets runtime `style` of [node] parsed as [CSS].
-  set style(dynamic cssText) {
+  set style(Object/*?*/ cssText) {
     var css = CSS(cssText);
     setAttribute('style', css.style);
   }
@@ -143,7 +143,7 @@ abstract class DOMNodeRuntime<T> {
 
   int get indexInParent;
 
-  bool isInSameParent(T other) {
+  bool/*!*/ isInSameParent(T other) {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null &&
         nodeParent == domGenerator.getNodeParent(other);
@@ -156,7 +156,7 @@ abstract class DOMNodeRuntime<T> {
     return domGenerator.createDOMNodeRuntime(treeMap, otherDomNode, other);
   }
 
-  bool isPreviousNode(T other) {
+  bool/*!*/ isPreviousNode(T other) {
     var otherRuntime = getSiblingRuntime(other);
     if (otherRuntime == null) return false;
 
@@ -165,7 +165,7 @@ abstract class DOMNodeRuntime<T> {
     return otherIdx >= 0 && otherIdx + 1 == idx;
   }
 
-  bool isNextNode(T other) {
+  bool/*!*/ isNextNode(T other) {
     var otherRuntime = getSiblingRuntime(other);
     if (otherRuntime == null) return false;
 
@@ -174,7 +174,7 @@ abstract class DOMNodeRuntime<T> {
     return idx >= 0 && idx + 1 == otherIdx;
   }
 
-  bool isConsecutiveNode(T other) {
+  bool/*!*/ isConsecutiveNode(T other) {
     return isNextNode(other) || isPreviousNode(other);
   }
 
@@ -184,27 +184,27 @@ abstract class DOMNodeRuntime<T> {
 
   void insertAt(int index, T child);
 
-  bool removeNode(T child);
+  bool/*!*/ removeNode(T child);
 
   T removeAt(int index);
 
   void clear();
 
-  bool remove() {
+  bool/*!*/ remove() {
     if (hasParent) {
       return parentRuntime.removeNode(node);
     }
     return false;
   }
 
-  bool replaceBy(List elements) {
+  bool/*!*/ replaceBy(List elements) {
     if (elements == null) return false;
     var e = domGenerator.toElements(elements);
     return domGenerator.replaceElement(node, e);
   }
 
   int _contentFromIndexBackwardWhere(
-      int idx, int steps, bool Function(T node) test) {
+      int idx, int steps, bool/*!*/ Function(T node) test) {
     for (var i = Math.min(idx, nodesLength - 1); i >= 0; i--) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -219,7 +219,7 @@ abstract class DOMNodeRuntime<T> {
   }
 
   int _contentFromIndexForwardWhere(
-      int idx, int steps, bool Function(T node) test) {
+      int idx, int steps, bool/*!*/ Function(T node) test) {
     for (var i = idx; i < nodesLength; i++) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -233,7 +233,7 @@ abstract class DOMNodeRuntime<T> {
     return -1;
   }
 
-  bool moveUp() {
+  bool/*!*/ moveUp() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
 
@@ -253,7 +253,7 @@ abstract class DOMNodeRuntime<T> {
     return true;
   }
 
-  bool moveDown() {
+  bool/*!*/ moveDown() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
 
@@ -286,9 +286,9 @@ abstract class DOMNodeRuntime<T> {
     return copy;
   }
 
-  bool absorbNode(T other);
+  bool/*!*/ absorbNode(T other);
 
-  bool mergeNode(T other, {bool onlyConsecutive = true}) {
+  bool/*!*/ mergeNode(T other, {bool onlyConsecutive = true}) {
     onlyConsecutive ??= true;
 
     if (onlyConsecutive) {
@@ -325,7 +325,7 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   void clearClasses() {}
 
   @override
-  bool removeClass(String className) => false;
+  bool/*!*/ removeClass(String className) => false;
 
   @override
   String get text => '';
@@ -375,7 +375,7 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   void insertAt(int index, T child) {}
 
   @override
-  bool removeNode(T child) => false;
+  bool/*!*/ removeNode(T child) => false;
 
   @override
   T removeAt(int index) => null;
@@ -384,8 +384,8 @@ class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   T copy() => null;
 
   @override
-  bool absorbNode(T other) => false;
+  bool/*!*/ absorbNode(T other) => false;
 
   @override
-  bool get isStringElement => false;
+  bool/*!*/ get isStringElement => false;
 }

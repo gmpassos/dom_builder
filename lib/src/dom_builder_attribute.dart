@@ -23,7 +23,7 @@ class DOMAttribute implements WithValue {
     'style': '; '
   };
 
-  static bool isBooleanAttribute(String attrName) =>
+  static bool/*!*/ isBooleanAttribute(String attrName) =>
       _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(attrName);
 
   static String getAttributeDelimiter(String name) =>
@@ -38,10 +38,10 @@ class DOMAttribute implements WithValue {
   static RegExp getAttributeDelimiterPattern(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
 
-  static bool hasAttribute(DOMAttribute attribute) =>
+  static bool/*!*/ hasAttribute(DOMAttribute attribute) =>
       attribute != null && attribute.hasValue;
 
-  static bool hasAttributes(Map<String, DOMAttribute> attributes) =>
+  static bool/*!*/ hasAttributes(Map<String, DOMAttribute> attributes) =>
       attributes != null && attributes.isNotEmpty;
 
   static String normalizeName(String name) {
@@ -63,7 +63,7 @@ class DOMAttribute implements WithValue {
 
   DOMAttribute(this.name, this._valueHandler);
 
-  factory DOMAttribute.from(String name, dynamic value) {
+  static DOMAttribute/*?*/ from(String name, Object/*?*/value) {
     name = normalizeName(name);
     if (name == null) return null;
 
@@ -114,16 +114,16 @@ class DOMAttribute implements WithValue {
 
   DOMAttributeValue get valueHandler => _valueHandler;
 
-  bool get isBoolean => _valueHandler is DOMAttributeValueBoolean;
+  bool/*!*/ get isBoolean => _valueHandler is DOMAttributeValueBoolean;
 
-  bool get isList => _valueHandler is DOMAttributeValueList;
+  bool/*!*/ get isList => _valueHandler is DOMAttributeValueList;
 
-  bool get isSet => _valueHandler is DOMAttributeValueSet;
+  bool/*!*/ get isSet => _valueHandler is DOMAttributeValueSet;
 
-  bool get isCollection => _valueHandler is DOMAttributeValueCollection;
+  bool/*!*/ get isCollection => _valueHandler is DOMAttributeValueCollection;
 
   @override
-  bool get hasValue => _valueHandler.hasAttributeValue;
+  bool/*!*/ get hasValue => _valueHandler.hasAttributeValue;
 
   @override
   String get value => _valueHandler.asAttributeValue;
@@ -135,17 +135,17 @@ class DOMAttribute implements WithValue {
 
   int get valueLength => _valueHandler.length;
 
-  bool containsValue(dynamic value) =>
+  bool/*!*/ containsValue(Object/*?*/value) =>
       _valueHandler.containsAttributeValue(value);
 
-  void setBoolean(dynamic value) {
+  void setBoolean(Object/*?*/value) {
     if (!isBoolean) throw StateError('Not a boolean attribute');
     setValue(value);
   }
 
-  void setValue(dynamic value) => _valueHandler.setAttributeValue(value);
+  void setValue(Object/*?*/value) => _valueHandler.setAttributeValue(value);
 
-  void appendValue(dynamic value) {
+  void appendValue(Object/*?*/value) {
     if (_valueHandler is DOMAttributeValueCollection) {
       var valueCollection = _valueHandler as DOMAttributeValueCollection;
       return valueCollection.appendAttributeValue(value);
@@ -188,18 +188,18 @@ abstract class DOMAttributeValue {
   String getAttributeValue([DOMContext domContext]) => asAttributeValue;
 
   /// Returns [true] if has a value.
-  bool get hasAttributeValue;
+  bool/*!*/ get hasAttributeValue;
 
   int get length;
 
   /// Parses [value] and returns [true] if is equals to this instance value.
-  bool equalsAttributeValue(dynamic value);
+  bool/*!*/ equalsAttributeValue(Object/*?*/value);
 
   /// Parses [value] and returns [true] if this instance contains it.
-  bool containsAttributeValue(dynamic value);
+  bool/*!*/ containsAttributeValue(Object/*?*/value);
 
   /// Parses [value] and sets this instances value.
-  void setAttributeValue(dynamic value);
+  void setAttributeValue(Object/*?*/value);
 
   @override
   String toString();
@@ -208,10 +208,10 @@ abstract class DOMAttributeValue {
 class DOMAttributeValueBoolean extends DOMAttributeValue {
   bool _value;
 
-  DOMAttributeValueBoolean(dynamic value) : _value = parseBool(value, false);
+  DOMAttributeValueBoolean(Object/*?*/value) : _value = parseBool(value, false);
 
   @override
-  bool get hasAttributeValue => _value;
+  bool/*!*/ get hasAttributeValue => _value;
 
   @override
   int get length => _value != null ? 1 : 0;
@@ -223,15 +223,15 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
   List<String> get asAttributeValues => [asAttributeValue];
 
   @override
-  bool equalsAttributeValue(dynamic value) {
+  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
     return _value == parseBool(value, false);
   }
 
   @override
-  bool containsAttributeValue(value) => equalsAttributeValue(value);
+  bool/*!*/ containsAttributeValue(value) => equalsAttributeValue(value);
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     _value = parseBool(value, false);
   }
 
@@ -245,10 +245,10 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 class DOMAttributeValueString extends DOMAttributeValue {
   String _value;
 
-  DOMAttributeValueString(dynamic value) : _value = parseString(value, '');
+  DOMAttributeValueString(Object/*?*/value) : _value = parseString(value, '');
 
   @override
-  bool get hasAttributeValue => _value != null && _value.isNotEmpty;
+  bool/*!*/ get hasAttributeValue => _value != null && _value.isNotEmpty;
 
   @override
   int get length => _value != null ? _value.length : 0;
@@ -261,19 +261,19 @@ class DOMAttributeValueString extends DOMAttributeValue {
       hasAttributeValue ? [asAttributeValue] : null;
 
   @override
-  bool equalsAttributeValue(dynamic value) {
+  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
     if (_value == null) return !hasAttributeValue;
     return hasAttributeValue && _value == parseString(value);
   }
 
   @override
-  bool containsAttributeValue(value) {
+  bool/*!*/ containsAttributeValue(value) {
     if (value == null) return false;
     return hasAttributeValue && _value.contains(value);
   }
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     _value = parseString(value);
   }
 
@@ -287,14 +287,14 @@ class DOMAttributeValueString extends DOMAttributeValue {
 class DOMAttributeValueTemplate extends DOMAttributeValueString {
   DOMTemplate _template;
 
-  DOMAttributeValueTemplate(dynamic value) : super(value) {
+  DOMAttributeValueTemplate(Object/*?*/value) : super(value) {
     _template = DOMTemplate.parse(value);
   }
 
   DOMTemplate get template => _template;
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     super.setAttributeValue(value);
     _template = DOMTemplate.parse(value);
   }
@@ -302,13 +302,13 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
 
 /// Base [DOMAttributeValue] class for collections.
 abstract class DOMAttributeValueCollection extends DOMAttributeValue {
-  bool containsAttributeValueEntry(dynamic value);
+  bool/*!*/ containsAttributeValueEntry(Object/*?*/value);
 
-  String getAttributeValueEntry(dynamic name);
+  String getAttributeValueEntry(Object/*?*/name);
 
-  void appendAttributeValue(dynamic value);
+  void appendAttributeValue(Object/*?*/value);
 
-  String removeAttributeValueEntry(dynamic name);
+  String removeAttributeValueEntry(Object/*?*/name);
 
   void removeAttributeValueAllEntries(List entries) {
     if (entries == null || !hasAttributeValue) return;
@@ -325,7 +325,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   final String delimiter;
   final Pattern delimiterPattern;
 
-  DOMAttributeValueList(dynamic values, this.delimiter, this.delimiterPattern) {
+  DOMAttributeValueList(Object/*?*/values, this.delimiter, this.delimiterPattern) {
     if (delimiter == null) throw ArgumentError.notNull('delimiter');
     if (delimiterPattern == null) {
       throw ArgumentError.notNull('delimiterPattern');
@@ -334,7 +334,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool get hasAttributeValue {
+  bool/*!*/ get hasAttributeValue {
     if (_values != null && _values.isNotEmpty) {
       if (_values.length == 1) {
         return _values[0].isNotEmpty;
@@ -357,7 +357,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   List<String> get asAttributeValues => hasAttributeValue ? _values : null;
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
     if (valuesList == null || valuesList.isEmpty) {
@@ -381,7 +381,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool equalsAttributeValue(dynamic value) {
+  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
     if (value == null) return !hasAttributeValue;
     if (!hasAttributeValue) return false;
     var valuesList = parseListOfStrings(value, delimiterPattern);
@@ -389,7 +389,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValue(dynamic value) {
+  bool/*!*/ containsAttributeValue(Object/*?*/value) {
     if (value == null) return false;
     if (!hasAttributeValue) return false;
     var valuesList = parseListOfStrings(value, delimiterPattern);
@@ -405,7 +405,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(dynamic entry) {
+  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
     if (entry == null) return false;
     if (!hasAttributeValue) return false;
     var entryStr = parseString(entry);
@@ -413,7 +413,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  String getAttributeValueEntry(dynamic entry) {
+  String getAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -422,7 +422,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  String removeAttributeValueEntry(dynamic entry) {
+  String removeAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -442,7 +442,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   final String delimiter;
   final Pattern delimiterPattern;
 
-  DOMAttributeValueSet(dynamic values, this.delimiter, this.delimiterPattern) {
+  DOMAttributeValueSet(Object/*?*/values, this.delimiter, this.delimiterPattern) {
     if (delimiter == null) throw ArgumentError.notNull('delimiter');
     if (delimiterPattern == null) {
       throw ArgumentError.notNull('delimiterPattern');
@@ -452,7 +452,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  bool get hasAttributeValue {
+  bool/*!*/ get hasAttributeValue {
     if (_values != null && _values.isNotEmpty) {
       if (_values.length == 1) {
         return _values.first.isNotEmpty;
@@ -476,7 +476,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
       hasAttributeValue ? _values.toList() : null;
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
     if (valuesList == null || valuesList.isEmpty) {
@@ -498,14 +498,14 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  bool equalsAttributeValue(dynamic value) {
+  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
     if (value == null) return !hasAttributeValue;
     var valuesSet = Set.from(parseListOfStrings(value, delimiterPattern));
     return isEqualsSet(_values ?? {}, valuesSet);
   }
 
   @override
-  bool containsAttributeValue(dynamic value) {
+  bool/*!*/ containsAttributeValue(Object/*?*/value) {
     if (!hasAttributeValue || value == null) {
       return null;
     }
@@ -514,7 +514,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(dynamic entry) {
+  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -523,7 +523,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  String getAttributeValueEntry(dynamic entry) {
+  String getAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -532,7 +532,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  String removeAttributeValueEntry(dynamic entry) {
+  String removeAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -550,14 +550,14 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
 class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   CSS _css;
 
-  DOMAttributeValueCSS(dynamic values) {
+  DOMAttributeValueCSS(Object/*?*/values) {
     _css = CSS(values);
   }
 
   CSS get css => _css;
 
   @override
-  bool get hasAttributeValue => _css.isNoEmpty;
+  bool/*!*/ get hasAttributeValue => _css.isNoEmpty;
 
   @override
   int get length => _css.length;
@@ -577,12 +577,12 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  void setAttributeValue(dynamic value) {
+  void setAttributeValue(Object/*?*/value) {
     _css = CSS(value);
   }
 
   @override
-  void appendAttributeValue(dynamic value) {
+  void appendAttributeValue(Object/*?*/value) {
     if (value == null) return;
 
     var entries = CSS(value).entries;
@@ -592,14 +592,14 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  bool equalsAttributeValue(dynamic value) {
+  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
     if (value == null) !hasAttributeValue;
     var css = CSS(value);
     return this.css == css;
   }
 
   @override
-  bool containsAttributeValue(dynamic value) {
+  bool/*!*/ containsAttributeValue(Object/*?*/value) {
     if (value == null) return false;
     var css = CSS(value);
     if (css.isEmpty) return false;
@@ -615,7 +615,7 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(dynamic entry) {
+  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -630,20 +630,20 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  String getAttributeValueEntry(dynamic entry) {
+  String getAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
 
     var cssEntry = CSSEntry.parse(entry);
-    var name = cssEntry != null ? cssEntry.name : entry.trim();
+    var name = cssEntry != null ? cssEntry.name : entry.toString().trim();
 
     var cssEntry2 = _css.getEntry(name);
     return cssEntry2.toString();
   }
 
   @override
-  String removeAttributeValueEntry(dynamic entry) {
+  String removeAttributeValueEntry(Object/*?*/entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }

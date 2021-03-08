@@ -14,19 +14,19 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  bool addChildToElement(T parent, T child) {
+  bool/*!*/ addChildToElement(T parent, T child) {
     _noDartHTML();
     return false;
   }
 
   @override
-  bool removeChildFromElement(T parent, T child) {
+  bool/*!*/ removeChildFromElement(T parent, T child) {
     _noDartHTML();
     return false;
   }
 
   @override
-  bool replaceChildElement(T parent, T child1, List<T> child2) {
+  bool/*!*/ replaceChildElement(T parent, T child1, List<T> child2) {
     _noDartHTML();
     return false;
   }
@@ -38,13 +38,13 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  bool isTextNode(T node) {
+  bool/*!*/ isTextNode(T node) {
     _noDartHTML();
     return null;
   }
 
   @override
-  bool containsNode(T parent, T node) => false;
+  bool/*!*/ containsNode(T parent, T node) => false;
 
   @override
   void setAttributes(DOMElement domElement, T element,
@@ -76,13 +76,13 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  List<T> addExternalElementToElement(T element, dynamic externalElement) {
+  List<T> addExternalElementToElement(T element, Object/*?*/ externalElement) {
     _noDartHTML();
     return null;
   }
 
   @override
-  bool canHandleExternalElement(externalElement) {
+  bool/*!*/ canHandleExternalElement(externalElement) {
     return false;
   }
 
@@ -133,6 +133,6 @@ class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
   }
 }
 
-DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
+DOMGeneratorDartHTML<T>/*!*/ createDOMGeneratorDartHTML<T>() {
   return DOMGeneratorDartHTMLUnsupported<T>();
 }

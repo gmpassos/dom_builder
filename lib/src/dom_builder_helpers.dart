@@ -16,7 +16,7 @@ final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
 /// [s] If is a [String] uses [delimiter] to split strings. If [s] is a [List] iterator over it and flatten sub lists.
 /// [delimiter] Pattern to split [s] to list.
 /// [trim] If [true] trims all strings.
-List<String> parseListOfStrings(dynamic s,
+List<String>/*?*/ parseListOfStrings(Object/*?*/s,
     [Pattern delimiter, bool trim = true]) {
   if (s == null) return null;
 
@@ -43,14 +43,14 @@ List<String> parseListOfStrings(dynamic s,
 
 final RegExp _REGEXP_HTML_TAG = RegExp(r'<\w+(?:>|\s)');
 
-bool possiblyWithHTML(String s) =>
+bool/*!*/ possiblyWithHTML(String s) =>
     s != null && s.contains('<') && s.contains(_REGEXP_HTML_TAG);
 
 final RegExp _REGEXP_DEPENDENT_TAG =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
 
 /// Parses a [html] to nodes.
-List<DOMNode> parseHTML(String html) {
+List<DOMNode>/*?*/ parseHTML(String html) {
   if (html == null) return null;
 
   var dependentTagMatch = _REGEXP_DEPENDENT_TAG.firstMatch(html);
@@ -109,7 +109,7 @@ List<DOMNode> parseHTML(String html) {
 }
 
 /// Returns a list of nodes from [html].
-List<DOMNode> $html<T extends DOMNode>(dynamic html) {
+List<DOMNode>/*?*/ $html<T extends DOMNode>(Object/*?*/ html) {
   if (html == null) return null;
   if (html is String) {
     return parseHTML(html);
@@ -117,7 +117,7 @@ List<DOMNode> $html<T extends DOMNode>(dynamic html) {
   throw ArgumentError("Can't parse type: ${html.runtimeType}");
 }
 
-bool _isTextTag(String tag) {
+bool/*!*/ _isTextTag(String tag) {
   tag = DOMElement.normalizeTag(tag);
   if (tag == null || tag.isEmpty) return false;
 
@@ -137,7 +137,7 @@ bool _isTextTag(String tag) {
   }
 }
 
-DOMElement $htmlRoot(dynamic html,
+DOMElement/*?*/ $htmlRoot(Object/*?*/ html,
     {String defaultRootTag, bool defaultTagDisplayInlineBlock}) {
   var nodes = $html(html);
   if (nodes == null || nodes.isEmpty) return null;
@@ -171,12 +171,12 @@ DOMElement $htmlRoot(dynamic html,
   }
 }
 
-typedef DOMNodeValidator = bool Function();
+typedef DOMNodeValidator = bool/*!*/ Function();
 
 final RegExp _PATTERN_HTML_ELEMENT_INIT = RegExp(r'\s*<\w+', multiLine: false);
 final RegExp _PATTERN_HTML_ELEMENT_END = RegExp(r'>\s*$', multiLine: false);
 
-bool isHTMLElement(String s) {
+bool/*!*/ isHTMLElement(String s) {
   if (s == null) return false;
   return s.startsWith(_PATTERN_HTML_ELEMENT_INIT) &&
       _PATTERN_HTML_ELEMENT_END.hasMatch(s);
@@ -184,19 +184,19 @@ bool isHTMLElement(String s) {
 
 final RegExp _PATTERN_HTML_ELEMENT = RegExp(r'<\w+.*?>');
 
-bool hasHTMLTag(String s) {
+bool/*!*/ hasHTMLTag(String s) {
   if (s == null) return false;
   return _PATTERN_HTML_ELEMENT.hasMatch(s);
 }
 
 final RegExp _PATTERN_HTML_ENTITY = RegExp(r'&(?:\w+|#\d+);');
 
-bool hasHTMLEntity(String s) {
+bool/*!*/ hasHTMLEntity(String s) {
   if (s == null) return false;
   return _PATTERN_HTML_ENTITY.hasMatch(s);
 }
 
-bool _isValid(DOMNodeValidator validate) {
+bool/*!*/ _isValid(DOMNodeValidator validate) {
   if (validate != null) {
     try {
       var valid = validate();
@@ -220,8 +220,8 @@ DOMElement $tag(String tag,
     style,
     Map<String, String> attributes,
     content,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -237,15 +237,15 @@ DOMElement $tag(String tag,
 }
 
 /// Creates a tag node from [html].
-T $tagHTML<T extends DOMElement>(dynamic html) =>
-    $html<DOMElement>(html).whereType<T>().first;
+T/*?*/ $tagHTML<T extends DOMElement>(Object/*?*/ html) =>
+    $html<DOMElement>(html).firstWhere((e) => e is T, orElse: () => null);
 
 /// Creates a list of nodes of same [tag].
-List<DOMElement> $tags<T>(String tag, Iterable<T> iterable,
+List<DOMElement>/*!*/ $tags<T>(String tag, Iterable<T> iterable,
     [ContentGenerator<T> elementGenerator]) {
-  if (iterable == null) return null;
 
   var elements = <DOMElement>[];
+  if (iterable == null) return elements;
 
   if (elementGenerator != null) {
     for (var entry in iterable) {
@@ -264,7 +264,7 @@ List<DOMElement> $tags<T>(String tag, Iterable<T> iterable,
 }
 
 /// Creates a `table` node.
-TABLEElement $table(
+TABLEElement/*?*/ $table(
     {DOMNodeValidator validate,
     id,
     classes,
@@ -277,8 +277,8 @@ TABLEElement $table(
     head,
     body,
     foot,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -320,15 +320,15 @@ TABLEElement $table(
 }
 
 /// Creates a `thread` node.
-THEADElement $thead(
+THEADElement/*?*/ $thead(
     {DOMNodeValidator validate,
     id,
     classes,
     style,
     Map<String, String> attributes,
     rows,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -344,7 +344,7 @@ THEADElement $thead(
 }
 
 /// Creates a `caption` node.
-CAPTIONElement $caption(
+CAPTIONElement/*?*/ $caption(
     {DOMNodeValidator validate,
     id,
     classes,
@@ -352,8 +352,8 @@ CAPTIONElement $caption(
     String captionSide,
     Map<String, String> attributes,
     content,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -373,15 +373,15 @@ CAPTIONElement $caption(
 }
 
 /// Creates a `tbody` node.
-TBODYElement $tbody(
+TBODYElement/*?*/ $tbody(
     {DOMNodeValidator validate,
     id,
     classes,
     style,
     Map<String, String> attributes,
     rows,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -397,15 +397,15 @@ TBODYElement $tbody(
 }
 
 /// Creates a `tfoot` node.
-TFOOTElement $tfoot(
+TFOOTElement/*?*/ $tfoot(
     {DOMNodeValidator validate,
     id,
     classes,
     style,
     Map<String, String> attributes,
     rows,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -421,15 +421,15 @@ TFOOTElement $tfoot(
 }
 
 /// Creates a `tr` node.
-TRowElement $tr(
+TRowElement/*?*/ $tr(
     {DOMNodeValidator validate,
     id,
     classes,
     style,
     Map<String, String> attributes,
     cells,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -445,7 +445,7 @@ TRowElement $tr(
 }
 
 /// Creates a `td` node.
-DOMElement $td(
+DOMElement/*?*/ $td(
         {DOMNodeValidator validate,
         id,
         classes,
@@ -455,8 +455,8 @@ DOMElement $td(
         int rowspan,
         String headers,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('td',
         validate: validate,
         id: id,
@@ -473,7 +473,7 @@ DOMElement $td(
         commented: commented);
 
 /// Creates a `th` node.
-DOMElement $th(
+DOMElement/*?*/ $th(
         {DOMNodeValidator validate,
         id,
         classes,
@@ -484,8 +484,8 @@ DOMElement $th(
         String abbr,
         String scope,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('td',
         validate: validate,
         id: id,
@@ -503,15 +503,15 @@ DOMElement $th(
         commented: commented);
 
 /// Creates a `div` node.
-DIVElement $div(
+DIVElement/*?*/ $div(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('div',
         validate: validate,
         id: id,
@@ -523,15 +523,15 @@ DIVElement $div(
         commented: commented);
 
 /// Creates a `div` node with `display: inline-block`.
-DIVElement $divInline(
+DIVElement/*?*/ $divInline(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('div',
         validate: validate,
         id: id,
@@ -544,11 +544,11 @@ DIVElement $divInline(
         commented: commented);
 
 /// Creates a `div` node from HTML.
-DIVElement $divHTML(dynamic html) => $tagHTML(html);
+DIVElement/*?*/ $divHTML(Object/*?*/ html) => $tagHTML(html);
 
 /// Creates a `div` that centers vertically and horizontally using `display` `table` and `table-cell`.
-DIVElement $divCenteredContent({
-  dynamic classes,
+DIVElement/*!*/ $divCenteredContent({
+  Object/*?*/ classes,
   String style,
   String width = '100%',
   String height = '100%',
@@ -558,7 +558,7 @@ DIVElement $divCenteredContent({
   int cellsPerRow,
   List cells,
   List rows,
-  dynamic content,
+  Object/*?*/ content,
 }) {
   var cssDimension = '';
   if (isNotEmptyString(width)) cssDimension += 'width: $width;';
@@ -640,7 +640,7 @@ DIVElement $divCenteredContent({
 /// Creates a `div` node with `display: inline-block`.
 DOMAsync $asyncContent({
   DOMNodeValidator validate,
-  final dynamic loading,
+  final Object/*?*/ loading,
   Future future,
   final Future Function() function,
 }) {
@@ -651,15 +651,15 @@ DOMAsync $asyncContent({
 }
 
 /// Creates a `span` node.
-DOMElement $span(
+DOMElement/*?*/ $span(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('span',
         validate: validate,
         id: id,
@@ -671,7 +671,7 @@ DOMElement $span(
         commented: commented);
 
 /// Creates a `button` node.
-DOMElement $button(
+DOMElement/*?*/ $button(
         {DOMNodeValidator validate,
         id,
         classes,
@@ -679,8 +679,8 @@ DOMElement $button(
         type,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('button',
         validate: validate,
         id: id,
@@ -695,7 +695,7 @@ DOMElement $button(
         commented: commented);
 
 /// Creates a `label` node.
-DOMElement $label(
+DOMElement/*?*/ $label(
         {DOMNodeValidator validate,
         id,
         forID,
@@ -703,8 +703,8 @@ DOMElement $label(
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('label',
         validate: validate,
         id: id,
@@ -716,7 +716,7 @@ DOMElement $label(
         commented: commented);
 
 /// Creates a `textarea` node.
-TEXTAREAElement $textarea(
+TEXTAREAElement/*?*/ $textarea(
     {DOMNodeValidator validate,
     id,
     name,
@@ -726,8 +726,8 @@ TEXTAREAElement $textarea(
     rows,
     Map<String, String> attributes,
     content,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -745,7 +745,7 @@ TEXTAREAElement $textarea(
 }
 
 /// Creates an `input` node.
-INPUTElement $input(
+INPUTElement/*?*/ $input(
     {DOMNodeValidator validate,
     id,
     name,
@@ -755,8 +755,8 @@ INPUTElement $input(
     placeholder,
     Map<String, String> attributes,
     value,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -774,7 +774,7 @@ INPUTElement $input(
 }
 
 /// Creates an `input` node of type `checkbox`.
-INPUTElement $checkbox(
+INPUTElement/*?*/ $checkbox(
     {DOMNodeValidator validate,
     id,
     name,
@@ -783,8 +783,8 @@ INPUTElement $checkbox(
     placeholder,
     Map<String, String> attributes,
     value,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -802,7 +802,7 @@ INPUTElement $checkbox(
 }
 
 /// Creates an `select` node.
-SELECTElement $select(
+SELECTElement/*?*/ $select(
     {DOMNodeValidator validate,
     id,
     name,
@@ -812,8 +812,8 @@ SELECTElement $select(
     options,
     selected,
     bool multiple,
-    bool hidden,
-    bool commented}) {
+    bool/*!*/ hidden = false,
+    bool/*!*/ commented = false}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -834,16 +834,16 @@ SELECTElement $select(
 }
 
 /// Creates an `option` node.
-OPTIONElement $option(
+OPTIONElement/*?*/ $option(
     {DOMNodeValidator validate,
     classes,
     style,
     Map<String, String> attributes,
-    dynamic value,
+    Object/*?*/ value,
     String label,
     bool selected,
-    dynamic text,
-    dynamic valueAndText}) {
+    Object/*?*/ text,
+    Object/*?*/ valueAndText}) {
   if (!_isValid(validate)) {
     return null;
   }
@@ -858,7 +858,7 @@ OPTIONElement $option(
 }
 
 /// Creates an `img` node.
-DOMElement $img(
+DOMElement/*?*/ $img(
         {DOMNodeValidator validate,
         id,
         classes,
@@ -867,8 +867,8 @@ DOMElement $img(
         String src,
         String title,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('img',
         validate: validate,
         id: id,
@@ -884,7 +884,7 @@ DOMElement $img(
         commented: commented);
 
 /// Creates an `a` node.
-DOMElement $a(
+DOMElement/*?*/ $a(
         {DOMNodeValidator validate,
         id,
         classes,
@@ -893,8 +893,8 @@ DOMElement $a(
         String href,
         String target,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('a',
         validate: validate,
         id: id,
@@ -910,14 +910,14 @@ DOMElement $a(
         commented: commented);
 
 /// Creates a `p` node.
-DOMElement $p(
+DOMElement/*?*/ $p(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('p',
         validate: validate,
         id: id,
@@ -928,7 +928,7 @@ DOMElement $p(
         commented: commented);
 
 /// Creates a `br` node.
-DOMElement $br({int amount, bool commented}) {
+DOMElement/*?*/ $br({int amount, bool/*!*/ commented = false}) {
   amount ??= 1;
 
   if (amount <= 0) {
@@ -957,14 +957,14 @@ String $nbsp([int length = 1]) {
 }
 
 /// Creates a `hr` node.
-DOMElement $hr(
+DOMElement/*?*/ $hr(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('hr',
         validate: validate,
         id: id,
@@ -975,15 +975,15 @@ DOMElement $hr(
         commented: commented);
 
 /// Creates a `form` node.
-DOMElement $form(
+DOMElement/*?*/ $form(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('form',
         validate: validate,
         id: id,
@@ -995,15 +995,15 @@ DOMElement $form(
         commented: commented);
 
 /// Creates a `nav` node.
-DOMElement $nav(
+DOMElement/*?*/ $nav(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('nav',
         validate: validate,
         id: id,
@@ -1015,15 +1015,15 @@ DOMElement $nav(
         commented: commented);
 
 /// Creates a `header` node.
-DOMElement $header(
+DOMElement/*?*/ $header(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('header',
         validate: validate,
         id: id,
@@ -1035,15 +1035,15 @@ DOMElement $header(
         commented: commented);
 
 /// Creates a `footer` node.
-DOMElement $footer(
+DOMElement/*?*/ $footer(
         {DOMNodeValidator validate,
         id,
         classes,
         style,
         Map<String, String> attributes,
         content,
-        bool hidden,
-        bool commented}) =>
+        bool/*!*/ hidden = false,
+        bool/*!*/ commented = false}) =>
     $tag('footer',
         validate: validate,
         id: id,
@@ -1057,7 +1057,7 @@ DOMElement $footer(
 /// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
 ///
 /// Note: A direct helper is only for tags that don't need parameters to be valid.
-bool isDOMBuilderDirectHelper(dynamic f) {
+bool/*!*/ isDOMBuilderDirectHelper(Object/*?*/ f) {
   if (f == null || !(f is Function)) return false;
 
   return identical(f, $br) ||
