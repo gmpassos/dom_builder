@@ -88,8 +88,8 @@ class Viewport {
 
 typedef NamedElementGenerator<T> = T Function(
     String name,
-    DOMGenerator<T> domGenerator,
-    DOMTreeMap<T> treeMap,
+    DOMGenerator<T/*!*/> domGenerator,
+    DOMTreeMap<T/*!*/> treeMap,
     DOMElement domParent,
     Object/*?*/ parent,
     String tag,

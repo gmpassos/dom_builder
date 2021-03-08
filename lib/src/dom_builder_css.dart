@@ -287,7 +287,7 @@ class CSS {
 
   CSSEntry<V> getEntry<V extends CSSValue>(String name) => _getEntry(name);
 
-  V get<V extends CSSValue>(String name) {
+  V get<V extends CSSValue/*!*/>(String name) {
     var entry = _getEntry(name);
     return entry != null ? entry.value : null;
   }
@@ -297,7 +297,7 @@ class CSS {
     return entry != null ? entry.valueAsString : null;
   }
 
-  List<CSSEntry> getPossibleEntries() {
+  List<CSSEntry/*!*/> getPossibleEntries() {
     var list = [
       _getEntry('color', sampleValue: CSSColor.parse('#000000')),
       _getEntry('background-color',
@@ -308,7 +308,7 @@ class CSS {
       _getEntry('opacity', sampleValue: CSSNumber(1)),
     ];
 
-    var map = LinkedHashMap<String, CSSEntry>.fromEntries(
+    var map = LinkedHashMap<String, CSSEntry/*!*/>.fromEntries(
         list.where((e) => e != null).map((e) => MapEntry(e.name, e)));
 
     for (var entry in _entries.values) {
@@ -323,13 +323,13 @@ class CSS {
 
   final LinkedHashMap<String, CSSEntry> _entries = LinkedHashMap();
 
-  CSSEntry<V> _getEntry<V extends CSSValue>(String name,
+  CSSEntry<V/*!*/> _getEntry<V extends CSSValue>(String name,
       {V defaultValue, V sampleValue}) {
     var entry = _entries[name];
     if (entry != null) return entry;
 
     if (defaultValue != null || sampleValue != null) {
-      return CSSEntry<V>(name, defaultValue, sampleValue);
+      return CSSEntry<V/*!*/>(name, defaultValue, sampleValue);
     }
 
     return null;
@@ -421,7 +421,7 @@ class CSS {
   void operator []=(String key, value) => put(key, value);
 }
 
-class CSSEntry<V extends CSSValue> {
+class CSSEntry<V extends CSSValue/*!*/> {
   static String normalizeName(String name) {
     if (name == null) return null;
     return name.trim().toLowerCase();
@@ -442,7 +442,7 @@ class CSSEntry<V extends CSSValue> {
 
   CSSEntry._(this.name, this.value, [this.sampleValue, this._comment]);
 
-  static CSSEntry<V>/*?*/ from<V extends CSSValue>(String name, Object/*?*/value, [String comment]) {
+  static CSSEntry<V>/*?*/ from<V extends CSSValue/*!*/>(String name, Object/*?*/value, [String comment]) {
     if (value == null) return null;
 
     if (value is CSSEntry) {
@@ -1919,7 +1919,7 @@ RegExpDialect _REGEXP_BACKGROUND_DIALECT = RegExpDialect({
 class CSSBackgroundGradient {
   final String type;
 
-  final List<String> parameters;
+  final List<String/*!*/> parameters;
 
   CSSBackgroundGradient(this.type, this.parameters);
 

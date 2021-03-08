@@ -123,7 +123,7 @@ class TestElem extends TestNode {
     return copy;
   }
 
-  final List<TestNode> _nodes = [];
+  final List<TestNode/*!*/> _nodes = [];
 
   List<TestNode> get nodes => List.unmodifiable(_nodes);
 
@@ -184,7 +184,7 @@ class TestElem extends TestNode {
     _nodes.clear();
   }
 
-  final Map<String, String> attributes = {};
+  final Map<String, String/*!*/> attributes = {};
 
   String get asHTML => outerHTML();
 
@@ -222,7 +222,7 @@ class TestElem extends TestNode {
   }
 }
 
-class TestGenerator extends DOMGenerator<TestNode> {
+class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   @override
   TestNode getNodeParent(TestNode node) {
     return node.parent;
@@ -256,7 +256,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  Map<String, String> getElementAttributes(TestNode element) {
+  Map<String, String/*!*/> getElementAttributes(TestNode element) {
     if (element is TestElem) {
       return Map.fromEntries(element.attributes.entries);
     }

@@ -8,7 +8,7 @@ import 'dom_builder_treemap.dart';
 /// Dummy [DOMGeneratorDartHTML] for platforms that doesn't supports `dart:html`.
 ///
 /// Useful when [DOMGenerator.dartHTML] is called in the wrong platform.
-class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
+class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T/*!*/> {
   void _noDartHTML() {
     throw UnsupportedError('DOMGeneratorDartHTML: dart:html not loaded');
   }
@@ -26,7 +26,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  bool/*!*/ replaceChildElement(T parent, T child1, List<T> child2) {
+  bool/*!*/ replaceChildElement(T parent, T child1, List<T/*!*/> child2) {
     _noDartHTML();
     return false;
   }
@@ -94,7 +94,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
 
   @override
   DOMNodeRuntime<T> createDOMNodeRuntime(
-      DOMTreeMap<T> treeMap, DOMNode domNode, T node) {
+      DOMTreeMap<T/*!*/> treeMap, DOMNode domNode, T node) {
     _noDartHTML();
     return null;
   }
@@ -106,7 +106,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 }
 
-class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
+class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T/*!*/> {
   void _noDartHTML() {
     throw UnsupportedError('DOMActionExecutorDartHTML: dart:html not loaded');
   }
@@ -133,6 +133,6 @@ class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
   }
 }
 
-DOMGeneratorDartHTML<T>/*!*/ createDOMGeneratorDartHTML<T>() {
+DOMGeneratorDartHTML<T/*!*/>/*!*/ createDOMGeneratorDartHTML<T>() {
   return DOMGeneratorDartHTMLUnsupported<T>();
 }

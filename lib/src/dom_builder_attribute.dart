@@ -180,7 +180,7 @@ class DOMAttribute implements WithValue {
 abstract class DOMAttributeValue {
   String get asAttributeValue;
 
-  List<String> get asAttributeValues;
+  List<String/*!*/> get asAttributeValues;
 
   /// Returns the attribute value.
   ///
@@ -257,7 +257,7 @@ class DOMAttributeValueString extends DOMAttributeValue {
   String get asAttributeValue => hasAttributeValue ? _value.toString() : null;
 
   @override
-  List<String> get asAttributeValues =>
+  List<String/*!*/> get asAttributeValues =>
       hasAttributeValue ? [asAttributeValue] : null;
 
   @override
@@ -321,7 +321,7 @@ abstract class DOMAttributeValueCollection extends DOMAttributeValue {
 
 /// A [DOMAttributeValue] of type [List].
 class DOMAttributeValueList extends DOMAttributeValueCollection {
-  List<String> _values;
+  List<String/*!*/> _values;
   final String delimiter;
   final Pattern delimiterPattern;
 

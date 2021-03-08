@@ -4,11 +4,11 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'dom_builder_generator.dart';
 
 abstract class DOMActionExecutor<T> {
-  DOMGenerator<T> _domGenerator;
+  DOMGenerator<T>/*?*/ _domGenerator;
 
   DOMGenerator<T> get domGenerator => _domGenerator;
 
-  set domGenerator(DOMGenerator<T> generator) {
+  set domGenerator(DOMGenerator<T>/*!*/ generator) {
     if (generator == null) throw ArgumentError.notNull('generator');
     _domGenerator = generator;
   }
@@ -26,7 +26,7 @@ abstract class DOMActionExecutor<T> {
   }
 
   T selectByID(
-      String id, T target, T self, DOMTreeMap treeMap, DOMContext context) {
+      String/*!*/ id, T target, T self, DOMTreeMap treeMap, DOMContext context) {
     throw UnimplementedError();
   }
 
@@ -101,7 +101,7 @@ abstract class DOMActionExecutor<T> {
     throw UnimplementedError();
   }
 
-  DOMAction<T> parse(String actionLine) {
+  DOMAction<T/*!*/>/*?*/ parse(String actionLine) {
     return DOMAction.parse(this, actionLine);
   }
 }
@@ -136,7 +136,7 @@ abstract class DOMAction<T> {
   static final RegExp _REGEXP_CALL_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$call_capture\.?');
 
-  static DOMAction<T> parse<T>(
+  static DOMAction<T>/*?*/ parse<T>(
       DOMActionExecutor<T> executor, String actionLine) {
     if (actionLine == null) return null;
     actionLine = actionLine.trim();
@@ -144,14 +144,14 @@ abstract class DOMAction<T> {
 
     var matches = _REGEXP_ACTION_CAPTURE.allMatches(actionLine);
 
-    var actions = <DOMAction<T>>[];
+    List<DOMAction<T>/*!*/>/*!*/ actions = <DOMAction<T>/*!*/>[];
 
     DOMAction<T> rootAction;
     DOMAction<T> lastAction;
 
     var endPos = 0;
     for (var match in matches) {
-      var part = match.group(0);
+      var part = match.group(0)/*!*/;
 
       if (match.start > endPos) {
         var prevChar = actionLine.substring(endPos, match.start).trim();
@@ -229,7 +229,7 @@ abstract class DOMAction<T> {
     return parameters;
   }
 
-  final DOMActionExecutor<T> executor;
+  final DOMActionExecutor<T/*!*/> executor;
 
   DOMAction<T> next;
 

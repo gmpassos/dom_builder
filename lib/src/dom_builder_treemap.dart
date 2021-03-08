@@ -229,11 +229,11 @@ class DOMTreeMap<T> {
   }
 
   /// Duplicates [element] in the parent children list. Also performs on mapped [DOMNode].
-  DOMNodeMapping<T> duplicateByElement(T element) =>
+  DOMNodeMapping<T/*!*/> duplicateByElement(T element) =>
       duplicateByDOMNode(getMappedDOMNode(element));
 
   /// Duplicates [domNode] in the parent children list. Also performs on mapped element.
-  DOMNodeMapping<T> duplicateByDOMNode(DOMNode domNode) {
+  DOMNodeMapping<T/*!*/> duplicateByDOMNode(DOMNode domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
     var nodeRuntime = domNode.runtime;
@@ -268,11 +268,11 @@ class DOMTreeMap<T> {
   }
 
   /// Removes [element] from parent. Also performs on mapped [DOMNode].
-  DOMNodeMapping<T> removeByElement(T element) =>
+  DOMNodeMapping<T/*!*/> removeByElement(T element) =>
       removeByDOMNode(getMappedDOMNode(element));
 
   /// Removes [domNode] from parent. Also performs on mapped element.
-  DOMNodeMapping<T> removeByDOMNode(DOMNode domNode) {
+  DOMNodeMapping<T/*!*/> removeByDOMNode(DOMNode domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
     var nodeRuntime = domNode.runtime;
@@ -286,7 +286,7 @@ class DOMTreeMap<T> {
     return DOMNodeMapping(this, domNode, nodeRuntime.node);
   }
 
-  DOMNodeMapping<T> mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
+  DOMNodeMapping<T/*!*/> mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
       {bool/*!*/ onlyCompatibles = false}) {
     onlyCompatibles ??= false;
 
@@ -322,7 +322,7 @@ class DOMTreeMap<T> {
     return null;
   }
 
-  DOMNodeMapping<T> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
+  DOMNodeMapping<T/*!*/> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
       {bool/*!*/ onlyCompatibles = false}) {
     if (domNode1 == null || domNode2 == null) {
       return null;

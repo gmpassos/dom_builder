@@ -245,7 +245,7 @@ class DOMNode implements AsDOMNode {
       : DOMNodeRuntimeDummy(null, this, null);
 
   /// Same as [runtime], but casts to [DOMNodeRuntime<T>].
-  DOMNodeRuntime<T> getRuntime<T>() => runtime as DOMNodeRuntime<T>;
+  DOMNodeRuntime<T/*!*/> getRuntime<T>() => runtime as DOMNodeRuntime<T/*!*/>;
 
   /// Returns [runtime.node].
   dynamic get runtimeNode =>
@@ -351,7 +351,7 @@ class DOMNode implements AsDOMNode {
   ///
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
-  T buildDOM<T>({DOMGenerator<T> generator, T parent, DOMContext<T> context}) {
+  T buildDOM<T>({DOMGenerator<T/*!*/> generator, T parent, DOMContext<T> context}) {
     if (isCommented) return null;
 
     generator ??= defaultDomGenerator;
@@ -874,7 +874,7 @@ class DOMNode implements AsDOMNode {
     return selectWhere((n) => n == node);
   }
 
-  T nodeWhere<T extends DOMNode>(Object/*?*/ selector) {
+  T nodeWhere<T extends DOMNode/*!*/>(Object/*?*/ selector) {
     if (selector == null || isEmpty || _content == null) return null;
     var nodeSelector = asNodeSelector(selector);
     return _content.firstWhere(nodeSelector, orElse: () => null);
@@ -1721,7 +1721,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       : _attributes.map((key, value) =>
           MapEntry(key, value.isCollection ? value.values : value.value));
 
-  Map<String, String> get attributesAsString => hasEmptyAttributes
+  Map<String, String/*!*/> get attributesAsString => hasEmptyAttributes
       ? {}
       : _attributes.map((key, value) => MapEntry(key, value.value));
 
@@ -2274,68 +2274,68 @@ class DOMElement extends DOMNode implements AsDOMElement {
         attributes: attributes, commented: isCommented, content: copyContent());
   }
 
-  EventStream<DOMMouseEvent> _onClick;
+  EventStream<DOMMouseEvent/*!*/> _onClick;
 
   /// Returns [true] if has any [onClick] listener registered.
   bool get hasOnClickListener => _onClick != null;
 
   /// Event handler for `click` events.
-  EventStream<DOMMouseEvent> get onClick {
+  EventStream<DOMMouseEvent/*!*/> get onClick {
     _onClick ??= EventStream();
     return _onClick;
   }
 
-  EventStream<DOMEvent> _onChange;
+  EventStream<DOMEvent/*!*/> _onChange;
 
   /// Returns [true] if has any [onChange] listener registered.
   bool get hasOnChangeListener => _onChange != null;
 
   /// Event handler for `change` events.
-  EventStream<DOMEvent> get onChange {
+  EventStream<DOMEvent/*!*/> get onChange {
     _onChange ??= EventStream();
     return _onChange;
   }
 
-  EventStream<DOMMouseEvent> _onMouseOver;
+  EventStream<DOMMouseEvent/*!*/> _onMouseOver;
 
   /// Returns [true] if has any [onMouseOver] listener registered.
   bool get hasOnMouseOverListener => _onMouseOver != null;
 
   /// Event handler for click `mouseOver` events.
-  EventStream<DOMMouseEvent> get onMouseOver {
+  EventStream<DOMMouseEvent/*!*/> get onMouseOver {
     _onMouseOver ??= EventStream();
     return _onMouseOver;
   }
 
-  EventStream<DOMMouseEvent> _onMouseOut;
+  EventStream<DOMMouseEvent/*!*/> _onMouseOut;
 
   /// Returns [true] if has any [onMouseOut] listener registered.
   bool get hasOnMouseOutListener => _onMouseOut != null;
 
   /// Event handler for click `mouseOut` events.
-  EventStream<DOMMouseEvent> get onMouseOut {
+  EventStream<DOMMouseEvent/*!*/> get onMouseOut {
     _onMouseOut ??= EventStream();
     return _onMouseOut;
   }
 
-  EventStream<DOMEvent> _onLoad;
+  EventStream<DOMEvent/*!*/> _onLoad;
 
   /// Returns [true] if has any [onLoad] listener registered.
   bool get hasOnLoadListener => _onLoad != null;
 
   /// Event handler for `load` events.
-  EventStream<DOMEvent> get onLoad {
+  EventStream<DOMEvent/*!*/> get onLoad {
     _onLoad ??= EventStream();
     return _onLoad;
   }
 
-  EventStream<DOMEvent> _onError;
+  EventStream<DOMEvent/*!*/> _onError;
 
   /// Returns [true] if has any [onError] listener registered.
   bool get hasOnErrorListener => _onError != null;
 
   /// Event handler for `load` events.
-  EventStream<DOMEvent> get onError {
+  EventStream<DOMEvent/*!*/> get onError {
     _onError ??= EventStream();
     return _onError;
   }
@@ -2678,7 +2678,7 @@ class SELECTElement extends DOMElement {
 //
 
 class OPTIONElement extends DOMElement implements WithValue {
-  static List<OPTIONElement> toOptions(Object/*?*/ options) {
+  static List<OPTIONElement/*!*/> toOptions(Object/*?*/ options) {
     if (options == null) return [];
     if (options is OPTIONElement) return [options];
 

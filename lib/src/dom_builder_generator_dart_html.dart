@@ -11,7 +11,7 @@ import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
 /// [DOMGenerator] based in `dart:html`.
-class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
+class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   DOMGeneratorDartHTMLImpl() {
     domActionExecutor = DOMActionExecutorDartHTML();
   }
@@ -104,7 +104,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     return false;
   }
 
-  String _toAttributesSignature(Map<String, String> attributes) {
+  String _toAttributesSignature(Map<String, String/*!*/> attributes) {
     var entries = attributes
         .map((key, value) => MapEntry(key.toLowerCase(), value))
         .entries
@@ -168,7 +168,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  bool/*!*/ replaceChildElement(Node parent, Node child1, List<Node> child2) {
+  bool/*!*/ replaceChildElement(Node parent, Node child1, List<Node/*!*/> child2) {
     if (parent is Element) {
       var idx = parent.nodes.indexOf(child1);
       if (idx >= 0) {
@@ -278,8 +278,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
-      Node element, DOMContext<Node> context) {
+  void registerEventListeners(DOMTreeMap<Node/*!*/> treeMap, DOMElement domElement,
+      Node element, DOMContext<Node/*!*/> context) {
     if (element is Element) {
       if (domElement.hasOnClickListener) {
         element.onClick.listen((event) {
@@ -326,7 +326,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<Node> treeMap, event) {
+  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<Node/*!*/> treeMap, event) {
     if (event is MouseEvent) {
       Node eventTarget = event.target;
       var domTarget = treeMap.getMappedDOMNode(eventTarget);
@@ -352,7 +352,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  DOMEvent createDOMEvent(DOMTreeMap<Node> treeMap, event) {
+  DOMEvent createDOMEvent(DOMTreeMap<Node/*!*/> treeMap, event) {
     if (event is Event) {
       Node eventTarget = event.target;
       var domTarget = treeMap.getMappedDOMNode(eventTarget);
@@ -381,13 +381,13 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  DOMNodeRuntime<Node> createDOMNodeRuntime(
-      DOMTreeMap<Node> treeMap, DOMNode domNode, Node node) {
+  DOMNodeRuntime<Node/*!*/> createDOMNodeRuntime(
+      DOMTreeMap<Node/*!*/> treeMap, DOMNode domNode, Node node) {
     return DOMNodeRuntimeDartHTMLImpl(treeMap, domNode, node);
   }
 }
 
-class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
+class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
   DOMNodeRuntimeDartHTMLImpl(
       DOMTreeMap<Node> treeMap, DOMNode domNode, Node node)
       : super(treeMap, domNode, node);
@@ -766,7 +766,7 @@ bool/*!*/ _isElementWithSRC(Element element) {
   return false;
 }
 
-class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
+class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   @override
   Node selectByID(String id, Node target, Node self, DOMTreeMap treeMap,
       DOMContext context) {

@@ -17,7 +17,7 @@ abstract class DOMNodeRuntime<T> {
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
-  DOMNodeRuntime<T/*!*/> get parentRuntime {
+  DOMNodeRuntime<T/*!*/>/*?*/ get parentRuntime {
     var domNodeParent = domNode != null ? domNode.parent : null;
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
@@ -276,7 +276,7 @@ abstract class DOMNodeRuntime<T> {
   T copy();
 
   T duplicate() {
-    var parentRuntime = this.parentRuntime;
+    DOMNodeRuntime<T/*!*/>/*?*/ parentRuntime = this.parentRuntime;
     var idx = indexInParent;
     if (idx < 0) return null;
 
@@ -308,7 +308,7 @@ abstract class DOMNodeRuntime<T> {
   }
 }
 
-class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
+class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T/*!*/> {
   DOMNodeRuntimeDummy(DOMTreeMap<T> treeMap, DOMNode domNode, T node)
       : super(treeMap, domNode, node);
 

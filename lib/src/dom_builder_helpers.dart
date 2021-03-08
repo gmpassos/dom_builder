@@ -16,11 +16,11 @@ final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
 /// [s] If is a [String] uses [delimiter] to split strings. If [s] is a [List] iterator over it and flatten sub lists.
 /// [delimiter] Pattern to split [s] to list.
 /// [trim] If [true] trims all strings.
-List<String>/*?*/ parseListOfStrings(Object/*?*/s,
+List<String/*!*/>/*?*/ parseListOfStrings(Object/*?*/s,
     [Pattern delimiter, bool trim = true]) {
   if (s == null) return null;
 
-  List<String> list;
+  List<String/*!*/> list;
 
   if (s is List) {
     list = s.map(parseString).toList();
@@ -50,7 +50,7 @@ final RegExp _REGEXP_DEPENDENT_TAG =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
 
 /// Parses a [html] to nodes.
-List<DOMNode>/*?*/ parseHTML(String html) {
+List<DOMNode/*!*/>/*?*/ parseHTML(String html) {
   if (html == null) return null;
 
   var dependentTagMatch = _REGEXP_DEPENDENT_TAG.firstMatch(html);
@@ -218,7 +218,7 @@ DOMElement $tag(String tag,
     id,
     classes,
     style,
-    Map<String, String> attributes,
+    Map<String, String/*!*/> attributes,
     content,
     bool/*!*/ hidden = false,
     bool/*!*/ commented = false}) {
@@ -237,14 +237,14 @@ DOMElement $tag(String tag,
 }
 
 /// Creates a tag node from [html].
-T/*?*/ $tagHTML<T extends DOMElement>(Object/*?*/ html) =>
+T/*?*/ $tagHTML<T extends DOMElement/*!*/>(Object/*?*/ html) =>
     $html<DOMElement>(html).firstWhere((e) => e is T, orElse: () => null);
 
 /// Creates a list of nodes of same [tag].
-List<DOMElement>/*!*/ $tags<T>(String tag, Iterable<T> iterable,
+List<DOMElement/*!*/>/*!*/ $tags<T>(String tag, Iterable<T> iterable,
     [ContentGenerator<T> elementGenerator]) {
 
-  var elements = <DOMElement>[];
+  List<DOMElement/*!*/> elements = <DOMElement/*!*/>[];
   if (iterable == null) return elements;
 
   if (elementGenerator != null) {
@@ -936,7 +936,7 @@ DOMElement/*?*/ $br({int amount, bool/*!*/ commented = false}) {
   } else if (amount == 1) {
     return $tag('br', commented: commented);
   } else {
-    var list = <DOMElement>[];
+    List<DOMElement/*!*/> list = <DOMElement/*!*/>[];
     while (list.length < amount) {
       list.add($tag('br', commented: commented));
     }
