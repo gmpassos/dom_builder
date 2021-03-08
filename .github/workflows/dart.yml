@@ -15,12 +15,17 @@ jobs:
       image:  google/dart:latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Install dependencies
-      run: pub get
-    - name: dartfmt
-      run: dartfmt -n --set-exit-if-changed .
-    - name: dartanalyzer
-      run: dartanalyzer --fatal-infos --fatal-warnings .
-    - name: Run tests
-      run: pub run test
+      - uses: actions/checkout@v2
+      - name: Dart version
+        run: dart --version
+      - name: Install dependencies
+        run: dart pub get
+      - name: dart format
+        run: dart format -o none --set-exit-if-changed .
+      #- name: dart analyze
+      #  run: dart analyze --fatal-infos --fatal-warnings .
+      - name: Run tests
+        run: dart test
+      - name: dart pub publish --dry-run
+        run: dart pub publish --dry-run
+

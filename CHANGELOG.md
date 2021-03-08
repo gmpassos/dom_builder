@@ -1,3 +1,12 @@
+## 1.0.26
+
+- Improved `boolean` attributes: 'selected', 'multiple', 'inert'.
+- Help `$divCenteredContent`: added `style` and `class`.
+- New helper: `$checkbox`.
+- Ensure that all element classes and helpers
+  have the global attribute `hidden`.
+- swiss_knife: ^2.5.26
+
 ## 1.0.25
 
 - `DOMElement`: added event handler `onLoad` and `onError`.

@@ -120,7 +120,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   Text appendElementText(Node node, String text) {
     if (text == null || text.isEmpty) return null;
     var textNode = Text(text);
-    node.nodes.add(textNode);
+    node.append(textNode);
     return textNode;
   }
 
@@ -200,14 +200,55 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   @override
   void setAttribute(Node node, String attrName, String attrVal) {
     if (node is Element) {
-      if (node is OptionElement && attrName == 'selected') {
-        var sel = (attrVal ?? '').toLowerCase() == 'true';
-        node.selected = sel;
-      } else if (attrVal == null) {
-        node.removeAttribute(attrName);
-      } else {
-        node.setAttribute(attrName, attrVal);
+      switch (attrName) {
+        case 'selected':
+          {
+            if (node is OptionElement) {
+              node.selected = _parseAttributeBoolValue(attrVal);
+            } else {
+              node.setAttribute(attrName, attrVal);
+            }
+            break;
+          }
+        case 'multiple':
+          {
+            if (node is SelectElement) {
+              node.multiple = _parseAttributeBoolValue(attrVal);
+            } else if (node is InputElement) {
+              node.multiple = _parseAttributeBoolValue(attrVal);
+            } else {
+              node.setAttribute(attrName, attrVal);
+            }
+            break;
+          }
+        case 'hidden':
+          {
+            node.hidden = _parseAttributeBoolValue(attrVal);
+            break;
+          }
+        case 'inert':
+          {
+            node.inert = _parseAttributeBoolValue(attrVal);
+            break;
+          }
+        default:
+          {
+            if (attrVal == null) {
+              node.removeAttribute(attrName);
+            } else {
+              node.setAttribute(attrName, attrVal);
+            }
+            break;
+          }
       }
+    }
+  }
+
+  bool _parseAttributeBoolValue(String attrVal) {
+    if (attrVal == null) {
+      return true;
+    } else {
+      return attrVal.toLowerCase() == 'true';
     }
   }
 
@@ -558,7 +599,7 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
         return true;
       } else if (other is Text) {
         other.remove();
-        nodeAsElement.nodes.add(other);
+        nodeAsElement.append(other);
         return true;
       }
     }
@@ -629,6 +670,7 @@ bool _setElementHREF(Element element, String href) {
     element.href = href;
     return true;
   } else if (element is AnchorElement) {
+    // ignore: unsafe_html
     element.href = href;
     return true;
   } else if (element is BaseElement) {
@@ -672,9 +714,11 @@ bool _setElementSRC(Element element, String src) {
   if (element == null) return false;
 
   if (element is ImageElement) {
+    // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is ScriptElement) {
+    // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is InputElement) {
@@ -684,9 +728,11 @@ bool _setElementSRC(Element element, String src) {
     element.src = src;
     return true;
   } else if (element is EmbedElement) {
+    // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is IFrameElement) {
+    // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is SourceElement) {

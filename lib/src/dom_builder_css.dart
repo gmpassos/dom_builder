@@ -431,16 +431,16 @@ class CSSEntry<V extends CSSValue> {
 
   final String name;
 
-  V _value;
+  V value;
 
-  V _sampleValue;
+  V sampleValue;
 
   String _comment;
 
   CSSEntry(String name, V value, [V sampleValue, String comment])
       : this._(normalizeName(name), value, sampleValue, comment);
 
-  CSSEntry._(this.name, this._value, [this._sampleValue, this._comment]);
+  CSSEntry._(this.name, this.value, [this.sampleValue, this._comment]);
 
   factory CSSEntry.from(String name, dynamic value, [String comment]) {
     if (value == null) return null;
@@ -491,27 +491,15 @@ class CSSEntry<V extends CSSValue> {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      (other is CSSEntry && name == other.name && _value == other._value);
+      (other is CSSEntry && name == other.name && value == other.value);
 
   @override
-  int get hashCode => name.hashCode ^ _value.hashCode;
+  int get hashCode => name.hashCode ^ value.hashCode;
 
-  V get value => _value;
-
-  set value(V value) {
-    _value = value;
-  }
-
-  String get valueAsString => _value != null ? _value.toString() : '';
-
-  V get sampleValue => _sampleValue;
-
-  set sampleValue(V value) {
-    _sampleValue = value;
-  }
+  String get valueAsString => value != null ? value.toString() : '';
 
   String get sampleValueAsString =>
-      _sampleValue != null ? _sampleValue.toString() : '';
+      sampleValue != null ? sampleValue.toString() : '';
 
   @override
   String toString([bool withDelimiter, DOMContext domContext]) {
@@ -1736,13 +1724,13 @@ class CSSBorder extends CSSValue {
       multiLine: false,
       caseSensitive: false);
 
-  CSSLength _size;
+  CSSLength size;
 
   CSSBorderStyle _style;
 
-  CSSColor _color;
+  CSSColor color;
 
-  CSSBorder(this._size, CSSBorderStyle style, [this._color])
+  CSSBorder(this.size, CSSBorderStyle style, [this.color])
       : _style = style ?? CSSBorderStyle.none;
 
   factory CSSBorder.from(dynamic value) {
@@ -1772,27 +1760,15 @@ class CSSBorder extends CSSValue {
     return CSSBorder(size, style, color);
   }
 
-  CSSLength get size => _size;
-
-  set size(CSSLength value) {
-    _size = value;
-  }
-
   CSSBorderStyle get style => _style;
 
   set style(CSSBorderStyle value) {
     _style = value ?? CSSBorderStyle.solid;
   }
 
-  CSSColor get color => _color;
-
-  set color(CSSColor value) {
-    _color = value;
-  }
-
   @override
   String toString([DOMContext domContext]) {
-    return '${_size != null ? '$_size ' : ''}${getCSSBorderStyleName(_style)}${_color != null ? ' $color' : ''}';
+    return '${size != null ? '$size ' : ''}${getCSSBorderStyleName(_style)}${color != null ? ' $color' : ''}';
   }
 }
 
@@ -2152,17 +2128,17 @@ class CSSBackground extends CSSValue {
   static final RegExp PATTERN_IMAGE_CAPTURE =
       _REGEXP_BACKGROUND_DIALECT.getPattern(r'(?:^\s*|\s+)($image)');
 
-  CSSColor _color;
+  CSSColor color;
   List<CSSBackgroundImage> _images;
 
-  CSSBackground.color(CSSColor color) : _color = color;
+  CSSBackground.color(CSSColor color) : color = color;
 
   CSSBackground.image(CSSBackgroundImage image, [CSSColor color])
-      : _color = color,
+      : color = color,
         _images = [image];
 
   CSSBackground.images(List<CSSBackgroundImage> images, [CSSColor color])
-      : _color = color,
+      : color = color,
         _images = images;
 
   CSSBackground.url(CSSURL url,
@@ -2173,7 +2149,7 @@ class CSSBackground extends CSSValue {
       String position,
       String size,
       CSSColor color})
-      : _color = color,
+      : color = color,
         _images = [
           CSSBackgroundImage.url(url,
               origin: origin,
@@ -2193,7 +2169,7 @@ class CSSBackground extends CSSValue {
     String position,
     String size,
     CSSColor color,
-  })  : _color = color,
+  })  : color = color,
         _images = [
           CSSBackgroundImage.gradient(gradient,
               origin: origin,
@@ -2260,12 +2236,6 @@ class CSSBackground extends CSSValue {
     return null;
   }
 
-  CSSColor get color => _color;
-
-  set color(CSSColor value) {
-    _color = value;
-  }
-
   List<CSSBackgroundImage> get images => _images.toList();
 
   bool get hasImages => _images != null && _images.isNotEmpty;
@@ -2278,18 +2248,18 @@ class CSSBackground extends CSSValue {
 
   @override
   String toString([DOMContext domContext]) {
-    var hasColor = _color != null;
+    var hasColor = color != null;
     var hasImages = isNotEmptyObject(_images);
 
     if (hasImages) {
       var s = _images.map((e) => e.toString(domContext)).join(', ');
       if (hasColor) {
         s += ' ';
-        s += _color.toString(domContext);
+        s += color.toString(domContext);
       }
       return s;
     } else if (hasColor) {
-      return _color.toString(domContext);
+      return color.toString(domContext);
     }
 
     return '';

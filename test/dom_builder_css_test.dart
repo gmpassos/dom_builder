@@ -529,6 +529,16 @@ void main() {
       var css3 = CSS('height: calc(100%-20px)');
       print(css3);
       expect(css3.style, equals('height: calc(100% - 20px)'));
+
+      var css4 =
+          CSS('min-height: 62p; width: calc(100% - 156px); margin-left: 10px;');
+      print(css4);
+      expect(
+          css4.style,
+          equals(
+              'min-height: 62px; width: calc(100% - 156px); margin-left: 10px'));
+
+      //
     });
 
     test('CSS multiple', () {

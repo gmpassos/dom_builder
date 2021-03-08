@@ -12,7 +12,9 @@ class DOMAttribute implements WithValue {
   static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {
     'checked',
     'hidden',
-    'selected'
+    'selected',
+    'multiple',
+    'inert'
   };
   static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
 

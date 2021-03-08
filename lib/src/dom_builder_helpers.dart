@@ -41,6 +41,11 @@ List<String> parseListOfStrings(dynamic s,
   return list;
 }
 
+final RegExp _REGEXP_HTML_TAG = RegExp(r'<\w+(?:>|\s)');
+
+bool possiblyWithHTML(String s) =>
+    s != null && s.contains('<') && s.contains(_REGEXP_HTML_TAG);
+
 final RegExp _REGEXP_DEPENDENT_TAG =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
 
@@ -109,7 +114,7 @@ List<DOMNode> $html<T extends DOMNode>(dynamic html) {
   if (html is String) {
     return parseHTML(html);
   }
-  throw ArgumentError("Ca't parse type: ${html.runtimeType}");
+  throw ArgumentError("Can't parse type: ${html.runtimeType}");
 }
 
 bool _isTextTag(String tag) {
@@ -215,6 +220,7 @@ DOMElement $tag(String tag,
     style,
     Map<String, String> attributes,
     content,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -226,6 +232,7 @@ DOMElement $tag(String tag,
       style: style,
       attributes: attributes,
       content: content,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -270,6 +277,7 @@ TABLEElement $table(
     head,
     body,
     foot,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -284,6 +292,7 @@ TABLEElement $table(
       head: head,
       body: body,
       foot: foot,
+      hidden: hidden,
       commented: commented);
 
   if (thsStyle != null) {
@@ -318,6 +327,7 @@ THEADElement $thead(
     style,
     Map<String, String> attributes,
     rows,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -329,6 +339,7 @@ THEADElement $thead(
       style: style,
       attributes: attributes,
       rows: rows,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -341,6 +352,7 @@ CAPTIONElement $caption(
     String captionSide,
     Map<String, String> attributes,
     content,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -356,6 +368,7 @@ CAPTIONElement $caption(
           : style,
       attributes: attributes,
       content: content,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -367,6 +380,7 @@ TBODYElement $tbody(
     style,
     Map<String, String> attributes,
     rows,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -378,6 +392,7 @@ TBODYElement $tbody(
       style: style,
       attributes: attributes,
       rows: rows,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -389,6 +404,7 @@ TFOOTElement $tfoot(
     style,
     Map<String, String> attributes,
     rows,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -400,6 +416,7 @@ TFOOTElement $tfoot(
       style: style,
       attributes: attributes,
       rows: rows,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -411,6 +428,7 @@ TRowElement $tr(
     style,
     Map<String, String> attributes,
     cells,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -422,6 +440,7 @@ TRowElement $tr(
       style: style,
       attributes: attributes,
       cells: cells,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -436,6 +455,7 @@ DOMElement $td(
         int rowspan,
         String headers,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('td',
         validate: validate,
@@ -449,6 +469,7 @@ DOMElement $td(
           ...?attributes,
         },
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `th` node.
@@ -463,6 +484,7 @@ DOMElement $th(
         String abbr,
         String scope,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('td',
         validate: validate,
@@ -477,6 +499,7 @@ DOMElement $th(
           ...?attributes,
         },
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `div` node.
@@ -487,6 +510,7 @@ DIVElement $div(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('div',
         validate: validate,
@@ -495,6 +519,7 @@ DIVElement $div(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `div` node with `display: inline-block`.
@@ -505,6 +530,7 @@ DIVElement $divInline(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('div',
         validate: validate,
@@ -514,24 +540,101 @@ DIVElement $divInline(
             delimiter: CSS_LIST_DELIMITER),
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `div` node from HTML.
 DIVElement $divHTML(dynamic html) => $tagHTML(html);
 
 /// Creates a `div` that centers vertically and horizontally using `display` `table` and `table-cell`.
-DIVElement $divCenteredContent(
-    {String width = '100%', String height = '100%', dynamic content}) {
+DIVElement $divCenteredContent({
+  dynamic classes,
+  String style,
+  String width = '100%',
+  String height = '100%',
+  String cellsClasses,
+  String cellsStyle,
+  String cellSpacing,
+  int cellsPerRow,
+  List cells,
+  List rows,
+  dynamic content,
+}) {
   var cssDimension = '';
   if (isNotEmptyString(width)) cssDimension += 'width: $width;';
   if (isNotEmptyString(height)) cssDimension += 'height: $height;';
 
-  return $div(
-      style: 'display: table;$cssDimension',
-      content: $div(
-          style:
-              'display: table-cell; text-align: center; vertical-align: middle;',
-          content: content));
+  var divStyle = 'display: table;$cssDimension';
+
+  if (isNotEmptyString(style, trim: true)) {
+    style = style.trim();
+    if (!style.endsWith(';')) style += ';';
+    divStyle += ' ; $style';
+  }
+
+  if (isNotEmptyString(cellSpacing, trim: true)) {
+    divStyle += ' ; border-spacing: $cellSpacing ;';
+  }
+
+  cellsStyle ??= '';
+  cellsStyle = cellsStyle.trim();
+
+  cellsClasses ??= '';
+  cellsClasses = cellsClasses.trim();
+
+  rows ??= [];
+
+  if (cells != null) {
+    if (cellsPerRow == null || cellsPerRow <= 0) {
+      rows.add(cells);
+    } else {
+      var row = [];
+      for (var i = 0; i < cells.length; ++i) {
+        var cell = cells[i];
+        row.add(cell);
+        if (row.length == cellsPerRow) {
+          rows.add(row);
+          row = [];
+        }
+      }
+      if (row.isNotEmpty) {
+        rows.add(row);
+      }
+    }
+  }
+
+  var list = [];
+
+  for (var row in rows) {
+    var rowList = row is List ? row : [row];
+
+    var rowCells = rowList
+        .map((e) => $div(
+              classes: cellsClasses,
+              style:
+                  'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
+              content: e,
+            ))
+        .toList();
+
+    var rowDiv = $div(
+      style: 'display: table-row;',
+      content: rowCells,
+    );
+
+    list.add(rowDiv);
+  }
+
+  if (content != null) {
+    list.add($div(
+      classes: cellsClasses,
+      style:
+          'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
+      content: content,
+    ));
+  }
+
+  return $div(classes: classes, style: divStyle, content: list);
 }
 
 /// Creates a `div` node with `display: inline-block`.
@@ -555,6 +658,7 @@ DOMElement $span(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('span',
         validate: validate,
@@ -563,6 +667,7 @@ DOMElement $span(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `button` node.
@@ -574,6 +679,7 @@ DOMElement $button(
         type,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('button',
         validate: validate,
@@ -585,6 +691,7 @@ DOMElement $button(
           ...?attributes
         },
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `label` node.
@@ -596,6 +703,7 @@ DOMElement $label(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('label',
         validate: validate,
@@ -604,6 +712,7 @@ DOMElement $label(
         style: style,
         attributes: {if (forID != null) 'for': forID, ...?attributes},
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `textarea` node.
@@ -617,6 +726,7 @@ TEXTAREAElement $textarea(
     rows,
     Map<String, String> attributes,
     content,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -630,6 +740,7 @@ TEXTAREAElement $textarea(
       rows: rows,
       attributes: attributes,
       content: content,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -644,6 +755,7 @@ INPUTElement $input(
     placeholder,
     Map<String, String> attributes,
     value,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -657,6 +769,35 @@ INPUTElement $input(
       style: style,
       attributes: attributes,
       value: value,
+      hidden: hidden,
+      commented: commented);
+}
+
+/// Creates an `input` node of type `checkbox`.
+INPUTElement $checkbox(
+    {DOMNodeValidator validate,
+    id,
+    name,
+    classes,
+    style,
+    placeholder,
+    Map<String, String> attributes,
+    value,
+    bool hidden,
+    bool commented}) {
+  if (!_isValid(validate)) {
+    return null;
+  }
+  return INPUTElement(
+      id: id,
+      name: name,
+      type: 'checkbox',
+      placeholder: placeholder,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      value: value,
+      hidden: hidden,
       commented: commented);
 }
 
@@ -670,6 +811,8 @@ SELECTElement $select(
     Map<String, String> attributes,
     options,
     selected,
+    bool multiple,
+    bool hidden,
     bool commented}) {
   if (!_isValid(validate)) {
     return null;
@@ -681,6 +824,8 @@ SELECTElement $select(
       style: style,
       attributes: attributes,
       options: options,
+      multiple: multiple,
+      hidden: hidden,
       commented: commented);
 
   selectElement.selectOption(selected);
@@ -722,6 +867,7 @@ DOMElement $img(
         String src,
         String title,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('img',
         validate: validate,
@@ -734,6 +880,7 @@ DOMElement $img(
           ...?attributes
         },
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates an `a` node.
@@ -746,6 +893,7 @@ DOMElement $a(
         String href,
         String target,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('a',
         validate: validate,
@@ -758,6 +906,7 @@ DOMElement $a(
           ...?attributes
         },
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `p` node.
@@ -767,6 +916,7 @@ DOMElement $p(
         classes,
         style,
         Map<String, String> attributes,
+        bool hidden,
         bool commented}) =>
     $tag('p',
         validate: validate,
@@ -774,6 +924,7 @@ DOMElement $p(
         classes: classes,
         style: style,
         attributes: attributes,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `br` node.
@@ -812,6 +963,7 @@ DOMElement $hr(
         classes,
         style,
         Map<String, String> attributes,
+        bool hidden,
         bool commented}) =>
     $tag('hr',
         validate: validate,
@@ -819,6 +971,7 @@ DOMElement $hr(
         classes: classes,
         style: style,
         attributes: attributes,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `form` node.
@@ -829,6 +982,7 @@ DOMElement $form(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('form',
         validate: validate,
@@ -837,6 +991,7 @@ DOMElement $form(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `nav` node.
@@ -847,6 +1002,7 @@ DOMElement $nav(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('nav',
         validate: validate,
@@ -855,6 +1011,7 @@ DOMElement $nav(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `header` node.
@@ -865,6 +1022,7 @@ DOMElement $header(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('header',
         validate: validate,
@@ -873,6 +1031,7 @@ DOMElement $header(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Creates a `footer` node.
@@ -883,6 +1042,7 @@ DOMElement $footer(
         style,
         Map<String, String> attributes,
         content,
+        bool hidden,
         bool commented}) =>
     $tag('footer',
         validate: validate,
@@ -891,6 +1051,7 @@ DOMElement $footer(
         style: style,
         attributes: attributes,
         content: content,
+        hidden: hidden,
         commented: commented);
 
 /// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
@@ -901,18 +1062,29 @@ bool isDOMBuilderDirectHelper(dynamic f) {
 
   return identical(f, $br) ||
       identical(f, $p) ||
+      identical(f, $a) ||
       identical(f, $nbsp) ||
       identical(f, $div) ||
       identical(f, $divInline) ||
+      identical(f, $img) ||
       identical(f, $hr) ||
       identical(f, $form) ||
       identical(f, $nav) ||
       identical(f, $header) ||
       identical(f, $footer) ||
+      identical(f, $span) ||
+      identical(f, $button) ||
+      identical(f, $label) ||
+      identical(f, $textarea) ||
+      identical(f, $input) ||
+      identical(f, $select) ||
+      identical(f, $option) ||
       identical(f, $table) ||
       identical(f, $tbody) ||
       identical(f, $thead) ||
       identical(f, $tfoot) ||
       identical(f, $td) ||
-      identical(f, $tr);
+      identical(f, $th) ||
+      identical(f, $tr) ||
+      identical(f, $caption);
 }

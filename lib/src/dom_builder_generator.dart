@@ -310,6 +310,25 @@ abstract class DOMGenerator<T> {
     var text = domNode.template
         .build(variables, intlMessageResolver: context?.intlMessageResolver);
 
+    if (possiblyWithHTML(text)) {
+      var nodes = parseHTML(text);
+      if (nodes != null && nodes.isNotEmpty) {
+        DOMNode node;
+        if (nodes.length == 1) {
+          node = nodes[0];
+        } else {
+          node = $tag('span', content: nodes);
+        }
+
+        if (node != null && node is! TextNode) {
+          if (domParent != null) {
+            node.parent = domParent;
+          }
+          return build(domParent, parent, node, treeMap, context);
+        }
+      }
+    }
+
     T textNode;
     if (parent != null) {
       textNode = appendElementText(parent, text);

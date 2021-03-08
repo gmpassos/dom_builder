@@ -232,20 +232,16 @@ class DOMNode implements AsDOMNode {
     return DOMElement(name, attributes: attributes, content: content);
   }
 
-  /// Parent of this node.
-  DOMNode _parent;
-
-  DOMTreeMap _treeMap;
+  /// Returns the [parent] [DOMNode] of generated tree (by [DOMGenerator]).
+  DOMNode parent;
 
   /// Returns the [DOMTreeMap] of the last generated tree of elements.
-  DOMTreeMap get treeMap => _treeMap;
-
-  set treeMap(DOMTreeMap value) => _treeMap = value;
+  DOMTreeMap treeMap;
 
   /// Returns a [DOMNodeRuntime] with the actual generated node
   /// associated with [treeMap] and [domGenerator].
-  DOMNodeRuntime get runtime => _treeMap != null
-      ? _treeMap.getRuntimeNode(this)
+  DOMNodeRuntime get runtime => treeMap != null
+      ? treeMap.getRuntimeNode(this)
       : DOMNodeRuntimeDummy(null, this, null);
 
   /// Same as [runtime], but casts to [DOMNodeRuntime<T>].
@@ -253,17 +249,17 @@ class DOMNode implements AsDOMNode {
 
   /// Returns [runtime.node].
   dynamic get runtimeNode =>
-      _treeMap != null ? _treeMap.getMappedElement(this) : null;
+      treeMap != null ? treeMap.getMappedElement(this) : null;
 
   /// Same as [runtimeNode], but casts to [T].
   T getRuntimeNode<T>() => runtimeNode as T;
 
   /// Returns [true] if this node has a generated element by [domGenerator].
-  bool get isGenerated => _treeMap != null;
+  bool get isGenerated => treeMap != null;
 
   /// Returns the [DOMGenerator] associated with [treeMap].
   DOMGenerator get domGenerator =>
-      _treeMap != null ? _treeMap.domGenerator : _treeMap;
+      treeMap != null ? treeMap.domGenerator : treeMap;
 
   /// Indicates if this node accepts content.
   final bool allowContent;
@@ -284,15 +280,8 @@ class DOMNode implements AsDOMNode {
   @override
   DOMNode get asDOMNode => this;
 
-  /// Returns the [parent] [DOMNode] of generated tree (by [DOMGenerator]).
-  DOMNode get parent => _parent;
-
-  set parent(DOMNode value) {
-    _parent = value;
-  }
-
   /// Returns [true] if this node has a parent.
-  bool get hasParent => _parent != null;
+  bool get hasParent => parent != null;
 
   /// If [true] this node is commented (ignored).
   bool get isCommented => _commented;
@@ -514,7 +503,7 @@ class DOMNode implements AsDOMNode {
     }
 
     _content.insert(idxUp, node);
-    node._parent = this;
+    node.parent = this;
     return true;
   }
 
@@ -542,7 +531,7 @@ class DOMNode implements AsDOMNode {
     }
 
     _content.insert(idxDown, node);
-    node._parent = this;
+    node.parent = this;
     return true;
   }
 
@@ -574,7 +563,7 @@ class DOMNode implements AsDOMNode {
     if (isEmpty) return;
 
     for (var node in _content) {
-      node._parent = null;
+      node.parent = null;
     }
 
     _content.clear();
@@ -599,7 +588,7 @@ class DOMNode implements AsDOMNode {
     var removed = _content.removeAt(idx);
 
     if (removed != null) {
-      removed._parent = null;
+      removed.parent = null;
       return true;
     } else {
       return false;
@@ -930,7 +919,7 @@ class DOMNode implements AsDOMNode {
 
     while (node != null) {
       if (nodeSelector(node)) return node;
-      node = node._parent;
+      node = node.parent;
     }
     return null;
   }
@@ -1454,6 +1443,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       classes,
       style,
       content,
+      bool hidden,
       bool commented}) {
     if (tag == null) throw ArgumentError('Null tag');
 
@@ -1466,6 +1456,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'input') {
       return INPUTElement(
@@ -1474,6 +1465,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           value: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'select') {
       return SELECTElement(
@@ -1482,6 +1474,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           options: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'option') {
       return OPTIONElement(
@@ -1497,6 +1490,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'table') {
       return TABLEElement(
@@ -1505,6 +1499,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'thead') {
       return THEADElement(
@@ -1513,6 +1508,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           rows: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'caption') {
       return CAPTIONElement(
@@ -1521,6 +1517,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'tbody') {
       return TBODYElement(
@@ -1529,6 +1526,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           rows: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'tfoot') {
       return TFOOTElement(
@@ -1537,6 +1535,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           rows: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'tr') {
       return TRowElement(
@@ -1545,6 +1544,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           cells: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'td') {
       return TDElement(
@@ -1553,6 +1553,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else if (tag == 'th') {
       return THElement(
@@ -1561,6 +1562,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           classes: classes,
           style: style,
           content: content,
+          hidden: hidden,
           commented: commented);
     } else {
       return DOMElement._(tag,
@@ -1568,7 +1570,9 @@ class DOMElement extends DOMNode implements AsDOMElement {
           id: id,
           classes: classes,
           style: style,
-          content: content);
+          content: content,
+          hidden: hidden,
+          commented: commented);
     }
   }
 
@@ -1578,6 +1582,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : tag = normalizeTag(tag),
         super._(true, commented) {
@@ -1595,6 +1600,10 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
     if (style != null) {
       appendToAttribute('style', style);
+    }
+
+    if (hidden != null) {
+      setAttribute('hidden', hidden);
     }
 
     if (content != null) {
@@ -2456,6 +2465,7 @@ class DIVElement extends DOMElement {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : super._('div',
             attributes: attributes,
@@ -2463,6 +2473,7 @@ class DIVElement extends DOMElement {
             classes: classes,
             style: style,
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -2505,6 +2516,7 @@ class INPUTElement extends DOMElement implements WithValue {
       classes,
       style,
       value,
+      bool hidden,
       bool commented})
       : super._('input',
             id: id,
@@ -2517,6 +2529,7 @@ class INPUTElement extends DOMElement implements WithValue {
               if (value != null) 'value': value,
               ...?attributes
             },
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -2563,6 +2576,8 @@ class SELECTElement extends DOMElement {
       classes,
       style,
       options,
+      bool multiple,
+      bool hidden,
       bool commented})
       : super._('select',
             id: id,
@@ -2572,8 +2587,10 @@ class SELECTElement extends DOMElement {
               ...?attributes,
               if (name != null) 'name': name,
               if (type != null) 'type': type,
+              if (multiple != null && multiple) 'multiple': true,
             },
             content: OPTIONElement.toOptions(options),
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -2729,7 +2746,7 @@ class OPTIONElement extends DOMElement implements WithValue {
             if (label != null) 'label': label,
             if (selected != null) 'selected': parseBool(selected),
           },
-          content: TextNode(text),
+          content: _toTextNode(text),
         );
 
   @override
@@ -2798,6 +2815,7 @@ class TEXTAREAElement extends DOMElement implements WithValue {
       cols,
       rows,
       content,
+      bool hidden,
       bool commented})
       : super._('textarea',
             id: id,
@@ -2810,6 +2828,7 @@ class TEXTAREAElement extends DOMElement implements WithValue {
               ...?attributes
             },
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3022,6 +3041,7 @@ abstract class TABLENode extends DOMElement {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : super._(tag,
             attributes: attributes,
@@ -3029,6 +3049,7 @@ abstract class TABLENode extends DOMElement {
             classes: classes,
             style: style,
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3067,6 +3088,7 @@ class TABLEElement extends DOMElement {
       body,
       foot,
       content,
+      bool hidden,
       bool commented})
       : super._('table',
             attributes: attributes,
@@ -3074,6 +3096,7 @@ class TABLEElement extends DOMElement {
             classes: classes,
             style: style,
             content: createTableContent(content, caption, head, body, foot),
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3109,6 +3132,7 @@ class THEADElement extends TABLENode {
       classes,
       style,
       rows,
+      bool hidden,
       bool commented})
       : super._('thead',
             attributes: attributes,
@@ -3116,6 +3140,7 @@ class THEADElement extends TABLENode {
             classes: classes,
             style: style,
             content: createTableRows(rows, true),
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3151,6 +3176,7 @@ class CAPTIONElement extends TABLENode {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : super._('caption',
             attributes: attributes,
@@ -3158,6 +3184,7 @@ class CAPTIONElement extends TABLENode {
             classes: classes,
             style: style,
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3193,6 +3220,7 @@ class TBODYElement extends TABLENode {
       classes,
       style,
       rows,
+      bool hidden,
       bool commented})
       : super._('tbody',
             attributes: attributes,
@@ -3200,6 +3228,7 @@ class TBODYElement extends TABLENode {
             classes: classes,
             style: style,
             content: createTableRows(rows, false),
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3235,6 +3264,7 @@ class TFOOTElement extends TABLENode {
       classes,
       style,
       rows,
+      bool hidden,
       bool commented})
       : super._('tfoot',
             attributes: attributes,
@@ -3242,6 +3272,7 @@ class TFOOTElement extends TABLENode {
             classes: classes,
             style: style,
             content: createTableRows(rows, false),
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3278,6 +3309,7 @@ class TRowElement extends TABLENode {
       style,
       cells,
       bool headerRow,
+      bool hidden,
       bool commented})
       : super._('tr',
             attributes: attributes,
@@ -3285,6 +3317,7 @@ class TRowElement extends TABLENode {
             classes: classes,
             style: style,
             content: createTableCells(cells, headerRow),
+            hidden: hidden,
             commented: commented);
 
   bool get isHeaderRow => parent != null ? parent is THEADElement : false;
@@ -3327,6 +3360,7 @@ class THElement extends TABLENode {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : super._('th',
             attributes: attributes,
@@ -3334,6 +3368,7 @@ class THElement extends TABLENode {
             classes: classes,
             style: style,
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
@@ -3374,6 +3409,7 @@ class TDElement extends TABLENode {
       classes,
       style,
       content,
+      bool hidden,
       bool commented})
       : super._('td',
             attributes: attributes,
@@ -3381,6 +3417,7 @@ class TDElement extends TABLENode {
             classes: classes,
             style: style,
             content: content,
+            hidden: hidden,
             commented: commented);
 
   @override
