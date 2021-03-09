@@ -40,18 +40,23 @@ abstract class DOMTemplate {
   /// Tries to parse [s].
   ///
   /// Returns [null] if [s] has no template or a not valid template code.
-  static DOMTemplateNode tryParse(String s) {
+  static DOMTemplateNode/*?*/ tryParse(String/*?*/ s) {
     return _parse(s, true);
   }
 
   /// Parses [s] and returns a DOMTemplateNode.
   ///
   /// Throws [StateError] if [s] is not a valid template.
-  static DOMTemplateNode parse(String s) {
+  static DOMTemplateNode/*!*/ parse(String/*!*/ s) {
     return _parse(s, false);
   }
 
-  static DOMTemplateNode _parse(String s, bool tryParsing) {
+  static DOMTemplateNode/*?*/ _parse(String/*?*/ s, bool/*!*/ tryParsing) {
+    if (s == null) {
+      if (tryParsing) return null;
+      return DOMTemplateNode([DOMTemplateContent(s)]);
+    }
+
     var matches = REGEXP_TAG.allMatches(s);
     if (matches == null || matches.isEmpty) {
       if (tryParsing) return null;

@@ -26,7 +26,7 @@ class DOMAttribute implements WithValue {
   static bool/*!*/ isBooleanAttribute(String attrName) =>
       _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(attrName);
 
-  static String getAttributeDelimiter(String name) =>
+  static String/*?*/ getAttributeDelimiter(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
 
   static final Map<String, Pattern>
@@ -35,7 +35,7 @@ class DOMAttribute implements WithValue {
     'style': RegExp(r'\s*;\s*')
   };
 
-  static RegExp getAttributeDelimiterPattern(String name) =>
+  static RegExp/*?*/ getAttributeDelimiterPattern(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
 
   static bool/*!*/ hasAttribute(DOMAttribute attribute) =>
@@ -44,24 +44,24 @@ class DOMAttribute implements WithValue {
   static bool/*!*/ hasAttributes(Map<String, DOMAttribute> attributes) =>
       attributes != null && attributes.isNotEmpty;
 
-  static String normalizeName(String name) {
+  static String/*?*/ normalizeName(String/*?*/ name) {
     if (name == null) return null;
     return name.trim().toLowerCase();
   }
 
-  static String append(String s, String delimiter, DOMAttribute attribute,
-      [DOMContext domContext]) {
+  static String/*!*/ append(String s, String delimiter, DOMAttribute attribute,
+      [DOMContext/*?*/ domContext]) {
     if (attribute == null) return s;
     var append = attribute.buildHTML(domContext);
     if (append == null || append.isEmpty) return s;
     return s + delimiter + append;
   }
 
-  final String name;
+  final String/*!*/ name;
 
-  final DOMAttributeValue _valueHandler;
+  final DOMAttributeValue/*!*/ valueHandler;
 
-  DOMAttribute(this.name, this._valueHandler);
+  DOMAttribute(this.name, this.valueHandler);
 
   static DOMAttribute/*?*/ from(String name, Object/*?*/value) {
     name = normalizeName(name);
@@ -112,54 +112,52 @@ class DOMAttribute implements WithValue {
     }
   }
 
-  DOMAttributeValue get valueHandler => _valueHandler;
+  bool/*!*/ get isBoolean => valueHandler is DOMAttributeValueBoolean;
 
-  bool/*!*/ get isBoolean => _valueHandler is DOMAttributeValueBoolean;
+  bool/*!*/ get isList => valueHandler is DOMAttributeValueList;
 
-  bool/*!*/ get isList => _valueHandler is DOMAttributeValueList;
+  bool/*!*/ get isSet => valueHandler is DOMAttributeValueSet;
 
-  bool/*!*/ get isSet => _valueHandler is DOMAttributeValueSet;
-
-  bool/*!*/ get isCollection => _valueHandler is DOMAttributeValueCollection;
+  bool/*!*/ get isCollection => valueHandler is DOMAttributeValueCollection;
 
   @override
-  bool/*!*/ get hasValue => _valueHandler.hasAttributeValue;
+  bool/*!*/ get hasValue => valueHandler.hasAttributeValue;
 
   @override
-  String get value => _valueHandler.asAttributeValue;
+  String get value => valueHandler.asAttributeValue;
 
-  List<String> get values => _valueHandler.asAttributeValues;
+  List<String> get values => valueHandler.asAttributeValues;
 
-  String getValue([DOMContext domContext]) =>
-      _valueHandler.getAttributeValue(domContext);
+  String/*?*/ getValue([DOMContext/*?*/ domContext]) =>
+      valueHandler.getAttributeValue(domContext);
 
-  int get valueLength => _valueHandler.length;
+  int get valueLength => valueHandler.length;
 
   bool/*!*/ containsValue(Object/*?*/value) =>
-      _valueHandler.containsAttributeValue(value);
+      valueHandler.containsAttributeValue(value);
 
   void setBoolean(Object/*?*/value) {
     if (!isBoolean) throw StateError('Not a boolean attribute');
     setValue(value);
   }
 
-  void setValue(Object/*?*/value) => _valueHandler.setAttributeValue(value);
+  void setValue(Object/*?*/value) => valueHandler.setAttributeValue(value);
 
   void appendValue(Object/*?*/value) {
-    if (_valueHandler is DOMAttributeValueCollection) {
-      var valueCollection = _valueHandler as DOMAttributeValueCollection;
+    if (valueHandler is DOMAttributeValueCollection) {
+      var valueCollection = valueHandler as DOMAttributeValueCollection;
       return valueCollection.appendAttributeValue(value);
     } else {
-      _valueHandler.setAttributeValue(value);
+      valueHandler.setAttributeValue(value);
     }
   }
 
-  String buildHTML([DOMContext domContext]) {
+  String/*!*/ buildHTML([DOMContext/*?*/ domContext]) {
     if (isBoolean) {
-      return _valueHandler.hasAttributeValue ? name : '';
+      return valueHandler.hasAttributeValue ? name : '';
     }
 
-    var htmlValue = _valueHandler.getAttributeValue(domContext);
+    var htmlValue = valueHandler.getAttributeValue(domContext);
 
     if (htmlValue != null) {
       var html = '$name=';
@@ -190,7 +188,7 @@ abstract class DOMAttributeValue {
   /// Returns [true] if has a value.
   bool/*!*/ get hasAttributeValue;
 
-  int get length;
+  int/*!*/ get length;
 
   /// Parses [value] and returns [true] if is equals to this instance value.
   bool/*!*/ equalsAttributeValue(Object/*?*/value);
@@ -206,9 +204,9 @@ abstract class DOMAttributeValue {
 }
 
 class DOMAttributeValueBoolean extends DOMAttributeValue {
-  bool _value;
+  bool/*!*/ _value;
 
-  DOMAttributeValueBoolean(Object/*?*/value) : _value = parseBool(value, false);
+  DOMAttributeValueBoolean(Object/*?*/value) : _value = parseBool(value, false)/*!*/;
 
   @override
   bool/*!*/ get hasAttributeValue => _value;
@@ -243,7 +241,7 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 
 /// A [DOMAttributeValue] of type [String].
 class DOMAttributeValueString extends DOMAttributeValue {
-  String _value;
+  String/*?*/ _value;
 
   DOMAttributeValueString(Object/*?*/value) : _value = parseString(value, '');
 
@@ -262,7 +260,7 @@ class DOMAttributeValueString extends DOMAttributeValue {
 
   @override
   bool/*!*/ equalsAttributeValue(Object/*?*/value) {
-    if (_value == null) return !hasAttributeValue;
+    if (value == null) return !hasAttributeValue;
     return hasAttributeValue && _value == parseString(value);
   }
 
@@ -285,7 +283,7 @@ class DOMAttributeValueString extends DOMAttributeValue {
 
 /// Attribute value when has template syntax: {{...}}
 class DOMAttributeValueTemplate extends DOMAttributeValueString {
-  DOMTemplate _template;
+  DOMTemplate/*!*/ _template;
 
   DOMAttributeValueTemplate(Object/*?*/value) : super(value) {
     _template = DOMTemplate.parse(value);
@@ -321,9 +319,9 @@ abstract class DOMAttributeValueCollection extends DOMAttributeValue {
 
 /// A [DOMAttributeValue] of type [List].
 class DOMAttributeValueList extends DOMAttributeValueCollection {
-  List<String/*!*/> _values;
-  final String delimiter;
-  final Pattern delimiterPattern;
+  List<String/*!*/>/*!*/ _values;
+  final String/*!*/ delimiter;
+  final Pattern/*!*/ delimiterPattern;
 
   DOMAttributeValueList(Object/*?*/values, this.delimiter, this.delimiterPattern) {
     if (delimiter == null) throw ArgumentError.notNull('delimiter');
@@ -438,9 +436,9 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
 
 /// A [DOMAttributeValue] of type [Set].
 class DOMAttributeValueSet extends DOMAttributeValueCollection {
-  LinkedHashSet<String> _values;
-  final String delimiter;
-  final Pattern delimiterPattern;
+  LinkedHashSet<String/*!*/>/*!*/ _values;
+  final String/*!*/ delimiter;
+  final Pattern/*!*/ delimiterPattern;
 
   DOMAttributeValueSet(Object/*?*/values, this.delimiter, this.delimiterPattern) {
     if (delimiter == null) throw ArgumentError.notNull('delimiter');
@@ -548,7 +546,7 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
 
 /// A [DOMAttributeValue] of type [CSS].
 class DOMAttributeValueCSS extends DOMAttributeValueCollection {
-  CSS _css;
+  CSS/*!*/ _css;
 
   DOMAttributeValueCSS(Object/*?*/values) {
     _css = CSS(values);

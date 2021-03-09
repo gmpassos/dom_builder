@@ -3,7 +3,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_generator.dart';
 
-abstract class DOMActionExecutor<T> {
+abstract class DOMActionExecutor<T/*!*/> {
   DOMGenerator<T>/*?*/ _domGenerator;
 
   DOMGenerator<T> get domGenerator => _domGenerator;
@@ -126,7 +126,7 @@ final RegExpDialect _REGEXP_ACTIONS_DIALECT = RegExpDialect({
   'action_capture': r'(?:($sel)|($call))',
 }, multiLine: false, caseSensitive: false);
 
-abstract class DOMAction<T> {
+abstract class DOMAction<T/*!*/> {
   static final RegExp _REGEXP_ACTION_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$action_capture\.?');
 
@@ -136,7 +136,7 @@ abstract class DOMAction<T> {
   static final RegExp _REGEXP_CALL_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$call_capture\.?');
 
-  static DOMAction<T>/*?*/ parse<T>(
+  static DOMAction<T>/*?*/ parse<T/*!*/>(
       DOMActionExecutor<T> executor, String actionLine) {
     if (actionLine == null) return null;
     actionLine = actionLine.trim();
@@ -222,7 +222,7 @@ abstract class DOMAction<T> {
         throw ArgumentError("Can't parse parameters line: $parametersLine");
       }
 
-      var param = match.group(1).trim();
+      var param = match.group(1)/*!*/.trim();
       parameters.add(param);
     }
 
@@ -231,7 +231,7 @@ abstract class DOMAction<T> {
 
   final DOMActionExecutor<T/*!*/> executor;
 
-  DOMAction<T> next;
+  DOMAction<T/*!*/>/*?*/ next;
 
   DOMAction(this.executor);
 
@@ -259,8 +259,8 @@ abstract class DOMAction<T> {
   }
 }
 
-class DOMActionList<T> extends DOMAction<T> {
-  final List<DOMAction<T>> actions;
+class DOMActionList<T/*!*/> extends DOMAction<T/*!*/> {
+  final List<DOMAction<T/*!*/>/*!*/>/*!*/ actions;
 
   DOMActionList(DOMActionExecutor<T> executor, this.actions) : super(executor);
 
@@ -282,8 +282,8 @@ class DOMActionList<T> extends DOMAction<T> {
   }
 }
 
-class DOMActionSelect<T> extends DOMAction<T> {
-  final String id;
+class DOMActionSelect<T/*!*/> extends DOMAction<T/*!*/> {
+  final String/*!*/ id;
 
   DOMActionSelect(DOMActionExecutor<T> executor, this.id) : super(executor);
 
@@ -293,14 +293,14 @@ class DOMActionSelect<T> extends DOMAction<T> {
   }
 }
 
-class DOMActionCall<T> extends DOMAction<T> {
-  final String name;
+class DOMActionCall<T/*!*/> extends DOMAction<T/*!*/> {
+  final String/*!*/ name;
 
-  final List<String> parameters;
+  final List<String/*!*/>/*!*/ parameters;
 
   DOMActionCall(
       DOMActionExecutor<T> executor, this.name, List<String> parameters)
-      : parameters = parameters ?? [],
+      : parameters = parameters ?? <String>[],
         super(executor);
 
   @override

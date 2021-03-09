@@ -7,8 +7,8 @@ import 'dom_builder_runtime.dart';
 
 /// Represents a mapping tree. Can be used to map a [DOMNode] to a generated
 /// node [T], or a node [T] to a [DOMNode].
-class DOMTreeMap<T> {
-  final DOMGenerator<T> domGenerator;
+class DOMTreeMap<T/*!*/> {
+  final DOMGenerator<T/*!*/>/*!*/ domGenerator;
 
   DOMTreeMap(this.domGenerator);
 
@@ -17,9 +17,9 @@ class DOMTreeMap<T> {
       domGenerator.generate(root,
           parent: parent, treeMap: this, context: context);
 
-  DOMNode _rootDOMNode;
+  DOMNode/*?*/ _rootDOMNode;
 
-  T _rootElement;
+  T/*?*/ _rootElement;
 
   void setRoot(DOMNode rootDOMNode, T rootElement) {
     _rootDOMNode = rootDOMNode;
@@ -32,17 +32,17 @@ class DOMTreeMap<T> {
   /// The root element [T] of this tree.
   T get rootElement => _rootElement;
 
-  final Map<DOMNode, T> _domNodeToElementMap = {};
+  final Map<DOMNode/*!*/, T/*!*/> _domNodeToElementMap = {};
 
-  final Map<T, DOMNode> _elementToDOMNodeMap = {};
+  final Map<T/*!*/, DOMNode/*!*/> _elementToDOMNodeMap = {};
 
-  Iterable<T> get mappedElements => _domNodeToElementMap.values;
+  Iterable<T/*!*/> get mappedElements => _domNodeToElementMap.values;
 
-  Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
+  Iterable<DOMNode/*!*/> get mappedDOMNodes => _elementToDOMNodeMap.values;
 
   /// Maps in this instance the pair [domNode] and [element].
-  void map(DOMNode domNode, T element,
-      {DOMContext<T> context, bool allowOverwrite}) {
+  void map(DOMNode/*!*/ domNode, T/*!*/ element,
+      {DOMContext<T/*!*/>/*?*/ context, bool/*!*/ allowOverwrite = false}) {
     if (domNode == null || element == null) return;
 
     var prevElement = _domNodeToElementMap[domNode];
@@ -74,7 +74,7 @@ class DOMTreeMap<T> {
   }
 
   /// Unmap from this instance the pair [domNode] and [element].
-  bool/*!*/ unmap(DOMNode domNode, T element) {
+  bool/*!*/ unmap(DOMNode/*!*/ domNode, T/*!*/ element) {
     if (domNode == null || element == null) return false;
 
     var prev = _domNodeToElementMap[domNode];
@@ -91,7 +91,7 @@ class DOMTreeMap<T> {
   /// Returns the mapped element [T] associated with [domNode].
   ///
   /// [checkParents] If true, also checks for mapped [domNode.parent].
-  T getMappedElement(DOMNode domNode, {bool checkParents}) {
+  T/*?*/ getMappedElement(DOMNode/*?*/ domNode, {bool/*!*/ checkParents = false}) {
     if (domNode == null) return null;
     var element = _domNodeToElementMap[domNode];
     if (element != null) return element;
@@ -106,7 +106,7 @@ class DOMTreeMap<T> {
   /// Returns the mapped [DOMNode] associated with [element].
   ///
   /// [checkParents] If true, also checks for mapped [element.parent].
-  DOMNode getMappedDOMNode(T element, {bool checkParents}) {
+  DOMNode/*?*/ getMappedDOMNode(T/*?*/ element, {bool/*!*/ checkParents = false}) {
     if (element == null) return null;
     var domNode = _elementToDOMNodeMap[element];
     if (domNode != null) return domNode;
@@ -119,13 +119,13 @@ class DOMTreeMap<T> {
   }
 
   /// Returns [true] if [domNode] is mapped by this instance.
-  bool/*!*/ isMappedDOMNode(DOMNode domNode) {
+  bool/*!*/ isMappedDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null) return false;
     return _domNodeToElementMap.containsKey(domNode);
   }
 
   /// Returns [true] if [element] is mapped by this instance.
-  bool/*!*/ isMappedElement(T element) {
+  bool/*!*/ isMappedElement(T/*?*/ element) {
     if (element == null) return false;
     return _elementToDOMNodeMap.containsKey(element);
   }
@@ -133,7 +133,7 @@ class DOMTreeMap<T> {
   /// Returns [domNode] or recursively a [domNode.parent] that is mapped.
   ///
   /// If [domNode] hierarchy doesn't have a mapped node, will return null.
-  DOMNode asMappedDOMNode(DOMNode domNode) {
+  DOMNode/*?*/ asMappedDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null) return null;
     if (isMappedDOMNode(domNode)) {
       return domNode;
@@ -146,7 +146,7 @@ class DOMTreeMap<T> {
   /// Returns [element] or recursively a [element.parent] that is mapped.
   ///
   /// If [element] hierarchy doesn't have a mapped node, will return null.
-  T asMappedElement(T element) {
+  T/*?*/ asMappedElement(T/*?*/ element) {
     if (element == null) return null;
     if (isMappedElement(element)) {
       return element;
@@ -157,11 +157,11 @@ class DOMTreeMap<T> {
   }
 
   /// Returns [true] if the mapping for [domNode] matches [node].
-  bool/*!*/ matchesMapping(DOMNode domNode, T node) {
+  bool/*!*/ matchesMapping(DOMNode/*!*/ domNode, T/*!*/ node) {
     return identical(_elementToDOMNodeMap[domNode], node);
   }
 
-  bool/*!*/ mapTree(DOMNode domRoot, T root) {
+  bool/*!*/ mapTree(DOMNode/*!*/ domRoot, T/*!*/ root) {
     if (domRoot == null || root == null) return false;
     map(domRoot, root);
 
@@ -185,17 +185,17 @@ class DOMTreeMap<T> {
   }
 
   /// Returns a [DOMNodeRuntime] of [domNode].
-  DOMNodeRuntime<T> getRuntimeNode(DOMNode domNode) {
+  DOMNodeRuntime<T/*!*/>/*?*/ getRuntimeNode(DOMNode/*?*/ domNode) {
     var node = getMappedElement(domNode);
     if (node == null) return null;
     return domGenerator.createDOMNodeRuntime(this, domNode, node);
   }
 
   /// Moves [element] up in the parent children list. Also performs on mapped [DOMNode].
-  bool/*!*/ moveUpByElement(T element) => moveUpByDOMNode(getMappedDOMNode(element));
+  bool/*!*/ moveUpByElement(T/*?*/ element) => moveUpByDOMNode(getMappedDOMNode(element));
 
   /// Moves [domNode] up in the parent children list. Also performs on mapped element.
-  bool/*!*/ moveUpByDOMNode(DOMNode domNode) {
+  bool/*!*/ moveUpByDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null || !domNode.hasParent) return false;
 
     var nodeRuntime = domNode.runtime;
@@ -210,11 +210,11 @@ class DOMTreeMap<T> {
   }
 
   /// Moves [element] down in the parent children list. Also performs on mapped [DOMNode].
-  bool/*!*/ moveDownByElement(T element) =>
+  bool/*!*/ moveDownByElement(T/*?*/ element) =>
       moveDownByDOMNode(getMappedDOMNode(element));
 
   /// Moves [domNode] down in the parent children list. Also performs on mapped element.
-  bool/*!*/ moveDownByDOMNode(DOMNode domNode) {
+  bool/*!*/ moveDownByDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null || !domNode.hasParent) return false;
 
     var nodeRuntime = domNode.runtime;
@@ -229,11 +229,11 @@ class DOMTreeMap<T> {
   }
 
   /// Duplicates [element] in the parent children list. Also performs on mapped [DOMNode].
-  DOMNodeMapping<T/*!*/> duplicateByElement(T element) =>
+  DOMNodeMapping<T/*!*/>/*?*/ duplicateByElement(T/*?*/ element) =>
       duplicateByDOMNode(getMappedDOMNode(element));
 
   /// Duplicates [domNode] in the parent children list. Also performs on mapped element.
-  DOMNodeMapping<T/*!*/> duplicateByDOMNode(DOMNode domNode) {
+  DOMNodeMapping<T/*!*/>/*?*/ duplicateByDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
     var nodeRuntime = domNode.runtime;
@@ -252,10 +252,10 @@ class DOMTreeMap<T> {
   }
 
   /// Empties [element] children nodes. Also performs on mapped [DOMNode].
-  bool/*!*/ emptyByElement(T element) => emptyByDOMNode(getMappedDOMNode(element));
+  bool/*!*/ emptyByElement(T/*?*/ element) => emptyByDOMNode(getMappedDOMNode(element));
 
   /// Empties [domNode] children nodes. Also performs on mapped element.
-  bool/*!*/ emptyByDOMNode(DOMNode domNode) {
+  bool/*!*/ emptyByDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null) return false;
 
     var nodeRuntime = domNode.runtime;
@@ -268,11 +268,11 @@ class DOMTreeMap<T> {
   }
 
   /// Removes [element] from parent. Also performs on mapped [DOMNode].
-  DOMNodeMapping<T/*!*/> removeByElement(T element) =>
+  DOMNodeMapping<T/*!*/> removeByElement(T/*?*/ element) =>
       removeByDOMNode(getMappedDOMNode(element));
 
   /// Removes [domNode] from parent. Also performs on mapped element.
-  DOMNodeMapping<T/*!*/> removeByDOMNode(DOMNode domNode) {
+  DOMNodeMapping<T/*!*/> removeByDOMNode(DOMNode/*?*/ domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
     var nodeRuntime = domNode.runtime;
@@ -286,7 +286,7 @@ class DOMTreeMap<T> {
     return DOMNodeMapping(this, domNode, nodeRuntime.node);
   }
 
-  DOMNodeMapping<T/*!*/> mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
+  DOMNodeMapping<T/*!*/> mergeNearNodes(DOMNode/*!*/ domNode1, DOMNode/*!*/ domNode2,
       {bool/*!*/ onlyCompatibles = false}) {
     onlyCompatibles ??= false;
 
@@ -322,7 +322,7 @@ class DOMTreeMap<T> {
     return null;
   }
 
-  DOMNodeMapping<T/*!*/> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
+  DOMNodeMapping<T/*!*/> mergeNearStringNodes(DOMNode/*!*/ domNode1, DOMNode/*!*/ domNode2,
       {bool/*!*/ onlyCompatibles = false}) {
     if (domNode1 == null || domNode2 == null) {
       return null;
@@ -338,17 +338,17 @@ class DOMTreeMap<T> {
 }
 
 /// A wrapper for a mapped pair of a [DOMTreeMap].
-class DOMNodeMapping<T> {
+class DOMNodeMapping<T/*!*/> {
   /// The [DOMTreeMap] of this pair.
-  final DOMTreeMap<T> treeMap;
+  final DOMTreeMap<T/*!*/>/*!*/ treeMap;
 
-  DOMGenerator<T> get domGenerator => treeMap.domGenerator;
+  DOMGenerator<T/*!*/> get domGenerator => treeMap.domGenerator;
 
   /// The [DOMNode] of this mapped pair.
-  final DOMNode domNode;
+  final DOMNode/*!*/ domNode;
 
   /// The element [T] of this mapped pair.
-  final T node;
+  final T/*!*/ node;
 
   E nodeCast<E>() => node as E;
 
@@ -361,5 +361,57 @@ class DOMTreeMapDummy<T> extends DOMTreeMap<T> {
 
   @override
   void map(DOMNode domNode, T element,
-      {DOMContext<T> context, bool allowOverwrite}) {}
+      {DOMContext<T> context, bool allowOverwrite = false}) {}
+
+      @override
+  bool unmap(DOMNode domNode, T element) => false ;
+
+  @override
+  DOMNodeMapping<T> duplicateByDOMNode(DOMNode domNode) => null;
+
+  @override
+  DOMNodeMapping<T> duplicateByElement(T element) => null;
+
+  @override
+  bool emptyByDOMNode(DOMNode domNode) => false ;
+
+  @override
+  bool emptyByElement(T element) => false ;
+
+  @override
+  bool isMappedDOMNode(DOMNode domNode) => false ;
+
+  @override
+  bool isMappedElement(T element) => false ;
+
+  @override
+  bool matchesMapping(DOMNode domNode, T node) => false;
+
+  @override
+  DOMNodeMapping<T> mergeNearNodes(DOMNode domNode1, DOMNode domNode2, {bool onlyCompatibles = false}) => null;
+
+  @override
+  DOMNodeMapping<T> mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2, {bool onlyCompatibles = false}) => null;
+
+  @override
+  DOMNodeMapping<T> removeByDOMNode(DOMNode domNode)  => null ;
+
+  @override
+  DOMNodeMapping<T> removeByElement(T element) => null ;
+
+  @override
+  bool moveDownByDOMNode(DOMNode domNode)  => false ;
+
+  @override
+  bool moveDownByElement(T element) => false ;
+
+  @override
+  bool moveUpByDOMNode(DOMNode domNode) => false ;
+
+  @override
+  bool moveUpByElement(T element) => false ;
+
+  @override
+  void setRoot(DOMNode rootDOMNode, T rootElement) {}
+
 }

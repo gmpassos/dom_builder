@@ -4,16 +4,16 @@ import 'package:swiss_knife/swiss_knife.dart';
 /// Represents browser window Viewport.
 class Viewport {
   /// The device width.
-  int deviceWidth;
+  int/*!*/ deviceWidth;
 
   /// The device height.
-  int deviceHeight;
+  int/*!*/ deviceHeight;
 
   /// The Viewport width.
-  int width;
+  int/*!*/ width;
 
   /// The Viewport height.
-  int height;
+  int/*!*/ height;
 
   Viewport(this.width, this.height, [int deviceWidth, int deviceHeight])
       : deviceWidth = deviceWidth ?? width,
@@ -36,7 +36,7 @@ class Viewport {
     }
   }
 
-  void _checkField(String name, int value, int minValue) {
+  void _checkField(String/*!*/ name, int value, int/*!*/ minValue) {
     if (value == null) {
       throw ArgumentError.notNull(name);
     }
@@ -46,22 +46,22 @@ class Viewport {
   }
 
   /// The smallest side of the viewport: `Math.min(width, height)`
-  int get vmin => Math.min(width, height);
+  int/*!*/ get vmin => Math.min(width, height);
 
   /// The biggest side of the viewport: `Math.max(width, height)`
-  int get vmax => Math.max(width, height);
+  int/*!*/ get vmax => Math.max(width, height);
 
   /// Returns [width] as a px String.
-  String get widthAsPx => '${width}px';
+  String/*!*/ get widthAsPx => '${width}px';
 
   /// Returns [height] as a px String.
-  String get heightAsPx => '${height}px';
+  String/*!*/ get heightAsPx => '${height}px';
 
   /// Returns [vmin] as a px String.
-  String get vminAsPx => '${vmin}px';
+  String/*!*/ get vminAsPx => '${vmin}px';
 
   /// Returns [vmax] as a px String.
-  String get vmaxAsPx => '${vmax}px';
+  String/*!*/ get vmaxAsPx => '${vmax}px';
 
   @override
   bool operator ==(Object other) =>
@@ -99,7 +99,7 @@ typedef IntlMessageResolver = String Function(String key,
     [Map<String, dynamic> parameters]);
 
 /// Converts [resolver] to [IntlMessageResolver].
-IntlMessageResolver toIntlMessageResolver(Object/*?*/ resolver) {
+IntlMessageResolver/*?*/ toIntlMessageResolver(Object/*?*/ resolver) {
   if (resolver == null) {
     return null;
   } else if (resolver is IntlMessageResolver) {
@@ -123,7 +123,7 @@ IntlMessageResolver toIntlMessageResolver(Object/*?*/ resolver) {
 ///
 /// Used by [DOMGenerator] to configure some behaviors,
 /// like CSS unit conversion.
-class DOMContext<T> {
+class DOMContext<T/*!*/> {
   /// Creates a copy of this instance.
   DOMContext<T> copy() {
     var context = DOMContext(
@@ -138,34 +138,34 @@ class DOMContext<T> {
     return context;
   }
 
-  DOMGenerator<T> _domGenerator;
+  DOMGenerator<T/*!*/> _domGenerator;
 
-  DOMGenerator<T> get domGenerator => _domGenerator;
+  DOMGenerator<T/*!*/> get domGenerator => _domGenerator;
 
   set domGenerator(DOMGenerator<T> generator) {
     if (generator == null) throw ArgumentError.notNull('generator');
     _domGenerator = generator;
   }
 
-  IntlMessageResolver intlMessageResolver;
+  IntlMessageResolver/*?*/ intlMessageResolver;
 
   String resolveIntlMessage(String key, [Map<String, dynamic> parameters]) {
     var msgResolver = intlMessageResolver;
     return msgResolver != null ? msgResolver(key, parameters) : null;
   }
 
-  final DOMContext<T> parent;
+  final DOMContext<T/*?*/>/*?*/ parent;
 
   /// The [Viewport] of this context.
-  Viewport viewport;
+  Viewport/*?*/ viewport;
 
   /// If [true] will resolve any viewport [CSSUnit] to `px` when
   /// generating a DOM tree.
-  bool/*!*/ _resolveCSSViewportUnit = false;
+  bool/*!*/ resolveCSSViewportUnit = false;
 
   /// If [true] will resolve any [CSSURL] when
   /// generating a DOM tree.
-  bool/*!*/ _resolveCSSURL = false;
+  bool/*!*/ resolveCSSURL = false;
 
   DOMContext(
       {this.parent,
@@ -176,11 +176,7 @@ class DOMContext<T> {
     this.resolveCSSURL = resolveCSSURL;
   }
 
-  bool/*!*/ get resolveCSSViewportUnit => _resolveCSSViewportUnit;
 
-  set resolveCSSViewportUnit(bool value) {
-    _resolveCSSViewportUnit = value ?? false;
-  }
 
   /// Resolves a Viewport [CSSUnit] (`vw`, `vh`, `vmin`, `vmax`) [value]
   /// to a `px` value as [String].
@@ -226,12 +222,6 @@ class DOMContext<T> {
   /// Resolves a [CSSUnit] [value] to a [String]
   String resolveCSSUnitValue(num value, CSSUnit unit) {
     return '$value${getCSSUnitName(unit)}';
-  }
-
-  bool/*!*/ get resolveCSSURL => _resolveCSSURL;
-
-  set resolveCSSURL(bool value) {
-    _resolveCSSURL = value ?? false;
   }
 
   /// The resolver [Function] for [CSSURL].
@@ -331,6 +321,6 @@ class DOMContext<T> {
 
   @override
   String toString() {
-    return 'DOMContext{viewport: $viewport, _resolveCSSViewportUnit: $_resolveCSSViewportUnit}';
+    return 'DOMContext{viewport: $viewport, resolveCSSViewportUnit: $resolveCSSViewportUnit resolveCSSURL: $resolveCSSURL}';
   }
 }
