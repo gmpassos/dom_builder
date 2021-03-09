@@ -316,7 +316,7 @@ void main() {
 
     test('\$br', () {
       expect($br().buildHTML(), equals('<br>'));
-      expect($br(amount: 0), isNull);
+      expect($br(amount: 0).isCommented  , isTrue);
       expect($br(amount: 1).buildHTML(), equals('<br>'));
       expect($br(amount: 2).buildHTML(), equals('<span><br><br></span>'));
       expect($br(amount: 3).buildHTML(), equals('<span><br><br><br></span>'));

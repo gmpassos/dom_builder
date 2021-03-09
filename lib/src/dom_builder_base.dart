@@ -11,6 +11,22 @@ import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
+void dom_builder_log(String/*!*/ message, {bool/*!*/ warning = false, Object/*?*/ error, StackTrace/*?*/ stackTrace}) {
+  if (error != null) {
+    print('dom_builder> [ERROR] $message > $error');
+  }
+  else if (warning) {
+    print('dom_builder> [WARNING] $message');
+  }
+  else {
+    print('dom_builder> $message');
+  }
+
+  if (stackTrace != null) {
+    print(stackTrace);
+  }
+}
+
 abstract class WithValue {
   bool/*!*/ get hasValue;
 
