@@ -87,23 +87,23 @@ abstract class DOMGenerator<T> {
     return _ignoreAttributeEquivalence.remove(attributeName);
   }
 
-  T getNodeParent(T node) {
+  T/*?*/ getNodeParent(T/*?*/ node) {
     throw UnsupportedError("Can't get element parent: $node");
   }
 
-  List<T> getElementNodes(T element) {
+  List<T>/*!*/ getElementNodes(T/*?*/ element) {
     throw UnsupportedError("Can't get element nodes: $element");
   }
 
-  String getElementTag(T element) {
+  String/*?*/ getElementTag(T/*?*/ element) {
     throw UnsupportedError("Can't get element tag: $element");
   }
 
-  String getElementValue(T element) {
+  String/*?*/ getElementValue(T/*?*/ element) {
     throw UnsupportedError("Can't get element value: $element");
   }
 
-  String getElementOuterHTML(T element) {
+  String/*?*/ getElementOuterHTML(T/*?*/ element) {
     throw UnsupportedError("Can't get element outerHTML: $element");
   }
 

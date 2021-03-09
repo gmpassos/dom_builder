@@ -11,9 +11,9 @@ abstract class DOMNodeRuntime<T> {
 
   DOMGenerator<T/*!*/> get domGenerator => treeMap.domGenerator;
 
-  final DOMNode domNode;
+  final DOMNode/*?*/ domNode;
 
-  final T/*!*/ node;
+  final T/*?*/ node;
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 

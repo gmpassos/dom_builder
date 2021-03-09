@@ -30,7 +30,7 @@ void dom_builder_log(String/*!*/ message, {bool/*!*/ warning = false, Object/*?*
 abstract class WithValue {
   bool/*!*/ get hasValue;
 
-  String get value;
+  String/*?*/ get value;
 }
 
 //
@@ -116,28 +116,28 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Parses [entry] to a list of nodes.
-  static List<DOMNode/*!*/> parseNodes(entry) {
-    if (entry == null) return null;
+  static List<DOMNode/*!*/>/*!*/ parseNodes(Object/*?*/ entry) {
+    if (entry == null) return <DOMNode>[];
 
     if (entry is AsDOMNode) {
       var node = entry.asDOMNode;
-      return node != null ? [node] : null;
+      return node != null ? [node] : <DOMNode>[];
     } else if (entry is AsDOMElement) {
       var element = entry.asDOMElement;
-      return element != null ? [element] : null;
+      return element != null ? [element] : <DOMNode>[];
     } else if (entry is DOMNode) {
       return [entry];
     } else if (entry is html_dom.Node) {
-      return [DOMNode.from(entry)];
+      var domNode = DOMNode.from(entry);
+      return domNode != null ? [domNode] : <DOMNode>[];
     } else if (entry is List) {
       entry.removeWhere((e) => e == null);
-      if (entry.isEmpty) return [];
+      if (entry.isEmpty) return <DOMNode>[];
       var list = entry.expand(parseNodes).toList();
-      list.removeWhere((e) => e == null);
       return list;
     } else if (entry is String) {
       if (isHTMLElement(entry)) {
-        return parseHTML(entry);
+        return parseHTML(entry) ?? <DOMNode>[] ;
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>');
       } else {
@@ -147,12 +147,12 @@ class DOMNode implements AsDOMNode {
       return [TextNode(entry.toString())];
     } else if (isDOMBuilderDirectHelper(entry)) {
       try {
-        var tag = entry();
-        return [tag];
+        dynamic f = entry ;
+        var tag = f();
+        return parseNodes(tag);
       } catch (e, s) {
-        print(e);
-        print(s);
-        return null;
+        dom_builder_log('Error calling function: $entry',error: e, stackTrace: s);
+        return <DOMNode>[];
       }
     } else if (entry is DOMElementGenerator ||
         entry is DOMElementGeneratorFunction) {
@@ -162,24 +162,29 @@ class DOMNode implements AsDOMNode {
     }
   }
 
-  static Object/*?*/ _parseNode(entry) {
-    if (entry == null) return null;
+  /// Same as [parseNodes], but returns a [DOMNode] or a [List<DOMNode>].
+  static Object/*?*/ _parseNode(Object/*?*/ entry) {
+    if (entry == null) return null ;
 
-    if (entry is DOMNode) {
+    if (entry is AsDOMNode) {
+      var node = entry.asDOMNode;
+      return node ;
+    } else if (entry is AsDOMElement) {
+      var element = entry.asDOMElement;
+      return element ;
+    } else if (entry is DOMNode) {
       return entry;
     } else if (entry is html_dom.Node) {
-      return DOMNode.from(entry);
+      var domNode = DOMNode.from(entry);
+      return domNode ;
     } else if (entry is List) {
       entry.removeWhere((e) => e == null);
-      if (entry.isEmpty) return null;
+      if (entry.isEmpty) return <DOMNode>[];
       var list = entry.expand(parseNodes).toList();
-      list.removeWhere((e) => e == null);
-      if (list.isEmpty) return null;
-      if (list.length == 1) return list.single;
       return list;
     } else if (entry is String) {
       if (isHTMLElement(entry)) {
-        return parseHTML(entry);
+        return parseHTML(entry) ;
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>');
       } else {
@@ -187,6 +192,15 @@ class DOMNode implements AsDOMNode {
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
+    } else if (isDOMBuilderDirectHelper(entry)) {
+      try {
+        dynamic f = entry ;
+        var tag = f();
+        return _parseNode(tag) ;
+      } catch (e, s) {
+        dom_builder_log('Error calling function: $entry',error: e, stackTrace: s);
+        return null;
+      }
     } else if (entry is DOMElementGenerator ||
         entry is DOMElementGeneratorFunction) {
       return ExternalElementNode(entry);
@@ -209,6 +223,7 @@ class DOMNode implements AsDOMNode {
     } else if (entry is List) {
       if (entry.isEmpty) return null;
       entry.removeWhere((e) => e == null);
+      if (entry.isEmpty) return null;
       return DOMNode.from(entry.single);
     } else if (entry is String) {
       if (isHTMLElement(entry)) {
@@ -238,7 +253,7 @@ class DOMNode implements AsDOMNode {
     return null;
   }
 
-  factory DOMNode._fromHtmlNodeElement(html_dom.Element entry) {
+  factory DOMNode._fromHtmlNodeElement(html_dom.Element/*!*/ entry) {
     var name = entry.localName;
 
     var attributes = entry.attributes.map((k, v) => MapEntry(k.toString(), v));
@@ -256,7 +271,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a [DOMNodeRuntime] with the actual generated node
   /// associated with [treeMap] and [domGenerator].
-  DOMNodeRuntime get runtime => treeMap != null
+  DOMNodeRuntime/*!*/ get runtime => treeMap != null
       ? treeMap.getRuntimeNode(this)
       : DOMNodeRuntimeDummy(null, this, null);
 
@@ -407,7 +422,7 @@ class DOMNode implements AsDOMNode {
     }
   }
 
-  List<DOMNode> _content;
+  List<DOMNode/*!*/>/*?*/ _content;
 
   /// Actual list of nodes that represents the content of this node.
   List<DOMNode> get content => _content;
@@ -693,30 +708,35 @@ class DOMNode implements AsDOMNode {
 
   void _addToContent(Object/*?*/ entry) {
     if (entry is List) {
-      _addListToContent(entry);
-    } else {
+      _addListToContent(entry.whereType<DOMNode>());
+    } else if (entry is DOMNode) {
       _addNodeToContent(entry);
     }
   }
 
-  void _addListToContent(List<DOMNode> list) {
-    if (list == null) return;
-    list.removeWhere((e) => e == null);
-    if (list.isEmpty) return;
-
-    for (var elem in list) {
-      _addNodeToContent(elem);
-    }
-  }
-
-  void _addNodeToContent(DOMNode/*?*/ entry) {
-    if (entry == null) return;
+  void _addListToContent(Iterable<DOMNode/*!*/>/*!*/ list) {
+    if (list.isEmpty) return ;
 
     _checkAllowContent();
 
     if (_content == null) {
+      _content = list.toList();
+      for (var elem in _content) {
+        elem.parent = this;
+      }
+    } else {
+      for (var elem in list) {
+        _content.add(elem);
+        elem.parent = this;
+      }
+    }
+  }
+
+  void _addNodeToContent(DOMNode/*!*/ entry) {
+    _checkAllowContent();
+
+    if (_content == null) {
       _content = [entry];
-      ;
     } else {
       _content.add(entry);
     }
@@ -724,48 +744,45 @@ class DOMNode implements AsDOMNode {
     entry.parent = this;
   }
 
-  void _insertToContent(int index, Object/*?*/ entry) {
+  void _insertToContent(int/*!*/ index, Object/*?*/ entry) {
     if (entry is List) {
-      _insertListToContent(index, entry);
-    } else {
+      _insertListToContent(index, entry.whereType<DOMNode>());
+    } else if (entry is DOMNode) {
       _insertNodeToContent(index, entry);
     }
   }
 
-  void _insertListToContent(int index, List<DOMNode> list) {
-    if (list == null) return;
-    list.removeWhere((e) => e == null);
+  void _insertListToContent(int/*!*/ index, Iterable<DOMNode/*!*/>/*!*/ list) {
     if (list.isEmpty) return;
-
-    if (list.length == 1) {
-      _addNodeToContent(list[0]);
-      return;
-    }
 
     _checkAllowContent();
 
+    if (list.length == 1) {
+      var elem = list.first;
+      if (_content == null || index >= _content.length) {
+        _addNodeToContent(elem);
+      } else {
+        _content.insert(index, elem);
+      }
+      return;
+    }
+
     if (_content == null) {
-      _content = List.from(list).cast();
+      _content = list.toList();
       _setChildrenParent();
     } else {
-      if (index > _content.length) index = _content.length;
-      if (index == _content.length) {
-        for (var entry in list) {
-          _addNodeToContent(entry);
-        }
+      if (index >= _content.length) {
+        _addListToContent(list);
       } else {
         _content.insertAll(index, list);
-        _setChildrenParent();
+        for (var elem in list) {
+          elem.parent = this ;
+        }
       }
     }
   }
 
-  void _setChildrenParent() {
-    if (isEmpty) return;
-    _content.forEach((e) => e.parent = this);
-  }
-
-  void _insertNodeToContent(int index, DOMNode entry) {
+  void _insertNodeToContent(int/*!*/ index, DOMNode/*!*/ entry) {
     if (entry == null) return;
 
     _checkAllowContent();
@@ -774,14 +791,18 @@ class DOMNode implements AsDOMNode {
       _content = [entry];
       entry.parent = this;
     } else {
-      if (index > _content.length) index = _content.length;
-      if (index == _content.length) {
+      if (index >= _content.length) {
         _addNodeToContent(entry);
       } else {
         _content.insert(index, entry);
         entry.parent = this;
       }
     }
+  }
+
+  void _setChildrenParent() {
+    if (isEmpty) return;
+    _content.forEach((e) => e.parent = this);
   }
 
   void _checkAllowContent() {
@@ -808,7 +829,7 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Sets the content of this node.
-  DOMNode setContent(newContent) {
+  DOMNode setContent(Object/*?*/ newContent) {
     var nodes = DOMNode.parseNodes(newContent);
     if (nodes != null && nodes.isNotEmpty) {
       _content = nodes;
@@ -821,97 +842,103 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Returns a child node by [index].
-  T nodeByIndex<T extends DOMNode>(int index) {
+  T/*?*/ nodeByIndex<T extends DOMNode>(int/*?*/ index) {
     if (index == null || isEmpty) return null;
     return _content[index];
   }
 
   /// Returns a child node by [id].
-  T nodeByID<T extends DOMNode>(String id) {
-    if (id == null || isEmpty) return null;
+  T/*?*/ nodeByID<T extends DOMNode>(String/*?*/ id) {
+    if (id == null || id.isEmpty || isEmpty) return null;
     if (id.startsWith('#')) id = id.substring(1);
     return nodeWhere((n) => n is DOMElement && n.id == id);
   }
 
   /// Returns a node [T] that has attribute [id].
-  T selectByID<T extends DOMNode>(String id) {
-    if (id == null || isEmpty) return null;
+  T/*?*/ selectByID<T extends DOMNode>(String/*?*/ id) {
+    if (id == null || id.isEmpty || isEmpty) return null;
     if (id.startsWith('#')) id = id.substring(1);
     return selectWhere((n) => n is DOMElement && n.id == id);
   }
 
   /// Returns a node [T] that has all [classes].
-  T selectWithAllClass<T extends DOMNode>(List<String> classes) {
+  T/*?*/ selectWithAllClass<T extends DOMNode>(List<String/*?*/>/*?*/ classes) {
     if (isEmptyObject(classes) || isEmpty) return null;
 
     classes = classes
-        .where((c) => c != null)
+        .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
         .toList();
+
+    if (classes.isEmpty) return null ;
 
     return selectWhere((n) => n is DOMElement && n.containsAllClasses(classes));
   }
 
   /// Returns a node [T] that has any of [classes].
-  T selectWithAnyClass<T extends DOMNode>(List<String> classes) {
+  T/*?*/ selectWithAnyClass<T extends DOMNode>(List<String/*?*/>/*?*/ classes) {
     if (isEmptyObject(classes) || isEmpty) return null;
 
     classes = classes
-        .where((c) => c != null)
+        .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
         .toList();
+
+    if (classes.isEmpty) return null ;
 
     return selectWhere((n) => n is DOMElement && n.containsAnyClass(classes));
   }
 
   /// Returns a node [T] that is one of [tags].
-  T selectByTag<T extends DOMNode>(List<String> tags) {
+  T/*?*/ selectByTag<T extends DOMNode>(List<String/*?*/>/*?*/ tags) {
     if (isEmptyObject(tags) || isEmpty) return null;
 
     tags = tags
-        .where((c) => c != null)
+        .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
         .toList();
+
+    if (tags.isEmpty) return null ;
 
     return selectWhere((n) => n is DOMElement && tags.contains(n.tag));
   }
 
   /// Returns a node [T] that is equals to [node].
-  T nodeEquals<T extends DOMNode>(DOMNode node) {
+  T/*?*/ nodeEquals<T extends DOMNode>(DOMNode/*?*/ node) {
     if (node == null || isEmpty) return null;
     return nodeWhere((n) => n == node);
   }
 
-  T selectEquals<T extends DOMNode>(DOMNode node) {
+  T/*?*/ selectEquals<T extends DOMNode>(DOMNode/*?*/ node) {
     if (node == null || isEmpty) return null;
     return selectWhere((n) => n == node);
   }
 
-  T nodeWhere<T extends DOMNode/*!*/>(Object/*?*/ selector) {
-    if (selector == null || isEmpty || _content == null) return null;
+  T/*?*/ nodeWhere<T extends DOMNode/*!*/>(Object/*?*/ selector) {
+    if (selector == null || isEmpty) return null;
     var nodeSelector = asNodeSelector(selector);
     return _content.firstWhere(nodeSelector, orElse: () => null);
   }
 
   /// Returns a [List<T>] of children nodes that matches [selector].
-  List<T> nodesWhere<T extends DOMNode>(Object/*?*/ selector) {
-    if (selector == null || isEmpty || _content == null) return [];
+  List<T/*!*/>/*!*/ nodesWhere<T extends DOMNode>(Object/*?*/ selector) {
+    if (selector == null || isEmpty ) return <T>[];
     var nodeSelector = asNodeSelector(selector);
-    return _content.where(nodeSelector).toList();
+    return _content.where(nodeSelector).whereType<T>().toList();
   }
 
   void catchNodesWhere<T extends DOMNode>(Object/*?*/ selector, List<T> destiny) {
-    if (selector == null || isEmpty || _content == null) return;
+    if (selector == null || isEmpty ) return;
     var nodeSelector = asNodeSelector(selector);
     destiny.addAll(_content.where(nodeSelector).whereType<T>());
   }
 
   /// Returns a [T] child node that matches [selector].
-  T selectWhere<T extends DOMNode>(Object/*?*/ selector) {
-    if (selector == null || isEmpty || _content == null) return null;
+  T/*?*/ selectWhere<T extends DOMNode>(Object/*?*/ selector) {
+    if (selector == null || isEmpty ) return null;
     var nodeSelector = asNodeSelector(selector);
 
     var found = nodeWhere(nodeSelector);
@@ -926,7 +953,7 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Returns a parent [T] that matches [selector].
-  T selectParentWhere<T extends DOMNode>(Object/*?*/ selector) {
+  T/*?*/ selectParentWhere<T extends DOMNode>(Object/*?*/ selector) {
     if (selector == null) return null;
     var nodeSelector = asNodeSelector(selector);
     if (nodeSelector == null) return null;
@@ -941,15 +968,15 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Returns a child node of type [T].
-  T selectByType<T extends DOMNode>() => selectWhere((n) => n is T);
+  T/*?*/ selectByType<T extends DOMNode>() => selectWhere((n) => n is T);
 
   /// Returns a [List<T>] of children nodes that are of type [T].
   List<T> selectAllByType<T extends DOMNode>() =>
       selectAllWhere((n) => n is T).whereType<T>().toList();
 
   /// Returns a [List<T>] of children nodes that matches [selector].
-  List<T> selectAllWhere<T extends DOMNode>(Object/*?*/ selector) {
-    if (selector == null || isEmpty) return [];
+  List<T/*!*/>/*!*/ selectAllWhere<T extends DOMNode>(Object/*?*/ selector) {
+    if (selector == null || isEmpty) return <T>[];
     var nodeSelector = asNodeSelector(selector);
 
     var all = <T>[];
@@ -958,8 +985,8 @@ class DOMNode implements AsDOMNode {
   }
 
   void _selectAllWhereImpl<T extends DOMNode>(
-      NodeSelector selector, List<T> all) {
-    if (isEmpty || _content == null) return;
+      NodeSelector selector, List<T/*!*/>/*!*/ all) {
+    if (isEmpty ) return;
 
     catchNodesWhere(selector, all);
 
@@ -968,9 +995,7 @@ class DOMNode implements AsDOMNode {
     }
   }
 
-  T node<T extends DOMNode>(Object/*?*/ selector) {
-    if (selector == null || isEmpty) return null;
-
+  T/*?*/ node<T extends DOMNode>(Object/*?*/ selector) {
     if (selector is num) {
       return nodeByIndex(selector);
     } else {
@@ -981,7 +1006,7 @@ class DOMNode implements AsDOMNode {
   /// Returns a node [T] that matches [selector].
   ///
   /// [selector] can by a [num], used as a node index.
-  T select<T extends DOMNode>(Object/*?*/ selector) {
+  T/*?*/ select<T extends DOMNode>(Object/*?*/ selector) {
     if (selector == null || isEmpty) return null;
 
     if (selector is num) {
@@ -992,35 +1017,35 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Returns the index of a child node that matches [selector].
-  int indexOf(Object/*?*/ selector) {
+  int/*!*/ indexOf(Object/*?*/ selector) {
+    if (selector == null || isEmpty) return -1;
+
     if (selector is num) {
       if (selector < 0) return -1;
-      if (isEmpty) return 0;
       if (selector >= _content.length) return _content.length;
       return selector;
     }
-
-    if (selector == null || isEmpty) return -1;
-
-    var nodeSelector = asNodeSelector(selector);
-    return _content.indexWhere(nodeSelector);
+    else {
+      var nodeSelector = asNodeSelector(selector);
+      return _content.indexWhere(nodeSelector);
+    }
   }
 
   /// Returns the index of [node].
-  int indexOfNode(DOMNode node) {
-    if (isEmpty) return -1;
+  int/*!*/ indexOfNode(DOMNode node) {
+    if (node == null || isEmpty) return -1;
     return _content.indexOf(node);
   }
 
   /// Adds each entry of [iterable] to [content].
   ///
-  /// [elementGenerator] Optional element generator, that is called for each entry of [iterable].
+  /// [contentGenerator] Optional element generator, that is called for each entry of [iterable].
   DOMNode addEach<T>(Iterable<T> iterable,
-      [ContentGenerator<T> elementGenerator]) {
-    if (elementGenerator != null) {
+      [ContentGenerator<T/*!*/> contentGenerator]) {
+    if (contentGenerator != null) {
       for (var entry in iterable) {
-        var elem = elementGenerator(entry);
-        _addImpl(elem);
+        var content = contentGenerator(entry);
+        _addImpl(content);
       }
     } else {
       for (var entry in iterable) {
@@ -1032,18 +1057,18 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
-  DOMNode addEachAsTag<T>(String tag, Iterable<T> iterable,
-      [ContentGenerator<T> elementGenerator]) {
-    if (elementGenerator != null) {
+  DOMNode addEachAsTag<T>(String/*!*/ tag, Iterable<T/*!*/>/*!*/ iterable,
+      [ContentGenerator<T/*!*/> contentGenerator]) {
+    if (contentGenerator != null) {
       for (var entry in iterable) {
-        var elem = elementGenerator(entry);
-        var tagElem = $tag(tag, content: elem);
+        var content = contentGenerator(entry);
+        var tagElem = $tag(tag, content: content);
         _addImpl(tagElem);
       }
     } else {
       for (var entry in iterable) {
-        var tagElem = $tag(tag, content: entry);
-        _addImpl(tagElem);
+        var content = $tag(tag, content: entry);
+        _addImpl(content);
       }
     }
 
@@ -1051,11 +1076,11 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
-  DOMNode addAsTag<T>(String tag, T entry,
-      [ContentGenerator<T> elementGenerator]) {
-    if (elementGenerator != null) {
-      var elem = elementGenerator(entry);
-      var tagElem = $tag(tag, content: elem);
+  DOMNode addAsTag<T>(String/*!*/ tag, T entry,
+      [ContentGenerator<T/*!*/> contentGenerator]) {
+    if (contentGenerator != null) {
+      var content = contentGenerator(entry);
+      var tagElem = $tag(tag, content: content);
       _addImpl(tagElem);
     } else {
       var tagElem = $tag(tag, content: entry);
@@ -1069,7 +1094,7 @@ class DOMNode implements AsDOMNode {
   /// Parses [html] and add it to [content].
   DOMNode addHTML(String html) {
     var list = $html(html);
-    _addListToContent(list);
+    _addToContent(list);
     normalizeContent();
     return this;
   }
@@ -1081,7 +1106,7 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Adds all [entries] to children nodes.
-  DOMNode addAll(List entries) {
+  DOMNode addAll(Iterable/*?*/ entries) {
     if (entries != null && entries.isNotEmpty) {
       entries.forEach(_addImpl);
       normalizeContent();
@@ -1089,7 +1114,7 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
-  void _addImpl(entry) {
+  void _addImpl(Object/*?*/ entry) {
     var node = _parseNode(entry);
     _addToContent(node);
   }
@@ -1100,13 +1125,17 @@ class DOMNode implements AsDOMNode {
 
     if (idx >= 0) {
       var node = _parseNode(entry);
-      _insertToContent(idx, node);
-      normalizeContent();
+      if ( idx >= length ) {
+        _addToContent(node);
+      } else {
+        _insertToContent(idx, node);
+      }
     } else if (indexSelector is num && isEmpty) {
       var node = _parseNode(entry);
-      add(node);
-      normalizeContent();
+      _addImpl(node);
     }
+
+    normalizeContent();
 
     return this;
   }
@@ -1120,32 +1149,30 @@ class DOMNode implements AsDOMNode {
 
       var node = _parseNode(entry);
       _insertToContent(idx, node);
-
-      normalizeContent();
     } else if (indexSelector is num && isEmpty) {
       var node = _parseNode(entry);
-      add(node);
-      normalizeContent();
+      _addImpl(node);
     }
+
+    normalizeContent();
 
     return this;
   }
 
   /// Copies this node.
-  DOMNode copy() {
+  DOMNode/*!*/ copy() {
     return DOMNode(content: copyContent());
   }
 
   /// Copies this node content.
-  List<DOMNode> copyContent() {
-    if (_content == null) return null;
-    if (_content.isEmpty) return [];
+  List<DOMNode/*!*/>/*!*/ copyContent() {
+    if (_content == null || _content.isEmpty) return <DOMNode>[];
     var content2 = _content.map((e) => e.copy()).toList();
     return content2;
   }
 }
 
-DOMNode _toTextNode(String text) {
+DOMNode/*!*/ _toTextNode(String text) {
   if (text == null || text.isEmpty) {
     return TextNode('');
   }
@@ -1160,32 +1187,24 @@ DOMNode _toTextNode(String text) {
 
 /// Represents a text node in DOM.
 class TextNode extends DOMNode implements WithValue {
-  String _text;
-
-  TextNode(String text)
-      : _text = text ?? '',
-        super._(false, false);
-
   @override
-  String get text => _text;
+  String/*!*/ text;
 
-  set text(String value) {
-    _text = value ?? '';
-  }
+  TextNode(this.text) : super._(false, false);
 
   bool/*!*/ get isTextEmpty => text.isEmpty;
 
   @override
-  bool/*!*/ get hasValue => isNotEmptyObject(_text);
+  bool/*!*/ get hasValue => isNotEmptyObject(text);
 
   @override
   bool/*!*/ absorbNode(DOMNode other) {
     if (other is TextNode) {
-      _text += other.text;
+      text += other.text;
       other.text = '';
       return true;
     } else if (other is DOMElement) {
-      _text += other.text;
+      text += other.text;
       other.clearNodes();
       return true;
     } else {
@@ -1248,22 +1267,21 @@ class TextNode extends DOMNode implements WithValue {
       DOMNode previousNode,
       DOMContext domContext}) {
     var nbsp = xhtml ? '&#160;' : '&nbsp;';
-
-    return _text.replaceAll('\xa0', nbsp);
+    return text.replaceAll('\xa0', nbsp);
   }
 
   @override
-  String get value => _text;
+  String get value => text;
 
   bool/*!*/ equals(Object other) =>
       identical(this, other) ||
       other is TextNode &&
           runtimeType == other.runtimeType &&
-          _text == other._text;
+          text == other.text;
 
   @override
   TextNode copy() {
-    return TextNode(_text);
+    return TextNode(text);
   }
 
   @override
@@ -1273,36 +1291,30 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   String toString() {
-    return _text ?? '';
+    return text;
   }
 }
 
 /// Represents a template node in DOM.
 class TemplateNode extends DOMNode implements WithValue {
-  DOMTemplateNode _template;
+  DOMTemplateNode/*!*/ template;
 
   TemplateNode(DOMTemplateNode template)
-      : _template = template ?? DOMTemplateNode([]),
+      : template = template ?? DOMTemplateNode([]),
         super._(false, false);
 
   @override
-  String get text => isNotEmpty ? _template.toString() : '';
+  String get text => isNotEmpty ? template.toString() : '';
 
   set text(String value) {
-    _template = DOMTemplate.parse(value ?? '');
-  }
-
-  DOMTemplate get template => _template;
-
-  set template(DOMTemplate value) {
-    _template = value;
+    template = DOMTemplate.parse(value ?? '');
   }
 
   @override
-  bool get isEmpty => _template != null ? _template.isEmpty : true;
+  bool get isEmpty => template.isEmpty ;
 
   @override
-  bool get hasValue => _template != null && _template.isNotEmpty;
+  bool get hasValue => template.isNotEmpty;
 
   @override
   bool/*!*/ absorbNode(DOMNode other) {
@@ -1311,8 +1323,8 @@ class TemplateNode extends DOMNode implements WithValue {
       other.text = '';
       return true;
     } else if (other is TemplateNode) {
-      _template.addAll(other._template.nodes);
-      other._template.clear();
+      template.addAll(other.template.nodes);
+      other.template.clear();
       return true;
     } else if (other is DOMElement) {
       text += other.text;
@@ -1325,7 +1337,7 @@ class TemplateNode extends DOMNode implements WithValue {
 
   @override
   void clearNodes() {
-    _template.clear();
+    template.clear();
     super.clearNodes();
   }
 
@@ -1399,7 +1411,7 @@ class TemplateNode extends DOMNode implements WithValue {
       identical(this, other) ||
       other is TemplateNode &&
           runtimeType == other.runtimeType &&
-          _template == other._template;
+          template == other.template;
 
   @override
   TemplateNode copy() {
@@ -1421,9 +1433,9 @@ class TemplateNode extends DOMNode implements WithValue {
 // ContentGenerator:
 //
 
-typedef ContentGenerator<T> = dynamic Function(T entry);
+typedef ContentGenerator<T/*!*/> = dynamic Function(T/*?*/ entry);
 
-void _checkTag(String expectedTag, DOMElement domElement) {
+void _checkTag(String/*!*/ expectedTag, DOMElement/*!*/ domElement) {
   if (domElement.tag != expectedTag) {
     throw StateError('Not a $expectedTag tag: $domElement');
   }
@@ -1445,7 +1457,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   static final Set<String> _SELF_CLOSING_TAGS_OPTIONAL = {'p'};
 
   /// Normalizes a tag name. Returns null for empty string.
-  static String normalizeTag(String tag) {
+  static String normalizeTag(String/*?*/ tag) {
     if (tag == null) return null;
     tag = tag.toLowerCase().trim();
     return tag.isNotEmpty ? tag : null;
@@ -1455,10 +1467,10 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   factory DOMElement(String tag,
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+      Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false}) {
     if (tag == null) throw ArgumentError('Null tag');
@@ -1594,10 +1606,10 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   DOMElement._(String tag,
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : tag = normalizeTag(tag),
@@ -2362,8 +2374,8 @@ class DOMElement extends DOMNode implements AsDOMElement {
 //
 
 /// Base class for [DOMElement] events.
-class DOMEvent<T> {
-  final DOMTreeMap<T> treeMap;
+class DOMEvent<T/*!*/> {
+  final DOMTreeMap<T/*!*/> treeMap;
   final Object/*?*/ event;
   final Object/*?*/ eventTarget;
   final DOMElement target;
@@ -2383,14 +2395,14 @@ class DOMEvent<T> {
 }
 
 /// Represents a mouse event.
-class DOMMouseEvent<T> extends DOMEvent<T> {
-  final Point<num> client;
+class DOMMouseEvent<T/*!*/> extends DOMEvent<T/*!*/> {
+  final Point<num/*!*/> client;
 
-  final Point<num> offset;
+  final Point<num/*!*/> offset;
 
-  final Point<num> page;
+  final Point<num/*!*/> page;
 
-  final Point<num> screen;
+  final Point<num/*!*/> screen;
 
   final int button;
 
@@ -2498,10 +2510,10 @@ class DIVElement extends DOMElement {
 
   DIVElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+      Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('div',
@@ -2546,13 +2558,13 @@ class INPUTElement extends DOMElement implements WithValue {
 
   INPUTElement(
       {Map<String, dynamic> attributes,
-      id,
-      name,
-      type,
-      placeholder,
-      classes,
-      style,
-      value,
+        Object/*?*/ id,
+        Object/*?*/ name,
+        Object/*?*/ type,
+        Object/*?*/ placeholder,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ value,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('input',
@@ -2607,12 +2619,12 @@ class SELECTElement extends DOMElement {
 
   SELECTElement(
       {Map<String, dynamic> attributes,
-      id,
-      name,
-      type,
-      classes,
-      style,
-      options,
+        Object/*?*/ id,
+        Object/*?*/ name,
+        Object/*?*/ type,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ options,
       bool multiple,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
@@ -2767,8 +2779,8 @@ class OPTIONElement extends DOMElement implements WithValue {
 
   OPTIONElement(
       {Map<String, dynamic> attributes,
-      classes,
-      style,
+        Object/*?*/ classes,
+        Object/*?*/ style,
       Object/*?*/ value,
       String label,
       bool selected,
@@ -2845,13 +2857,13 @@ class TEXTAREAElement extends DOMElement implements WithValue {
 
   TEXTAREAElement(
       {Map<String, dynamic> attributes,
-      id,
-      name,
-      classes,
-      style,
-      cols,
-      rows,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ name,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ cols,
+        Object/*?*/ rows,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('textarea',
@@ -3074,10 +3086,10 @@ List<TABLENode> createTableCells(Object/*?*/ rowCells, [bool header]) {
 abstract class TABLENode extends DOMElement {
   TABLENode._(String tag,
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._(tag,
@@ -3117,14 +3129,14 @@ class TABLEElement extends DOMElement {
 
   TABLEElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      caption,
-      head,
-      body,
-      foot,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ caption,
+        Object/*?*/ head,
+        Object/*?*/ body,
+        Object/*?*/ foot,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('table',
@@ -3165,10 +3177,10 @@ class THEADElement extends TABLENode {
 
   THEADElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      rows,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ rows,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('thead',
@@ -3209,10 +3221,10 @@ class CAPTIONElement extends TABLENode {
 
   CAPTIONElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('caption',
@@ -3253,10 +3265,10 @@ class TBODYElement extends TABLENode {
 
   TBODYElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      rows,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ rows,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('tbody',
@@ -3297,10 +3309,10 @@ class TFOOTElement extends TABLENode {
 
   TFOOTElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      rows,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ rows,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('tfoot',
@@ -3341,10 +3353,10 @@ class TRowElement extends TABLENode {
 
   TRowElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      cells,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ cells,
       bool headerRow,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
@@ -3393,10 +3405,10 @@ class THElement extends TABLENode {
 
   THElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('th',
@@ -3442,10 +3454,10 @@ class TDElement extends TABLENode {
 
   TDElement(
       {Map<String, dynamic> attributes,
-      id,
-      classes,
-      style,
-      content,
+        Object/*?*/ id,
+        Object/*?*/ classes,
+        Object/*?*/ style,
+        Object/*?*/ content,
       bool/*!*/ hidden = false,
       bool/*!*/ commented = false})
       : super._('td',
@@ -3472,10 +3484,10 @@ class TDElement extends TABLENode {
 /// A [DOMNode] that will be defined in the future.
 class DOMAsync extends DOMNode {
   /// A Future that returns the final node content.
-  final Future future;
+  final Future/*?*/ future;
 
   /// A [Function] that returns the [Future] that defines this node content.
-  final Future Function() function;
+  final Future Function()/*?*/ function;
 
   /// Content to be showed while [future]/[function] is being executed.
   final Object/*?*/ loading;
@@ -3515,10 +3527,10 @@ class DOMAsync extends DOMNode {
 
 /// Interface for objects that can be cast as [DOMNode].
 abstract class AsDOMNode {
-  DOMNode get asDOMNode;
+  DOMNode/*!*/ get asDOMNode;
 }
 
 /// Interface for objects that can be cast as [DOMElement].
 abstract class AsDOMElement {
-  DOMElement get asDOMElement;
+  DOMElement/*!*/ get asDOMElement;
 }

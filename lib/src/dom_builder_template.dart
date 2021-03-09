@@ -304,7 +304,7 @@ abstract class DOMTemplate {
 typedef ElementHTMLProvider = String Function(String query);
 
 class DOMTemplateNode extends DOMTemplate {
-  List<DOMTemplate> nodes;
+  List<DOMTemplate>/*!*/ nodes;
 
   DOMTemplateNode([List<DOMTemplate> nodes]) : nodes = nodes ?? <DOMTemplate>[];
 
