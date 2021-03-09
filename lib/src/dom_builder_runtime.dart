@@ -308,8 +308,8 @@ abstract class DOMNodeRuntime<T/*!*/> {
   }
 }
 
-class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T/*!*/> {
-  DOMNodeRuntimeDummy(DOMTreeMap<T> treeMap, DOMNode domNode, T node)
+class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
+  DOMNodeRuntimeDummy(DOMTreeMap<T/*!*/> treeMap, DOMNode domNode, T node)
       : super(treeMap, domNode, node);
 
   @override
