@@ -473,7 +473,7 @@ void main() {
       var source1 = 'Hello! Period: {{:period!=hourPeriod}}diff{{?}}eq{{/}}!';
       var source2 = 'Hello! Period: {{:period!=hourPeriod}}diff{{?}}eq!';
 
-      var template1 = DOMTemplate.tryParse(source1);
+      var template1 = DOMTemplate.tryParse(source1)!;
       expect(template1.nodes.length, equals(3));
       expect(template1.toString(), equals(source1));
 
@@ -484,7 +484,7 @@ void main() {
     test('intl:hi', () {
       var source1 = '{{intl:hi}} Joe!';
 
-      var template1 = DOMTemplate.tryParse(source1);
+      var template1 = DOMTemplate.tryParse(source1)!;
       expect(template1.nodes.length, equals(2));
       expect(template1.toString(), equals(source1));
 
@@ -502,16 +502,16 @@ void main() {
     test('intl:parameters', () {
       var source1 = '{{intl:hi}} {{intl:child}}!';
 
-      var template1 = DOMTemplate.tryParse(source1);
+      var template1 = DOMTemplate.tryParse(source1)!;
       expect(template1.nodes.length, equals(4));
       expect(template1.toString(), equals(source1));
 
-      var msgResolver = (String key, [Map<String, dynamic> parameters]) {
+      var msgResolver = (String key, [Map<String, dynamic>? parameters]) {
         switch (key) {
           case 'hi':
             return 'Hello';
           case 'child':
-            return parameters['n'] > 1 ? 'children' : 'child';
+            return parameters!['n'] > 1 ? 'children' : 'child';
           default:
             return '?';
         }

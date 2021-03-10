@@ -5,7 +5,7 @@ import 'package:dom_builder/dom_builder.dart';
 class BootstrapNavbarToggler {
   static DOMGenerator domGenerator = DOMGenerator.dartHTML();
 
-  Element render() {
+  Element? render() {
     var button = $button(
         classes: 'navbar-toggler',
         type: 'button',
@@ -18,6 +18,6 @@ class BootstrapNavbarToggler {
         },
         content: $span(classes: 'navbar-toggler-icon'));
 
-    return button.buildDOM(generator: domGenerator);
+    return button.buildDOM(generator: domGenerator as DOMGenerator<Element>?);
   }
 }

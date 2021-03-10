@@ -15,7 +15,7 @@ void main() {
   ]);
 
   // Moves down Joe's row, placing it after Smith's row:
-  div.select('tbody').select('tr').moveDown();
+  div.select('tbody')!.select('tr')!.moveDown();
 
   print('===============');
   print(div.buildHTML(withIndent: true));
@@ -23,7 +23,7 @@ void main() {
 
   // Equivalent:
 
-  var div2 = $divHTML('<div class="container"><span>Builder</span></div>')
+  var div2 = $divHTML('<div class="container"><span>Builder</span></div>')!
       .insertAt(0, $span(id: 's1', content: 'The '))
       .insertAfter(
           '#s1', $span(id: 's2', style: 'font-weight: bold', content: 'DOM '))

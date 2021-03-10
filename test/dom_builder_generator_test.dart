@@ -11,7 +11,7 @@ void main() {
       var generator = TestGenerator();
 
       var div = $tagHTML(
-          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
+          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>')!;
 
       var genDiv = div.buildDOM(generator: generator) as TestElem;
 
@@ -35,7 +35,7 @@ void main() {
       var generator = TestGenerator();
 
       var div = $tagHTML(
-          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>');
+          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span></div>')!;
 
       var treeMap = generator.generateMapped(div);
 
@@ -65,7 +65,7 @@ void main() {
 
       var text = TextNode('txt!');
 
-      var genText = treeMap.generate(generator, text);
+      var genText = treeMap.generate(generator, text)!;
 
       expect(text, isNotNull);
       expect(treeMap.getMappedDOMNode(genText), equals(text));
@@ -92,7 +92,7 @@ void main() {
         },
       ]);
 
-      var genDiv = treeMap.generate(generator, div);
+      var genDiv = treeMap.generate(generator, div)!;
 
       expect(genDiv, isNotNull);
       expect(genDiv.text, equals('BBBXCCCZIII'));
@@ -111,16 +111,18 @@ void main() {
       var generator = TestGenerator();
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
-          'uc',
-          (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
-                  domContext) =>
-              TestText(contentHolder.text.toUpperCase())));
+        'uc',
+        (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
+                domContext) =>
+            TestText(contentHolder!.text.toUpperCase()),
+      ));
 
       generator.registerElementGenerator(ElementGeneratorFunctions(
-          'lc',
-          (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
-                  domContext) =>
-              TestText(contentHolder.text.toLowerCase())));
+        'lc',
+        (domGenerator, tag, parent, attributes, contentHolder, contentNodes,
+                domContext) =>
+            TestText(contentHolder!.text.toLowerCase()),
+      ));
 
       var treeMap = generator.createDOMTreeMap();
 
@@ -129,7 +131,7 @@ void main() {
         '<lc>BBbb</lc>',
       ]);
 
-      var genDiv = treeMap.generate(generator, div);
+      var genDiv = treeMap.generate(generator, div)!;
 
       expect(genDiv, isNotNull);
       expect(genDiv.text, equals('BBBBbbbb'));
@@ -138,7 +140,7 @@ void main() {
     test('generator mapped: operations', () {
       var generator = TestGenerator();
 
-      var div = $tagHTML('<div><b>BBB</b><i>III</i><u>UUU</u></div>');
+      var div = $tagHTML('<div><b>BBB</b><i>III</i><u>UUU</u></div>')!;
       expect(div, isNotNull);
 
       var bNode = div.node('b') as DOMElement;
@@ -194,7 +196,7 @@ void main() {
       expect(genDiv.text, equals('UUUBBBIII'));
       expect(uNode.indexInParent, equals(0));
 
-      var copyB = treeMap.duplicateByDOMNode(bNode);
+      var copyB = treeMap.duplicateByDOMNode(bNode)!;
 
       expect(copyB, isNotNull);
       expect(copyB.domNode.text, equals('BBB'));
@@ -204,13 +206,13 @@ void main() {
           equals('<div><u>UUU</u><b>BBB</b><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUBBBBBBIII'));
 
-      var removed = treeMap.removeByDOMNode(bNode);
+      var removed = treeMap.removeByDOMNode(bNode)!;
       expect(removed.domNode, equals(bNode));
       expect(
           div.buildHTML(), equals('<div><u>UUU</u><b>BBB</b><i>III</i></div>'));
       expect(genDiv.text, equals('UUUBBBIII'));
 
-      var copyU = treeMap.duplicateByDOMNode(uNode);
+      var copyU = treeMap.duplicateByDOMNode(uNode)!;
 
       expect(copyU, isNotNull);
       expect(copyU.domNode.parent, isNotNull);
@@ -224,7 +226,7 @@ void main() {
       expect(copyU.domNode.text, equals('UUUX'));
       expect(copyU.node.text, equals('UUUX'));
 
-      var copyU2 = treeMap.duplicateByDOMNode(copyU.domNode);
+      var copyU2 = treeMap.duplicateByDOMNode(copyU.domNode)!;
       expect(copyU2, isNotNull);
       expect(copyU2.domNode.parent, isNotNull);
       expect(copyU2.node.parent, isNotNull);
@@ -239,7 +241,7 @@ void main() {
       expect(genDiv.text, equals('UUUUUUXUUUXBBBIII'));
 
       var mergeU = treeMap.mergeNearStringNodes(uNode, copyU.domNode,
-          onlyCompatibles: true);
+          onlyCompatibles: true)!;
 
       expect(mergeU, isNotNull);
 
@@ -283,7 +285,7 @@ void main() {
     test('external element', () {
       var generator = TestGenerator();
 
-      var div = $tagHTML('<div class="container"></div>');
+      var div = $tagHTML('<div class="container"></div>')!;
 
       var span = TestElem('span')..add(TestText('span element'));
       div.add(span);
@@ -313,15 +315,16 @@ void main() {
       generator.registerElementGenerator(TestNodeGenerator('x-tag', 'x-tag'));
 
       var div = $tagHTML(
-          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span><x-tag>XTAG</x-tag></div>');
+          '<div class="container"><span class="s1">Span Text<div class="d2">More text</div></span><x-tag>XTAG</x-tag></div>')!;
 
       print(div);
       print(div.buildHTML());
 
-      var genDiv = div.buildDOM(generator: generator) as TestElem;
+      var genDiv = div.buildDOM(generator: generator) as TestElem?;
       expect(genDiv, isNotNull);
 
-      DOMElement div2 = generator.revert(div.treeMap, genDiv);
+      var div2 =
+          generator.revert(div.treeMap as DOMTreeMap<TestNode>?, genDiv)!;
       expect(div2, isNotNull);
 
       expect(div2.buildHTML(), equals(div.buildHTML()));

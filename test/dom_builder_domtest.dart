@@ -11,16 +11,16 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
   TestElem generate(
       DOMGenerator<dynamic> domGenerator,
       DOMTreeMap<dynamic> treeMap,
-      String tag,
-      DOMElement domParent,
+      String? tag,
+      DOMElement? domParent,
       parent,
       DOMNode domNode,
       Map<String, DOMAttribute> attributes,
-      contentHolder,
-      List<DOMNode> contentNodes,
-      DOMContext<dynamic> context) {
+      TestElem? contentHolder,
+      List<DOMNode>? contentNodes,
+      DOMContext<dynamic>? context) {
     var attributesAsString =
-        attributes.map((key, value) => MapEntry(key, value.value));
+        attributes.map((key, value) => MapEntry(key, value.value ?? ''));
 
     var elem = TestElem(tag)..attributes.addAll(attributesAsString);
 
@@ -28,7 +28,9 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
 
     elem.attributes['class'] = (classes + ' ' + prevClass).trim();
 
-    elem.add(TestText(contentHolder.text));
+    if (contentHolder != null) {
+      elem.add(TestText(contentHolder.text));
+    }
 
     return elem;
   }
@@ -36,14 +38,14 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
   @override
   DOMElement revert(
       DOMGenerator<dynamic> domGenerator,
-      DOMTreeMap<dynamic> treeMap,
-      DOMElement domParent,
-      TestElem parent,
-      TestElem node) {
-    var tag = node.tag;
+      DOMTreeMap<dynamic>? treeMap,
+      DOMElement? domParent,
+      TestElem? parent,
+      TestElem? node) {
+    var tag = node!.tag;
     var prevClass = node.attributes['class'];
 
-    if (prevClass != null && prevClass.contains(tag)) {
+    if (prevClass != null && prevClass.contains(tag!)) {
       prevClass = prevClass.replaceFirst(tag, '').trim();
       node.attributes['class'] = prevClass;
     }
@@ -57,7 +59,7 @@ abstract class TestNode {
 
   final int instanceID = ++instanceIDCount;
 
-  TestNode parent;
+  TestNode? parent;
 
   String get text;
 
@@ -68,18 +70,12 @@ abstract class TestNode {
 
 class TestText extends TestNode {
   @override
-  TestNode parent;
-
-  String _text;
+  TestNode? parent;
 
   @override
-  String get text => _text;
+  String text;
 
-  set text(String value) {
-    _text = value ?? '';
-  }
-
-  TestText(String text) : _text = text ?? '';
+  TestText(String? text) : text = text ?? '';
 
   TestElem get asTestElem => TestElem('span')..add(TestText(text));
 
@@ -88,27 +84,27 @@ class TestText extends TestNode {
       identical(this, other) ||
       other is TestText &&
           runtimeType == other.runtimeType &&
-          _text == other._text;
+          text == other.text;
 
   @override
   int get hashCode => instanceID;
 
   @override
   String toString() {
-    return _text;
+    return text;
   }
 
   @override
-  TestText copy() => TestText(_text);
+  TestText copy() => TestText(text);
 
   @override
-  String outerHTML() => _text;
+  String outerHTML() => text;
 }
 
 class TestElem extends TestNode {
   @override
-  TestNode parent;
-  final String tag;
+  TestNode? parent;
+  final String? tag;
 
   TestElem(this.tag);
 
@@ -123,7 +119,7 @@ class TestElem extends TestNode {
     return copy;
   }
 
-  final List<TestNode/*!*/> _nodes = [];
+  final List<TestNode> _nodes = [];
 
   List<TestNode> get nodes => List.unmodifiable(_nodes);
 
@@ -141,16 +137,16 @@ class TestElem extends TestNode {
     _nodes.addAll(nodes);
   }
 
-  bool contains(TestNode node) => _nodes.contains(node);
+  bool contains(TestNode? node) => _nodes.contains(node);
 
   void add(TestNode node) {
     _nodes.add(node);
     _setParent(node, this);
   }
 
-  bool remove(TestNode node) {
+  bool remove(TestNode? node) {
     if (_nodes.remove(node)) {
-      _setParentNull(node);
+      _setParentNull(node!);
       return true;
     }
     return false;
@@ -184,7 +180,7 @@ class TestElem extends TestNode {
     _nodes.clear();
   }
 
-  final Map<String, String/*!*/> attributes = {};
+  final Map<String, String> attributes = {};
 
   String get asHTML => outerHTML();
 
@@ -222,14 +218,14 @@ class TestElem extends TestNode {
   }
 }
 
-class TestGenerator extends DOMGenerator<TestNode/*!*/> {
+class TestGenerator extends DOMGenerator<TestNode> {
   @override
-  TestNode getNodeParent(TestNode node) {
-    return node.parent;
+  TestNode? getNodeParent(TestNode? node) {
+    return node!.parent;
   }
 
   @override
-  List<TestNode> getElementNodes(TestNode element) {
+  List<TestNode> getElementNodes(TestNode? element) {
     if (element is TestElem) {
       return List.from(element.nodes);
     }
@@ -237,7 +233,7 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  String getElementTag(TestNode element) {
+  String? getElementTag(TestNode? element) {
     if (element is TestElem) {
       return element.tag;
     }
@@ -245,18 +241,18 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  String getElementValue(TestNode element) {
+  String? getElementValue(TestNode? element) {
     if (element == null) return null;
     return element.text;
   }
 
   @override
-  String getElementOuterHTML(TestNode element) {
-    return element.outerHTML();
+  String getElementOuterHTML(TestNode? element) {
+    return element!.outerHTML();
   }
 
   @override
-  Map<String, String/*!*/> getElementAttributes(TestNode element) {
+  Map<String, String>? getElementAttributes(TestNode? element) {
     if (element is TestElem) {
       return Map.fromEntries(element.attributes.entries);
     }
@@ -264,16 +260,16 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  bool addChildToElement(TestNode parent, TestNode child) {
+  bool addChildToElement(TestNode? parent, TestNode? child) {
     if (parent is TestElem && !parent.contains(child)) {
-      parent.add(child);
+      parent.add(child!);
       return true;
     }
     return false;
   }
 
   @override
-  bool removeChildFromElement(TestNode parent, TestNode child) {
+  bool removeChildFromElement(TestNode parent, TestNode? child) {
     if (parent is TestElem) {
       parent.remove(child);
       return true;
@@ -283,12 +279,12 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
 
   @override
   bool replaceChildElement(
-      TestNode parent, TestNode child1, List<TestNode> child2) {
+      TestNode parent, TestNode? child1, List<TestNode>? child2) {
     if (parent is TestElem) {
-      var idx = parent.indexOf(child1);
+      var idx = parent.indexOf(child1!);
       if (idx >= 0) {
         parent.removeAt(idx);
-        for (var i = 0; i < child2.length; ++i) {
+        for (var i = 0; i < child2!.length; ++i) {
           var e = child2[i];
           parent.insertAt(idx + i, e);
         }
@@ -304,8 +300,8 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  List<TestNode> addExternalElementToElement(
-      TestNode element, Object/*?*/ externalElement) {
+  List<TestNode>? addExternalElementToElement(
+      TestNode element, Object? externalElement) {
     if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);
@@ -320,7 +316,7 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  TestNode appendElementText(TestNode element, String text) {
+  TestNode? appendElementText(TestNode element, String? text) {
     if (element is TestElem) {
       var textElem = TestText(text);
       element.add(textElem);
@@ -330,16 +326,16 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  TestNode createTextNode(String text) {
+  TestNode createTextNode(String? text) {
     return TestText(text);
   }
 
   @override
-  bool isTextNode(TestNode node) => node is TestText;
+  bool isTextNode(TestNode? node) => node is TestText;
 
   @override
-  bool containsNode(TestNode parent, TestNode node) {
-    if (parent == null || node == null) return false;
+  bool containsNode(TestNode parent, TestNode? node) {
+    if (node == null) return false;
 
     if (parent is TestElem) {
       return parent.nodes.contains(node);
@@ -349,24 +345,24 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
   }
 
   @override
-  TestElem createElement(String tag, [DOMElement domElement]) {
+  TestElem createElement(String? tag, [DOMElement? domElement]) {
     return TestElem(tag);
   }
 
   @override
-  String getNodeText(TestNode node) {
-    return node.text;
+  String getNodeText(TestNode? node) {
+    return node!.text;
   }
 
   @override
-  void setAttribute(TestNode element, String attrName, String attrVal) {
+  void setAttribute(TestNode element, String attrName, String? attrVal) {
     if (element is TestElem) {
-      element.attributes[attrName] = attrVal;
+      element.attributes[attrName] = attrVal!;
     }
   }
 
   @override
-  String getAttribute(TestNode element, String attrName) {
+  String? getAttribute(TestNode element, String attrName) {
     if (element is TestElem) {
       return element.attributes[attrName];
     }
@@ -383,19 +379,19 @@ class TestGenerator extends DOMGenerator<TestNode/*!*/> {
 
   @override
   DOMNodeRuntime<TestNode> createDOMNodeRuntime(
-      DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestNode node) {
-    return TestNodeRuntime(treeMap, domNode, node);
+      DOMTreeMap<TestNode> treeMap, DOMNode? domNode, TestNode node) {
+    return TestNodeRuntime(treeMap, domNode, node as TestElem);
   }
 }
 
 class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
-  TestNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode domNode, TestElem node)
+  TestNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode? domNode, TestElem node)
       : super(treeMap, domNode, node);
 
   @override
-  String get tagName {
+  String? get tagName {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return element.tag;
     }
     return null;
@@ -403,16 +399,16 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
   @override
   String get text {
-    return node.text;
+    return node!.text;
   }
 
   @override
-  set text(String value) {
+  set text(String? value) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       element.add(TestText(value));
     } else if (node is TestText) {
-      TestText textElem = node;
+      var textElem = node as TestText;
       textElem.text = value ?? '';
     }
   }
@@ -421,14 +417,14 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   String get value => text;
 
   @override
-  set value(String value) {
+  set value(String? value) {
     text = value;
   }
 
   @override
-  String getAttribute(String name) {
+  String? getAttribute(String name) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return element.attributes[name];
     }
     return null;
@@ -437,7 +433,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   @override
   void setAttribute(String name, String value) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       element.attributes[name] = value;
     }
   }
@@ -445,7 +441,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   @override
   void removeAttribute(String name) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       element.attributes.remove(name);
     }
   }
@@ -453,7 +449,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   @override
   List<TestNode> get children {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return List.from(element.nodes);
     }
     return [];
@@ -462,74 +458,74 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   @override
   int get nodesLength {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return element.nodes.length;
     }
     return 0;
   }
 
   @override
-  TestNode getNodeAt(int index) {
+  TestNode? getNodeAt(int index) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return element.nodes[index];
     }
     return null;
   }
 
   @override
-  void add(TestNode child) {
+  void add(TestNode? child) {
     if (node is TestElem) {
-      TestElem element = node;
-      element.add(child);
+      var element = node as TestElem;
+      element.add(child!);
     }
   }
 
   @override
   void clear() {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       element.clear();
     }
   }
 
   @override
-  int indexOf(TestNode child) {
+  int indexOf(TestNode? child) {
     if (node is TestElem) {
-      TestElem element = node;
-      return element.indexOf(child);
+      var element = node as TestElem;
+      return element.indexOf(child!);
     }
     return -1;
   }
 
   @override
-  void insertAt(int index, TestNode child) {
+  void insertAt(int index, TestNode? child) {
     if (node is TestElem) {
-      TestElem element = node;
-      element.insertAt(index, child);
+      var element = node as TestElem;
+      element.insertAt(index, child!);
     }
   }
 
   @override
-  bool removeNode(TestNode child) {
+  bool removeNode(TestNode? child) {
     if (node is TestElem) {
-      TestElem element = node;
+      var element = node as TestElem;
       return element.remove(child);
     }
     return false;
   }
 
   @override
-  TestElem removeAt(int index) {
+  TestElem? removeAt(int index) {
     if (node is TestElem) {
-      TestElem element = node;
-      return element.removeAt(index);
+      var element = node as TestElem;
+      return element.removeAt(index) as TestElem?;
     }
     return null;
   }
 
   @override
-  void addClass(String className) {}
+  void addClass(String? className) {}
 
   @override
   List<String> get classes => [];
@@ -538,15 +534,15 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   void clearClasses() {}
 
   @override
-  bool removeClass(String className) => false;
+  bool removeClass(String? className) => false;
 
   @override
   TestNode copy() {
-    return node.copy();
+    return node!.copy();
   }
 
   @override
-  bool absorbNode(TestNode other) {
+  bool absorbNode(TestNode? other) {
     if (node is TestText) {
       if (other is TestText) {
         var textNode = node as TestText;
@@ -555,10 +551,10 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
         return true;
       }
     } else if (node is TestElem) {
-      var elemNode = node as TestElem;
+      var elemNode = node as TestElem?;
 
       if (other is TestElem) {
-        elemNode.addAll(other.nodes);
+        elemNode!.addAll(other.nodes);
         other.clear();
         return true;
       }
@@ -570,7 +566,7 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
   @override
   int get indexInParent {
     if (hasParent) {
-      return parentRuntime.indexOf(node);
+      return parentRuntime!.indexOf(node!);
     }
     return -1;
   }
@@ -589,14 +585,14 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
 class TestActionExecutor extends DOMActionExecutor<TestNode> {
   @override
-  TestNode call(String name, List<String> parameters, TestNode target,
-      TestNode self, DOMTreeMap treeMap, DOMContext context) {
+  TestNode call(String name, List<String> parameters, TestNode? target,
+      TestNode? self, DOMTreeMap? treeMap, DOMContext? context) {
     throw UnimplementedError();
   }
 
   @override
-  TestNode selectByID(String id, TestNode target, TestNode self,
-      DOMTreeMap treeMap, DOMContext context) {
+  TestNode selectByID(String id, TestNode? target, TestNode? self,
+      DOMTreeMap? treeMap, DOMContext? context) {
     throw UnimplementedError();
   }
 }

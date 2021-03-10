@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dom_builder/dom_builder.dart';
 import 'package:html/dom.dart' as html_dom;
 import 'package:html/parser.dart' as html_parse;
@@ -17,25 +18,22 @@ final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
 /// [s] If is a [String] uses [delimiter] to split strings. If [s] is a [List] iterator over it and flatten sub lists.
 /// [delimiter] Pattern to split [s] to list.
 /// [trim] If [true] trims all strings.
-List<String/*!*/>/*!*/ parseListOfStrings(Object/*?*/s,
-    Pattern/*!*/ delimiter, [bool trim = true]) {
+List<String> parseListOfStrings(Object? s, Pattern delimiter,
+    [bool trim = true]) {
   if (s == null) return <String>[];
 
-  List<String/*!*/> list;
+  List<String> list;
 
   if (s is List) {
     list = s.map(parseString).whereType<String>().toList();
   } else {
-    var str = parseString(s,'')/*!*/;
+    var str = parseString(s, '')!;
     if (trim) str = str.trim();
     list = str.split(delimiter);
   }
 
   if (trim) {
-    list = list
-        .map((e) => e.trim())
-        .where((e) => e.isNotEmpty)
-        .toList();
+    list = list.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
   }
 
   return list;
@@ -43,22 +41,22 @@ List<String/*!*/>/*!*/ parseListOfStrings(Object/*?*/s,
 
 final RegExp _REGEXP_HTML_TAG = RegExp(r'<\w+(?:>|\s)');
 
-bool/*!*/ possiblyWithHTML(String s) =>
+bool possiblyWithHTML(String? s) =>
     s != null && s.contains('<') && s.contains(_REGEXP_HTML_TAG);
 
 final RegExp _REGEXP_DEPENDENT_TAG =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
 
 /// Parses a [html] to nodes.
-List<DOMNode/*!*/>/*?*/ parseHTML(String html) {
+List<DOMNode>? parseHTML(String? html) {
   if (html == null) return null;
 
   var dependentTagMatch = _REGEXP_DEPENDENT_TAG.firstMatch(html);
 
   if (dependentTagMatch != null) {
-    var dependentTagName = dependentTagMatch.group(1).toLowerCase();
+    var dependentTagName = dependentTagMatch.group(1)!.toLowerCase();
 
-    html_dom.DocumentFragment parsed;
+    late html_dom.DocumentFragment parsed;
     if (dependentTagName == 'td' || dependentTagName == 'th') {
       parsed = html_parse.parseFragment(
           '<table><tbody><tr></tr>\n$html\n</tbody></table>',
@@ -71,7 +69,7 @@ List<DOMNode/*!*/>/*?*/ parseHTML(String html) {
     }
 
     var node = parsed.querySelector(dependentTagName);
-    return [DOMNode.from(node)];
+    return [DOMNode.from(node)!];
   }
 
   var parsed = html_parse.parseFragment(html, container: 'div');
@@ -80,7 +78,7 @@ List<DOMNode/*!*/>/*?*/ parseHTML(String html) {
     return null;
   } else if (parsed.nodes.length == 1) {
     var node = parsed.nodes[0];
-    return [DOMNode.from(node)];
+    return [DOMNode.from(node)!];
   } else {
     var list = parsed.nodes.toList();
 
@@ -103,25 +101,25 @@ List<DOMNode/*!*/>/*?*/ parseHTML(String html) {
       }
     }
 
-    var domList = list.map((e) => DOMNode.from(e)).toList();
+    var domList =
+        list.map((e) => DOMNode.from(e)).whereType<DOMNode>().toList();
     return domList;
   }
 }
 
 /// Returns a list of nodes from [html].
-List<DOMNode>/*!*/ $html<T extends DOMNode>(Object/*?*/ html) {
+List<DOMNode> $html<T extends DOMNode>(Object? html) {
   if (html == null) return <DOMNode>[];
   if (html is String) {
-    return parseHTML(html);
-  }
-  else if (html is List) {
-    return parseHTML(html.join(''));
+    return parseHTML(html)!;
+  } else if (html is List) {
+    return parseHTML(html.join(''))!;
   }
 
   throw ArgumentError("Can't parse type: ${html.runtimeType}");
 }
 
-bool/*!*/ _isTextTag(String tag) {
+bool _isTextTag(String? tag) {
   tag = DOMElement.normalizeTag(tag);
   if (tag == null || tag.isEmpty) return false;
 
@@ -147,27 +145,33 @@ bool/*!*/ _isTextTag(String tag) {
 /// - [instantiator]: the node instantiator, in case of [node] is null.
 /// - [preValidate]: validates the node before the instance is defined/created.
 /// - [validate]: validates a node after the instance is defined/created
-T/*?*/ $validate<T extends DOMNode>( {bool/*!*/ Function()/*?*/ preValidate,  DOMNodeValidator<T>/*?*/ validate , T/*?*/ node, DOMNodeInstantiator<T>/*?*/ instantiator , bool/*!*/ rethrowErrors = false} ) {
+T? $validate<T extends DOMNode>(
+    {bool Function()? preValidate,
+    DOMNodeValidator<T>? validate,
+    T? node,
+    DOMNodeInstantiator<T>? instantiator,
+    bool rethrowErrors = false}) {
   if (preValidate != null) {
     try {
       var preValid = preValidate();
-      if (!preValid) return null ;
+      if (!preValid) return null;
     } catch (e, s) {
       if (rethrowErrors) {
-        rethrow ;
-      }
-      else {
-        dom_builder_log("Error calling 'preValidate' function: $preValidate", error: e, stackTrace: s);
+        rethrow;
+      } else {
+        dom_builder_log("Error calling 'preValidate' function: $preValidate",
+            error: e, stackTrace: s);
       }
     }
   }
 
-  var theNode = node ;
+  var theNode = node;
   if (theNode == null && instantiator != null) {
     try {
       theNode = instantiator();
     } catch (e, s) {
-      dom_builder_log("Error calling 'instantiator' function: $instantiator", error: e, stackTrace: s);
+      dom_builder_log("Error calling 'instantiator' function: $instantiator",
+          error: e, stackTrace: s);
     }
   }
 
@@ -176,27 +180,27 @@ T/*?*/ $validate<T extends DOMNode>( {bool/*!*/ Function()/*?*/ preValidate,  DO
   if (validate != null) {
     try {
       var valid = validate(theNode);
-      if (!valid) return null ;
+      if (!valid) return null;
     } catch (e, s) {
-      dom_builder_log("Error calling 'validate' function: $validate", error: e, stackTrace: s);
+      dom_builder_log("Error calling 'validate' function: $validate",
+          error: e, stackTrace: s);
     }
   }
 
-  return theNode ;
+  return theNode;
 }
 
-
-DOMElement/*!*/ $htmlRoot(Object/*?*/ html,
-    {String defaultRootTag, bool defaultTagDisplayInlineBlock}) {
+DOMElement? $htmlRoot(Object? html,
+    {String? defaultRootTag, bool? defaultTagDisplayInlineBlock}) {
   var nodes = $html(html);
-  if (nodes == null || nodes.isEmpty) return null;
+  if (nodes.isEmpty) return null;
 
   if (nodes.length > 1) {
     nodes.removeWhere((e) => e is TextNode && e.text.trim().isEmpty);
     if (nodes.length == 1) {
-      return nodes[0];
+      return nodes[0] as DOMElement;
     } else {
-      Map<String, String> attributes;
+      Map<String, String>? attributes;
       if (defaultRootTag == null) {
         var onlyText = listMatchesAll(nodes,
             (e) => e is TextNode || (e is DOMElement && _isTextTag(e.tag)));
@@ -220,43 +224,39 @@ DOMElement/*!*/ $htmlRoot(Object/*?*/ html,
   }
 }
 
-typedef DOMNodeInstantiator<T extends DOMNode> = T/*?*/ Function();
+typedef DOMNodeInstantiator<T extends DOMNode> = T? Function();
 
-typedef DOMNodeValidator<T extends DOMNode> = bool/*!*/ Function(T/*?*/ node);
+typedef DOMNodeValidator<T extends DOMNode> = bool Function(T? node);
 
 final RegExp _PATTERN_HTML_ELEMENT_INIT = RegExp(r'\s*<\w+', multiLine: false);
 final RegExp _PATTERN_HTML_ELEMENT_END = RegExp(r'>\s*$', multiLine: false);
 
-bool/*!*/ isHTMLElement(String s) {
-  return s != null && s.startsWith(_PATTERN_HTML_ELEMENT_INIT) &&
+bool isHTMLElement(String s) {
+  return s.startsWith(_PATTERN_HTML_ELEMENT_INIT) &&
       _PATTERN_HTML_ELEMENT_END.hasMatch(s);
 }
 
-final RegExp _PATTERN_HTML_ELEMENT = RegExp(r'<\w+.*?>');
+final RegExp _PATTERN_HTML_ELEMENT = RegExp(r'<\w+.*>');
 
-bool/*!*/ hasHTMLTag(String s) {
-  return s != null && _PATTERN_HTML_ELEMENT.hasMatch(s);
+bool hasHTMLTag(String s) {
+  return _PATTERN_HTML_ELEMENT.hasMatch(s);
 }
 
 final RegExp _PATTERN_HTML_ENTITY = RegExp(r'&(?:\w+|#\d+);');
 
-bool/*!*/ hasHTMLEntity(String s) {
-  return s != null && _PATTERN_HTML_ENTITY.hasMatch(s);
+bool hasHTMLEntity(String s) {
+  return _PATTERN_HTML_ENTITY.hasMatch(s);
 }
-
 
 /// Creates a node with [tag].
 DOMElement $tag(String tag,
-    {
-    Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String/*!*/> attributes,
-      Object/*?*/ content,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? content,
+    bool hidden = false,
+    bool commented = false}) {
   return DOMElement(tag,
       id: id,
       classes: classes,
@@ -268,14 +268,13 @@ DOMElement $tag(String tag,
 }
 
 /// Creates a tag node from [html].
-T/*?*/ $tagHTML<T extends DOMElement/*!*/>(Object/*?*/ html) =>
-    $html<DOMElement>(html).firstWhere((e) => e is T, orElse: () => null);
+T? $tagHTML<T extends DOMElement>(Object? html) =>
+    $html<DOMElement>(html).firstWhereOrNull((e) => e is T) as T?;
 
 /// Creates a list of nodes of same [tag].
-List<DOMElement/*!*/>/*!*/ $tags<T>(String tag, Iterable<T> iterable,
-    [ContentGenerator<T> elementGenerator]) {
-
-  List<DOMElement/*!*/> elements = <DOMElement/*!*/>[];
+List<DOMElement> $tags<T>(String tag, Iterable<T>? iterable,
+    [ContentGenerator<T>? elementGenerator]) {
+  var elements = <DOMElement>[];
   if (iterable == null) return elements;
 
   if (elementGenerator != null) {
@@ -295,23 +294,20 @@ List<DOMElement/*!*/>/*!*/ $tags<T>(String tag, Iterable<T> iterable,
 }
 
 /// Creates a `table` node.
-TABLEElement/*!*/ $table(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-      Object/*?*/ thsStyle,
-      Object/*?*/ tdsStyle,
-      Object/*?*/ trsStyle,
-    Map<String, String> attributes,
-      Object/*?*/ caption,
-      Object/*?*/ head,
-      Object/*?*/ body,
-      Object/*?*/ foot,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+TABLEElement $table(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Object? thsStyle,
+    Object? tdsStyle,
+    Object? trsStyle,
+    Map<String, String>? attributes,
+    Object? caption,
+    Object? head,
+    Object? body,
+    Object? foot,
+    bool hidden = false,
+    bool commented = false}) {
   var tableElement = TABLEElement(
       id: id,
       classes: classes,
@@ -349,17 +345,14 @@ TABLEElement/*!*/ $table(
 }
 
 /// Creates a `thread` node.
-THEADElement/*!*/ $thead(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-      Object/*?*/ rows,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+THEADElement $thead(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? rows,
+    bool hidden = false,
+    bool commented = false}) {
   return THEADElement(
       id: id,
       classes: classes,
@@ -371,24 +364,21 @@ THEADElement/*!*/ $thead(
 }
 
 /// Creates a `caption` node.
-CAPTIONElement/*!*/ $caption(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    String captionSide,
-    Map<String, String> attributes,
-      Object/*?*/ content,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+CAPTIONElement $caption(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    String? captionSide,
+    Map<String, String>? attributes,
+    Object? content,
+    bool hidden = false,
+    bool commented = false}) {
   return CAPTIONElement(
       id: id,
       classes: classes,
       style: isNotEmptyString(captionSide)
-          ? (isNotEmptyString(style)
-              ? 'caption-side: $captionSide; $style'
+          ? (style != null
+              ? 'caption-side: $captionSide; ${CSS(style).style}'
               : 'caption-side: $captionSide;')
           : style,
       attributes: attributes,
@@ -398,17 +388,14 @@ CAPTIONElement/*!*/ $caption(
 }
 
 /// Creates a `tbody` node.
-TBODYElement/*!*/ $tbody(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-      Object/*?*/ rows,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+TBODYElement $tbody(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? rows,
+    bool hidden = false,
+    bool commented = false}) {
   return TBODYElement(
       id: id,
       classes: classes,
@@ -420,17 +407,14 @@ TBODYElement/*!*/ $tbody(
 }
 
 /// Creates a `tfoot` node.
-TFOOTElement/*!*/ $tfoot(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-      Object/*?*/ rows,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+TFOOTElement $tfoot(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? rows,
+    bool hidden = false,
+    bool commented = false}) {
   return TFOOTElement(
       id: id,
       classes: classes,
@@ -442,17 +426,14 @@ TFOOTElement/*!*/ $tfoot(
 }
 
 /// Creates a `tr` node.
-TRowElement/*!*/ $tr(
-    {
-      Object/*?*/ id,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-      Object/*?*/ cells,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-  
-
+TRowElement $tr(
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? cells,
+    bool hidden = false,
+    bool commented = false}) {
   return TRowElement(
       id: id,
       classes: classes,
@@ -464,20 +445,18 @@ TRowElement/*!*/ $tr(
 }
 
 /// Creates a `td` node.
-DOMElement/*!*/ $td(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        int colspan,
-        int rowspan,
-        String headers,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $td(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        int? colspan,
+        int? rowspan,
+        String? headers,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('td',
-        
         id: id,
         classes: classes,
         style: style,
@@ -492,21 +471,19 @@ DOMElement/*!*/ $td(
         commented: commented);
 
 /// Creates a `th` node.
-DOMElement/*!*/ $th(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        int colspan,
-        int rowspan,
-        String abbr,
-        String scope,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $th(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        int? colspan,
+        int? rowspan,
+        String? abbr,
+        String? scope,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('td',
-
         id: id,
         classes: classes,
         style: style,
@@ -522,37 +499,33 @@ DOMElement/*!*/ $th(
         commented: commented);
 
 /// Creates a `div` node.
-DIVElement/*!*/ $div(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DIVElement $div(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('div',
-
         id: id,
         classes: classes,
         style: style,
         attributes: attributes,
         content: content,
         hidden: hidden,
-        commented: commented);
+        commented: commented) as DIVElement;
 
 /// Creates a `div` node with `display: inline-block`.
-DIVElement/*!*/ $divInline(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DIVElement $divInline(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('div',
-
         id: id,
         classes: classes,
         style: toFlatListOfStrings(['display: inline-block', style],
@@ -560,24 +533,24 @@ DIVElement/*!*/ $divInline(
         attributes: attributes,
         content: content,
         hidden: hidden,
-        commented: commented);
+        commented: commented) as DIVElement;
 
 /// Creates a `div` node from HTML.
-DIVElement/*?*/ $divHTML(Object/*?*/ html) => $tagHTML(html);
+DIVElement? $divHTML(Object? html) => $tagHTML(html);
 
 /// Creates a `div` that centers vertically and horizontally using `display` `table` and `table-cell`.
-DIVElement/*!*/ $divCenteredContent({
-  Object/*?*/ classes,
-  String style,
+DIVElement $divCenteredContent({
+  Object? classes,
+  String? style,
   String width = '100%',
   String height = '100%',
-  String cellsClasses,
-  String cellsStyle,
-  String cellSpacing,
-  int cellsPerRow,
-  List cells,
-  List rows,
-  Object/*?*/ content,
+  String? cellsClasses,
+  String? cellsStyle,
+  String? cellSpacing,
+  int? cellsPerRow,
+  List? cells,
+  List? rows,
+  Object? content,
 }) {
   var cssDimension = '';
   if (isNotEmptyString(width)) cssDimension += 'width: $width;';
@@ -586,7 +559,7 @@ DIVElement/*!*/ $divCenteredContent({
   var divStyle = 'display: table;$cssDimension';
 
   if (isNotEmptyString(style, trim: true)) {
-    style = style.trim();
+    style = style!.trim();
     if (!style.endsWith(';')) style += ';';
     divStyle += ' ; $style';
   }
@@ -658,27 +631,23 @@ DIVElement/*!*/ $divCenteredContent({
 
 /// Creates a `div` node with `display: inline-block`.
 DOMAsync $asyncContent({
-
-  final Object/*?*/ loading,
-  Future future,
-  final Future Function() function,
+  final Object? loading,
+  Future? future,
+  final Future Function()? function,
 }) {
-
   return DOMAsync(loading: loading, future: future, function: function);
 }
 
 /// Creates a `span` node.
-DOMElement/*!*/ $span(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $span(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('span',
-
         id: id,
         classes: classes,
         style: style,
@@ -688,23 +657,21 @@ DOMElement/*!*/ $span(
         commented: commented);
 
 /// Creates a `button` node.
-DOMElement/*!*/ $button(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-          Object/*?*/ type,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $button(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        String? type,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('button',
-
         id: id,
         classes: classes,
         style: style,
         attributes: {
-          'type': isNotEmptyString(type) ? type : 'button',
+          'type': isNotEmptyString(type) ? type! : 'button',
           ...?attributes
         },
         content: content,
@@ -712,18 +679,16 @@ DOMElement/*!*/ $button(
         commented: commented);
 
 /// Creates a `label` node.
-DOMElement/*!*/ $label(
-        {
-          Object/*?*/ id,
-          Object/*?*/ forID,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $label(
+        {Object? id,
+        String? forID,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('label',
-
         id: id,
         classes: classes,
         style: style,
@@ -733,19 +698,17 @@ DOMElement/*!*/ $label(
         commented: commented);
 
 /// Creates a `textarea` node.
-TEXTAREAElement/*!*/ $textarea(
-    {
-      Object/*?*/ id,
-      Object/*?*/ name,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-      Object/*?*/ cols,
-      Object/*?*/ rows,
-    Map<String, String> attributes,
-      Object/*?*/ content,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-
+TEXTAREAElement $textarea(
+    {Object? id,
+    Object? name,
+    Object? classes,
+    Object? style,
+    Object? cols,
+    Object? rows,
+    Map<String, String>? attributes,
+    Object? content,
+    bool hidden = false,
+    bool commented = false}) {
   return TEXTAREAElement(
       id: id,
       name: name,
@@ -760,19 +723,17 @@ TEXTAREAElement/*!*/ $textarea(
 }
 
 /// Creates an `input` node.
-INPUTElement/*!*/ $input(
-    {
-      Object/*?*/ id,
-      Object/*?*/ name,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-      Object/*?*/ type,
-      Object/*?*/ placeholder,
-    Map<String, String> attributes,
-      Object/*?*/ value,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-
+INPUTElement $input(
+    {Object? id,
+    Object? name,
+    Object? classes,
+    Object? style,
+    Object? type,
+    Object? placeholder,
+    Map<String, String>? attributes,
+    Object? value,
+    bool hidden = false,
+    bool commented = false}) {
   return INPUTElement(
       id: id,
       name: name,
@@ -787,18 +748,16 @@ INPUTElement/*!*/ $input(
 }
 
 /// Creates an `input` node of type `checkbox`.
-INPUTElement/*!*/ $checkbox(
-    {
-      Object/*?*/ id,
-      Object/*?*/ name,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-      Object/*?*/ placeholder,
-    Map<String, String> attributes,
-      Object/*?*/ value,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-
+INPUTElement $checkbox(
+    {Object? id,
+    Object? name,
+    Object? classes,
+    Object? style,
+    Object? placeholder,
+    Map<String, String>? attributes,
+    Object? value,
+    bool hidden = false,
+    bool commented = false}) {
   return INPUTElement(
       id: id,
       name: name,
@@ -813,19 +772,17 @@ INPUTElement/*!*/ $checkbox(
 }
 
 /// Creates an `select` node.
-SELECTElement/*!*/ $select(
-    {
-      Object/*?*/ id,
-      Object/*?*/ name,
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-      Object/*?*/ options,
-      Object/*?*/ selected,
-    bool multiple,
-    bool/*!*/ hidden = false,
-    bool/*!*/ commented = false}) {
-
+SELECTElement $select(
+    {Object? id,
+    Object? name,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? options,
+    Object? selected,
+    bool? multiple,
+    bool hidden = false,
+    bool commented = false}) {
   var selectElement = SELECTElement(
       id: id,
       name: name,
@@ -843,17 +800,15 @@ SELECTElement/*!*/ $select(
 }
 
 /// Creates an `option` node.
-OPTIONElement/*!*/ $option(
-    {
-      Object/*?*/ classes,
-      Object/*?*/ style,
-    Map<String, String> attributes,
-    Object/*?*/ value,
-    String label,
-    bool selected,
-    Object/*?*/ text,
-    Object/*?*/ valueAndText}) {
-
+OPTIONElement $option(
+    {Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    Object? value,
+    String? label,
+    bool? selected,
+    Object? text,
+    Object? valueAndText}) {
   return OPTIONElement(
       classes: classes,
       style: style,
@@ -865,19 +820,17 @@ OPTIONElement/*!*/ $option(
 }
 
 /// Creates an `img` node.
-DOMElement/*!*/ $img(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        String src,
-        String title,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $img(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        String? src,
+        String? title,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('img',
-
         id: id,
         classes: classes,
         style: style,
@@ -891,19 +844,17 @@ DOMElement/*!*/ $img(
         commented: commented);
 
 /// Creates an `a` node.
-DOMElement/*!*/ $a(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        String href,
-        String target,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $a(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        String? href,
+        String? target,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('a',
-
         id: id,
         classes: classes,
         style: style,
@@ -917,16 +868,14 @@ DOMElement/*!*/ $a(
         commented: commented);
 
 /// Creates a `p` node.
-DOMElement/*!*/ $p(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $p(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('p',
-
         id: id,
         classes: classes,
         style: style,
@@ -935,15 +884,13 @@ DOMElement/*!*/ $p(
         commented: commented);
 
 /// Creates a `br` node.
-DOMElement/*!*/ $br({int/*!*/ amount = 1, bool/*!*/ commented = false}) {
-
-
+DOMElement $br({int amount = 1, bool commented = false}) {
   if (amount <= 0) {
     return $tag('br', commented: true);
   } else if (amount == 1) {
     return $tag('br', commented: commented);
   } else {
-    List<DOMElement/*!*/> list = <DOMElement/*!*/>[];
+    var list = <DOMElement>[];
     while (list.length < amount) {
       list.add($tag('br', commented: commented));
     }
@@ -951,8 +898,7 @@ DOMElement/*!*/ $br({int/*!*/ amount = 1, bool/*!*/ commented = false}) {
   }
 }
 
-String/*!*/ $nbsp([int length = 1]) {
-  length ??= 1;
+String $nbsp([int length = 1]) {
   if (length < 1) return '';
 
   var s = StringBuffer('&nbsp;');
@@ -964,16 +910,14 @@ String/*!*/ $nbsp([int length = 1]) {
 }
 
 /// Creates a `hr` node.
-DOMElement/*!*/ $hr(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $hr(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('hr',
-
         id: id,
         classes: classes,
         style: style,
@@ -982,17 +926,15 @@ DOMElement/*!*/ $hr(
         commented: commented);
 
 /// Creates a `form` node.
-DOMElement/*!*/ $form(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $form(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('form',
-
         id: id,
         classes: classes,
         style: style,
@@ -1002,17 +944,15 @@ DOMElement/*!*/ $form(
         commented: commented);
 
 /// Creates a `nav` node.
-DOMElement/*!*/ $nav(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $nav(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('nav',
-
         id: id,
         classes: classes,
         style: style,
@@ -1022,17 +962,15 @@ DOMElement/*!*/ $nav(
         commented: commented);
 
 /// Creates a `header` node.
-DOMElement/*!*/ $header(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $header(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('header',
-
         id: id,
         classes: classes,
         style: style,
@@ -1042,17 +980,15 @@ DOMElement/*!*/ $header(
         commented: commented);
 
 /// Creates a `footer` node.
-DOMElement/*!*/ $footer(
-        {
-          Object/*?*/ id,
-          Object/*?*/ classes,
-          Object/*?*/ style,
-        Map<String, String> attributes,
-          Object/*?*/ content,
-        bool/*!*/ hidden = false,
-        bool/*!*/ commented = false}) =>
+DOMElement $footer(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool hidden = false,
+        bool commented = false}) =>
     $tag('footer',
-
         id: id,
         classes: classes,
         style: style,
@@ -1064,7 +1000,7 @@ DOMElement/*!*/ $footer(
 /// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
 ///
 /// Note: A direct helper is only for tags that don't need parameters to be valid.
-bool/*!*/ isDOMBuilderDirectHelper(Object/*?*/ f) {
+bool isDOMBuilderDirectHelper(Object? f) {
   if (f == null || !(f is Function)) return false;
 
   return identical(f, $br) ||

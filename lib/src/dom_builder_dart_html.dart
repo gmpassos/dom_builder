@@ -4,7 +4,7 @@ import 'package:dom_builder/dom_builder.dart';
 
 /// Creates an [Element] using [tag] name.
 @override
-Element/*?*/ createElement(String/*!*/ tag, [DOMElement/*?*/ domElement]) {
+Element? createElement(String tag, [DOMElement? domElement]) {
   switch (tag) {
     case 'a':
       return AnchorElement();
@@ -71,7 +71,7 @@ Element/*?*/ createElement(String/*!*/ tag, [DOMElement/*?*/ domElement]) {
   }
 }
 
-InputElementBase/*!*/ createInputElement([String/*?*/ type]) {
+InputElementBase createInputElement([String? type]) {
   type = type?.toLowerCase();
 
   switch (type) {

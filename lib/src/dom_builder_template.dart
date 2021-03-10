@@ -13,7 +13,7 @@ final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMTemplate {
-  static DOMTemplate/*?*/ from(Object/*?*/ value) {
+  static DOMTemplate? from(Object? value) {
     if (value == null) return null;
     if (value is DOMTemplate) return value;
     if (value is String) return DOMTemplate.parse(value);
@@ -22,12 +22,12 @@ abstract class DOMTemplate {
 
   DOMTemplate();
 
-  bool/*!*/ get isEmpty;
+  bool get isEmpty;
 
-  bool/*!*/ get isNotEmpty => !isEmpty;
+  bool get isNotEmpty => !isEmpty;
 
   /// Returns [true] if [s] can be a templace code, has `{{` and `}}`.
-  static bool/*!*/ possiblyATemplate(String s) {
+  static bool possiblyATemplate(String s) {
     var idx = s.indexOf('{{');
     if (idx < 0) return false;
     var idx2 = s.indexOf('}}', idx);
@@ -40,25 +40,25 @@ abstract class DOMTemplate {
   /// Tries to parse [s].
   ///
   /// Returns [null] if [s] has no template or a not valid template code.
-  static DOMTemplateNode/*?*/ tryParse(String/*?*/ s) {
+  static DOMTemplateNode? tryParse(String? s) {
     return _parse(s, true);
   }
 
   /// Parses [s] and returns a DOMTemplateNode.
   ///
   /// Throws [StateError] if [s] is not a valid template.
-  static DOMTemplateNode/*!*/ parse(String/*!*/ s) {
-    return _parse(s, false);
+  static DOMTemplateNode parse(String s) {
+    return _parse(s, false)!;
   }
 
-  static DOMTemplateNode/*?*/ _parse(String/*?*/ s, bool/*!*/ tryParsing) {
+  static DOMTemplateNode? _parse(String? s, bool tryParsing) {
     if (s == null) {
       if (tryParsing) return null;
       return DOMTemplateNode([DOMTemplateContent(s)]);
     }
 
     var matches = REGEXP_TAG.allMatches(s);
-    if (matches == null || matches.isEmpty) {
+    if (matches.isEmpty) {
       if (tryParsing) return null;
       return DOMTemplateNode([DOMTemplateContent(s)]);
     }
@@ -111,10 +111,10 @@ abstract class DOMTemplate {
           case '/':
             {
               if (cursor is DOMTemplateBlock) {
-                if (key != null && cursor.variable.keysFull != key) {
+                if (key != null && cursor.variable!.keysFull != key) {
                   if (tryParsing) return null;
                   throw StateError(
-                      'Error paring! Current block with different key: ${cursor.variable.keysFull} != $key');
+                      'Error paring! Current block with different key: ${cursor.variable!.keysFull} != $key');
                 }
               } else {
                 if (tryParsing) return null;
@@ -154,7 +154,7 @@ abstract class DOMTemplate {
               DOMTemplateBlockIf block;
 
               if (cmp != null) {
-                Object/*?*/ value;
+                Object? value;
 
                 if (valueQuote != null) {
                   value = DOMTemplateContent(
@@ -169,7 +169,7 @@ abstract class DOMTemplate {
               }
 
               cursor.add(block);
-              stack.add(cursor);
+              stack.add(cursor as DOMTemplateNode);
               cursor = block;
               break;
             }
@@ -182,7 +182,7 @@ abstract class DOMTemplate {
               DOMTemplateBlockCondition block;
 
               if (cmp != null) {
-                Object/*?*/ value;
+                Object? value;
 
                 if (valueQuote != null) {
                   value = DOMTemplateContent(
@@ -207,7 +207,7 @@ abstract class DOMTemplate {
               var variable = DOMTemplateVariable.parse(key);
               var o = DOMTemplateBlockNot(variable);
               cursor.add(o);
-              stack.add(cursor);
+              stack.add(cursor as DOMTemplateNode);
               cursor = o;
               break;
             }
@@ -230,7 +230,7 @@ abstract class DOMTemplate {
               var variable = DOMTemplateVariable.parse(key);
               var o = DOMTemplateBlockVarElse(variable);
               cursor.add(o);
-              stack.add(cursor);
+              stack.add(cursor as DOMTemplateNode);
               cursor = o;
               break;
             }
@@ -239,7 +239,7 @@ abstract class DOMTemplate {
               var variable = DOMTemplateVariable.parse(key);
               var o = DOMTemplateBlockIfCollection(variable);
               cursor.add(o);
-              stack.add(cursor);
+              stack.add(cursor as DOMTemplateNode);
               cursor = o;
               break;
             }
@@ -253,10 +253,10 @@ abstract class DOMTemplate {
           case '/':
             {
               if (cursor is DOMTemplateBlock) {
-                if (key != null && cursor.variable.keysFull != key) {
+                if (cursor.variable!.keysFull != key) {
                   if (tryParsing) return null;
                   throw StateError(
-                      'Error paring! Current block with different key: ${cursor.variable.keysFull} != $key');
+                      'Error paring! Current block with different key: ${cursor.variable!.keysFull} != $key');
                 }
               } else {
                 if (tryParsing) return null;
@@ -294,11 +294,11 @@ abstract class DOMTemplate {
     return root;
   }
 
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver});
+  String? build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver});
 
-  bool/*!*/ add(DOMTemplate entry) {
+  bool add(DOMTemplate entry) {
     throw UnsupportedError("Type can't have content: $runtimeType");
   }
 
@@ -306,15 +306,16 @@ abstract class DOMTemplate {
   String toString();
 }
 
-typedef ElementHTMLProvider = String Function(String query);
+typedef ElementHTMLProvider = String? Function(String query);
 
 class DOMTemplateNode extends DOMTemplate {
-  List<DOMTemplate>/*!*/ nodes;
+  List<DOMTemplate> nodes;
 
-  DOMTemplateNode([List<DOMTemplate> nodes]) : nodes = nodes ?? <DOMTemplate>[];
+  DOMTemplateNode([List<DOMTemplate>? nodes])
+      : nodes = nodes ?? <DOMTemplate>[];
 
   @override
-  bool/*!*/ get isEmpty {
+  bool get isEmpty {
     if (nodes.isEmpty) return true;
     for (var node in nodes) {
       if (node.isNotEmpty) return false;
@@ -322,7 +323,7 @@ class DOMTemplateNode extends DOMTemplate {
     return true;
   }
 
-  bool/*!*/ get hasOnlyContent {
+  bool get hasOnlyContent {
     for (var node in nodes) {
       if (!(node is DOMTemplateContent)) return false;
     }
@@ -330,9 +331,9 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
+  String? build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
@@ -345,14 +346,14 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  bool/*!*/ add(DOMTemplate entry) {
+  bool add(DOMTemplate? entry) {
     if (entry == null) return false;
     nodes.add(entry);
     return true;
   }
 
-  bool/*!*/ addAll(List<DOMTemplate> entries) {
-    if (entries == null || entries.isEmpty) return false;
+  bool addAll(List<DOMTemplate> entries) {
+    if (entries.isEmpty) return false;
     nodes.addAll(entries);
     return true;
   }
@@ -365,7 +366,7 @@ class DOMTemplateNode extends DOMTemplate {
   String toString() => _toStringNodes();
 
   String _toStringNodes() {
-    return nodes != null && nodes.isNotEmpty ? nodes.join() : '';
+    return nodes.isNotEmpty ? nodes.join() : '';
   }
 }
 
@@ -374,8 +375,7 @@ class DOMTemplateVariable {
 
   DOMTemplateVariable(this.keys);
 
-  static DOMTemplateVariable/*?*/ parse(String s) {
-    if (s == null) return null;
+  static DOMTemplateVariable? parse(String s) {
     s = s.trim();
     if (s.isEmpty) return null;
 
@@ -385,13 +385,13 @@ class DOMTemplateVariable {
 
   String get keysFull => keys.join('.');
 
-  Object/*?*/ get(Object/*?*/ context) {
+  Object? get(Object? context) {
     if (context == null || isEmptyObject(context)) return null;
 
     var length = keys.length;
     if (length == 0) return context;
 
-    Object/*?*/ value = _get(context, keys[0]);
+    var value = _get(context, keys[0]);
 
     for (var i = 1; i < length; ++i) {
       var k = keys[i];
@@ -401,13 +401,13 @@ class DOMTemplateVariable {
     return value;
   }
 
-  Object/*?*/ _get(Object/*?*/ context, String key) {
+  Object? _get(Object? context, String key) {
     if (context == null || isEmptyObject(context) || isEmptyString(key)) {
       return null;
     }
 
     if (context is Iterable) {
-      context = (context as Iterable).toList();
+      context = context.toList();
     }
 
     if (context is Map) {
@@ -418,7 +418,7 @@ class DOMTemplateVariable {
         return context[n];
       }
     } else if (context is List) {
-      int idx;
+      int? idx;
       if (isInt(key)) {
         idx = parseInt(key);
       } else {
@@ -442,17 +442,17 @@ class DOMTemplateVariable {
     return null;
   }
 
-  Object/*?*/ getResolved(Object/*?*/ context) {
+  Object? getResolved(Object? context) {
     var value = get(context);
     return evaluateObject(context, value);
   }
 
-  String getResolvedAsString(Object/*?*/ context) {
+  String getResolvedAsString(Object? context) {
     var value = getResolved(context);
     return DOMTemplateVariable.valueToString(value);
   }
 
-  static String valueToString(Object/*?*/ value) {
+  static String valueToString(Object? value) {
     if (value == null) return '';
 
     if (value is String) {
@@ -470,7 +470,7 @@ class DOMTemplateVariable {
     }
   }
 
-  static Object/*?*/ evaluateObject(Object/*?*/ context, Object/*?*/ value) {
+  static Object? evaluateObject(Object? context, Object? value) {
     if (value == null) return null;
 
     if (value is String) {
@@ -484,10 +484,10 @@ class DOMTemplateVariable {
     } else if (value is Map) {
       return Map.from(value.map((k, v) =>
           MapEntry(evaluateObject(context, k), evaluateObject(context, v))));
-    } else if (value is Function(Map a)) {
-      var res = value(context);
+    } else if (value is Function(Map? a)) {
+      var res = value(context as Map<dynamic, dynamic>?);
       return evaluateObject(context, res);
-    } else if (value is Function(Object/*?*/a)) {
+    } else if (value is Function(Object? a)) {
       var res = value(context);
       return evaluateObject(context, res);
     } else if (value is Function()) {
@@ -498,12 +498,12 @@ class DOMTemplateVariable {
     }
   }
 
-  bool/*!*/ evaluate(Object/*?*/ context) {
+  bool evaluate(Object? context) {
     var value = getResolved(context);
     return evaluateValue(value);
   }
 
-  bool/*!*/ evaluateValue(value) {
+  bool evaluateValue(value) {
     if (value == null) return false;
 
     if (value is String) {
@@ -527,23 +527,22 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
 
   DOMTemplateIntlMessage(this.key);
 
-  static DOMTemplateIntlMessage/*?*/ parse(String s) {
-    if (s == null) return null;
+  static DOMTemplateIntlMessage? parse(String s) {
     s = s.trim();
     if (s.isEmpty) return null;
     return DOMTemplateIntlMessage(s);
   }
 
   @override
-  bool/*!*/ get isEmpty => false;
+  bool get isEmpty => false;
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
+  String? build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     if (intlMessageResolver == null) return '';
 
-    Map<String, dynamic> parameters;
+    Map<String, dynamic>? parameters;
 
     if (context is Map<String, dynamic>) {
       parameters = context;
@@ -563,17 +562,17 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
 }
 
 class DOMTemplateContent extends DOMTemplate {
-  final String content;
+  final String? content;
 
   DOMTemplateContent(this.content);
 
   @override
-  bool/*!*/ get isEmpty => isEmptyString(content);
+  bool get isEmpty => isEmptyString(content);
 
   @override
-  String build(Object/*?*/ context,
-          {ElementHTMLProvider elementProvider,
-          IntlMessageResolver intlMessageResolver}) =>
+  String? build(Object? context,
+          {ElementHTMLProvider? elementProvider,
+          IntlMessageResolver? intlMessageResolver}) =>
       content;
 
   @override
@@ -583,7 +582,7 @@ class DOMTemplateContent extends DOMTemplate {
 }
 
 class DOMTemplateBlockVar extends DOMTemplateNode {
-  final DOMTemplateVariable variable;
+  final DOMTemplateVariable? variable;
 
   DOMTemplateBlockVar(this.variable);
 
@@ -592,15 +591,15 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   }
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
-    return variable.getResolvedAsString(context);
+  String build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    return variable!.getResolvedAsString(context);
   }
 
   @override
   String toString() {
-    return '{{${variable.keys.isEmpty ? '.' : variable.keysFull}}}';
+    return '{{${variable!.keys.isEmpty ? '.' : variable!.keysFull}}}';
   }
 }
 
@@ -610,17 +609,17 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   DOMTemplateBlockQuery(this.query);
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
+  String? build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     if (elementProvider == null) return '';
-    var element = elementProvider(query);
+    var element = elementProvider(query)!;
 
     var template = DOMTemplate.parse(element);
-    if (template != null && !template.hasOnlyContent) {
+    if (!template.hasOnlyContent) {
       return template.build(context, elementProvider: elementProvider);
     } else {
-      return element ?? '';
+      return element;
     }
   }
 
@@ -631,26 +630,26 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
 }
 
 abstract class DOMTemplateBlock extends DOMTemplateNode {
-  final DOMTemplateVariable variable;
+  final DOMTemplateVariable? variable;
 
-  DOMTemplateBlock(this.variable, [DOMTemplateNode content]) {
+  DOMTemplateBlock(this.variable, [DOMTemplateNode? content]) {
     add(content);
   }
 }
 
 abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
-  DOMTemplateBlockCondition(DOMTemplateVariable variable,
-      [DOMTemplateNode content])
+  DOMTemplateBlockCondition(DOMTemplateVariable? variable,
+      [DOMTemplateNode? content])
       : super(variable, content);
 
-  DOMTemplateBlockCondition elseCondition;
+  DOMTemplateBlockCondition? elseCondition;
 
-  bool/*!*/ evaluate(Object/*?*/ context);
+  bool evaluate(Object? context);
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
+  String build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     if (evaluate(context)) {
       return buildContent(context, elementProvider: elementProvider);
     } else {
@@ -667,7 +666,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
     }
   }
 
-  String buildContent(Object/*?*/ context, {ElementHTMLProvider elementProvider}) {
+  String buildContent(Object? context, {ElementHTMLProvider? elementProvider}) {
     if (nodes.isEmpty) return '';
 
     var s = StringBuffer();
@@ -688,23 +687,23 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 }
 
 class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
-  DOMTemplateBlockIf(DOMTemplateVariable variable, [DOMTemplateNode content])
+  DOMTemplateBlockIf(DOMTemplateVariable? variable, [DOMTemplateNode? content])
       : super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
-    return variable.evaluate(context);
+  bool evaluate(Object? context) {
+    return variable!.evaluate(context);
   }
 
   @override
   String toString() {
-    return '{{:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }
 
 enum DOMTemplateCmp { eq, notEq }
 
-String getDOMTemplateCmp_operator(DOMTemplateCmp cmp) {
+String getDOMTemplateCmp_operator(DOMTemplateCmp? cmp) {
   switch (cmp) {
     case DOMTemplateCmp.eq:
       return '==';
@@ -715,7 +714,7 @@ String getDOMTemplateCmp_operator(DOMTemplateCmp cmp) {
   }
 }
 
-DOMTemplateCmp parseDOMTemplateCmp(Object/*?*/ cmp) {
+DOMTemplateCmp? parseDOMTemplateCmp(Object? cmp) {
   if (cmp == null) return null;
 
   if (cmp is DOMTemplateCmp) return cmp;
@@ -741,17 +740,17 @@ DOMTemplateCmp parseDOMTemplateCmp(Object/*?*/ cmp) {
 class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
   final bool elseIf;
 
-  final DOMTemplateCmp cmp;
-  final Object/*?*/ value;
+  final DOMTemplateCmp? cmp;
+  final Object? value;
 
   DOMTemplateBlockIfCmp(
-      this.elseIf, DOMTemplateVariable variable, Object/*?*/ cmp, this.value,
-      [DOMTemplateNode content])
+      this.elseIf, DOMTemplateVariable? variable, Object? cmp, this.value,
+      [DOMTemplateNode? content])
       : cmp = parseDOMTemplateCmp(cmp),
         super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
+  bool evaluate(Object? context) {
     switch (cmp) {
       case DOMTemplateCmp.eq:
         return matchesEq(context);
@@ -762,13 +761,13 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
     }
   }
 
-  bool/*!*/ matchesEq(Object/*?*/ context) {
-    var varValueStr = variable.getResolvedAsString(context);
+  bool matchesEq(Object? context) {
+    var varValueStr = variable!.getResolvedAsString(context);
     var valueStr = getValueAsString(context);
     return varValueStr == valueStr;
   }
 
-  String getValueAsString(Object/*?*/ context) {
+  String? getValueAsString(Object? context) {
     if (value is DOMTemplateContent) {
       var valueContent = value as DOMTemplateContent;
       return valueContent.content;
@@ -783,7 +782,7 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
   String toStringValue() {
     if (value is DOMTemplateContent) {
       var valueContent = value as DOMTemplateContent;
-      var content = valueContent.content;
+      var content = valueContent.content!;
       return content.contains('"') ? "'$content'" : '"$content"';
     } else if (value is DOMTemplateVariable) {
       var valueVar = value as DOMTemplateVariable;
@@ -795,38 +794,38 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
 
   @override
   String toString() {
-    return '{{${elseIf ? '?' : ''}:${variable.keysFull}${getDOMTemplateCmp_operator(cmp)}${toStringValue()}}}' +
+    return '{{${elseIf ? '?' : ''}:${variable!.keysFull}${getDOMTemplateCmp_operator(cmp)}${toStringValue()}}}' +
         _toStringNodes() +
         _toStringRest();
   }
 }
 
 class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
-  DOMTemplateBlockNot(DOMTemplateVariable variable, [DOMTemplateNode content])
+  DOMTemplateBlockNot(DOMTemplateVariable? variable, [DOMTemplateNode? content])
       : super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
-    return !variable.evaluate(context);
+  bool evaluate(Object? context) {
+    return !variable!.evaluate(context);
   }
 
   @override
   String toString() {
-    return '{{!${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{!${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }
 
 abstract class DOMTemplateBlockElseCondition extends DOMTemplateBlockCondition {
-  DOMTemplateBlockElseCondition(DOMTemplateVariable variable,
-      [DOMTemplateNode content])
+  DOMTemplateBlockElseCondition(DOMTemplateVariable? variable,
+      [DOMTemplateNode? content])
       : super(variable, content);
 }
 
 class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
-  DOMTemplateBlockElse([DOMTemplateNode content]) : super(null, content);
+  DOMTemplateBlockElse([DOMTemplateNode? content]) : super(null, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
+  bool evaluate(Object? context) {
     return true;
   }
 
@@ -837,48 +836,48 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
 }
 
 class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
-  DOMTemplateBlockElseIf(DOMTemplateVariable variable,
-      [DOMTemplateNode content])
+  DOMTemplateBlockElseIf(DOMTemplateVariable? variable,
+      [DOMTemplateNode? content])
       : super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
-    return variable.evaluate(context);
+  bool evaluate(Object? context) {
+    return variable!.evaluate(context);
   }
 
   @override
   String toString() {
-    return '{{?:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{?:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }
 
 class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
-  DOMTemplateBlockElseNot(DOMTemplateVariable variable,
-      [DOMTemplateNode content])
+  DOMTemplateBlockElseNot(DOMTemplateVariable? variable,
+      [DOMTemplateNode? content])
       : super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
-    return !variable.evaluate(context);
+  bool evaluate(Object? context) {
+    return !variable!.evaluate(context);
   }
 
   @override
   String toString() {
-    return '{{?!:${variable.keysFull}}' + _toStringRest();
+    return '{{?!:${variable!.keysFull}}' + _toStringRest();
   }
 }
 
 class DOMTemplateBlockVarElse extends DOMTemplateBlock {
-  DOMTemplateBlockVarElse(DOMTemplateVariable variable,
-      [DOMTemplate contentElse])
+  DOMTemplateBlockVarElse(DOMTemplateVariable? variable,
+      [DOMTemplateNode? contentElse])
       : super(variable, contentElse);
 
   @override
-  String build(Object/*?*/ context,
-      {ElementHTMLProvider elementProvider,
-      IntlMessageResolver intlMessageResolver}) {
-    var value = variable.getResolved(context);
-    if (variable.evaluateValue(value)) {
+  String? build(Object? context,
+      {ElementHTMLProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    var value = variable!.getResolved(context);
+    if (variable!.evaluateValue(value)) {
       return DOMTemplateVariable.valueToString(value);
     } else {
       return super.build(context, elementProvider: elementProvider);
@@ -887,23 +886,23 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
 
   @override
   String toString() {
-    return '{{?${variable.keysFull}}}' + _toStringNodes() + '{{/}}';
+    return '{{?${variable!.keysFull}}}' + _toStringNodes() + '{{/}}';
   }
 }
 
 class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
-  DOMTemplateBlockIfCollection(DOMTemplateVariable variable,
-      [DOMTemplateNode content])
+  DOMTemplateBlockIfCollection(DOMTemplateVariable? variable,
+      [DOMTemplateNode? content])
       : super(variable, content);
 
   @override
-  bool/*!*/ evaluate(Object/*?*/ context) {
-    return variable.evaluate(context);
+  bool evaluate(Object? context) {
+    return variable!.evaluate(context);
   }
 
   @override
-  String buildContent(Object/*?*/ context, {ElementHTMLProvider elementProvider}) {
-    var value = variable.getResolved(context);
+  String buildContent(Object? context, {ElementHTMLProvider? elementProvider}) {
+    var value = variable!.getResolved(context);
 
     if (value is List) {
       var s = StringBuffer();
@@ -920,6 +919,6 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
 
   @override
   String toString() {
-    return '{{*:${variable.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{*:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
   }
 }

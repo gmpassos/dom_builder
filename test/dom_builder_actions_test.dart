@@ -11,8 +11,9 @@ class TestActionExecutorLog extends DOMActionExecutor<TestNode> {
   }
 
   @override
-  TestNode execute(DOMAction<TestNode> action, TestNode target, TestNode self,
-      {DOMTreeMap treeMap, DOMContext context}) {
+  TestNode? execute(
+      DOMAction<TestNode> action, TestNode? target, TestNode? self,
+      {DOMTreeMap? treeMap, DOMContext? context}) {
     log.add(action.actionString());
     return null;
   }
@@ -25,7 +26,7 @@ void main() {
     setUp(() {});
 
     test('parse: sel', () {
-      var action = DOMAction.parse(executor, '#foo');
+      var action = DOMAction.parse(executor, '#foo')!;
 
       var sel = action as DOMActionSelect;
       expect(sel.id, equals('foo'));
@@ -36,7 +37,7 @@ void main() {
     });
 
     test('parse: call', () {
-      var action = DOMAction.parse(executor, 'show()');
+      var action = DOMAction.parse(executor, 'show()')!;
 
       var call = action as DOMActionCall;
 
@@ -49,7 +50,7 @@ void main() {
     });
 
     test('parse: sel -> call', () {
-      var action = DOMAction.parse(executor, '#foo.show()');
+      var action = DOMAction.parse(executor, '#foo.show()')!;
 
       var sel = action as DOMActionSelect;
       expect(sel.id, equals('foo'));
@@ -65,7 +66,7 @@ void main() {
     });
 
     test('parse: call ; sel -> call', () {
-      var action = DOMAction.parse(executor, 'location(en); #foo.hide()');
+      var action = DOMAction.parse(executor, 'location(en); #foo.hide()')!;
 
       var list = action as DOMActionList;
       expect(list.actions.length, equals(2));

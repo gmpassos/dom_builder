@@ -11,13 +11,13 @@ import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
 /// [DOMGenerator] based in `dart:html`.
-class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
+class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   DOMGeneratorDartHTMLImpl() {
     domActionExecutor = DOMActionExecutorDartHTML();
   }
 
   @override
-  List<Node> getElementNodes(Node node) {
+  List<Node> getElementNodes(Node? node) {
     if (node is Element) {
       return List.from(node.nodes);
     }
@@ -25,7 +25,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  String getElementTag(Node element) {
+  String? getElementTag(Node? element) {
     if (element is Element) {
       return element.tagName;
     }
@@ -33,7 +33,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  String getElementValue(Node element) {
+  String? getElementValue(Node? element) {
     if (element == null) return null;
 
     if (element is InputElement) {
@@ -53,16 +53,16 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  String getElementOuterHTML(Node element) {
+  String? getElementOuterHTML(Node? element) {
     if (element is Element) {
       return element.outerHtml;
     } else {
-      return element.text;
+      return element!.text;
     }
   }
 
   @override
-  Map<String, String> getElementAttributes(Node element) {
+  Map<String, String>? getElementAttributes(Node? element) {
     if (element is Element) {
       var attributes = Map.fromEntries(element.attributes.entries);
       return attributes;
@@ -71,23 +71,23 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  Node getNodeParent(Node node) {
-    return node.parent;
+  Node? getNodeParent(Node? node) {
+    return node!.parent;
   }
 
   @override
-  bool/*!*/ isEquivalentNodeType(DOMNode domNode, Node node) {
+  bool isEquivalentNodeType(DOMNode domNode, Node node) {
     if (node is Text) {
       return domNode is TextNode;
     } else if (node is Element) {
       return domNode is DOMElement &&
-          domNode.tag.toLowerCase() == node.tagName.toLowerCase();
+          domNode.tag!.toLowerCase() == node.tagName.toLowerCase();
     }
     return false;
   }
 
   @override
-  bool/*!*/ isEquivalentNode(DOMNode domNode, Node node) {
+  bool isEquivalentNode(DOMNode domNode, Node node) {
     if (!isEquivalentNodeType(domNode, node)) {
       return false;
     }
@@ -97,14 +97,14 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
     } else if (domNode is DOMElement && node is Element) {
       var domAttributesSign =
           _toAttributesSignature(domNode.attributesAsString);
-      var attributesSign = _toAttributesSignature(getElementAttributes(node));
+      var attributesSign = _toAttributesSignature(getElementAttributes(node)!);
       return domAttributesSign == attributesSign;
     }
 
     return false;
   }
 
-  String _toAttributesSignature(Map<String, String/*!*/> attributes) {
+  String _toAttributesSignature(Map<String, String> attributes) {
     var entries = attributes
         .map((key, value) => MapEntry(key.toLowerCase(), value))
         .entries
@@ -117,7 +117,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  Text appendElementText(Node node, String text) {
+  Text? appendElementText(Node node, String? text) {
     if (text == null || text.isEmpty) return null;
     var textNode = Text(text);
     node.append(textNode);
@@ -125,17 +125,17 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  Text createTextNode(String text) {
+  Text? createTextNode(String? text) {
     if (text == null || text.isEmpty) return null;
     return Text(text);
   }
 
   @override
-  bool/*!*/ isTextNode(Node node) => node is Text;
+  bool isTextNode(Node? node) => node is Text;
 
   @override
-  bool/*!*/ containsNode(Node parent, Node node) {
-    if (parent == null || node == null) return false;
+  bool containsNode(Node parent, Node? node) {
+    if (node == null) return false;
 
     if (parent is Node) {
       return parent.contains(node);
@@ -145,22 +145,22 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  String getNodeText(Node node) {
+  String? getNodeText(Node? node) {
     if (node == null) return null;
     return node.text;
   }
 
   @override
-  bool/*!*/ addChildToElement(Node parent, Node child) {
+  bool addChildToElement(Node? parent, Node? child) {
     if (parent is Element && !parent.nodes.contains(child)) {
-      parent.append(child);
+      parent.append(child!);
       return true;
     }
     return false;
   }
 
   @override
-  bool/*!*/ removeChildFromElement(Node parent, Node child) {
+  bool removeChildFromElement(Node parent, Node? child) {
     if (parent is Element) {
       return parent.children.remove(child);
     }
@@ -168,12 +168,12 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  bool/*!*/ replaceChildElement(Node parent, Node child1, List<Node/*!*/> child2) {
+  bool replaceChildElement(Node parent, Node? child1, List<Node>? child2) {
     if (parent is Element) {
-      var idx = parent.nodes.indexOf(child1);
+      var idx = parent.nodes.indexOf(child1!);
       if (idx >= 0) {
         parent.nodes.removeAt(idx);
-        for (var i = 0; i < child2.length; ++i) {
+        for (var i = 0; i < child2!.length; ++i) {
           var e = child2[i];
           parent.nodes.insert(idx + i, e);
         }
@@ -184,21 +184,21 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  bool/*!*/ canHandleExternalElement(externalElement) {
+  bool canHandleExternalElement(externalElement) {
     return externalElement is Node;
   }
 
   @override
-  List<Node> addExternalElementToElement(Node node, Object/*?*/ externalElement) {
+  List<Node>? addExternalElementToElement(Node node, Object? externalElement) {
     if (node is Element && externalElement is Node) {
-      node.children.add(externalElement);
+      node.children.add(externalElement as Element);
       return [externalElement];
     }
     return null;
   }
 
   @override
-  void setAttribute(Node node, String attrName, String attrVal) {
+  void setAttribute(Node node, String attrName, String? attrVal) {
     if (node is Element) {
       switch (attrName) {
         case 'selected':
@@ -206,7 +206,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
             if (node is OptionElement) {
               node.selected = _parseAttributeBoolValue(attrVal);
             } else {
-              node.setAttribute(attrName, attrVal);
+              node.setAttribute(attrName, attrVal!);
             }
             break;
           }
@@ -217,7 +217,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
             } else if (node is InputElement) {
               node.multiple = _parseAttributeBoolValue(attrVal);
             } else {
-              node.setAttribute(attrName, attrVal);
+              node.setAttribute(attrName, attrVal!);
             }
             break;
           }
@@ -244,7 +244,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
     }
   }
 
-  bool/*!*/ _parseAttributeBoolValue(String attrVal) {
+  bool _parseAttributeBoolValue(String? attrVal) {
     if (attrVal == null) {
       return true;
     } else {
@@ -253,7 +253,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  String getAttribute(Node node, String attrName) {
+  String? getAttribute(Node node, String attrName) {
     if (node is Element) {
       return node.getAttribute(attrName);
     }
@@ -261,13 +261,12 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  Element createElement(String tag, [DOMElement domElement]) {
-    return dart_html.createElement(tag, domElement);
+  Element? createElement(String? tag, [DOMElement? domElement]) {
+    return dart_html.createElement(tag!, domElement);
   }
 
   @override
-  String buildElementHTML(Node node) {
-    if (node == null) return null;
+  String? buildElementHTML(Node node) {
     if (node is Element) {
       var html = node.outerHtml;
       return html;
@@ -278,57 +277,57 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  void registerEventListeners(DOMTreeMap<Node/*!*/> treeMap, DOMElement domElement,
-      Node element, DOMContext<Node/*!*/> context) {
+  void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
+      Node element, DOMContext<Node>? context) {
     if (element is Element) {
       if (domElement.hasOnClickListener) {
         element.onClick.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event);
-          domElement.onClick.add(domEvent);
+          var domEvent = createDOMMouseEvent(treeMap, event)!;
+          domElement.onClick!.add(domEvent);
         });
       }
 
       if (domElement.hasOnChangeListener) {
         element.onChange.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event);
-          domElement.onChange.add(domEvent);
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onChange!.add(domEvent);
         });
       }
 
       if (domElement.hasOnMouseOverListener) {
         element.onMouseOver.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event);
-          domElement.onMouseOver.add(domEvent);
+          var domEvent = createDOMMouseEvent(treeMap, event)!;
+          domElement.onMouseOver!.add(domEvent);
         });
       }
 
       if (domElement.hasOnMouseOutListener) {
         element.onMouseOut.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event);
-          domElement.onMouseOut.add(domEvent);
+          var domEvent = createDOMMouseEvent(treeMap, event)!;
+          domElement.onMouseOut!.add(domEvent);
         });
       }
 
       if (domElement.hasOnLoadListener) {
         element.onLoad.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event);
-          domElement.onLoad.add(domEvent);
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onLoad!.add(domEvent);
         });
       }
 
       if (domElement.hasOnErrorListener) {
         element.onError.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event);
-          domElement.onError.add(domEvent);
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onError!.add(domEvent);
         });
       }
     }
   }
 
   @override
-  DOMMouseEvent createDOMMouseEvent(DOMTreeMap<Node/*!*/> treeMap, event) {
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, event) {
     if (event is MouseEvent) {
-      Node eventTarget = event.target;
+      var eventTarget = event.target as Node?;
       var domTarget = treeMap.getMappedDOMNode(eventTarget);
 
       return DOMMouseEvent(
@@ -352,21 +351,21 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  DOMEvent createDOMEvent(DOMTreeMap<Node/*!*/> treeMap, event) {
+  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, event) {
     if (event is Event) {
-      Node eventTarget = event.target;
+      var eventTarget = event.target as Node?;
       var domTarget = treeMap.getMappedDOMNode(eventTarget);
 
-      return DOMEvent(treeMap, event, eventTarget, domTarget);
+      return DOMEvent(treeMap, event, eventTarget, domTarget as DOMElement?);
     }
 
     return null;
   }
 
   @override
-  bool/*!*/ cancelEvent(Object/*?*/ event, {bool stopImmediatePropagation = false}) {
+  bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) {
     if (event is UIEvent) {
-      if (event.cancelable) {
+      if (event.cancelable!) {
         event.preventDefault();
 
         if (stopImmediatePropagation) {
@@ -381,80 +380,80 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node/*!*/> {
   }
 
   @override
-  DOMNodeRuntime<Node/*!*/> createDOMNodeRuntime(
-      DOMTreeMap<Node/*!*/> treeMap, DOMNode domNode, Node node) {
+  DOMNodeRuntime<Node> createDOMNodeRuntime(
+      DOMTreeMap<Node> treeMap, DOMNode? domNode, Node node) {
     return DOMNodeRuntimeDartHTMLImpl(treeMap, domNode, node);
   }
 }
 
-class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
+class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
   DOMNodeRuntimeDartHTMLImpl(
-      DOMTreeMap<Node> treeMap, DOMNode domNode, Node node)
+      DOMTreeMap<Node> treeMap, DOMNode? domNode, Node node)
       : super(treeMap, domNode, node);
 
-  bool/*!*/ get isNodeElement => node is Element;
+  bool get isNodeElement => node is Element;
 
-  Element get nodeAsElement => node as Element;
+  Element? get nodeAsElement => node as Element?;
 
   @override
-  String get tagName {
+  String? get tagName {
     if (node is Element) {
-      var element = nodeAsElement;
+      var element = nodeAsElement!;
       return DOMElement.normalizeTag(element.tagName);
     }
     return null;
   }
 
   @override
-  void addClass(String className) {
+  void addClass(String? className) {
     if (isEmptyObject(className)) return;
-    className = className.trim();
+    className = className!.trim();
     if (className.isEmpty) return;
 
     if (node is Element) {
-      var element = nodeAsElement;
+      var element = nodeAsElement!;
       element.classes.add(className);
     }
   }
 
   @override
   List<String> get classes =>
-      isNodeElement ? List.from(nodeAsElement.classes) : [];
+      isNodeElement ? List.from(nodeAsElement!.classes) : [];
 
   @override
   void clearClasses() {
     if (isNodeElement) {
-      nodeAsElement.nodes.clear();
+      nodeAsElement!.nodes.clear();
     }
   }
 
   @override
-  bool/*!*/ removeClass(String className) {
+  bool removeClass(String? className) {
     if (isEmptyObject(className)) return false;
     if (isNodeElement) {
-      return nodeAsElement.classes.remove(className);
+      return nodeAsElement!.classes.remove(className);
     }
     return false;
   }
 
   @override
   String get text {
-    return node.text;
+    return node!.text!;
   }
 
   @override
   set text(String value) {
-    node.text = value ?? '';
+    node!.text = value;
   }
 
   @override
-  String get value => _getElementValue(node);
+  String? get value => _getElementValue(node as Element?);
 
   @override
-  set value(String value) => _setElementValue(node, value);
+  set value(String? value) => _setElementValue(node as Element?, value);
 
   @override
-  bool/*!*/ get isStringElement {
+  bool get isStringElement {
     if (node is Text) {
       return true;
     } else if (node is Element) {
@@ -464,18 +463,18 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
   }
 
   @override
-  bool/*!*/ remove() {
+  bool remove() {
     if (hasParent) {
-      node.remove();
+      node!.remove();
       return true;
     }
     return false;
   }
 
   @override
-  String getAttribute(String name) {
+  String? getAttribute(String name) {
     if (isNodeElement) {
-      return nodeAsElement.attributes[name];
+      return nodeAsElement!.attributes[name];
     }
     return null;
   }
@@ -483,32 +482,32 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
   @override
   void setAttribute(String name, String value) {
     if (isNodeElement) {
-      nodeAsElement.attributes[name] = value;
+      nodeAsElement!.attributes[name] = value;
     }
   }
 
   @override
   void removeAttribute(String name) {
     if (isNodeElement) {
-      nodeAsElement.removeAttribute(name);
+      nodeAsElement!.removeAttribute(name);
     }
   }
 
   @override
-  List<Node> get children => List.from(node.nodes);
+  List<Node> get children => List.from(node!.nodes);
 
   @override
   int get nodesLength {
     if (isNodeElement) {
-      return nodeAsElement.nodes.length;
+      return nodeAsElement!.nodes.length;
     }
     return 0;
   }
 
   @override
-  Node getNodeAt(int index) {
+  Node? getNodeAt(int index) {
     if (isNodeElement) {
-      return nodeAsElement.nodes[index];
+      return nodeAsElement!.nodes[index];
     }
     return null;
   }
@@ -516,76 +515,75 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
   @override
   void add(Node child) {
     if (isNodeElement) {
-      nodeAsElement.append(child);
+      nodeAsElement!.append(child);
     }
   }
 
   @override
   void clear() {
-    node.nodes.clear();
+    node!.nodes.clear();
   }
 
   @override
   int get indexInParent {
-    var parent = node.parent;
+    var parent = node!.parent;
     if (parent == null) return -1;
-    return parent.nodes.indexOf(node);
+    return parent.nodes.indexOf(node!);
   }
 
   @override
-  bool/*!*/ isInSameParent(Node other) {
-    if (other == null) return false;
-    var parent = node.parent;
+  bool isInSameParent(Node other) {
+    var parent = node!.parent;
     return parent != null && parent == other.parent;
   }
 
   @override
   int indexOf(Node child) {
     if (isNodeElement) {
-      return nodeAsElement.nodes.indexOf(child);
+      return nodeAsElement!.nodes.indexOf(child);
     }
     return -1;
   }
 
   @override
-  void insertAt(int index, Node child) {
+  void insertAt(int index, Node? child) {
     if (isNodeElement) {
-      nodeAsElement.nodes.insert(index, child);
+      nodeAsElement!.nodes.insert(index, child!);
     }
   }
 
   @override
-  bool/*!*/ removeNode(Node child) {
+  bool removeNode(Node? child) {
     if (isNodeElement) {
-      return nodeAsElement.nodes.remove(child);
+      return nodeAsElement!.nodes.remove(child);
     }
     return false;
   }
 
   @override
-  Node removeAt(int index) {
+  Node? removeAt(int index) {
     if (isNodeElement) {
-      return nodeAsElement.nodes.removeAt(index);
+      return nodeAsElement!.nodes.removeAt(index);
     }
     return null;
   }
 
   @override
   Element copy() {
-    return node.clone(true);
+    return node!.clone(true) as Element;
   }
 
   @override
-  bool/*!*/ absorbNode(Node other) {
+  bool absorbNode(Node? other) {
     if (other == null) return false;
 
     if (node is Text) {
       if (other is Text) {
-        node.text += other.text;
+        node!.text = (node!.text ?? '') + other.text!;
         other.text = '';
         return true;
       } else if (other is Element) {
-        node.text += other.text;
+        node!.text = (node!.text ?? '') + other.text!;
         other.nodes.clear();
         return true;
       }
@@ -594,12 +592,12 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
         if (other.nodes.isEmpty) {
           return true;
         }
-        nodeAsElement.nodes.addAll(other.nodes);
+        nodeAsElement!.nodes.addAll(other.nodes);
         other.nodes.clear();
         return true;
       } else if (other is Text) {
         other.remove();
-        nodeAsElement.append(other);
+        nodeAsElement!.append(other);
         return true;
       }
     }
@@ -608,17 +606,17 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node/*!*/> {
   }
 }
 
-String _getElementValue(Element element, [String def]) {
+String? _getElementValue(Element? element, [String? def]) {
   if (element == null) return def;
 
-  String value;
+  String? value;
 
   if (element is InputElement) {
     value = element.value;
   } else if (element is CanvasImageSource) {
     value = _getElementSRC(element);
   } else if (element is CheckboxInputElement) {
-    value = element.checked ? 'true' : 'false';
+    value = element.checked! ? 'true' : 'false';
   } else if (element is TextAreaElement) {
     value = element.value;
   } else if (_isElementWithSRC(element)) {
@@ -632,7 +630,7 @@ String _getElementValue(Element element, [String def]) {
   return def != null && isEmptyObject(value) ? def : value;
 }
 
-bool/*!*/ _setElementValue(Element element, String value) {
+bool _setElementValue(Element? element, String? value) {
   if (element == null) return false;
 
   if (element is InputElement) {
@@ -656,7 +654,7 @@ bool/*!*/ _setElementValue(Element element, String value) {
   }
 }
 
-String _getElementHREF(Element element) {
+String? _getElementHREF(Element element) {
   if (element is LinkElement) return element.href;
   if (element is AnchorElement) return element.href;
   if (element is BaseElement) return element.href;
@@ -665,16 +663,16 @@ String _getElementHREF(Element element) {
   return null;
 }
 
-bool/*!*/ _setElementHREF(Element element, String href) {
+bool _setElementHREF(Element element, String? href) {
   if (element is LinkElement) {
-    element.href = href;
+    element.href = href!;
     return true;
   } else if (element is AnchorElement) {
     // ignore: unsafe_html
     element.href = href;
     return true;
   } else if (element is BaseElement) {
-    element.href = href;
+    element.href = href!;
     return true;
   } else if (element is AreaElement) {
     element.href = href;
@@ -684,7 +682,7 @@ bool/*!*/ _setElementHREF(Element element, String href) {
   return false;
 }
 
-bool/*!*/ _isElementWithHREF(Element element) {
+bool _isElementWithHREF(Element element) {
   if (element is LinkElement) return true;
   if (element is AnchorElement) return true;
   if (element is BaseElement) return true;
@@ -693,7 +691,7 @@ bool/*!*/ _isElementWithHREF(Element element) {
   return false;
 }
 
-String _getElementSRC(Element element) {
+String? _getElementSRC(Element element) {
   if (element is ImageElement) return element.src;
   if (element is ScriptElement) return element.src;
   if (element is InputElement) return element.src;
@@ -710,33 +708,31 @@ String _getElementSRC(Element element) {
   return null;
 }
 
-bool/*!*/ _setElementSRC(Element element, String src) {
-  if (element == null) return false;
-
+bool _setElementSRC(Element element, String? src) {
   if (element is ImageElement) {
     // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is ScriptElement) {
     // ignore: unsafe_html
-    element.src = src;
+    element.src = src!;
     return true;
   } else if (element is InputElement) {
     element.src = src;
     return true;
   } else if (element is MediaElement) {
-    element.src = src;
+    element.src = src!;
     return true;
   } else if (element is EmbedElement) {
     // ignore: unsafe_html
-    element.src = src;
+    element.src = src!;
     return true;
   } else if (element is IFrameElement) {
     // ignore: unsafe_html
     element.src = src;
     return true;
   } else if (element is SourceElement) {
-    element.src = src;
+    element.src = src!;
     return true;
   } else if (element is TrackElement) {
     element.src = src;
@@ -749,7 +745,7 @@ bool/*!*/ _setElementSRC(Element element, String src) {
   }
 }
 
-bool/*!*/ _isElementWithSRC(Element element) {
+bool _isElementWithSRC(Element element) {
   if (element is ImageElement) return true;
   if (element is ScriptElement) return true;
   if (element is InputElement) return true;
@@ -766,10 +762,10 @@ bool/*!*/ _isElementWithSRC(Element element) {
   return false;
 }
 
-class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
+class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
   @override
-  Node selectByID(String id, Node target, Node self, DOMTreeMap treeMap,
-      DOMContext context) {
+  Node selectByID(String id, Node? target, Node? self, DOMTreeMap? treeMap,
+      DOMContext? context) {
     if (self is Element) {
       var sel = _selectByID(self, id);
       if (sel != null) return sel;
@@ -789,16 +785,16 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
     }
 
     var sel = document.querySelector('#$id');
-    sel ??= _selectByID(document.documentElement, id);
+    sel ??= _selectByID(document.documentElement!, id);
 
-    return sel;
+    return sel!;
   }
 
-  Element _selectByID(Element element, String id) =>
+  Element? _selectByID(Element element, String id) =>
       element.querySelector('#$id');
 
   @override
-  Node callShow(Node target) {
+  Node? callShow(Node? target) {
     if (target is Element) {
       target.hidden = false;
 
@@ -814,7 +810,7 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callHide(Node target) {
+  Node? callHide(Node? target) {
     if (target is Element) {
       target.hidden = true;
     }
@@ -822,13 +818,13 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callRemove(Node target) {
-    target.remove();
+  Node? callRemove(Node? target) {
+    target!.remove();
     return target;
   }
 
   @override
-  Node callClear(Node target) {
+  Node? callClear(Node? target) {
     if (target is Element) {
       target.nodes.clear();
     }
@@ -836,7 +832,7 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callAddClass(Node target, List<String> classes) {
+  Node? callAddClass(Node? target, List<String> classes) {
     if (target is Element) {
       target.classes.addAll(classes);
     }
@@ -852,7 +848,7 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callSetClass(Node target, List<String> classes) {
+  Node? callSetClass(Node? target, List<String> classes) {
     if (target is Element) {
       target.classes.clear();
       target.classes.addAll(classes);
@@ -861,7 +857,7 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callClearClass(Node target) {
+  Node? callClearClass(Node? target) {
     if (target is Element) {
       target.classes.clear();
     }
@@ -869,7 +865,7 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 
   @override
-  Node callLocale(Node target, List<String> parameters, DOMContext context) {
+  Node? callLocale(Node? target, List<String> parameters, DOMContext? context) {
     var variables = context?.variables ?? {};
     var event = variables['event'] ?? {};
     var locale = event['value'] ?? '';
@@ -881,6 +877,6 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node/*!*/> {
   }
 }
 
-DOMGeneratorDartHTML<T>/*!*/ createDOMGeneratorDartHTML<T>() {
+DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
   return DOMGeneratorDartHTMLImpl() as DOMGeneratorDartHTML<T>;
 }

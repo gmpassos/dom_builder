@@ -1,6 +1,8 @@
 # dom_builder
 
 [![pub package](https://img.shields.io/pub/v/dom_builder.svg?logo=dart&logoColor=00b9fc)](https://pub.dartlang.org/packages/dom_builder)
+[![Null Safety](https://img.shields.io/badge/null-safety-brightgreen)](https://dart.dev/null-safety)
+
 [![CI](https://img.shields.io/github/workflow/status/gmpassos/dom_builder/Dart%20CI/master?logo=github-actions&logoColor=white)](https://github.com/gmpassos/dom_builder/actions)
 [![GitHub Tag](https://img.shields.io/github/v/tag/gmpassos/dom_builder?logo=git&logoColor=white)](https://github.com/gmpassos/dom_builder/releases)
 [![New Commits](https://img.shields.io/github/commits-since/gmpassos/dom_builder/latest?logo=git&logoColor=white)](https://github.com/gmpassos/dom_builder/network)
@@ -8,9 +10,6 @@
 [![Pull Requests](https://img.shields.io/github/issues-pr/gmpassos/dom_builder?logo=github&logoColor=white)](https://github.com/gmpassos/dom_builder/pulls)
 [![Code size](https://img.shields.io/github/languages/code-size/gmpassos/dom_builder?logo=github&logoColor=white)](https://github.com/gmpassos/dom_builder)
 [![License](https://img.shields.io/github/license/gmpassos/dom_builder?logo=open-source-initiative&logoColor=green)](https://github.com/gmpassos/dom_builder/blob/master/LICENSE)
-[![Funding](https://img.shields.io/badge/Donate-yellow?labelColor=666666&style=plastic&logo=liberapay)](https://liberapay.com/gmpassos/donate)
-[![Funding](https://img.shields.io/liberapay/patrons/gmpassos.svg?logo=liberapay)](https://liberapay.com/gmpassos/donate)
-
 
 Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native support).
 
@@ -85,7 +84,7 @@ class BootstrapNavbarToggler {
 
 ```dart
 import 'dart:html' ;
-import 'package:dom_builder/dom_builder.dart';
+import 'package:dom_builder/dom_builder_html.dart';
 
 class TitleComponent {
 
@@ -106,46 +105,51 @@ class TitleComponent {
 ## Example of Bootstrap Cards and Table:
 
 ```dart
+import 'dart:html' ;
+import 'package:dom_builder/dom_builder_html.dart';
 
-      // ...
+Element generateBSCards() {
+  // ...
 
-      var tableHeads = ['User', 'E-Mail'] ;
-      var usersEntries = [ ['Joe' , 'joe@mail.com'] , ['Smith' , 'smith@mail.com'] ] ;
+  var tableHeads = ['User', 'E-Mail'];
+  var usersEntries = [ ['Joe', 'joe@mail.com'], ['Smith', 'smith@mail.com']];
 
-      var content = $div( content: [
-        $div( classes: 'card' , content: [
-          $div( classes: 'card-header' , content: 'Activity Timeline:') ,
-          $div( id: 'timeline-chart' )
-        ]) ,
+  var content = $div(content: [
+    $div(classes: 'card', content: [
+      $div(classes: 'card-header', content: 'Activity Timeline:'),
+      $div(id: 'timeline-chart')
+    ]),
 
-        $hr(),
+    $hr(),
 
-        $div( classes: 'card' , content: [
-          $div( classes: 'card-header' , content: "Users:"),
-          $div( classes: 'card-body' , content:
-            $table( classes: 'table text-truncate', head: tableHeads, body: usersEntries)
-            ..applyWhere( 'td , th' , classes: 'd-inline text-truncate' , style: 'max-width: 50vw')
-          )
-        ]) ,
+    $div(classes: 'card', content: [
+      $div(classes: 'card-header', content: "Users:"),
+      $div(classes: 'card-body', content:
+      $table(classes: 'table text-truncate', head: tableHeads, body: usersEntries)
+        ..applyWhere('td , th', classes: 'd-inline text-truncate', style: 'max-width: 50vw')
+      )
+    ]),
 
-      ] );
+  ]);
 
-      // ...
+  // ...
 
-      if (timelineChartSeries != null) {
-        content.select( '#timeline-chart' ).add(
-            ( parent ) {
-              // render Chart inside element parent...
-            }
-        ) ;
-      }
-      else {
-        content.select( '#timeline-chart' ).add( 'No Timeline Data.' ) ;
-      }
+  if (timelineChartSeries != null) {
+    content.select('#timeline-chart').add(
+            (parent) {
+          // render Chart inside element parent...
+        }
+    );
+  }
+  else {
+    content.select('#timeline-chart').add('No Timeline Data.');
+  }
 
-      // ...
+  // ...
 
-      return content.buildDOM(domGenerator) ;
+  var domGenerator = DOMGenerator.dartHTML();
+  return content.buildDOM(domGenerator);
+}
 ```
 
 ## See Also

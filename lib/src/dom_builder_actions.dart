@@ -3,19 +3,19 @@ import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_generator.dart';
 
-abstract class DOMActionExecutor<T/*!*/> {
-  DOMGenerator<T>/*?*/ _domGenerator;
+abstract class DOMActionExecutor<T> {
+  DOMGenerator<T>? _domGenerator;
 
-  DOMGenerator<T> get domGenerator => _domGenerator;
+  DOMGenerator<T>? get domGenerator => _domGenerator;
 
-  set domGenerator(DOMGenerator<T>/*!*/ generator) {
+  set domGenerator(DOMGenerator<T>? generator) {
     if (generator == null) throw ArgumentError.notNull('generator');
     _domGenerator = generator;
   }
 
-  T execute(DOMAction<T> action, T target, T self,
-      {DOMTreeMap treeMap, DOMContext context}) {
-    T result;
+  T? execute(DOMAction<T> action, T? target, T? self,
+      {DOMTreeMap? treeMap, DOMContext? context}) {
+    T? result;
     if (action is DOMActionSelect<T>) {
       result = selectByID(action.id, target, self, treeMap, context);
     } else if (action is DOMActionCall<T>) {
@@ -25,14 +25,13 @@ abstract class DOMActionExecutor<T/*!*/> {
     return result;
   }
 
-  T selectByID(
-      String/*!*/ id, T target, T self, DOMTreeMap treeMap, DOMContext context) {
+  T? selectByID(
+      String id, T? target, T? self, DOMTreeMap? treeMap, DOMContext? context) {
     throw UnimplementedError();
   }
 
-  T call(String name, List<String> parameters, T target, T self,
-      DOMTreeMap treeMap, DOMContext context) {
-    if (name == null) return null;
+  T? call(String name, List<String> parameters, T? target, T? self,
+      DOMTreeMap? treeMap, DOMContext? context) {
     name = name.trim().toLowerCase();
     if (name.isEmpty) return null;
 
@@ -65,23 +64,23 @@ abstract class DOMActionExecutor<T/*!*/> {
     }
   }
 
-  T callShow(T target) {
+  T? callShow(T? target) {
     throw UnimplementedError();
   }
 
-  T callHide(T target) {
+  T? callHide(T? target) {
     throw UnimplementedError();
   }
 
-  T callRemove(T target) {
+  T? callRemove(T? target) {
     throw UnimplementedError();
   }
 
-  T callClear(T target) {
+  T? callClear(T? target) {
     throw UnimplementedError();
   }
 
-  T callAddClass(T target, List<String> classes) {
+  T? callAddClass(T? target, List<String> classes) {
     throw UnimplementedError();
   }
 
@@ -89,19 +88,19 @@ abstract class DOMActionExecutor<T/*!*/> {
     throw UnimplementedError();
   }
 
-  T callSetClass(T target, List<String> classes) {
+  T? callSetClass(T? target, List<String> classes) {
     throw UnimplementedError();
   }
 
-  T callClearClass(T target) {
+  T? callClearClass(T? target) {
     throw UnimplementedError();
   }
 
-  T callLocale(T target, List<String> parameters, DOMContext context) {
+  T? callLocale(T? target, List<String> parameters, DOMContext? context) {
     throw UnimplementedError();
   }
 
-  DOMAction<T/*!*/>/*?*/ parse(String actionLine) {
+  DOMAction<T>? parse(String? actionLine) {
     return DOMAction.parse(this, actionLine);
   }
 }
@@ -126,7 +125,7 @@ final RegExpDialect _REGEXP_ACTIONS_DIALECT = RegExpDialect({
   'action_capture': r'(?:($sel)|($call))',
 }, multiLine: false, caseSensitive: false);
 
-abstract class DOMAction<T/*!*/> {
+abstract class DOMAction<T> {
   static final RegExp _REGEXP_ACTION_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$action_capture\.?');
 
@@ -136,28 +135,28 @@ abstract class DOMAction<T/*!*/> {
   static final RegExp _REGEXP_CALL_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$call_capture\.?');
 
-  static DOMAction<T>/*?*/ parse<T/*!*/>(
-      DOMActionExecutor<T> executor, String actionLine) {
+  static DOMAction<T>? parse<T>(
+      DOMActionExecutor<T> executor, String? actionLine) {
     if (actionLine == null) return null;
     actionLine = actionLine.trim();
     if (actionLine.isEmpty) return null;
 
     var matches = _REGEXP_ACTION_CAPTURE.allMatches(actionLine);
 
-    List<DOMAction<T>/*!*/>/*!*/ actions = <DOMAction<T>/*!*/>[];
+    var actions = <DOMAction<T>>[];
 
-    DOMAction<T> rootAction;
-    DOMAction<T> lastAction;
+    DOMAction<T>? rootAction;
+    DOMAction<T>? lastAction;
 
     var endPos = 0;
     for (var match in matches) {
-      var part = match.group(0)/*!*/;
+      var part = match.group(0)!;
 
       if (match.start > endPos) {
         var prevChar = actionLine.substring(endPos, match.start).trim();
 
         if (prevChar == ';') {
-          actions.add(rootAction);
+          actions.add(rootAction!);
           rootAction = null;
           lastAction = null;
         } else {
@@ -171,12 +170,12 @@ abstract class DOMAction<T/*!*/> {
       DOMAction<T> action;
 
       if (sel != null) {
-        var selMatch = _REGEXP_SEL_CAPTURE.firstMatch(part);
-        var id = selMatch.group(1);
+        var selMatch = _REGEXP_SEL_CAPTURE.firstMatch(part)!;
+        var id = selMatch.group(1)!;
         action = DOMActionSelect<T>(executor, id);
       } else if (call != null) {
-        var callMatch = _REGEXP_CALL_CAPTURE.firstMatch(part);
-        var name = callMatch.group(1);
+        var callMatch = _REGEXP_CALL_CAPTURE.firstMatch(part)!;
+        var name = callMatch.group(1)!;
         var parametersLine = callMatch.group(2);
         var parameters = parseParameters(executor, parametersLine);
         action = DOMActionCall<T>(executor, name, parameters);
@@ -196,7 +195,7 @@ abstract class DOMAction<T/*!*/> {
     }
 
     if (actions.isNotEmpty) {
-      actions.add(rootAction);
+      actions.add(rootAction!);
       return DOMActionList(executor, actions);
     }
 
@@ -206,8 +205,8 @@ abstract class DOMAction<T/*!*/> {
   static final RegExp _REGEXP_PARAMETER_CAPTURE =
       _REGEXP_ACTIONS_DIALECT.getPattern(r'$parameter_capture');
 
-  static List<String> parseParameters<T>(
-      DOMActionExecutor executor, String parametersLine) {
+  static List<String>? parseParameters<T>(
+      DOMActionExecutor executor, String? parametersLine) {
     if (parametersLine == null) return null;
     parametersLine = parametersLine.trim();
     if (parametersLine.isEmpty) return null;
@@ -222,26 +221,26 @@ abstract class DOMAction<T/*!*/> {
         throw ArgumentError("Can't parse parameters line: $parametersLine");
       }
 
-      var param = match.group(1)/*!*/.trim();
+      var param = match.group(1)!.trim();
       parameters.add(param);
     }
 
     return parameters;
   }
 
-  final DOMActionExecutor<T/*!*/> executor;
+  final DOMActionExecutor<T> executor;
 
-  DOMAction<T/*!*/>/*?*/ next;
+  DOMAction<T>? next;
 
   DOMAction(this.executor);
 
-  T execute(T target, {T self, DOMTreeMap treeMap, DOMContext context}) {
+  T? execute(T? target, {T? self, DOMTreeMap? treeMap, DOMContext? context}) {
     var result = executor.execute(this, target, self,
         treeMap: treeMap, context: context);
 
     if (next != null) {
-      result = next.execute(target,
-          self: result, treeMap: treeMap, context: context);
+      result = next!
+          .execute(target, self: result, treeMap: treeMap, context: context);
     }
 
     return result;
@@ -259,14 +258,14 @@ abstract class DOMAction<T/*!*/> {
   }
 }
 
-class DOMActionList<T/*!*/> extends DOMAction<T/*!*/> {
-  final List<DOMAction<T/*!*/>/*!*/>/*!*/ actions;
+class DOMActionList<T> extends DOMAction<T> {
+  final List<DOMAction<T>> actions;
 
   DOMActionList(DOMActionExecutor<T> executor, this.actions) : super(executor);
 
   @override
-  T execute(T target, {T self, DOMTreeMap treeMap, DOMContext context}) {
-    T result;
+  T? execute(T? target, {T? self, DOMTreeMap? treeMap, DOMContext? context}) {
+    T? result;
 
     for (var action in actions) {
       result = action.execute(target,
@@ -282,8 +281,8 @@ class DOMActionList<T/*!*/> extends DOMAction<T/*!*/> {
   }
 }
 
-class DOMActionSelect<T/*!*/> extends DOMAction<T/*!*/> {
-  final String/*!*/ id;
+class DOMActionSelect<T> extends DOMAction<T> {
+  final String id;
 
   DOMActionSelect(DOMActionExecutor<T> executor, this.id) : super(executor);
 
@@ -293,13 +292,13 @@ class DOMActionSelect<T/*!*/> extends DOMAction<T/*!*/> {
   }
 }
 
-class DOMActionCall<T/*!*/> extends DOMAction<T/*!*/> {
-  final String/*!*/ name;
+class DOMActionCall<T> extends DOMAction<T> {
+  final String name;
 
-  final List<String/*!*/>/*!*/ parameters;
+  final List<String> parameters;
 
   DOMActionCall(
-      DOMActionExecutor<T> executor, this.name, List<String> parameters)
+      DOMActionExecutor<T> executor, this.name, List<String>? parameters)
       : parameters = parameters ?? <String>[],
         super(executor);
 

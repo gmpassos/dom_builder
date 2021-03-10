@@ -18,52 +18,46 @@ class DOMAttribute implements WithValue {
   };
   static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
 
-  static final Map<String, Pattern> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
+  static final Map<String, String> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
     'class': ' ',
     'style': '; '
   };
 
-  static bool/*!*/ isBooleanAttribute(String attrName) =>
+  static bool isBooleanAttribute(String attrName) =>
       _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(attrName);
 
-  static String/*?*/ getAttributeDelimiter(String name) =>
+  static String? getAttributeDelimiter(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
 
-  static final Map<String, Pattern>
+  static final Map<String, RegExp>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
     'class': RegExp(r'\s+'),
     'style': RegExp(r'\s*;\s*')
   };
 
-  static RegExp/*?*/ getAttributeDelimiterPattern(String name) =>
+  static RegExp? getAttributeDelimiterPattern(String name) =>
       _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
 
-  static bool/*!*/ hasAttribute(DOMAttribute attribute) =>
-      attribute != null && attribute.hasValue;
-
-  static bool/*!*/ hasAttributes(Map<String, DOMAttribute> attributes) =>
-      attributes != null && attributes.isNotEmpty;
-
-  static String/*?*/ normalizeName(String/*?*/ name) {
+  static String? normalizeName(String? name) {
     if (name == null) return null;
     return name.trim().toLowerCase();
   }
 
-  static String/*!*/ append(String s, String delimiter, DOMAttribute attribute,
-      [DOMContext/*?*/ domContext]) {
+  static String append(String s, String delimiter, DOMAttribute? attribute,
+      [DOMContext? domContext]) {
     if (attribute == null) return s;
     var append = attribute.buildHTML(domContext);
-    if (append == null || append.isEmpty) return s;
+    if (append.isEmpty) return s;
     return s + delimiter + append;
   }
 
-  final String/*!*/ name;
+  final String name;
 
-  final DOMAttributeValue/*!*/ valueHandler;
+  final DOMAttributeValue valueHandler;
 
   DOMAttribute(this.name, this.valueHandler);
 
-  static DOMAttribute/*?*/ from(String name, Object/*?*/value) {
+  static DOMAttribute? from(String? name, Object? value) {
     name = normalizeName(name);
     if (name == null) return null;
 
@@ -82,8 +76,7 @@ class DOMAttribute implements WithValue {
 
     if (delimiter != null) {
       var delimiterPattern =
-          _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
-      assert(delimiterPattern != null);
+          _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name]!;
 
       var attrSet = _ATTRIBUTES_VALUE_AS_SET.contains(name);
 
@@ -112,38 +105,38 @@ class DOMAttribute implements WithValue {
     }
   }
 
-  bool/*!*/ get isBoolean => valueHandler is DOMAttributeValueBoolean;
+  bool get isBoolean => valueHandler is DOMAttributeValueBoolean;
 
-  bool/*!*/ get isList => valueHandler is DOMAttributeValueList;
+  bool get isList => valueHandler is DOMAttributeValueList;
 
-  bool/*!*/ get isSet => valueHandler is DOMAttributeValueSet;
+  bool get isSet => valueHandler is DOMAttributeValueSet;
 
-  bool/*!*/ get isCollection => valueHandler is DOMAttributeValueCollection;
-
-  @override
-  bool/*!*/ get hasValue => valueHandler.hasAttributeValue;
+  bool get isCollection => valueHandler is DOMAttributeValueCollection;
 
   @override
-  String get value => valueHandler.asAttributeValue;
+  bool get hasValue => valueHandler.hasAttributeValue;
 
-  List<String> get values => valueHandler.asAttributeValues;
+  @override
+  String? get value => valueHandler.asAttributeValue;
 
-  String/*?*/ getValue([DOMContext/*?*/ domContext]) =>
+  List<String>? get values => valueHandler.asAttributeValues;
+
+  String? getValue([DOMContext? domContext]) =>
       valueHandler.getAttributeValue(domContext);
 
   int get valueLength => valueHandler.length;
 
-  bool/*!*/ containsValue(Object/*?*/value) =>
+  bool containsValue(Object? value) =>
       valueHandler.containsAttributeValue(value);
 
-  void setBoolean(Object/*?*/value) {
+  void setBoolean(Object? value) {
     if (!isBoolean) throw StateError('Not a boolean attribute');
     setValue(value);
   }
 
-  void setValue(Object/*?*/value) => valueHandler.setAttributeValue(value);
+  void setValue(Object? value) => valueHandler.setAttributeValue(value);
 
-  void appendValue(Object/*?*/value) {
+  void appendValue(Object? value) {
     if (valueHandler is DOMAttributeValueCollection) {
       var valueCollection = valueHandler as DOMAttributeValueCollection;
       return valueCollection.appendAttributeValue(value);
@@ -152,7 +145,7 @@ class DOMAttribute implements WithValue {
     }
   }
 
-  String/*!*/ buildHTML([DOMContext/*?*/ domContext]) {
+  String buildHTML([DOMContext? domContext]) {
     if (isBoolean) {
       return valueHandler.hasAttributeValue ? name : '';
     }
@@ -170,49 +163,49 @@ class DOMAttribute implements WithValue {
 
   @override
   String toString() {
-    return hasValue ? value : '';
+    return hasValue ? value! : '';
   }
 }
 
 /// Base class for [DOMAttribute] value.
 abstract class DOMAttributeValue {
-  String get asAttributeValue;
+  String? get asAttributeValue;
 
-  List<String/*!*/> get asAttributeValues;
+  List<String>? get asAttributeValues;
 
   /// Returns the attribute value.
   ///
   /// [domContext] Optional context, used by [DOMGenerator].
-  String getAttributeValue([DOMContext domContext]) => asAttributeValue;
+  String? getAttributeValue([DOMContext? domContext]) => asAttributeValue;
 
   /// Returns [true] if has a value.
-  bool/*!*/ get hasAttributeValue;
+  bool get hasAttributeValue;
 
-  int/*!*/ get length;
+  int get length;
 
   /// Parses [value] and returns [true] if is equals to this instance value.
-  bool/*!*/ equalsAttributeValue(Object/*?*/value);
+  bool equalsAttributeValue(Object? value);
 
   /// Parses [value] and returns [true] if this instance contains it.
-  bool/*!*/ containsAttributeValue(Object/*?*/value);
+  bool containsAttributeValue(Object? value);
 
   /// Parses [value] and sets this instances value.
-  void setAttributeValue(Object/*?*/value);
+  void setAttributeValue(Object? value);
 
   @override
   String toString();
 }
 
 class DOMAttributeValueBoolean extends DOMAttributeValue {
-  bool/*!*/ _value;
+  bool _value;
 
-  DOMAttributeValueBoolean(Object/*?*/value) : _value = parseBool(value, false)/*!*/;
-
-  @override
-  bool/*!*/ get hasAttributeValue => _value;
+  DOMAttributeValueBoolean(Object? value) : _value = parseBool(value, false)!;
 
   @override
-  int get length => _value != null ? 1 : 0;
+  bool get hasAttributeValue => _value;
+
+  @override
+  int get length => 1;
 
   @override
   String get asAttributeValue => _value.toString();
@@ -221,16 +214,16 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
   List<String> get asAttributeValues => [asAttributeValue];
 
   @override
-  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
+  bool equalsAttributeValue(Object? value) {
     return _value == parseBool(value, false);
   }
 
   @override
-  bool/*!*/ containsAttributeValue(value) => equalsAttributeValue(value);
+  bool containsAttributeValue(value) => equalsAttributeValue(value);
 
   @override
-  void setAttributeValue(Object/*?*/value) {
-    _value = parseBool(value, false);
+  void setAttributeValue(Object? value) {
+    _value = parseBool(value, false)!;
   }
 
   @override
@@ -241,37 +234,37 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 
 /// A [DOMAttributeValue] of type [String].
 class DOMAttributeValueString extends DOMAttributeValue {
-  String/*?*/ _value;
+  String? _value;
 
-  DOMAttributeValueString(Object/*?*/value) : _value = parseString(value, '');
-
-  @override
-  bool/*!*/ get hasAttributeValue => _value != null && _value.isNotEmpty;
+  DOMAttributeValueString(Object? value) : _value = parseString(value, '');
 
   @override
-  int get length => _value != null ? _value.length : 0;
+  bool get hasAttributeValue => _value != null && _value!.isNotEmpty;
 
   @override
-  String get asAttributeValue => hasAttributeValue ? _value.toString() : null;
+  int get length => _value != null ? _value!.length : 0;
 
   @override
-  List<String/*!*/> get asAttributeValues =>
-      hasAttributeValue ? [asAttributeValue] : null;
+  String? get asAttributeValue => hasAttributeValue ? _value.toString() : null;
 
   @override
-  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
+  List<String>? get asAttributeValues =>
+      hasAttributeValue ? [asAttributeValue!] : null;
+
+  @override
+  bool equalsAttributeValue(Object? value) {
     if (value == null) return !hasAttributeValue;
     return hasAttributeValue && _value == parseString(value);
   }
 
   @override
-  bool/*!*/ containsAttributeValue(value) {
+  bool containsAttributeValue(value) {
     if (value == null) return false;
-    return hasAttributeValue && _value.contains(value);
+    return hasAttributeValue && _value!.contains(value as Pattern);
   }
 
   @override
-  void setAttributeValue(Object/*?*/value) {
+  void setAttributeValue(Object? value) {
     _value = parseString(value);
   }
 
@@ -283,33 +276,34 @@ class DOMAttributeValueString extends DOMAttributeValue {
 
 /// Attribute value when has template syntax: {{...}}
 class DOMAttributeValueTemplate extends DOMAttributeValueString {
-  DOMTemplate/*!*/ _template;
+  late DOMTemplate _template;
 
-  DOMAttributeValueTemplate(Object/*?*/value) : super(value) {
-    _template = DOMTemplate.parse(value);
+  DOMAttributeValueTemplate(Object? value) : super(value) {
+    /*!!!*/
+    _template = DOMTemplate.from(value)!;
   }
 
   DOMTemplate get template => _template;
 
   @override
-  void setAttributeValue(Object/*?*/value) {
+  void setAttributeValue(Object? value) {
     super.setAttributeValue(value);
-    _template = DOMTemplate.parse(value);
+    _template = DOMTemplate.parse(value as String);
   }
 }
 
 /// Base [DOMAttributeValue] class for collections.
 abstract class DOMAttributeValueCollection extends DOMAttributeValue {
-  bool/*!*/ containsAttributeValueEntry(Object/*?*/value);
+  bool containsAttributeValueEntry(Object? value);
 
-  String getAttributeValueEntry(Object/*?*/name);
+  String? getAttributeValueEntry(Object? name);
 
-  void appendAttributeValue(Object/*?*/value);
+  void appendAttributeValue(Object? value);
 
-  String removeAttributeValueEntry(Object/*?*/name);
+  String? removeAttributeValueEntry(Object? name);
 
   void removeAttributeValueAllEntries(List entries) {
-    if (entries == null || !hasAttributeValue) return;
+    if (!hasAttributeValue) return;
 
     for (var entry in entries) {
       removeAttributeValueEntry(entry);
@@ -319,21 +313,16 @@ abstract class DOMAttributeValueCollection extends DOMAttributeValue {
 
 /// A [DOMAttributeValue] of type [List].
 class DOMAttributeValueList extends DOMAttributeValueCollection {
-  List<String/*!*/>/*!*/ _values;
-  final String/*!*/ delimiter;
-  final Pattern/*!*/ delimiterPattern;
+  List<String> _values;
+  final String delimiter;
+  final Pattern delimiterPattern;
 
-  DOMAttributeValueList(Object/*?*/values, this.delimiter, this.delimiterPattern) {
-    if (delimiter == null) throw ArgumentError.notNull('delimiter');
-    if (delimiterPattern == null) {
-      throw ArgumentError.notNull('delimiterPattern');
-    }
-    _values = parseListOfStrings(values, delimiterPattern) ?? <String>[];
-  }
+  DOMAttributeValueList(Object? values, this.delimiter, this.delimiterPattern)
+      : _values = parseListOfStrings(values, delimiterPattern);
 
   @override
-  bool/*!*/ get hasAttributeValue {
-    if (_values != null && _values.isNotEmpty) {
+  bool get hasAttributeValue {
+    if (_values.isNotEmpty) {
       if (_values.length == 1) {
         return _values[0].isNotEmpty;
       } else {
@@ -344,26 +333,24 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  int get length => _values != null ? _values.length : 0;
+  int get length => _values.length;
 
   @override
-  String get asAttributeValue => hasAttributeValue
+  String? get asAttributeValue => hasAttributeValue
       ? (_values.length == 1 ? _values[0] : _values.join(delimiter))
       : null;
 
   @override
-  List<String> get asAttributeValues => hasAttributeValue ? _values : null;
+  List<String>? get asAttributeValues => hasAttributeValue ? _values : null;
 
   @override
-  void setAttributeValue(Object/*?*/value) {
+  void setAttributeValue(Object? value) {
     var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
-    if (valuesList == null || valuesList.isEmpty) {
+    if (valuesList.isEmpty) {
       _values = [];
-    } else if (_values != null &&
-        _values.length == 1 &&
-        valuesList.length == 1) {
-      _values[0] = parseString(valuesList[0]);
+    } else if (_values.length == 1 && valuesList.length == 1) {
+      _values[0] = parseString(valuesList[0])!;
     } else {
       _values = valuesList;
     }
@@ -373,13 +360,12 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   void appendAttributeValue(value) {
     var s = parseString(value);
     if (s != null) {
-      _values ??= [];
       _values.add(s);
     }
   }
 
   @override
-  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
+  bool equalsAttributeValue(Object? value) {
     if (value == null) return !hasAttributeValue;
     if (!hasAttributeValue) return false;
     var valuesList = parseListOfStrings(value, delimiterPattern);
@@ -387,11 +373,11 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool/*!*/ containsAttributeValue(Object/*?*/value) {
+  bool containsAttributeValue(Object? value) {
     if (value == null) return false;
     if (!hasAttributeValue) return false;
     var valuesList = parseListOfStrings(value, delimiterPattern);
-    if (valuesList == null || valuesList.isEmpty) return false;
+    if (valuesList.isEmpty) return false;
 
     for (var entry in valuesList) {
       if (!_values.contains(entry)) {
@@ -403,7 +389,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
+  bool containsAttributeValueEntry(Object? entry) {
     if (entry == null) return false;
     if (!hasAttributeValue) return false;
     var entryStr = parseString(entry);
@@ -411,20 +397,20 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  String getAttributeValueEntry(Object/*?*/entry) {
+  String? getAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
-    var idx = _values.indexOf(entry);
+    var idx = _values.indexOf(entry as String);
     return idx >= 0 ? _values[idx] : null;
   }
 
   @override
-  String removeAttributeValueEntry(Object/*?*/entry) {
+  String? removeAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
-    var idx = _values.indexOf(entry);
+    var idx = _values.indexOf(entry as String);
     return idx >= 0 ? _values.removeAt(idx) : null;
   }
 
@@ -436,22 +422,17 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
 
 /// A [DOMAttributeValue] of type [Set].
 class DOMAttributeValueSet extends DOMAttributeValueCollection {
-  LinkedHashSet<String/*!*/>/*!*/ _values;
-  final String/*!*/ delimiter;
-  final Pattern/*!*/ delimiterPattern;
+  LinkedHashSet<String> _values;
+  final String delimiter;
+  final Pattern delimiterPattern;
 
-  DOMAttributeValueSet(Object/*?*/values, this.delimiter, this.delimiterPattern) {
-    if (delimiter == null) throw ArgumentError.notNull('delimiter');
-    if (delimiterPattern == null) {
-      throw ArgumentError.notNull('delimiterPattern');
-    }
-    _values = Set<String>.from(parseListOfStrings(values, delimiterPattern)) ??
-        <String>{};
-  }
+  DOMAttributeValueSet(Object? values, this.delimiter, this.delimiterPattern)
+      : _values = LinkedHashSet<String>.from(
+            parseListOfStrings(values, delimiterPattern));
 
   @override
-  bool/*!*/ get hasAttributeValue {
-    if (_values != null && _values.isNotEmpty) {
+  bool get hasAttributeValue {
+    if (_values.isNotEmpty) {
       if (_values.length == 1) {
         return _values.first.isNotEmpty;
       } else {
@@ -462,26 +443,26 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  int get length => _values != null ? _values.length : 0;
+  int get length => _values.length;
 
   @override
-  String get asAttributeValue => hasAttributeValue
+  String? get asAttributeValue => hasAttributeValue
       ? (_values.length == 1 ? _values.first : _values.join(delimiter))
       : null;
 
   @override
-  List<String> get asAttributeValues =>
+  List<String>? get asAttributeValues =>
       hasAttributeValue ? _values.toList() : null;
 
   @override
-  void setAttributeValue(Object/*?*/value) {
+  void setAttributeValue(Object? value) {
     var valuesList = parseListOfStrings(value, delimiterPattern, true);
 
-    if (valuesList == null || valuesList.isEmpty) {
+    if (valuesList.isEmpty) {
       // ignore: prefer_collection_literals
-      _values = LinkedHashSet();
+      _values = LinkedHashSet<String>();
     } else {
-      _values = Set<String>.from(valuesList);
+      _values = Set<String>.from(valuesList) as LinkedHashSet<String>;
     }
   }
 
@@ -489,48 +470,46 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   void appendAttributeValue(value) {
     var s = parseString(value);
     if (s != null) {
-      // ignore: prefer_collection_literals
-      _values ??= LinkedHashSet();
       _values.add(s);
     }
   }
 
   @override
-  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
+  bool equalsAttributeValue(Object? value) {
     if (value == null) return !hasAttributeValue;
     var valuesSet = Set.from(parseListOfStrings(value, delimiterPattern));
-    return isEqualsSet(_values ?? {}, valuesSet);
+    return isEqualsSet(_values, valuesSet);
   }
 
   @override
-  bool/*!*/ containsAttributeValue(Object/*?*/value) {
+  bool containsAttributeValue(Object? value) {
     if (!hasAttributeValue || value == null) {
-      return null;
+      return false;
     }
     var valuesList = parseListOfStrings(value, delimiterPattern);
     return _values.containsAll(valuesList);
   }
 
   @override
-  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
+  bool containsAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
-      return null;
+      return false;
     }
     var entryStr = parseString(entry);
     return _values.contains(entryStr);
   }
 
   @override
-  String getAttributeValueEntry(Object/*?*/entry) {
+  String? getAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
     var entryStr = parseString(entry);
-    return _values.contains(entryStr) ? entry : null;
+    return _values.contains(entryStr) ? entry as String? : null;
   }
 
   @override
-  String removeAttributeValueEntry(Object/*?*/entry) {
+  String? removeAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
@@ -546,28 +525,26 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
 
 /// A [DOMAttributeValue] of type [CSS].
 class DOMAttributeValueCSS extends DOMAttributeValueCollection {
-  CSS/*!*/ _css;
+  CSS _css;
 
-  DOMAttributeValueCSS(Object/*?*/values) {
-    _css = CSS(values);
-  }
+  DOMAttributeValueCSS(Object? values) : _css = CSS(values);
 
   CSS get css => _css;
 
   @override
-  bool/*!*/ get hasAttributeValue => _css.isNoEmpty;
+  bool get hasAttributeValue => _css.isNoEmpty;
 
   @override
   int get length => _css.length;
 
   @override
-  String get asAttributeValue => hasAttributeValue ? _css.toString() : null;
+  String? get asAttributeValue => hasAttributeValue ? _css.toString() : null;
 
   @override
   List<String> get asAttributeValues => _css.entriesAsString;
 
   @override
-  String getAttributeValue([DOMContext domContext]) {
+  String? getAttributeValue([DOMContext? domContext]) {
     if (hasAttributeValue) {
       return _css.toString(domContext);
     }
@@ -575,12 +552,12 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  void setAttributeValue(Object/*?*/value) {
+  void setAttributeValue(Object? value) {
     _css = CSS(value);
   }
 
   @override
-  void appendAttributeValue(Object/*?*/value) {
+  void appendAttributeValue(Object? value) {
     if (value == null) return;
 
     var entries = CSS(value).entries;
@@ -590,14 +567,14 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  bool/*!*/ equalsAttributeValue(Object/*?*/value) {
+  bool equalsAttributeValue(Object? value) {
     if (value == null) !hasAttributeValue;
     var css = CSS(value);
     return this.css == css;
   }
 
   @override
-  bool/*!*/ containsAttributeValue(Object/*?*/value) {
+  bool containsAttributeValue(Object? value) {
     if (value == null) return false;
     var css = CSS(value);
     if (css.isEmpty) return false;
@@ -613,14 +590,14 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  bool/*!*/ containsAttributeValueEntry(Object/*?*/entry) {
+  bool containsAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
-      return null;
+      return false;
     }
 
-    var cssEntry = CSSEntry.parse(entry);
+    var cssEntry = CSSEntry.parse(entry as String);
     if (cssEntry == null) {
-      return null;
+      return false;
     }
 
     var cssEntry2 = _css.getEntry(cssEntry.name);
@@ -628,12 +605,12 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  String getAttributeValueEntry(Object/*?*/entry) {
+  String? getAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
 
-    var cssEntry = CSSEntry.parse(entry);
+    var cssEntry = CSSEntry.parse(entry as String);
     var name = cssEntry != null ? cssEntry.name : entry.toString().trim();
 
     var cssEntry2 = _css.getEntry(name);
@@ -641,12 +618,12 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  String removeAttributeValueEntry(Object/*?*/entry) {
+  String? removeAttributeValueEntry(Object? entry) {
     if (!hasAttributeValue || entry == null) {
       return null;
     }
 
-    var cssEntry = CSSEntry.parse(entry);
+    var cssEntry = CSSEntry.parse(entry as String);
     if (cssEntry == null) return null;
 
     var name = cssEntry.name;

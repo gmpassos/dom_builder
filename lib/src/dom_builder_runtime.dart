@@ -6,86 +6,87 @@ import 'dom_builder_generator.dart';
 import 'dom_builder_treemap.dart';
 
 /// Wraps the actual generated node [T] and allows some operations over it.
-abstract class DOMNodeRuntime<T/*!*/> {
-  final DOMTreeMap<T>/*!*/ treeMap;
+abstract class DOMNodeRuntime<T> {
+  final DOMTreeMap<T>? treeMap;
 
-  DOMGenerator<T/*!*/> get domGenerator => treeMap.domGenerator;
+  DOMGenerator<T> get domGenerator => treeMap!.domGenerator;
 
-  final DOMNode/*?*/ domNode;
+  final DOMNode? domNode;
 
-  final T/*?*/ node;
+  final T? node;
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
-  DOMNodeRuntime<T/*!*/>/*?*/ get parentRuntime {
-    var domNodeParent = domNode != null ? domNode.parent : null;
+  DOMNodeRuntime<T>? get parentRuntime {
+    var domNodeParent = domNode != null ? domNode!.parent : null;
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
     return domGenerator.createDOMNodeRuntime(
-        treeMap, domNodeParent, nodeParent);
+        treeMap!, domNodeParent, nodeParent);
   }
 
-  bool/*!*/ get hasParent {
+  bool get hasParent {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null;
   }
 
-  String/*?*/ get tagName;
+  String? get tagName;
 
-  bool/*!*/ get isStringElement;
+  bool get isStringElement;
 
-  List<String>/*!*/ get classes;
+  List<String> get classes;
 
-  void addClass(String/*?*/ className);
+  void addClass(String? className);
 
-  bool/*!*/ removeClass(String/*?*/ className);
+  bool removeClass(String? className);
 
   void clearClasses();
 
-  bool/*!*/ get exists => domNode != null && node != null;
+  bool get exists => domNode != null && node != null;
 
   String get text;
 
-  set text(String/*!*/ value);
+  set text(String value);
 
-  String/*?*/ get value;
+  String? get value;
 
-  set value(String/*?*/ value);
+  set value(String? value);
 
-  String operator [](String name) => getAttribute(name);
+  String? operator [](String name) => getAttribute(name);
 
-  void operator []=(String name, Object/*?*/ value) => setAttribute(name, value);
+  void operator []=(String name, Object? value) =>
+      setAttribute(name, (value ?? '').toString());
 
-  String/*?*/ getAttribute(String/*!*/ name);
+  String? getAttribute(String name);
 
-  void setAttribute(String/*!*/ name, String/*!*/ value);
+  void setAttribute(String name, String value);
 
-  void removeAttribute(String/*!*/ name);
+  void removeAttribute(String name);
 
   /// Gets runtime `style` of [node] as [CSS].
-  CSS/*!*/ get style {
+  CSS get style {
     return CSS(getAttribute('style'));
   }
 
   /// Sets runtime `style` of [node] parsed as [CSS].
-  set style(Object/*?*/ cssText) {
+  set style(Object? cssText) {
     var css = CSS(cssText);
     setAttribute('style', css.style);
   }
 
   /// Gets a runtime [style] [CSSEntry] for [name] from [node].
-  CSSEntry getStyleEntry(String name) {
+  CSSEntry? getStyleEntry(String name) {
     var style = this.style;
     return style.getEntry(name);
   }
 
   /// Gets a runtime [style] property for [name] from [node].
-  String/*?*/ getStyleProperty(String name) {
+  String? getStyleProperty(String name) {
     var entry = getStyleEntry(name);
     return entry != null ? entry.valueAsString : null;
   }
 
-  String/*?*/ setStyleProperty(String name, String value) {
+  String? setStyleProperty(String name, String value) {
     var style = this.style;
     var prev = style.getAsString(name);
     style.put(name, value);
@@ -99,20 +100,20 @@ abstract class DOMNodeRuntime<T/*!*/> {
     this.style = style;
   }
 
-  CSSEntry/*?*/ removeStyleEntry(String name) {
+  CSSEntry? removeStyleEntry(String name) {
     var style = this.style;
     var entry = style.removeEntry(name);
     this.style = style;
     return entry;
   }
 
-  String/*?*/ removeStyleProperty(String name) {
+  String? removeStyleProperty(String name) {
     var entry = removeStyleEntry(name);
     return entry != null ? entry.valueAsString : null;
   }
 
-  List<CSSEntry>/*!*/ removeStyleEntries(List<String/*!*/> names) {
-    if (names == null || names.isEmpty) return <CSSEntry>[];
+  List<CSSEntry> removeStyleEntries(List<String> names) {
+    if (names.isEmpty) return <CSSEntry>[];
 
     var style = this.style;
 
@@ -129,7 +130,7 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return removed;
   }
 
-  Map<String/*!*/, String/*!*/> removeStyleProperties(List<String/*!*/> names) {
+  Map<String, String> removeStyleProperties(List<String> names) {
     var removed = removeStyleEntries(names);
     return Map.fromEntries(
         removed.map((e) => MapEntry(e.name, e.valueAsString)));
@@ -139,24 +140,24 @@ abstract class DOMNodeRuntime<T/*!*/> {
 
   int get nodesLength;
 
-  T getNodeAt(int index);
+  T? getNodeAt(int index);
 
   int get indexInParent;
 
-  bool/*!*/ isInSameParent(T other) {
+  bool isInSameParent(T other) {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null &&
         nodeParent == domGenerator.getNodeParent(other);
   }
 
-  DOMNodeRuntime<T/*!*/> getSiblingRuntime(T other) {
-    if (other == null || !isInSameParent(other)) return null;
+  DOMNodeRuntime<T>? getSiblingRuntime(T? other) {
+    if (other == null || treeMap == null || !isInSameParent(other)) return null;
 
-    var otherDomNode = treeMap.getMappedDOMNode(other);
-    return domGenerator.createDOMNodeRuntime(treeMap, otherDomNode, other);
+    var otherDomNode = treeMap!.getMappedDOMNode(other);
+    return domGenerator.createDOMNodeRuntime(treeMap!, otherDomNode, other);
   }
 
-  bool/*!*/ isPreviousNode(T other) {
+  bool isPreviousNode(T? other) {
     var otherRuntime = getSiblingRuntime(other);
     if (otherRuntime == null) return false;
 
@@ -165,7 +166,7 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return otherIdx >= 0 && otherIdx + 1 == idx;
   }
 
-  bool/*!*/ isNextNode(T other) {
+  bool isNextNode(T? other) {
     var otherRuntime = getSiblingRuntime(other);
     if (otherRuntime == null) return false;
 
@@ -174,37 +175,37 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return idx >= 0 && idx + 1 == otherIdx;
   }
 
-  bool/*!*/ isConsecutiveNode(T other) {
+  bool isConsecutiveNode(T other) {
     return isNextNode(other) || isPreviousNode(other);
   }
 
-  int/*!*/ indexOf(T child);
+  int indexOf(T child);
 
   void add(T child);
 
-  void insertAt(int/*!*/ index, T child);
+  void insertAt(int index, T? child);
 
-  bool/*!*/ removeNode(T child);
+  bool removeNode(T? child);
 
-  T removeAt(int/*!*/ index);
+  T? removeAt(int index);
 
   void clear();
 
-  bool/*!*/ remove() {
+  bool remove() {
     if (hasParent) {
-      return parentRuntime.removeNode(node);
+      return parentRuntime!.removeNode(node);
     }
     return false;
   }
 
-  bool/*!*/ replaceBy(List/*?*/ elements) {
+  bool replaceBy(List? elements) {
     if (elements == null) return false;
     var e = domGenerator.toElements(elements);
     return domGenerator.replaceElement(node, e);
   }
 
   int _contentFromIndexBackwardWhere(
-      int idx, int steps, bool/*!*/ Function(T node) test) {
+      int idx, int steps, bool Function(T? node) test) {
     for (var i = Math.min(idx, nodesLength - 1); i >= 0; i--) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -219,7 +220,7 @@ abstract class DOMNodeRuntime<T/*!*/> {
   }
 
   int _contentFromIndexForwardWhere(
-      int idx, int steps, bool/*!*/ Function(T node) test) {
+      int idx, int steps, bool Function(T? node) test) {
     for (var i = idx; i < nodesLength; i++) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -233,7 +234,7 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return -1;
   }
 
-  bool/*!*/ moveUp() {
+  bool moveUp() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
 
@@ -243,7 +244,7 @@ abstract class DOMNodeRuntime<T/*!*/> {
 
     remove();
 
-    var idxUp = parentRuntime._contentFromIndexBackwardWhere(
+    var idxUp = parentRuntime!._contentFromIndexBackwardWhere(
         idx - 1, 0, (node) => domGenerator.isElementNode(node));
     if (idxUp < 0) {
       idxUp = 0;
@@ -253,13 +254,13 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return true;
   }
 
-  bool/*!*/ moveDown() {
+  bool moveDown() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
 
     var idx = indexInParent;
     if (idx < 0) return false;
-    if (idx >= parentRuntime.nodesLength - 1) return true;
+    if (idx >= parentRuntime!.nodesLength - 1) return true;
 
     remove();
 
@@ -273,34 +274,33 @@ abstract class DOMNodeRuntime<T/*!*/> {
     return true;
   }
 
-  T/*?*/ copy();
+  T? copy();
 
-  T/*?*/ duplicate() {
-    DOMNodeRuntime<T/*!*/>/*?*/ parentRuntime = this.parentRuntime;
+  T? duplicate() {
+    var parentRuntime = this.parentRuntime;
     var idx = indexInParent;
     if (idx < 0) return null;
 
     var copy = this.copy();
-    parentRuntime.insertAt(idx + 1, copy);
+    parentRuntime!.insertAt(idx + 1, copy);
 
     return copy;
   }
 
-  bool/*!*/ absorbNode(T other);
+  bool absorbNode(T? other);
 
-  bool/*!*/ mergeNode(T other, {bool onlyConsecutive = true}) {
-    onlyConsecutive ??= true;
-
+  bool mergeNode(T? other, {bool onlyConsecutive = true}) {
     if (onlyConsecutive) {
       if (isPreviousNode(other)) {
-        return getSiblingRuntime(other).mergeNode(node, onlyConsecutive: false);
+        return getSiblingRuntime(other)!
+            .mergeNode(node, onlyConsecutive: false);
       } else if (!isNextNode(other)) {
         return false;
       }
     }
 
     if (hasParent) {
-      parentRuntime.removeNode(other);
+      parentRuntime!.removeNode(other);
     }
 
     absorbNode(other);
@@ -308,15 +308,15 @@ abstract class DOMNodeRuntime<T/*!*/> {
   }
 }
 
-class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
-  DOMNodeRuntimeDummy(DOMTreeMap<T/*!*/> treeMap, DOMNode domNode, T node)
+class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
+  DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T node)
       : super(treeMap, domNode, node);
 
   @override
-  String get tagName => null;
+  String? get tagName => null;
 
   @override
-  void addClass(String className) {}
+  void addClass(String? className) {}
 
   @override
   List<String> get classes => [];
@@ -325,7 +325,7 @@ class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
   void clearClasses() {}
 
   @override
-  bool/*!*/ removeClass(String className) => false;
+  bool removeClass(String? className) => false;
 
   @override
   String get text => '';
@@ -337,10 +337,10 @@ class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
   String get value => '';
 
   @override
-  set value(String value) {}
+  set value(String? value) {}
 
   @override
-  String getAttribute(String name) {
+  String? getAttribute(String name) {
     return null;
   }
 
@@ -360,7 +360,7 @@ class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
   int get nodesLength => 0;
 
   @override
-  T getNodeAt(int index) => null;
+  T? getNodeAt(int index) => null;
 
   @override
   void clear() {}
@@ -372,20 +372,20 @@ class DOMNodeRuntimeDummy<T/*!*/> extends DOMNodeRuntime<T/*!*/> {
   int indexOf(T child) => -1;
 
   @override
-  void insertAt(int index, T child) {}
+  void insertAt(int index, T? child) {}
 
   @override
-  bool/*!*/ removeNode(T child) => false;
+  bool removeNode(T? child) => false;
 
   @override
-  T removeAt(int index) => null;
+  T? removeAt(int index) => null;
 
   @override
-  T copy() => null;
+  T? copy() => null;
 
   @override
-  bool/*!*/ absorbNode(T other) => false;
+  bool absorbNode(T? other) => false;
 
   @override
-  bool/*!*/ get isStringElement => false;
+  bool get isStringElement => false;
 }

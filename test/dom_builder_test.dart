@@ -8,7 +8,7 @@ void main() {
     setUp(() {});
 
     test('Basic div 1', () {
-      var div = $divHTML('<div class="container"><span>Builder</span></div>')
+      var div = $divHTML('<div class="container"><span>Builder</span></div>')!
           .insertAt(0, $span(id: 's1', content: 'The '))
           .insertAfter('#s1',
               $span(id: 's2', content: 'DOM ', style: 'font-weight: bold'));
@@ -19,7 +19,7 @@ void main() {
           equals(
               '<div class="container"><span id="s1">The </span><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
 
-      div.select('#s1').remove();
+      div.select('#s1')!.remove();
 
       expect(
           div.buildHTML(),
@@ -156,7 +156,7 @@ void main() {
 
     test('Basic html', () {
       var div = $tagHTML(
-          '<DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>');
+          '<DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>')!;
 
       expect(div, isNotNull);
       expect(
@@ -167,7 +167,7 @@ void main() {
 
     test('build HTML', () {
       var div = $tagHTML(
-          '<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span><span>Final Text</span></div>');
+          '<div class="container"><span class="s1">Span Text<div class="d2">more text</div></span><span>Final Text</span></div>')!;
 
       expect(
           div.buildHTML(),
@@ -181,7 +181,7 @@ void main() {
 
     test('html add span', () {
       var div = $divHTML(
-          '<DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>');
+          '<DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>')!;
 
       div.add($span(content: 'Final text'));
 
@@ -202,7 +202,7 @@ void main() {
 
     test('html insert span', () {
       var div = $divHTML(
-          '  <DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>  ');
+          '  <DIV class="container">Simple Text<SPAN>Sub text</SPAN></DIV>  ')!;
 
       div.insertAt(1, $span(id: 's1', content: 'Initial text'));
 
@@ -212,14 +212,14 @@ void main() {
           equals(
               '<div class="container">Simple Text<span id="s1">Initial text</span><span>Sub text</span></div>'));
 
-      expect(div.nodeByID('s1').buildHTML(),
+      expect(div.nodeByID('s1')!.buildHTML(),
           equals('<span id="s1">Initial text</span>'));
-      expect(div.node('#s1').buildHTML(),
+      expect(div.node('#s1')!.buildHTML(),
           equals('<span id="s1">Initial text</span>'));
 
-      expect(div.selectByID('#s1').buildHTML(),
+      expect(div.selectByID('#s1')!.buildHTML(),
           equals('<span id="s1">Initial text</span>'));
-      expect(div.select('#s1').buildHTML(),
+      expect(div.select('#s1')!.buildHTML(),
           equals('<span id="s1">Initial text</span>'));
 
       div.insertAt('#s1', $span(id: 's0', content: 'Text 0'));
@@ -266,7 +266,7 @@ void main() {
 
       // Equivalent:
 
-      var div2 = $divHTML('<div class="container"><span>Builder</span></div>')
+      var div2 = $divHTML('<div class="container"><span>Builder</span></div>')!
           .insertAt(0, $span(id: 's1', content: 'The '))
           .insertAfter('#s1',
               $span(id: 's2', style: 'font-weight: bold', content: 'DOM '))
@@ -316,7 +316,7 @@ void main() {
 
     test('\$br', () {
       expect($br().buildHTML(), equals('<br>'));
-      expect($br(amount: 0).isCommented  , isTrue);
+      expect($br(amount: 0).isCommented, isTrue);
       expect($br(amount: 1).buildHTML(), equals('<br>'));
       expect($br(amount: 2).buildHTML(), equals('<span><br><br></span>'));
       expect($br(amount: 3).buildHTML(), equals('<span><br><br><br></span>'));
@@ -368,7 +368,7 @@ void main() {
       );
       expect(div.buildHTML(), equals('<div class="c1 c2"></div>'));
 
-      var attributeClass = div.getAttribute('class');
+      var attributeClass = div.getAttribute('class')!;
       expect(attributeClass.value, equals('c1 c2'));
       expect(attributeClass.values, equals(['c1', 'c2']));
       expect(attributeClass.containsValue('c2'), isTrue);
@@ -400,7 +400,7 @@ void main() {
       var div = $div(attributes: {'title': 'aaa'});
       expect(div.buildHTML(), equals('<div title="aaa"></div>'));
 
-      var attributeFoo = div.getAttribute('title');
+      var attributeFoo = div.getAttribute('title')!;
       expect(attributeFoo.value, equals('aaa'));
       attributeFoo.setValue('bbb');
       expect(attributeFoo.value, equals('bbb'));
@@ -422,7 +422,7 @@ void main() {
       expect(div.getAttributeValue('title'), equals('111'));
       expect(div.getAttributeValue('hidden'), equals('true'));
 
-      var attributeClass = div.getAttribute('class');
+      var attributeClass = div.getAttribute('class')!;
       expect(attributeClass.value, equals('c1 c2'));
       expect(attributeClass.values, equals(['c1', 'c2']));
       expect(attributeClass.containsValue('c2'), isTrue);
@@ -432,7 +432,7 @@ void main() {
       expect(attributeClass.isSet, isTrue);
       expect(attributeClass.isCollection, isTrue);
 
-      var attributeTitle = div.getAttribute('title');
+      var attributeTitle = div.getAttribute('title')!;
       expect(attributeTitle.value, equals('111'));
       expect(attributeTitle.values, equals(['111']));
       expect(attributeTitle.containsValue('111'), isTrue);
@@ -442,7 +442,7 @@ void main() {
       expect(attributeTitle.isSet, isFalse);
       expect(attributeTitle.isCollection, isFalse);
 
-      var attributeLang = div.getAttribute('lang');
+      var attributeLang = div.getAttribute('lang')!;
       expect(attributeLang.value, equals('en'));
       expect(attributeLang.values, equals(['en']));
       expect(attributeLang.containsValue('en'), isTrue);
@@ -455,7 +455,7 @@ void main() {
       var attributeBaz = div.getAttribute('baz');
       expect(attributeBaz, isNull);
 
-      var attributeHidden = div.getAttribute('hidden');
+      var attributeHidden = div.getAttribute('hidden')!;
       expect(attributeHidden.value, equals('true'));
       expect(attributeHidden.values, equals(['true']));
       expect(attributeHidden.containsValue('true'), isTrue);
@@ -488,16 +488,13 @@ void main() {
           equals('<div id="x1" class="c1 c2"><span>sub</span></div>'));
 
       var div2 = $div(hidden: true, content: 'foo');
-      expect(div2.buildHTML(),
-          equals('<div hidden>foo</div>'));
+      expect(div2.buildHTML(), equals('<div hidden>foo</div>'));
 
       var div3 = $div(hidden: false, content: 'foo');
-      expect(div3.buildHTML(),
-          equals('<div>foo</div>'));
+      expect(div3.buildHTML(), equals('<div>foo</div>'));
 
       var div4 = $div(content: 'foo');
-      expect(div4.buildHTML(),
-          equals('<div>foo</div>'));
+      expect(div4.buildHTML(), equals('<div>foo</div>'));
     });
 
     test('Helper \$tag', () {
@@ -508,24 +505,24 @@ void main() {
     });
 
     test('Helper \$htmlRoot: div', () {
-      var div = $htmlRoot('''<div title="aaa">WOW</div>''');
+      var div = $htmlRoot('''<div title="aaa">WOW</div>''')!;
 
       expect(div.runtimeType, equals(DIVElement));
       expect(div.buildHTML(), equals('<div title="aaa">WOW</div>'));
     });
 
     test('Helper \$htmlRoot: text 1', () {
-      var node = $htmlRoot('''WoW''');
+      var node = $htmlRoot('''WoW''')!;
       expect(node.buildHTML(), equals('<span>WoW</span>'));
     });
 
     test('Helper \$htmlRoot: text 2', () {
-      var node = $htmlRoot('''WoW<br>!''');
+      var node = $htmlRoot('''WoW<br>!''')!;
       expect(node.buildHTML(), equals('<span>WoW<br>!</span>'));
     });
 
     test('Helper \$htmlRoot: b+i', () {
-      var node = $htmlRoot('''<b>BB</b><i>II</i>''');
+      var node = $htmlRoot('''<b>BB</b><i>II</i>''')!;
       expect(node.buildHTML(), equals('<span><b>BB</b><i>II</i></span>'));
     });
 
@@ -536,7 +533,7 @@ void main() {
     });
 
     test('Helper \$tags +generator', () {
-      var node = $tags<String>('b', ['aa', 'bb'], (e) => e.toUpperCase());
+      var node = $tags<String>('b', ['aa', 'bb'], (e) => e!.toUpperCase());
       expect(
           node.map((e) => e.buildHTML()), equals(['<b>AA</b>', '<b>BB</b>']));
     });
@@ -622,18 +619,12 @@ void main() {
 }
 
 class TestText {
-  String _text;
+  String text;
 
-  String get text => _text;
-
-  set text(String value) {
-    _text = value ?? '';
-  }
-
-  TestText(String text) : _text = text ?? '';
+  TestText(String text) : text = text;
 
   @override
   String toString() {
-    return _text;
+    return text;
   }
 }

@@ -22,6 +22,71 @@ void main() {
           css.style,
           equals(
               'color: rgb(255, 0, 0); background-color: rgb(0, 255, 0); width: 10px'));
+
+      var possibleEntries = css.getPossibleEntries();
+
+      var keys = possibleEntries.map((e) => e.name).toList()..sort();
+      expect(
+          keys,
+          equals([
+            'background-color',
+            'border',
+            'color',
+            'height',
+            'opacity',
+            'width'
+          ]));
+
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'background-color')
+              .toString(),
+          equals('background-color: rgb(0, 255, 0)'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'background-color')
+              .sampleValueAsString,
+          equals('rgba(0, 0, 0, 0.5)'));
+
+      expect(possibleEntries.firstWhere((e) => e.name == 'border').toString(),
+          equals('border: initial'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'border')
+              .sampleValueAsString,
+          equals('1px solid #000000'));
+
+      expect(possibleEntries.firstWhere((e) => e.name == 'color').toString(),
+          equals('color: rgb(255, 0, 0)'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'color')
+              .sampleValueAsString,
+          equals('#000000'));
+
+      expect(possibleEntries.firstWhere((e) => e.name == 'height').toString(),
+          equals('height: auto'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'height')
+              .sampleValueAsString,
+          equals('1px'));
+
+      expect(possibleEntries.firstWhere((e) => e.name == 'opacity').toString(),
+          equals('opacity: initial'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'opacity')
+              .sampleValueAsString,
+          equals('1'));
+
+      expect(possibleEntries.firstWhere((e) => e.name == 'width').toString(),
+          equals('width: 10px'));
+      expect(
+          possibleEntries
+              .firstWhere((e) => e.name == 'width')
+              .sampleValueAsString,
+          equals('1px'));
     });
 
     test('CSS construct 2', () {
@@ -92,28 +157,28 @@ void main() {
           equals(
               'width: 10vw; height: 20%; color: rgb(255, 0, 0); background-color: rgba(0, 255, 0, 0.5)'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorRGB;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorRGB;
       expect(color.red, equals(255));
       expect(color.green, equals(0));
       expect(color.blue, equals(0));
       expect(color.toString(), equals('rgb(255, 0, 0)'));
 
-      expect(css.backgroundColor.name, equals('background-color'));
-      var backgroundColor = css.backgroundColor.value as CSSColorRGBA;
+      expect(css.backgroundColor!.name, equals('background-color'));
+      var backgroundColor = css.backgroundColor!.value as CSSColorRGBA;
       expect(backgroundColor.red, equals(0));
       expect(backgroundColor.green, equals(255));
       expect(backgroundColor.blue, equals(0));
       expect(backgroundColor.alpha, equals(0.50));
       expect(backgroundColor.toString(), equals('rgba(0, 255, 0, 0.5)'));
 
-      expect(css.width.name, equals('width'));
-      var width = css.width.value;
+      expect(css.width!.name, equals('width'));
+      var width = css.width!.value!;
       expect(width.value, equals(10));
       expect(width.unit, equals(CSSUnit.vw));
 
-      expect(css.height.name, equals('height'));
-      var height = css.height.value;
+      expect(css.height!.name, equals('height'));
+      var height = css.height!.value!;
       expect(height.value, equals(20));
       expect(height.unit, equals(CSSUnit.percent));
 
@@ -133,8 +198,8 @@ void main() {
       var css = CSS('color: rgb(255, 0, 0);');
       expect(css.style, equals('color: rgb(255, 0, 0)'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorRGB;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorRGB;
       expect(color.red, equals(255));
       expect(color.green, equals(0));
       expect(color.blue, equals(0));
@@ -151,8 +216,8 @@ void main() {
       var css = CSS('color: rgb(255, 0, 0, 0.21);');
       expect(css.style, equals('color: rgba(255, 0, 0, 0.21)'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorRGBA;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorRGBA;
       expect(color.red, equals(255));
       expect(color.green, equals(0));
       expect(color.blue, equals(0));
@@ -171,8 +236,8 @@ void main() {
       var css = CSS('color: #FF0000;');
       expect(css.style, equals('color: #ff0000'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorHEX;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorHEX;
       expect(color.red, equals(255));
       expect(color.green, equals(0));
       expect(color.blue, equals(0));
@@ -189,8 +254,8 @@ void main() {
       var css = CSS('color: #FFF;');
       expect(css.style, equals('color: #ffffff'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorHEX;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorHEX;
       expect(color.red, equals(255));
       expect(color.green, equals(255));
       expect(color.blue, equals(255));
@@ -206,8 +271,8 @@ void main() {
       var css = CSS('color: #FF881180;');
       expect(css.style, equals('color: #ff881180'));
 
-      expect(css.color.name, equals('color'));
-      var color = css.color.value as CSSColorHEXAlpha;
+      expect(css.color!.name, equals('color'));
+      var color = css.color!.value as CSSColorHEXAlpha;
       expect(color.red, equals(255));
       expect(color.green, equals(136));
       expect(color.blue, equals(17));
@@ -247,10 +312,10 @@ void main() {
     });
 
     test('CSS colors named', () {
-      var color1 = CSSColor.from('red');
-      var color2 = CSSColor.from('blue');
-      var color3 = CSSColor.from('black');
-      var color4 = CSSColor.from('white');
+      var color1 = CSSColor.from('red')!;
+      var color2 = CSSColor.from('blue')!;
+      var color3 = CSSColor.from('black')!;
+      var color4 = CSSColor.from('white')!;
 
       expect(color1.asCSSColorHEX, equals(CSSColor.from('#ff0000')));
       expect(color2.asCSSColorHEX, equals(CSSColor.from('#0000ff')));
@@ -346,13 +411,13 @@ void main() {
       expect(css.style,
           equals('background: url("assets/foo.png") no-repeat; width: 20px'));
 
-      var background = css.background.value;
+      var background = css.background!.value!;
       expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
 
       expect(background.hasImages, isTrue);
       expect(background.imagesLength, equals(1));
 
-      var image = background.firstImage;
+      var image = background.firstImage!;
 
       expect(image.url.toString(), equals('url("assets/foo.png")'));
       expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
@@ -370,7 +435,7 @@ void main() {
           equals(
               'background: url("assets/foo.png") no-repeat #ff0000; width: 20px'));
 
-      var background = css.background.value;
+      var background = css.background!.value!;
       expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
 
       expect(background.hasImages, isTrue);
@@ -378,7 +443,7 @@ void main() {
 
       expect(background.color.toString(), equals('#ff0000'));
 
-      var image = background.firstImage;
+      var image = background.firstImage!;
 
       expect(image.url.toString(), equals('url("assets/foo.png")'));
       expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
@@ -396,7 +461,7 @@ void main() {
           equals(
               'background: url("assets/foo.png") center no-repeat fixed #ff0000; width: 20px'));
 
-      var background = css.background.value;
+      var background = css.background!.value!;
       expect(background, equals(CSSBackground.url(CSSURL('assets/foo.png'))));
 
       expect(background.hasImages, isTrue);
@@ -404,7 +469,7 @@ void main() {
 
       expect(background.color.toString(), equals('#ff0000'));
 
-      var image = background.firstImage;
+      var image = background.firstImage!;
 
       expect(image.url.toString(), equals('url("assets/foo.png")'));
       expect(image.repeat, equals(CSSBackgroundRepeat.noRepeat));
@@ -425,7 +490,7 @@ void main() {
           equals(
               'background: url("assets/foo1.png"), url("assets/foo2.png"); width: 20px'));
 
-      var background = css.background.value;
+      var background = css.background!.value!;
       expect(
           background,
           equals(CSSBackground.images([
@@ -436,8 +501,8 @@ void main() {
       expect(background.hasImages, isTrue);
       expect(background.imagesLength, equals(2));
 
-      var image1 = background.getImage(0);
-      var image2 = background.getImage(1);
+      var image1 = background.getImage(0)!;
+      var image2 = background.getImage(1)!;
 
       expect(image1.url.toString(), equals('url("assets/foo1.png")'));
       expect(image2.url.toString(), equals('url("assets/foo2.png")'));
@@ -456,7 +521,7 @@ void main() {
           equals(
               'background: url("assets/foo1.png"), url("assets/foo2.png") #00ff00; width: 20px'));
 
-      var background = css.background.value;
+      var background = css.background!.value!;
       expect(
           background,
           equals(CSSBackground.images([
@@ -469,8 +534,8 @@ void main() {
       expect(background.hasImages, isTrue);
       expect(background.imagesLength, equals(2));
 
-      var image1 = background.getImage(0);
-      var image2 = background.getImage(1);
+      var image1 = background.getImage(0)!;
+      var image2 = background.getImage(1)!;
 
       expect(image1.url.toString(), equals('url("assets/foo1.png")'));
       expect(image2.url.toString(), equals('url("assets/foo2.png")'));
@@ -576,7 +641,7 @@ void main() {
 
       expect(css2.style, equals(css.style));
 
-      expect(css.get<CSSColor>('background-color').hasAlpha, isTrue);
+      expect(css.get<CSSColor>('background-color')!.hasAlpha, isTrue);
 
       expect(css.get('font-size'), equals(CSSLength(0.7, CSSUnit.rem)));
 
