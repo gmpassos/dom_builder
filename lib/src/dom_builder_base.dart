@@ -415,7 +415,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns the content of this node as text.
   String get text {
-    if (isEmpty || _content == null) return '';
+    if (isEmptyContent) return '';
     if (_content!.length == 1) {
       return _content![0].text;
     } else {
@@ -462,7 +462,7 @@ class DOMNode implements AsDOMNode {
   }
 
   int indexOfNodeIdentical(DOMNode node) {
-    if (isEmpty) return -1;
+    if (isEmptyContent) return -1;
     for (var i = 0; i < _content!.length; i++) {
       var child = _content![i];
       if (identical(node, child)) return i;
@@ -471,7 +471,7 @@ class DOMNode implements AsDOMNode {
   }
 
   int indexOfNodeWhere(bool Function(DOMNode node) test) {
-    if (isEmpty) return -1;
+    if (isEmptyContent) return -1;
 
     for (var i = 0; i < _content!.length; i++) {
       var child = _content![i];
@@ -520,7 +520,7 @@ class DOMNode implements AsDOMNode {
 
   /// Moves [node] up in the children list.
   bool moveUpNode(DOMNode node) {
-    if (isEmpty) return false;
+    if (isEmptyContent) return false;
 
     var idx = indexOfNodeIdenticalFirst(node);
     if (idx < 0) return false;
@@ -548,7 +548,7 @@ class DOMNode implements AsDOMNode {
 
   /// Moves [node] down in the children list.
   bool moveDownNode(DOMNode node) {
-    if (isEmpty) return false;
+    if (isEmptyContent) return false;
 
     var idx = indexOfNodeIdenticalFirst(node);
     if (idx < 0) return false;
@@ -576,7 +576,7 @@ class DOMNode implements AsDOMNode {
 
   /// Duplicate [node] and add it to the children list.
   DOMNode? duplicateNode(DOMNode node) {
-    if (isEmpty) return null;
+    if (isEmptyContent) return null;
 
     var idx = indexOfNodeIdenticalFirst(node);
     if (idx < 0) return null;
@@ -592,7 +592,7 @@ class DOMNode implements AsDOMNode {
 
   /// Clear the children list.
   void clearNodes() {
-    if (isEmpty) return;
+    if (isEmptyContent) return;
 
     for (var node in _content!) {
       node.parent = null;
@@ -610,7 +610,7 @@ class DOMNode implements AsDOMNode {
 
   /// Removes [node] from children list.
   bool removeNode(DOMNode node) {
-    if (isEmpty) return false;
+    if (isEmptyContent) return false;
 
     var idx = indexOfNodeIdenticalFirst(node);
     if (idx < 0) {
@@ -678,27 +678,33 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a copy [List] of children nodes.
   List<DOMNode> get nodes =>
-      isNotEmpty && _content != null ? List.from(_content!).cast() : [];
+      isNotEmptyContent ? List.from(_content!).cast() : [];
 
   /// Returns the total number of children nodes.
   int get length => allowContent && _content != null ? _content!.length : 0;
 
   /// Returns [true] if this node content is empty (no children nodes).
-  bool get isEmpty =>
+  bool get isEmptyContent =>
       allowContent && _content != null ? _content!.isEmpty : true;
 
+  /// Returns ![isEmptyContent].
+  bool get isNotEmptyContent => !isEmptyContent;
+
+  /// Returns [true] if this node content is empty (no children nodes).
+  //bool get isEmpty => isContentEmpty;
+
   /// Returns ![isEmpty].
-  bool get isNotEmpty => !isEmpty;
+  //bool get isNotEmpty => !isEmpty;
 
   /// Returns [true] if this node only have [DOMElement] nodes.
   bool get hasOnlyElementNodes {
-    if (isEmpty) return false;
+    if (isEmptyContent) return false;
     return _content!.any((n) => !(n is DOMElement)) == false;
   }
 
   /// Returns [true] if this node only have [TextNode] nodes.
   bool get hasOnlyTextNodes {
-    if (isEmpty) return false;
+    if (isEmptyContent) return false;
     return _content!.any((n) => (n is DOMElement)) == false;
   }
 
@@ -795,7 +801,7 @@ class DOMNode implements AsDOMNode {
   }
 
   void _setChildrenParent() {
-    if (isEmpty) return;
+    if (isEmptyContent) return;
     _content!.forEach((e) => e.parent = this);
   }
 
@@ -809,7 +815,7 @@ class DOMNode implements AsDOMNode {
 
   /// Checks children nodes integrity.
   void checkNodes() {
-    if (isEmpty) return;
+    if (isEmptyContent) return;
 
     for (var child in _content!) {
       if (child.parent == null) {
@@ -837,27 +843,27 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a child node by [index].
   T? nodeByIndex<T extends DOMNode>(int? index) {
-    if (index == null || isEmpty) return null;
+    if (index == null || isEmptyContent) return null;
     return _content![index] as T?;
   }
 
   /// Returns a child node by [id].
   T? nodeByID<T extends DOMNode>(String? id) {
-    if (id == null || id.isEmpty || isEmpty) return null;
+    if (id == null || id.isEmpty || isEmptyContent) return null;
     if (id.startsWith('#')) id = id.substring(1);
     return nodeWhere((n) => n is DOMElement && n.id == id);
   }
 
   /// Returns a node [T] that has attribute [id].
   T? selectByID<T extends DOMNode>(String? id) {
-    if (id == null || id.isEmpty || isEmpty) return null;
+    if (id == null || id.isEmpty || isEmptyContent) return null;
     if (id.startsWith('#')) id = id.substring(1);
     return selectWhere((n) => n is DOMElement && n.id == id);
   }
 
   /// Returns a node [T] that has all [classes].
   T? selectWithAllClass<T extends DOMNode>(List<String>? classes) {
-    if (isEmptyObject(classes) || isEmpty) return null;
+    if (isEmptyObject(classes) || isEmptyContent) return null;
 
     classes = classes!
         .whereType<String>()
@@ -872,7 +878,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that has any of [classes].
   T? selectWithAnyClass<T extends DOMNode>(List<String>? classes) {
-    if (isEmptyObject(classes) || isEmpty) return null;
+    if (isEmptyObject(classes) || isEmptyContent) return null;
 
     classes = classes!
         .whereType<String>()
@@ -887,7 +893,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that is one of [tags].
   T? selectByTag<T extends DOMNode>(List<String>? tags) {
-    if (isEmptyObject(tags) || isEmpty) return null;
+    if (isEmptyObject(tags) || isEmptyContent) return null;
 
     tags = tags!
         .whereType<String>()
@@ -902,37 +908,38 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that is equals to [node].
   T? nodeEquals<T extends DOMNode>(DOMNode? node) {
-    if (node == null || isEmpty) return null;
+    if (node == null || isEmptyContent) return null;
     return nodeWhere((n) => n == node);
   }
 
   T? selectEquals<T extends DOMNode>(DOMNode? node) {
-    if (node == null || isEmpty) return null;
+    if (node == null || isEmptyContent) return null;
     return selectWhere((n) => n == node);
   }
 
   T? nodeWhere<T extends DOMNode>(Object? selector) {
-    if (selector == null || isEmpty) return null;
+    if (selector == null || isEmptyContent) return null;
     bool Function(DOMNode) nodeSelector = asNodeSelector(selector)!;
     return _content!.firstWhereOrNull(nodeSelector) as T?;
   }
 
   /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> nodesWhere<T extends DOMNode>(Object? selector) {
-    if (selector == null || isEmpty) return <T>[];
+    if (selector == null || isEmptyContent) return <T>[];
     bool Function(DOMNode) nodeSelector = asNodeSelector(selector)!;
     return _content!.where(nodeSelector).whereType<T>().toList();
   }
 
   void catchNodesWhere<T extends DOMNode>(Object? selector, List<T> destiny) {
-    if (selector == null || isEmpty) return;
-    bool Function(DOMNode) nodeSelector = asNodeSelector(selector)!;
-    destiny.addAll(_content!.where(nodeSelector).whereType<T>());
+    if (selector == null || isEmptyContent) return;
+    var nodeSelector = asNodeSelector(selector)!;
+    var nodes = _content!.where(nodeSelector).whereType<T>();
+    destiny.addAll(nodes);
   }
 
   /// Returns a [T] child node that matches [selector].
   T? selectWhere<T extends DOMNode>(Object? selector) {
-    if (selector == null || isEmpty) return null;
+    if (selector == null || isEmptyContent) return null;
     bool Function(DOMNode)? nodeSelector = asNodeSelector(selector);
 
     var found = nodeWhere(nodeSelector);
@@ -970,7 +977,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a [List<T>] of children nodes that matches [selector].
   List<T> selectAllWhere<T extends DOMNode>(Object? selector) {
-    if (selector == null || isEmpty) return <T>[];
+    if (selector == null || isEmptyContent) return <T>[];
     var nodeSelector = asNodeSelector(selector);
 
     var all = <T>[];
@@ -980,7 +987,7 @@ class DOMNode implements AsDOMNode {
 
   void _selectAllWhereImpl<T extends DOMNode>(
       NodeSelector? selector, List<T> all) {
-    if (isEmpty) return;
+    if (isEmptyContent) return;
 
     catchNodesWhere(selector, all);
 
@@ -1001,7 +1008,7 @@ class DOMNode implements AsDOMNode {
   ///
   /// [selector] can by a [num], used as a node index.
   T? select<T extends DOMNode>(Object? selector) {
-    if (selector == null || isEmpty) return null;
+    if (selector == null || isEmptyContent) return null;
 
     if (selector is num) {
       return nodeByIndex(selector as int?);
@@ -1012,7 +1019,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns the index of a child node that matches [selector].
   int indexOf(Object? selector) {
-    if (selector == null || isEmpty) return -1;
+    if (selector == null || isEmptyContent) return -1;
 
     if (selector is num) {
       if (selector < 0) return -1;
@@ -1026,7 +1033,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns the index of [node].
   int indexOfNode(DOMNode node) {
-    if (isEmpty) return -1;
+    if (isEmptyContent) return -1;
     return _content!.indexOf(node);
   }
 
@@ -1123,7 +1130,7 @@ class DOMNode implements AsDOMNode {
       } else {
         _insertToContent(idx, node);
       }
-    } else if (indexSelector is num && isEmpty) {
+    } else if (indexSelector is num && isEmptyContent) {
       var node = _parseNode(entry);
       _addImpl(node);
     }
@@ -1142,7 +1149,7 @@ class DOMNode implements AsDOMNode {
 
       var node = _parseNode(entry);
       _insertToContent(idx, node);
-    } else if (indexSelector is num && isEmpty) {
+    } else if (indexSelector is num && isEmptyContent) {
       var node = _parseNode(entry);
       _addImpl(node);
     }
@@ -1221,7 +1228,7 @@ class TextNode extends DOMNode implements WithValue {
       return true;
     } else if (other is DOMElement &&
         other.isStringElement &&
-        (other.isEmpty || other.hasOnlyTextNodes)) {
+        (other.isEmptyContent || other.hasOnlyTextNodes)) {
       other.remove();
       absorbNode(other);
       return true;
@@ -1295,14 +1302,15 @@ class TemplateNode extends DOMNode implements WithValue {
         super._(false, false);
 
   @override
-  String get text => isNotEmpty ? template.toString() : '';
+  String get text => isNotEmptyTemplate ? template.toString() : '';
 
   set text(String value) {
     template = DOMTemplate.parse(value);
   }
 
-  @override
-  bool get isEmpty => template.isEmpty;
+  bool get isEmptyTemplate => template.isEmpty;
+
+  bool get isNotEmptyTemplate => !isEmptyTemplate;
 
   @override
   bool get hasValue => template.isNotEmpty;
@@ -1352,7 +1360,7 @@ class TemplateNode extends DOMNode implements WithValue {
       return true;
     } else if (other is DOMElement &&
         other.isStringElement &&
-        (other.isEmpty || other.hasOnlyTextNodes)) {
+        (other.isEmptyContent || other.hasOnlyTextNodes)) {
       other.remove();
       absorbNode(other);
       return true;
@@ -1729,17 +1737,17 @@ class DOMElement extends DOMNode implements AsDOMElement {
   LinkedHashMap<String, DOMAttribute>? _attributes;
 
   Map<String, DOMAttribute> get domAttributes =>
-      _attributes != null ? Map.from(_attributes!) : {};
+      _attributes != null ? Map.from(_attributes!) : <String, DOMAttribute>{};
 
   Map<String, dynamic> get attributes => hasEmptyAttributes
-      ? {}
-      : _attributes!.map((key, value) =>
-          MapEntry(key, value.isCollection ? value.values : value.value));
+      ? <String, dynamic>{}
+      : _attributes!.map((key, value) => MapEntry<String, dynamic>(
+          key, value.isCollection ? value.values : value.value));
 
   Map<String, String> get attributesAsString => hasEmptyAttributes
-      ? {}
-      : _attributes!.map(((key, value) => MapEntry(key, value.value!))
-          as MapEntry<String, String> Function(String, DOMAttribute));
+      ? <String, String>{}
+      : _attributes!
+          .map(((key, value) => MapEntry<String, String>(key, value.value!)));
 
   static const Set<String> POSSIBLE_GLOBAL_ATTRIBUTES = {
     'id',
@@ -2030,7 +2038,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   @override
   bool absorbNode(DOMNode other) {
     if (other is DOMElement) {
-      if (other.isEmpty) return true;
+      if (other.isEmptyContent) return true;
       addAll(other._content);
       other._content!.clear();
       return true;
@@ -2195,8 +2203,10 @@ class DOMElement extends DOMNode implements AsDOMElement {
       disableIndent = true;
     }
 
-    var allowIndent =
-        withIndent && isNotEmpty && hasOnlyElementNodes && !disableIndent;
+    var allowIndent = withIndent &&
+        isNotEmptyContent &&
+        hasOnlyElementNodes &&
+        !disableIndent;
 
     var innerIndent = allowIndent ? parentIndent + indent : '';
     var innerBreakLine = allowIndent ? '\n' : '';
@@ -2249,7 +2259,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
           runtimeType == other.runtimeType &&
           tag == other.tag &&
           equalsAttributes(other) &&
-          ((isEmpty && other.isEmpty) ||
+          ((isEmptyContent && other.isEmptyContent) ||
               isEqualsDeep(_content, other._content));
 
   /// Returns true if [other] have the same attributes.
@@ -2265,7 +2275,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   @override
   String toString() {
     var attributesStr = hasAttributes ? ', attributes: $_attributes' : '';
-    var contentStr = isNotEmpty ? ', content: ${_content!.length}' : '';
+    var contentStr = isNotEmptyContent ? ', content: ${_content!.length}' : '';
 
     return 'DOMElement{tag: $tag$attributesStr$contentStr}';
   }
@@ -2620,7 +2630,7 @@ class SELECTElement extends DOMElement {
         attributes: attributes, options: content, commented: isCommented);
   }
 
-  bool get hasOptions => isNotEmpty;
+  bool get hasOptions => isNotEmptyContent;
 
   List<OPTIONElement> get options =>
       content?.whereType<OPTIONElement>().toList() ?? [];

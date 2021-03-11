@@ -1,3 +1,8 @@
+## 2.0.1
+
+- Null Safety adjustments.
+- swiss_knife: ^3.0.5
+
 ## 2.0.0
 
 - Dart 2.12.0:
