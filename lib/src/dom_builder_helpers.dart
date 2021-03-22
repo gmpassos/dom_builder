@@ -821,27 +821,41 @@ OPTIONElement $option(
 
 /// Creates an `img` node.
 DOMElement $img(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        String? src,
-        String? title,
-        Object? content,
-        bool hidden = false,
-        bool commented = false}) =>
-    $tag('img',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {
-          if (src != null) 'src': src,
-          if (title != null) 'title': title,
-          ...?attributes
-        },
-        content: content,
-        hidden: hidden,
-        commented: commented);
+    {Object? id,
+    Object? classes,
+    Object? style,
+    Map<String, String>? attributes,
+    String? src,
+    Future<String?>? srcFuture,
+    String? title,
+    Object? content,
+    bool hidden = false,
+    bool commented = false}) {
+  var img = $tag('img',
+      id: id,
+      classes: classes,
+      style: style,
+      attributes: {
+        if (src != null) 'src': src,
+        if (title != null) 'title': title,
+        ...?attributes
+      },
+      content: content,
+      hidden: hidden,
+      commented: commented);
+
+  if (srcFuture != null) {
+    srcFuture.then((src) {
+      if (src != null) {
+        img.setAttribute('src', src);
+        img.runtime.setAttribute('src', src);
+      }
+      return src;
+    });
+  }
+
+  return img;
+}
 
 /// Creates an `a` node.
 DOMElement $a(

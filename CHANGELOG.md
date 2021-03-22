@@ -1,3 +1,8 @@
+## 2.0.2
+
+- Null Safety adjustments.
+- swiss_knife: ^3.0.6
+  
 ## 2.0.1
 
 - Null Safety adjustments.

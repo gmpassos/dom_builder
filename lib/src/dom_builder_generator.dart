@@ -819,14 +819,14 @@ abstract class DOMGenerator<T> {
     var domAction = _domActionExecutor!.parse(actionValue);
 
     if (domAction != null) {
-      EventStream<DOMEvent>? eventStream = domElement.onClick;
+      EventStream<DOMEvent> eventStream = domElement.onClick;
 
       var tag = domElement.tag;
       if (tag == 'select' || tag == 'input' || tag == 'textarea') {
         eventStream = domElement.onChange;
       }
 
-      eventStream!.listen((event) {
+      eventStream.listen((event) {
         var target = domElement.getRuntimeNode();
         var elementValue = getElementValue(element);
 
@@ -893,7 +893,7 @@ abstract class DOMGenerator<T> {
     tag = normalizeTag(tag);
     if (tag == null) return null;
 
-    DOMElement domNode;
+    DOMElement? domNode;
 
     var generator = node == null
         ? null
@@ -911,6 +911,8 @@ abstract class DOMGenerator<T> {
       attributes = revertElementAttributes(node, attributes);
       domNode = DOMElement(tag, attributes: attributes);
     }
+
+    if (domNode == null) return null;
 
     if (domParent != null) {
       domParent.add(domNode);
@@ -985,7 +987,7 @@ abstract class ElementGenerator<T> {
       List<DOMNode>? contentNodes,
       DOMContext<T>? context);
 
-  DOMElement revert(DOMGenerator<T> domGenerator, DOMTreeMap<T>? treeMap,
+  DOMElement? revert(DOMGenerator<T> domGenerator, DOMTreeMap<T>? treeMap,
       DOMElement? domParent, T? parent, T? node);
 
   bool isGeneratedElement(T element) => false;

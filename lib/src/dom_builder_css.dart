@@ -477,7 +477,7 @@ class CSSEntry<V extends CSSValue> {
 
     var value = entry.substring(idx + 1).trim();
 
-    var cssValue = CSSValue.from(value, name) as V;
+    var cssValue = CSSValue.from(value, name) as V?;
 
     if (comment != null && comment.contains('DOMContext-original-value:')) {
       var idx = comment.indexOf('DOMContext-original-value:');

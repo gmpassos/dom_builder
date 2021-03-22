@@ -283,42 +283,42 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
       if (domElement.hasOnClickListener) {
         element.onClick.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onClick!.add(domEvent);
+          domElement.onClick.add(domEvent);
         });
       }
 
       if (domElement.hasOnChangeListener) {
         element.onChange.listen((event) {
           var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onChange!.add(domEvent);
+          domElement.onChange.add(domEvent);
         });
       }
 
       if (domElement.hasOnMouseOverListener) {
         element.onMouseOver.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOver!.add(domEvent);
+          domElement.onMouseOver.add(domEvent);
         });
       }
 
       if (domElement.hasOnMouseOutListener) {
         element.onMouseOut.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOut!.add(domEvent);
+          domElement.onMouseOut.add(domEvent);
         });
       }
 
       if (domElement.hasOnLoadListener) {
         element.onLoad.listen((event) {
           var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onLoad!.add(domEvent);
+          domElement.onLoad.add(domEvent);
         });
       }
 
       if (domElement.hasOnErrorListener) {
         element.onError.listen((event) {
           var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onError!.add(domEvent);
+          domElement.onError.add(domEvent);
         });
       }
     }
