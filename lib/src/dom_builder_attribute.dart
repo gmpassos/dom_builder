@@ -44,9 +44,10 @@ class DOMAttribute implements WithValue {
   }
 
   static String append(String s, String delimiter, DOMAttribute? attribute,
-      [DOMContext? domContext]) {
+      {DOMContext? domContext, bool resolveDSX = false}) {
     if (attribute == null) return s;
-    var append = attribute.buildHTML(domContext);
+    var append =
+        attribute.buildHTML(domContext: domContext, resolveDSX: resolveDSX);
     if (append.isEmpty) return s;
     return s + delimiter + append;
   }
@@ -145,12 +146,19 @@ class DOMAttribute implements WithValue {
     }
   }
 
-  String buildHTML([DOMContext? domContext]) {
+  String buildHTML({DOMContext? domContext, bool resolveDSX = false}) {
+    var valueHandler = this.valueHandler;
+
     if (isBoolean) {
       return valueHandler.hasAttributeValue ? name : '';
     }
 
-    var htmlValue = valueHandler.getAttributeValue(domContext);
+    String? htmlValue;
+    if (resolveDSX && valueHandler is DOMAttributeValueTemplate) {
+      htmlValue = valueHandler.template.build(domContext);
+    } else {
+      htmlValue = valueHandler.getAttributeValue(domContext);
+    }
 
     if (htmlValue != null) {
       var html = '$name=';
@@ -279,7 +287,6 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
   late DOMTemplate _template;
 
   DOMAttributeValueTemplate(Object? value) : super(value) {
-    /*!!!*/
     _template = DOMTemplate.from(value)!;
   }
 

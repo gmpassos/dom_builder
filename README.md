@@ -2,7 +2,6 @@
 
 [![pub package](https://img.shields.io/pub/v/dom_builder.svg?logo=dart&logoColor=00b9fc)](https://pub.dartlang.org/packages/dom_builder)
 [![Null Safety](https://img.shields.io/badge/null-safety-brightgreen)](https://dart.dev/null-safety)
-
 [![CI](https://img.shields.io/github/workflow/status/gmpassos/dom_builder/Dart%20CI/master?logo=github-actions&logoColor=white)](https://github.com/gmpassos/dom_builder/actions)
 [![GitHub Tag](https://img.shields.io/github/v/tag/gmpassos/dom_builder?logo=git&logoColor=white)](https://github.com/gmpassos/dom_builder/releases)
 [![New Commits](https://img.shields.io/github/commits-since/gmpassos/dom_builder/latest?logo=git&logoColor=white)](https://github.com/gmpassos/dom_builder/network)
@@ -11,7 +10,7 @@
 [![Code size](https://img.shields.io/github/languages/code-size/gmpassos/dom_builder?logo=github&logoColor=white)](https://github.com/gmpassos/dom_builder)
 [![License](https://img.shields.io/github/license/gmpassos/dom_builder?logo=open-source-initiative&logoColor=green)](https://github.com/gmpassos/dom_builder/blob/master/LICENSE)
 
-Generate and manipulate DOM (virtual and real) elements or HTML (Web and Native support).
+Generate and manipulate DOM elements (virtual or real), DSX (like JSX) and HTML declarations (Web and Native support).
 
 ## Usage
 
@@ -101,6 +100,30 @@ class TitleComponent {
 }
 
 ```
+
+## DSX
+
+Similar to [JSX][jsx], DSX (Dart Syntax Extension) allows the declaration and construction of
+a `DOM` tree using plain `HTML`.
+
+```dart
+import 'dart:html' ;
+import 'package:dom_builder/dom_builder_html.dart';
+
+void main() {
+
+  var button = $dsx('''
+    <button onclick="${_btnClick.dsx()}">CLICK ME!</button>
+  ''');
+  
+}
+
+void _btnClick() {
+  print('Button Clicked!');
+}
+```
+
+[jsx]: https://reactjs.org/docs/introducing-jsx.html
 
 ## Example of Bootstrap Cards and Table:
 

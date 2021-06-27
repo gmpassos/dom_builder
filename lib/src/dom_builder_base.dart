@@ -332,6 +332,7 @@ class DOMNode implements AsDOMNode {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
+      bool resolveDSX = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
@@ -1261,6 +1262,7 @@ class TextNode extends DOMNode implements WithValue {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
+      bool resolveDSX = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
@@ -1393,9 +1395,21 @@ class TemplateNode extends DOMNode implements WithValue {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
+      bool resolveDSX = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
+    var text = this.text;
+
+    if (resolveDSX) {
+      if (template.isDSX) {
+        text = template.build(domContext) ?? '';
+      } else if (template.hasDSX) {
+        var template2 = template.copy(resolveDSX: true);
+        text = template2.toString();
+      }
+    }
+
     var nbsp = xhtml ? '&#160;' : '&nbsp;';
 
     return text.replaceAll('\xa0', nbsp);
@@ -1632,6 +1646,69 @@ class DOMElement extends DOMNode implements AsDOMElement {
     if (content != null) {
       setContent(content);
     }
+
+    resolveDSX();
+  }
+
+  void resolveDSX() {
+    var attributes = _attributes;
+    if (attributes == null || attributes.isEmpty) return;
+
+    Map<String, DSX?>? dsxAttributes;
+
+    for (var entry in attributes.entries) {
+      var attrVal = entry.value;
+
+      var valueHandler = attrVal.valueHandler;
+
+      if (valueHandler is DOMAttributeValueTemplate) {
+        var dsx = valueHandler.template.asDSX;
+        if (dsx != null) {
+          dsxAttributes ??= <String, DSX?>{};
+          dsxAttributes[entry.key] = dsx;
+        }
+      }
+    }
+
+    if (dsxAttributes != null) {
+      for (var entry in dsxAttributes.entries) {
+        var attrName = entry.key.toLowerCase();
+        var dsx = entry.value;
+
+        if (dsx == null) {
+          removeAttribute(attrName);
+          continue;
+        }
+
+        if (dsx.isFunction) {
+          _resolveDSXFunction(attrName, dsx);
+        }
+      }
+    }
+  }
+
+  bool _resolveDSXFunction(String attrName, DSX<dynamic> dsx) {
+    if (attrName == 'onclick') {
+      onClick.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onload') {
+      onLoad.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onmouseover') {
+      onMouseOver.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onmouseout') {
+      onMouseOut.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onchange') {
+      onChange.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onerror') {
+      onError.listen((_) => dsx.call());
+      return true;
+    }
+
+    return false;
   }
 
   @override
@@ -2136,7 +2213,10 @@ class DOMElement extends DOMNode implements AsDOMElement {
     return false;
   }
 
-  String buildOpenTagHTML({bool openCloseTag = false, DOMContext? domContext}) {
+  String buildOpenTagHTML(
+      {bool openCloseTag = false,
+      bool resolveDSX = false,
+      DOMContext? domContext}) {
     var html = '<$tag';
 
     if (hasAttributes) {
@@ -2144,22 +2224,27 @@ class DOMElement extends DOMNode implements AsDOMElement {
       var attributeClass = _attributes!['class'];
       var attributeStyle = _attributes!['style'];
 
-      html = DOMAttribute.append(html, ' ', attributeId, domContext);
-      html = DOMAttribute.append(html, ' ', attributeClass, domContext);
-      html = DOMAttribute.append(html, ' ', attributeStyle, domContext);
+      html = DOMAttribute.append(html, ' ', attributeId,
+          domContext: domContext, resolveDSX: resolveDSX);
+      html = DOMAttribute.append(html, ' ', attributeClass,
+          domContext: domContext, resolveDSX: resolveDSX);
+      html = DOMAttribute.append(html, ' ', attributeStyle,
+          domContext: domContext, resolveDSX: resolveDSX);
 
       var attributesNormal = _attributes!.values
           .where((v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
 
       for (var attr in attributesNormal) {
-        html = DOMAttribute.append(html, ' ', attr, domContext);
+        html = DOMAttribute.append(html, ' ', attr,
+            domContext: domContext, resolveDSX: resolveDSX);
       }
 
       var attributesBoolean = _attributes!.values
           .where((v) => v.hasValue && !_isPriorityAttribute(v) && v.isBoolean);
 
       for (var attr in attributesBoolean) {
-        html = DOMAttribute.append(html, ' ', attr, domContext);
+        html = DOMAttribute.append(html, ' ', attr,
+            domContext: domContext, resolveDSX: resolveDSX);
       }
     }
 
@@ -2196,6 +2281,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
+      bool resolveDSX = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
@@ -2222,12 +2308,15 @@ class DOMElement extends DOMNode implements AsDOMElement {
     if (_SELF_CLOSING_TAGS.contains(tag) ||
         (emptyContent && _SELF_CLOSING_TAGS_OPTIONAL.contains(tag))) {
       var html = parentIndent +
-          buildOpenTagHTML(openCloseTag: xhtml, domContext: domContext);
+          buildOpenTagHTML(
+              openCloseTag: xhtml,
+              resolveDSX: resolveDSX,
+              domContext: domContext);
       return html;
     }
 
     var html = parentIndent +
-        buildOpenTagHTML(domContext: domContext) +
+        buildOpenTagHTML(resolveDSX: resolveDSX, domContext: domContext) +
         innerBreakLine;
 
     if (!emptyContent) {
@@ -2239,6 +2328,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
             indent: indent,
             disableIndent: disableIndent,
             xhtml: xhtml,
+            resolveDSX: resolveDSX,
             parentNode: this,
             previousNode: prev,
             domContext: domContext);
@@ -2416,6 +2506,42 @@ class DOMMouseEvent<T> extends DOMEvent<T> {
       this.metaKey)
       : super(treeMap, event, eventTarget, target as DOMElement?);
 
+  /// Creates an artificial event. Useful to generated events programmatically.
+  factory DOMMouseEvent.synthetic({
+    DOMTreeMap<T>? treeMap,
+    Object? event,
+    Object? eventTarget,
+    DOMNode? target,
+    Point<num>? client,
+    Point<num>? offset,
+    Point<num>? page,
+    Point<num>? screen,
+    int button = 0,
+    int? buttons,
+    bool altKey = false,
+    bool ctrlKey = false,
+    bool shiftKey = false,
+    bool metaKey = false,
+  }) {
+    client ??= Point(0, 0);
+
+    return DOMMouseEvent(
+        treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()),
+        event,
+        eventTarget,
+        target,
+        client,
+        offset ?? client,
+        page ?? client,
+        screen ?? client,
+        button,
+        buttons,
+        altKey,
+        ctrlKey,
+        shiftKey,
+        metaKey);
+  }
+
   @override
   bool cancel({bool stopImmediatePropagation = false}) => domGenerator
       .cancelEvent(event, stopImmediatePropagation: stopImmediatePropagation);
@@ -2439,6 +2565,7 @@ class ExternalElementNode extends DOMNode {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
+      bool resolveDSX = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {

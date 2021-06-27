@@ -1509,3 +1509,381 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   set _domActionExecutor(DOMActionExecutor<T>? value) =>
       domGenerator._domActionExecutor = value;
 }
+
+/// A dummy [DOMGenerator] implementation.
+class DOMGeneratorDummy<T> implements DOMGenerator<T> {
+  DOMGeneratorDummy();
+
+  @override
+  void reset() {}
+
+  @override
+  bool addChildToElement(T? parent, T? child) => false;
+
+  @override
+  List<T>? addExternalElementToElement(T element, externalElement) {}
+
+  @override
+  T? appendElementText(T element, String? text) {}
+
+  @override
+  String? buildElementHTML(T element) {}
+
+  @override
+  bool canHandleExternalElement(externalElement) => false;
+
+  @override
+  bool containsNode(T parent, T? node) => false;
+
+  @override
+  DOMNodeRuntime<T>? createDOMNodeRuntime(
+          DOMTreeMap<T> treeMap, DOMNode? domNode, T node) =>
+      null;
+
+  @override
+  List<T> castToNodes(List list) => <T>[];
+
+  @override
+  T? createElement(String? tag, [DOMElement? domElement]) => null;
+
+  @override
+  T? createTextNode(String? text) => null;
+
+  @override
+  T? generateDOMAsyncElement(DOMElement? domParent, T? parent,
+          DOMAsync domAsync, DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? generateFutureElement(DOMElement? domParent, T? parent, DOMNode domElement,
+          Future future, DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? _generateFutureElementImpl(
+          DOMElement? domParent,
+          T? parent,
+          DOMNode domElement,
+          T? templateElement,
+          Future future,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T>? context) =>
+      null;
+
+  @override
+  Object? resolveFutureElement(
+          DOMElement? domParent,
+          T? parent,
+          DOMNode domElement,
+          T? templateElement,
+          futureResult,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T>? context) =>
+      null;
+
+  @override
+  void attachFutureElement(
+          DOMElement? domParent,
+          T? parent,
+          DOMNode domElement,
+          T? templateElement,
+          Object? futureElementResolved,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T>? context) =>
+      null;
+
+  @override
+  String? getAttribute(T element, String attrName) => null;
+
+  @override
+  String? getNodeText(T? node) => null;
+
+  @override
+  bool isTextNode(T? node) => false;
+
+  @override
+  bool removeChildFromElement(T element, T? child) => false;
+
+  @override
+  bool replaceChildElement(T element, T? child1, List<T>? child2) => false;
+
+  @override
+  bool replaceElement(T? child1, List<T>? child2) => false;
+
+  @override
+  List<T>? toElements(elements) => null;
+
+  @override
+  void setAttribute(T element, String attrName, String? attrVal) {}
+
+  @override
+  void onElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
+      DOMContext<T>? context) {}
+
+  @override
+  void resolveActionAttribute(DOMTreeMap<T> treeMap, DOMElement domElement,
+      T element, DOMContext<T>? context) {}
+
+  @override
+  void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
+      T element, DOMContext<T>? context) {}
+
+  @override
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
+      null;
+
+  @override
+  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, event) => null;
+
+  @override
+  bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) =>
+      false;
+
+  @override
+  void finalizeGeneratedTree(DOMTreeMap<T> treeMap) {}
+
+  @override
+  Viewport? get viewport => null;
+
+  @override
+  Map<String, ElementGenerator<T>> get registeredElementsGenerators =>
+      <String, ElementGenerator<T>>{};
+
+  @override
+  int get registeredElementsGeneratorsLength => 0;
+
+  @override
+  DOMContext<T>? get domContext => null;
+
+  @override
+  set domContext(DOMContext<T>? value) {}
+
+  @override
+  T buildElement(DOMElement? domParent, T? parent, DOMElement domElement,
+          DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      throw UnsupportedError(toString());
+
+  @override
+  List<T> buildNodes(DOMElement? domParent, T? parent, List<DOMNode>? domNodes,
+          DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      <T>[];
+
+  @override
+  void _callFinalizeGeneratedTree(
+      DOMTreeMap<T> treeMap, DOMContext<T>? context, bool finalizeTree) {}
+
+  @override
+  void _callOnElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement,
+      T element, DOMContext<T>? context) {}
+
+  @override
+  Map<String, ElementGenerator<T>> get _elementsGenerators =>
+      <String, ElementGenerator<T>>{};
+
+  @override
+  Set<String> get _ignoreAttributeEquivalence => <String>{};
+
+  @override
+  T? _parseExternalElement(DOMElement? domParent, T? parent, DOMNode domElement,
+          externalElement, DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  DOMNode? _revertImp(
+          DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) =>
+      null;
+
+  @override
+  DOMElement? _revert_DOMElement(
+          DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) =>
+      null;
+
+  @override
+  TextNode _revert_TextNode(DOMElement domParent, T? parent, T? node) =>
+      TextNode('');
+
+  @override
+  T? build(DOMElement? domParent, T? parent, DOMNode domNode,
+          DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? buildDOMAsyncElement(DOMElement? domParent, T? parent, DOMAsync domElement,
+          DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? buildExternalElement(
+          DOMElement? domParent,
+          T? parent,
+          ExternalElementNode domElement,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? buildText(DOMElement? domParent, T? parent, TextNode domNode,
+          DOMTreeMap<T> treeMap) =>
+      null;
+
+  @override
+  T? buildTemplate(DOMElement? domParent, T? parent, TemplateNode domNode,
+          DOMTreeMap<T> treeMap, DOMContext<T>? context) =>
+      null;
+
+  @override
+  void clearIgnoredAttributesEquivalence() {}
+
+  @override
+  DOMTreeMap<T> createDOMTreeMap() => DOMTreeMapDummy(this);
+
+  @override
+  DOMTreeMap<T> createGenericDOMTreeMap() => DOMTreeMapDummy(this);
+
+  @override
+  T? createWithRegisteredElementGenerator(
+          DOMElement? domParent,
+          T? parent,
+          DOMElement domElement,
+          DOMTreeMap<T> treeMap,
+          DOMContext<T>? context) =>
+      null;
+
+  @override
+  T? generate(DOMNode root,
+          {DOMTreeMap<T>? treeMap,
+          T? parent,
+          DOMContext<T>? context,
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
+      null;
+
+  @override
+  T? generateFromHTML(String htmlRoot,
+          {DOMTreeMap<T>? treeMap,
+          DOMElement? domParent,
+          T? parent,
+          DOMContext<T>? context,
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
+      null;
+
+  @override
+  DOMTreeMap<T> generateMapped(DOMElement root,
+          {T? parent, DOMContext<T>? context}) =>
+      DOMTreeMapDummy(this);
+
+  @override
+  List<T> generateNodes(List<DOMNode> nodes, {DOMContext<T>? context}) => <T>[];
+
+  @override
+  T? generateWithRoot(DOMElement? domRoot, T? rootElement, List<DOMNode> nodes,
+          {DOMTreeMap<T>? treeMap,
+          T? rootParent,
+          DOMContext<T>? context,
+          bool finalizeTree = true,
+          bool setTreeMapRoot = true}) =>
+      null;
+
+  @override
+  String getDOMNodeText(TextNode domNode) => '';
+
+  @override
+  Map<String, String>? getElementAttributes(T? element) => null;
+
+  @override
+  Map<String, String>? revertElementAttributes(
+          T? element, Map<String, String>? attributes) =>
+      null;
+
+  @override
+  List<T> getElementNodes(T? element) => <T>[];
+
+  @override
+  String? getElementTag(T? element) => null;
+
+  @override
+  String? getElementValue(T? element) => null;
+
+  @override
+  String? getElementOuterHTML(T? element) => null;
+
+  @override
+  List<String> getIgnoredAttributesEquivalence() => <String>[];
+
+  @override
+  T? getNodeParent(T? node) => null;
+
+  @override
+  void ignoreAttributeEquivalence(String attributeName) {}
+
+  @override
+  bool isElementGeneratorTag(String? tag) => false;
+
+  @override
+  bool isElementNode(T? node) => false;
+
+  @override
+  bool isEquivalentNode(DOMNode domNode, T node) => false;
+
+  @override
+  bool isEquivalentNodeType(DOMNode domNode, T node) => false;
+
+  @override
+  bool isIgnoreAttributeEquivalence(String attributeName) => false;
+
+  @override
+  bool registerElementGenerator(ElementGenerator<T> elementGenerator) => false;
+
+  @override
+  bool registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) => false;
+
+  @override
+  bool removeIgnoredAttributeEquivalence(String attributeName) => false;
+
+  @override
+  DOMNode? revert(DOMTreeMap<T>? treeMap, T? node) => null;
+
+  @override
+  void setAttributes(DOMElement domElement, T element,
+      {bool preserveClass = false, bool preserveStyle = false}) {}
+
+  @override
+  DOMContext<T>? get _domContext => null;
+
+  @override
+  set _domContext(DOMContext<T>? domContext) {}
+
+  @override
+  List<String> get _generatedHTMLTrees => <String>[];
+
+  @override
+  List<String> get generatedHTMLTrees => <String>[];
+
+  @override
+  bool get populateGeneratedHTMLTrees => false;
+
+  @override
+  set populateGeneratedHTMLTrees(bool populate) {}
+
+  @override
+  String Function(String url)? get sourceResolver => null;
+
+  @override
+  set sourceResolver(String Function(String url)? sourceResolver) {}
+
+  @override
+  String resolveSource(String url) => '';
+
+  @override
+  DOMActionExecutor<T>? get domActionExecutor => null;
+
+  @override
+  set domActionExecutor(DOMActionExecutor<T>? value) {}
+
+  @override
+  DOMActionExecutor<T>? get _domActionExecutor => null;
+
+  @override
+  set _domActionExecutor(DOMActionExecutor<T>? value) {}
+}

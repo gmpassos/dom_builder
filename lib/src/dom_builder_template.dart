@@ -22,9 +22,23 @@ abstract class DOMTemplate {
 
   DOMTemplate();
 
+  /// Returns `true` if this node is empty.
   bool get isEmpty;
 
+  /// Returns `true` if this node NOT is empty.
   bool get isNotEmpty => !isEmpty;
+
+  /// Returns this node as an [DSX] instance if [isDSX] returns `true`.
+  DSX? get asDSX => null;
+
+  /// Returns `true` if this node is a `DSX` entry.
+  bool get isDSX => false;
+
+  /// Returns `true` if this node or any sub-node is a [DSX] entry.
+  bool get hasDSX => false;
+
+  /// Returns a copy if this instance.
+  DOMTemplate copy({bool resolveDSX = false});
 
   /// Returns [true] if [s] can be a templace code, has `{{` and `}}`.
   static bool possiblyATemplate(String s) {
@@ -315,6 +329,34 @@ class DOMTemplateNode extends DOMTemplate {
       : nodes = nodes ?? <DOMTemplate>[];
 
   @override
+  DSX? get asDSX {
+    if (nodes.length == 1) {
+      return nodes.first.asDSX;
+    } else {
+      return null;
+    }
+  }
+
+  @override
+  bool get isDSX {
+    if (nodes.length == 1) {
+      return nodes.first.isDSX;
+    } else {
+      return false;
+    }
+  }
+
+  @override
+  bool get hasDSX {
+    for (var node in nodes) {
+      if (node.hasDSX) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  @override
   bool get isEmpty {
     if (nodes.isEmpty) return true;
     for (var node in nodes) {
@@ -368,6 +410,25 @@ class DOMTemplateNode extends DOMTemplate {
   String _toStringNodes() {
     return nodes.isNotEmpty ? nodes.join() : '';
   }
+
+  @override
+  DOMTemplate copy({bool resolveDSX = false}) {
+    if (resolveDSX) {
+      var dsx = asDSX;
+      if (dsx != null) {
+        var s = dsx.resolveAsString();
+        return DOMTemplateContent(s);
+      }
+    }
+
+    var copy = DOMTemplateNode();
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  List<DOMTemplate> copyNodes({bool resolveDSX = false}) {
+    return nodes.map((e) => e.copy(resolveDSX: resolveDSX)).toList();
+  }
 }
 
 class DOMTemplateVariable {
@@ -383,9 +444,18 @@ class DOMTemplateVariable {
     return DOMTemplateVariable(keys);
   }
 
+  bool get isDSX => keys.length == 1 && keys.first.startsWith('__DSX__');
+
+  DSX? get asDSX => isDSX ? DSX.resolveDSX(keys.first) : null;
+
   String get keysFull => keys.join('.');
 
   Object? get(Object? context) {
+    if (isDSX) {
+      var dsx = DSX.resolveDSX(keys.first);
+      return dsx;
+    }
+
     if (context == null || isEmptyObject(context)) return null;
 
     var length = keys.length;
@@ -437,6 +507,15 @@ class DOMTemplateVariable {
         var n = parseInt(key);
         return context.contains(n);
       }
+    } else if (context is DOMContext) {
+      var val = context.variables[key];
+      return val;
+    } else if (context is DSX) {
+      var object = context.object;
+      return object;
+    } else if (context is Function) {
+      var ret = context(key);
+      return ret;
     }
 
     return null;
@@ -484,6 +563,9 @@ class DOMTemplateVariable {
     } else if (value is Map) {
       return Map.from(value.map((k, v) =>
           MapEntry(evaluateObject(context, k), evaluateObject(context, v))));
+    } else if (value is DSX) {
+      var res = value.resolveAsString();
+      return res;
     } else if (value is Function(Map? a)) {
       var res = value(context as Map<dynamic, dynamic>?);
       return evaluateObject(context, res);
@@ -534,7 +616,13 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   }
 
   @override
-  bool get isEmpty => false;
+  DOMTemplateIntlMessage copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateIntlMessage(key);
+    return copy;
+  }
+
+  @override
+  bool get isEmpty => key.isEmpty;
 
   @override
   String? build(Object? context,
@@ -567,6 +655,12 @@ class DOMTemplateContent extends DOMTemplate {
   DOMTemplateContent(this.content);
 
   @override
+  DOMTemplateContent copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateContent(content);
+    return copy;
+  }
+
+  @override
   bool get isEmpty => isEmptyString(content);
 
   @override
@@ -586,9 +680,35 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
 
   DOMTemplateBlockVar(this.variable);
 
+  @override
+  bool get isDSX => variable?.isDSX ?? false;
+
+  @override
+  bool get hasDSX => isDSX;
+
+  @override
+  DSX? get asDSX => variable?.asDSX;
+
+  @override
+  DOMTemplate copy({bool resolveDSX = false}) {
+    if (resolveDSX) {
+      var dsx = asDSX;
+      if (dsx != null) {
+        var s = dsx.resolveAsString();
+        return DOMTemplateContent(s);
+      }
+    }
+
+    var copy = DOMTemplateBlockVar(variable);
+    return copy;
+  }
+
   factory DOMTemplateBlockVar.parse(String s) {
     return DOMTemplateBlockVar(DOMTemplateVariable.parse(s));
   }
+
+  @override
+  bool get isEmpty => variable == null;
 
   @override
   String build(Object? context,
@@ -607,6 +727,16 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   final String query;
 
   DOMTemplateBlockQuery(this.query);
+
+  @override
+  DOMTemplateBlockQuery copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockQuery(query);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  @override
+  bool get isEmpty => query.isEmpty;
 
   @override
   String? build(Object? context,
@@ -635,6 +765,9 @@ abstract class DOMTemplateBlock extends DOMTemplateNode {
   DOMTemplateBlock(this.variable, [DOMTemplateNode? content]) {
     add(content);
   }
+
+  @override
+  bool get isEmpty => false;
 }
 
 abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
@@ -689,6 +822,13 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
   DOMTemplateBlockIf(DOMTemplateVariable? variable, [DOMTemplateNode? content])
       : super(variable, content);
+
+  @override
+  DOMTemplateBlockIf copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockIf(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
 
   @override
   bool evaluate(Object? context) {
@@ -750,6 +890,13 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
         super(variable, content);
 
   @override
+  DOMTemplateBlockIfCmp copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockIfCmp(elseIf, variable, cmp, value);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  @override
   bool evaluate(Object? context) {
     switch (cmp) {
       case DOMTemplateCmp.eq:
@@ -805,6 +952,13 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
       : super(variable, content);
 
   @override
+  DOMTemplateBlockNot copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockNot(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  @override
   bool evaluate(Object? context) {
     return !variable!.evaluate(context);
   }
@@ -825,6 +979,13 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElse([DOMTemplateNode? content]) : super(null, content);
 
   @override
+  DOMTemplateBlockElse copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockElse();
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  @override
   bool evaluate(Object? context) {
     return true;
   }
@@ -839,6 +1000,13 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElseIf(DOMTemplateVariable? variable,
       [DOMTemplateNode? content])
       : super(variable, content);
+
+  @override
+  DOMTemplateBlockElseIf copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockElseIf(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
 
   @override
   bool evaluate(Object? context) {
@@ -857,6 +1025,13 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
       : super(variable, content);
 
   @override
+  DOMTemplateBlockElseNot copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockElseNot(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
+
+  @override
   bool evaluate(Object? context) {
     return !variable!.evaluate(context);
   }
@@ -871,6 +1046,13 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
   DOMTemplateBlockVarElse(DOMTemplateVariable? variable,
       [DOMTemplateNode? contentElse])
       : super(variable, contentElse);
+
+  @override
+  DOMTemplateBlockVarElse copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockVarElse(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
 
   @override
   String? build(Object? context,
@@ -894,6 +1076,13 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
   DOMTemplateBlockIfCollection(DOMTemplateVariable? variable,
       [DOMTemplateNode? content])
       : super(variable, content);
+
+  @override
+  DOMTemplateBlockIfCollection copy({bool resolveDSX = false}) {
+    var copy = DOMTemplateBlockIfCollection(variable);
+    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    return copy;
+  }
 
   @override
   bool evaluate(Object? context) {

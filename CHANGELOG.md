@@ -1,3 +1,8 @@
+## 2.0.3
+
+- Implemented `DSX` support, similar to `JSX`.
+  - Templates also accepts `DSX` references, including functions/lambdas.
+
 ## 2.0.2
 
 - Null Safety adjustments.
