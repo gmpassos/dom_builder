@@ -104,7 +104,7 @@ class TitleComponent {
 ## DSX
 
 Similar to [JSX][jsx], DSX (Dart Syntax Extension) allows the declaration and construction of
-a `DOM` tree using plain `HTML`.
+a `DOM` tree using plain `HTML` with an extended syntax:
 
 ```dart
 import 'dart:html' ;
