@@ -13,10 +13,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Joe!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('My name is !'));
     });
 
@@ -27,10 +27,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Joe!!!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('My name is !!!'));
     });
 
@@ -41,10 +41,10 @@ void main() {
       expect(template.nodes.length, equals(2));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Joe'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('My name is '));
     });
 
@@ -55,10 +55,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals('My name is {{name}}.'));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Joe.'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('My name is .'));
     });
 
@@ -69,10 +69,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('name is Joe!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('name is unknown!'));
     });
 
@@ -83,10 +83,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('name var present!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('name var !'));
     });
 
@@ -97,10 +97,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals('name var {{:name}}present{{/}}!'));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('name var present!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('name var !'));
     });
 
@@ -111,10 +111,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({});
+      var s1 = template.buildAsString({});
       expect(s1, equals('Name is empty!'));
 
-      var s2 = template.build({'name': 'Joe'});
+      var s2 = template.buildAsString({'name': 'Joe'});
       expect(s2, equals('Name is !'));
     });
 
@@ -125,10 +125,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals('Name is {{!name}}empty{{/}}!'));
 
-      var s1 = template.build({});
+      var s1 = template.buildAsString({});
       expect(s1, equals('Name is empty!'));
 
-      var s2 = template.build({'name': 'Joe'});
+      var s2 = template.buildAsString({'name': 'Joe'});
       expect(s2, equals('Name is !'));
     });
 
@@ -139,10 +139,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Foo!'));
 
-      var s2 = template.build({});
+      var s2 = template.buildAsString({});
       expect(s2, equals('My name is Bar!'));
     });
 
@@ -153,13 +153,13 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Foo!'));
 
-      var s2 = template.build({'surname': '2nd'});
+      var s2 = template.buildAsString({'surname': '2nd'});
       expect(s2, equals('My name is Fii!'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('My name is Bar!'));
     });
 
@@ -171,16 +171,16 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Foo!'));
 
-      var s2 = template.build({'surname': '2nd'});
+      var s2 = template.buildAsString({'surname': '2nd'});
       expect(s2, equals('My name is Fii!'));
 
-      var s3 = template.build({'nickname': 'J'});
+      var s3 = template.buildAsString({'nickname': 'J'});
       expect(s3, equals('My name is Fuu!'));
 
-      var s4 = template.build({});
+      var s4 = template.buildAsString({});
       expect(s4, equals('My name is Bar!'));
     });
 
@@ -191,13 +191,13 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'name': 'Joe'});
+      var s1 = template.buildAsString({'name': 'Joe'});
       expect(s1, equals('My name is Foo!'));
 
-      var s2 = template.build({'surname': '2nd'});
+      var s2 = template.buildAsString({'surname': '2nd'});
       expect(s2, equals('My name is Fii!'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('My name is !'));
     });
 
@@ -208,10 +208,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({});
+      var s1 = template.buildAsString({});
       expect(s1, equals('name is empty!'));
 
-      var s2 = template.build({'name': 'Joe'});
+      var s2 = template.buildAsString({'name': 'Joe'});
       expect(s2, equals('name is present!'));
     });
 
@@ -222,10 +222,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'email': 'a@b.c'});
+      var s1 = template.buildAsString({'email': 'a@b.c'});
       expect(s1, equals('E-mail is !'));
 
-      var s2 = template.build({'name': 'Joe', 'email': 'a@b.c'});
+      var s2 = template.buildAsString({'name': 'Joe', 'email': 'a@b.c'});
       expect(s2, equals('E-mail is "a@b.c"!'));
     });
 
@@ -236,10 +236,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'email': 'a@b.c'});
+      var s1 = template.buildAsString({'email': 'a@b.c'});
       expect(s1, equals('E-mail is unknown_user!'));
 
-      var s2 = template.build({'name': 'Joe', 'email': 'a@b.c'});
+      var s2 = template.buildAsString({'name': 'Joe', 'email': 'a@b.c'});
       expect(s2, equals('E-mail is "a@b.c"!'));
     });
 
@@ -251,13 +251,13 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'email': 'a@b.c'});
+      var s1 = template.buildAsString({'email': 'a@b.c'});
       expect(s1, equals('E-mail is unknown_user!'));
 
-      var s2 = template.build({'name': 'Joe', 'email': 'a@b.c'});
+      var s2 = template.buildAsString({'name': 'Joe', 'email': 'a@b.c'});
       expect(s2, equals('E-mail is "a@b.c"!'));
 
-      var s3 = template.build({'name': 'Joe'});
+      var s3 = template.buildAsString({'name': 'Joe'});
       expect(s3, equals('E-mail is "NULL_MAIL"!'));
     });
 
@@ -268,7 +268,7 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
           {'name': 'About'}
@@ -276,10 +276,10 @@ void main() {
       });
       expect(s1, equals('Routes: [Home] [About]!'));
 
-      var s2 = template.build({'routes': []});
+      var s2 = template.buildAsString({'routes': []});
       expect(s2, equals('Routes:!'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('Routes:!'));
     });
 
@@ -290,7 +290,7 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
           {'name': 'About'}
@@ -298,13 +298,13 @@ void main() {
       });
       expect(s1, equals('Route 1: About!'));
 
-      var s2 = template.build({'routes': []});
+      var s2 = template.buildAsString({'routes': []});
       expect(s2, equals('Route 1: !'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('Route 1: !'));
 
-      var s4 = template.build({
+      var s4 = template.buildAsString({
         'routes': [
           {'name': 'Home'}
         ]
@@ -319,7 +319,7 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
           {'name': 'About'}
@@ -327,13 +327,13 @@ void main() {
       });
       expect(s1, equals('Routes: [name: Home] [name: About]!'));
 
-      var s2 = template.build({'routes': []});
+      var s2 = template.buildAsString({'routes': []});
       expect(s2, equals('Routes:!'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('Routes:!'));
 
-      var s4 = template.build({
+      var s4 = template.buildAsString({
         'routes': ['Home', 'About']
       });
       expect(s4, equals('Routes: [Home] [About]!'));
@@ -346,7 +346,7 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
           {'name': 'About'}
@@ -354,10 +354,10 @@ void main() {
       });
       expect(s1, equals('Routes: [Home] [About]!'));
 
-      var s2 = template.build({'routes': []});
+      var s2 = template.buildAsString({'routes': []});
       expect(s2, equals('Routes: NO ROUTES!'));
 
-      var s3 = template.build({});
+      var s3 = template.buildAsString({});
       expect(s3, equals('Routes: NO ROUTES!'));
     });
 
@@ -368,7 +368,7 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'no_routes': 'Empty routes',
         'routes': [
           {'name': 'Home'},
@@ -377,7 +377,7 @@ void main() {
       });
       expect(s1, equals('Routes:!'));
 
-      var s2 = template.build({'no_routes': 'Empty routes'});
+      var s2 = template.buildAsString({'no_routes': 'Empty routes'});
       expect(s2, equals('Routes:Empty routes!'));
     });
 
@@ -392,10 +392,12 @@ void main() {
         return q == '#element_x' ? 'XXX' : null;
       };
 
-      var s1 = template.build({'ok': true}, elementProvider: elementProvider);
+      var s1 = template
+          .buildAsString({'ok': true}, elementProvider: elementProvider);
       expect(s1, equals('Element: XXX!'));
 
-      var s2 = template.build({'ok': false}, elementProvider: elementProvider);
+      var s2 = template
+          .buildAsString({'ok': false}, elementProvider: elementProvider);
       expect(s2, equals('Element: !'));
     });
 
@@ -407,13 +409,13 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'period': 'am'});
+      var s1 = template.buildAsString({'period': 'am'});
       expect(s1, equals('Hello! Good morning!'));
 
-      var s2 = template.build({'period': 'pm'});
+      var s2 = template.buildAsString({'period': 'pm'});
       expect(s2, equals('Hello! Good afternoon!'));
 
-      var s3 = template.build({'period': ''});
+      var s3 = template.buildAsString({'period': ''});
       expect(s3, equals('Hello! Good day!'));
     });
 
@@ -425,10 +427,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'period': 'am', 'hourPeriod': 'am'});
+      var s1 = template.buildAsString({'period': 'am', 'hourPeriod': 'am'});
       expect(s1, equals('Hello! Period: match!'));
 
-      var s2 = template.build({'period': 'am', 'hourPeriod': 'pm'});
+      var s2 = template.buildAsString({'period': 'am', 'hourPeriod': 'pm'});
       expect(s2, equals('Hello! Period: no match!'));
     });
 
@@ -439,10 +441,10 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({'period': 'am', 'hourPeriod': 'am'});
+      var s1 = template.buildAsString({'period': 'am', 'hourPeriod': 'am'});
       expect(s1, equals('Hello! Period: eq!'));
 
-      var s2 = template.build({'period': 'am', 'hourPeriod': 'pm'});
+      var s2 = template.buildAsString({'period': 'am', 'hourPeriod': 'pm'});
       expect(s2, equals('Hello! Period: diff!'));
     });
 
@@ -456,7 +458,7 @@ void main() {
       expect(template.nodes.length, equals(2));
       expect(template.toString(), equals(source));
 
-      var s1 = template.build({
+      var s1 = template.buildAsString({
         'menu': [
           {'route': 'home', 'name': 'Welcome', 'current': true},
           {'route': 'help', 'name': 'Help-me'},
@@ -489,12 +491,12 @@ void main() {
       expect(template1.toString(), equals(source1));
 
       expect(
-          template1.build({},
+          template1.buildAsString({},
               intlMessageResolver: toIntlMessageResolver({'hi': 'Hi'})),
           equals('Hi Joe!'));
 
       expect(
-          template1.build({},
+          template1.buildAsString({},
               intlMessageResolver: toIntlMessageResolver({'hi': 'Olá'})),
           equals('Olá Joe!'));
     });
@@ -517,10 +519,12 @@ void main() {
         }
       };
 
-      expect(template1.build({'n': 1}, intlMessageResolver: msgResolver),
+      expect(
+          template1.buildAsString({'n': 1}, intlMessageResolver: msgResolver),
           equals('Hello child!'));
 
-      expect(template1.build({'n': 2}, intlMessageResolver: msgResolver),
+      expect(
+          template1.buildAsString({'n': 2}, intlMessageResolver: msgResolver),
           equals('Hello children!'));
     });
   });

@@ -255,7 +255,7 @@ DOMElement $tag(String tag,
     Object? style,
     Map<String, String>? attributes,
     Object? content,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return DOMElement(tag,
       id: id,
@@ -306,7 +306,7 @@ TABLEElement $table(
     Object? head,
     Object? body,
     Object? foot,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   var tableElement = TABLEElement(
       id: id,
@@ -351,7 +351,7 @@ THEADElement $thead(
     Object? style,
     Map<String, String>? attributes,
     Object? rows,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return THEADElement(
       id: id,
@@ -371,7 +371,7 @@ CAPTIONElement $caption(
     String? captionSide,
     Map<String, String>? attributes,
     Object? content,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return CAPTIONElement(
       id: id,
@@ -394,7 +394,7 @@ TBODYElement $tbody(
     Object? style,
     Map<String, String>? attributes,
     Object? rows,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return TBODYElement(
       id: id,
@@ -413,7 +413,7 @@ TFOOTElement $tfoot(
     Object? style,
     Map<String, String>? attributes,
     Object? rows,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return TFOOTElement(
       id: id,
@@ -432,7 +432,7 @@ TRowElement $tr(
     Object? style,
     Map<String, String>? attributes,
     Object? cells,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return TRowElement(
       id: id,
@@ -454,7 +454,7 @@ DOMElement $td(
         int? rowspan,
         String? headers,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('td',
         id: id,
@@ -481,7 +481,7 @@ DOMElement $th(
         String? abbr,
         String? scope,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('td',
         id: id,
@@ -505,7 +505,7 @@ DIVElement $div(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('div',
         id: id,
@@ -523,7 +523,7 @@ DIVElement $divInline(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('div',
         id: id,
@@ -645,7 +645,7 @@ DOMElement $span(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('span',
         id: id,
@@ -664,7 +664,7 @@ DOMElement $button(
         String? type,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('button',
         id: id,
@@ -686,7 +686,7 @@ DOMElement $label(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('label',
         id: id,
@@ -707,7 +707,7 @@ TEXTAREAElement $textarea(
     Object? rows,
     Map<String, String>? attributes,
     Object? content,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return TEXTAREAElement(
       id: id,
@@ -732,7 +732,7 @@ INPUTElement $input(
     Object? placeholder,
     Map<String, String>? attributes,
     Object? value,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return INPUTElement(
       id: id,
@@ -756,7 +756,7 @@ INPUTElement $checkbox(
     Object? placeholder,
     Map<String, String>? attributes,
     Object? value,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   return INPUTElement(
       id: id,
@@ -781,7 +781,7 @@ SELECTElement $select(
     Object? options,
     Object? selected,
     bool? multiple,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   var selectElement = SELECTElement(
       id: id,
@@ -829,7 +829,7 @@ DOMElement $img(
     Future<String?>? srcFuture,
     String? title,
     Object? content,
-    bool hidden = false,
+    bool? hidden,
     bool commented = false}) {
   var img = $tag('img',
       id: id,
@@ -866,7 +866,7 @@ DOMElement $a(
         String? href,
         String? target,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('a',
         id: id,
@@ -887,7 +887,7 @@ DOMElement $p(
         Object? classes,
         Object? style,
         Map<String, String>? attributes,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('p',
         id: id,
@@ -929,7 +929,7 @@ DOMElement $hr(
         Object? classes,
         Object? style,
         Map<String, String>? attributes,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('hr',
         id: id,
@@ -946,7 +946,7 @@ DOMElement $form(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('form',
         id: id,
@@ -964,7 +964,7 @@ DOMElement $nav(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('nav',
         id: id,
@@ -982,7 +982,7 @@ DOMElement $header(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('header',
         id: id,
@@ -1000,7 +1000,7 @@ DOMElement $footer(
         Object? style,
         Map<String, String>? attributes,
         Object? content,
-        bool hidden = false,
+        bool? hidden,
         bool commented = false}) =>
     $tag('footer',
         id: id,

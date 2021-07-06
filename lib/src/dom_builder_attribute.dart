@@ -155,7 +155,15 @@ class DOMAttribute implements WithValue {
 
     String? htmlValue;
     if (resolveDSX && valueHandler is DOMAttributeValueTemplate) {
-      htmlValue = valueHandler.template.build(domContext);
+      var templateBuilt =
+          valueHandler.template.build(domContext, asElement: false);
+
+      if (templateBuilt is String && !possiblyWithHTML(templateBuilt)) {
+        htmlValue = templateBuilt;
+      } else {
+        var nodes = DOMNode.parseNodes(templateBuilt);
+        htmlValue = nodes.map((e) => e.text).join();
+      }
     } else {
       htmlValue = valueHandler.getAttributeValue(domContext);
     }

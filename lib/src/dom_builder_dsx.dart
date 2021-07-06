@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart';
 import 'package:dom_builder/dom_builder.dart';
 
@@ -26,11 +28,20 @@ class _DSXKey {
 /// passed to [$dsx].
 class DSX<T> {
   static final Expando<List<DSX>> _objectsToDSX = Expando<List<DSX>>();
+  static final Expando<Object> _dsxToObjectSource = Expando<Object>();
   static final Expando<Object> _dsxToObject = Expando<Object>();
   static final Map<_DSXKey, DSX> _keyToDSK = <_DSXKey, DSX>{};
 
   static Object? objectFromDSX(DSX dsx) {
     var o = _dsxToObject[dsx];
+    if (o == null) {
+      dsx.check();
+    }
+    return o;
+  }
+
+  static Object? objectSourceFromDSX(DSX dsx) {
+    var o = _dsxToObjectSource[dsx];
     if (o == null) {
       dsx.check();
     }
@@ -119,31 +130,96 @@ class DSX<T> {
     return id;
   }
 
+  factory DSX.varArgs(
+    Object objSource,
+    T obj, [
+    dynamic a1,
+    dynamic a2,
+    dynamic a3,
+    dynamic a4,
+    dynamic a5,
+    dynamic a6,
+    dynamic a7,
+    dynamic a8,
+    dynamic a9,
+    dynamic a10,
+  ]) {
+    if (a10 != null) {
+      return DSX(objSource, obj,
+          parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9, 10]);
+    } else if (a9 != null) {
+      return DSX(objSource, obj,
+          parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9]);
+    } else if (a8 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3, a4, a5, a6, a7, a8]);
+    } else if (a7 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3, a4, a5, a6, a7]);
+    } else if (a6 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3, a4, a5, a6]);
+    } else if (a5 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3, a4, a5]);
+    } else if (a4 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3, a4]);
+    } else if (a3 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2, a3]);
+    } else if (a2 != null) {
+      return DSX(objSource, obj, parameters: [a1, a2]);
+    } else if (a1 != null) {
+      return DSX(objSource, obj, parameters: [a1]);
+    }
+
+    return DSX(objSource, obj);
+  }
+
+  static bool _isPrimitive(dynamic o) {
+    return o == null || o is String || o is num || o is bool;
+  }
+
   /// Creates a DSX object that makes a reference to [object] with [parameters].
-  factory DSX(T obj, [List? parameters]) {
-    var prevDSX = _objectsToDSX[obj as Object];
+  factory DSX(Object objSource, T obj, {List? parameters}) {
+    if (_isPrimitive(objSource) || _isPrimitive(obj)) {
+      var dsx = DSX<T>._(parameters);
+
+      _dsxToObjectSource[dsx] = objSource;
+      _dsxToObject[dsx] = obj;
+      _keyToDSK[dsx.key] ??= dsx;
+
+      print('primitive> $dsx > $objSource ; $obj');
+
+      return dsx;
+    }
+
+    var prevDSX = _objectsToDSX[objSource];
+    prevDSX ??= _objectsToDSX[obj as Object];
 
     if (prevDSX != null) {
       for (var e in prevDSX) {
         if (e.equalsParameters(parameters)) {
-          return e as DSX<T>;
+          var dsx = e as DSX<T>;
+          if (identical(dsx.objectSource, objSource)) {
+            return dsx;
+          }
         }
       }
 
       var dsx = DSX<T>._(parameters);
       prevDSX.add(dsx);
 
-      _objectsToDSX[obj] = prevDSX;
+      _objectsToDSX[objSource] = prevDSX;
+      _objectsToDSX[obj as Object] = prevDSX;
+      _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx.key] = dsx;
+      _keyToDSK[dsx.key] ??= dsx;
 
       return dsx;
     } else {
       var dsx = DSX<T>._(parameters);
 
-      _objectsToDSX[obj] = [dsx];
+      _objectsToDSX[objSource] = [dsx];
+      _objectsToDSX[obj as Object] = [dsx];
+      _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx.key] = dsx;
+      _keyToDSK[dsx.key] ??= dsx;
 
       return dsx;
     }
@@ -161,15 +237,23 @@ class DSX<T> {
     key = _DSXKey(id);
   }
 
+  DSXResolver createResolver() => DSXResolver(this);
+
+  Object? get objectSource => _dsxToObjectSource[this];
+
   Object? get object => _dsxToObject[this];
 
   /// Check the referenced [object] that this [DSX] instance still exists.
   DSX<T> check() {
+    var objSrc = _dsxToObjectSource[this];
     var obj = _dsxToObject[this];
-    if (obj == null) {
+
+    if (objSrc == null && obj == null) {
+      _dsxToObjectSource[this] = null;
       _dsxToObject[this] = null;
       _keyToDSK.remove(key);
     }
+
     return this;
   }
 
@@ -209,24 +293,19 @@ class DSX<T> {
 
   bool get isFunction => object is Function;
 
-  /// Resolve this [DSX] object.
-  ///
-  /// - If [isFunction] calls it with [parameters].
-  Object? resolve() {
-    if (isFunction) {
-      var ret = call();
-      return ret;
-    } else {
-      return object;
+  bool get isFuture => object is Future;
+
+  /// Returns the type of this DSX object as [String].
+  String get type {
+    var obj = object;
+    if (obj is Function) {
+      return 'function';
+    } else if (obj is Future) {
+      return 'future';
     }
+    return '';
   }
 
-  /// calls [resolve] to a [String].
-  String? resolveAsString() {
-    return resolve()?.toString();
-  }
-
-  /// Call this DSX object as a [Function], passing [parameters] if present.
   dynamic call() {
     var f = object as Function;
 
@@ -258,14 +337,6 @@ class DSX<T> {
     }
   }
 
-  /// Returns the type of this DSX object as [String].
-  String get type {
-    if (isFunction) {
-      return 'function';
-    }
-    return '';
-  }
-
   /// This DSX object referend mark as [String].
   @override
   String toString() {
@@ -275,6 +346,150 @@ class DSX<T> {
     }
     return '{{__DSX__$type$id}}';
   }
+}
+
+class DSXResolver<T> {
+  final DSX<T> dsx;
+
+  DSXResolver(this.dsx) {
+    print('DSXResolver> $dsx > $type');
+  }
+
+  Object? get objectSource => dsx.objectSource;
+
+  Object? get object => dsx.object;
+
+  bool get isFunction => dsx.isFunction;
+
+  bool get isFuture => dsx.isFuture;
+
+  Future? _future;
+
+  Object? _resolvedValue;
+
+  Object? get resolvedValue => _resolvedValue;
+
+  StreamSubscription? _resolvedValueListenerSubscription;
+
+  DOMElement? _resolvedElement;
+
+  DOMElement? get resolvedElement => _resolvedElement;
+
+  void reset() {
+    _resolvedValue = null;
+
+    _resolvedElement?.getRuntime().remove();
+    _resolvedElement = null;
+  }
+
+  /// Resolve this [DSX] object value.
+  ///
+  /// - If [isFunction], calls it with [parameters].
+  Object? resolveValue(
+      {QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    if (_resolvedValue != null) {
+      assert(_resolvedElement != null);
+      return _resolvedValue;
+    }
+
+    if (isFunction) {
+      var value = call();
+      setResolvedValue(value);
+      return value;
+    } else if (isFuture) {
+      assert(_future == null);
+      var future = object as Future;
+      future.then(setResolvedValue);
+      _future = future;
+      setResolvedValue('...');
+      return _resolvedValue;
+    } else {
+      var value = object;
+      setResolvedValue(value);
+      return value;
+    }
+  }
+
+  DOMElement setResolvedValue(dynamic value) {
+    _resolvedValue = value;
+
+    var element = _valueAsElement(value);
+
+    if (_resolvedValueListenerSubscription == null) {
+      var listenerSubscription = _listenDSXValue(objectSource, (objSrc) {
+        var value = _toDSXValue(objSrc, objSrc);
+        setResolvedValue(value);
+      });
+      _resolvedValueListenerSubscription = listenerSubscription;
+    }
+
+    if (_resolvedElement != null) {
+      var runtime = _resolvedElement!.getRuntime();
+
+      if (runtime.domGenerator.isNodeInDOM(runtime.node)) {
+        runtime.replaceBy([element]);
+      } else {
+        runtime.remove();
+        _resolvedValueListenerSubscription?.cancel();
+        reset();
+      }
+    }
+
+    _resolvedElement = element;
+
+    return element;
+  }
+
+  DOMElement _valueAsElement(Object? value) {
+    value = _toDSXValue(value, value);
+
+    List<DOMNode> nodes;
+    if (value == null) {
+      nodes = <DOMNode>[];
+    } else if (value is String && isHTMLElement(value)) {
+      nodes = $html(value);
+    } else {
+      nodes = DOMNode.parseNodes(value);
+    }
+
+    if (nodes.isEmpty) {
+      return $span();
+    }
+
+    if (nodes.length == 1) {
+      var elem = nodes.first;
+      return elem is DOMElement ? elem : $span(content: elem);
+    } else {
+      return $span(content: nodes);
+    }
+  }
+
+  /// Calls [resolveValue] and returns the corresponding [DOMElement] for the value.
+  Object? resolveElement(
+      {QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    resolveValue(
+        elementProvider: elementProvider,
+        intlMessageResolver: intlMessageResolver);
+    return _resolvedElement!;
+  }
+
+  /// Calls [resolveValue] to a [String].
+  String? resolveValueAsString(
+      {QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    return resolveValue(
+            elementProvider: elementProvider,
+            intlMessageResolver: intlMessageResolver)
+        ?.toString();
+  }
+
+  /// Call this DSX object as a [Function], passing [parameters] if present.
+  dynamic call() => dsx.call();
+
+  /// Returns the type of this DSX object as [String].
+  String get type => dsx.type;
 }
 
 /// Parses [o] to a [List<DOMNode>], resolving [DSX] objects.
@@ -348,9 +563,13 @@ void _dsx_joinStrings(List list) {
   }
 }
 
-/// DSX extensions for [Function].
-extension DSXFunctionExtension on Function {
-  DSX dsx([
+abstract class DSXType<T> {
+  DSX<T> toDSX();
+}
+
+/// DSX extensions for [FutureOr].
+extension DSXFutureOrExtension<T> on FutureOr<T> {
+  dynamic dsx([
     dynamic a1,
     dynamic a2,
     dynamic a3,
@@ -362,28 +581,102 @@ extension DSXFunctionExtension on Function {
     dynamic a9,
     dynamic a10,
   ]) {
-    if (a10 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5, a6, a7, a8, a9, 10]);
-    } else if (a9 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5, a6, a7, a8, a9]);
-    } else if (a8 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5, a6, a7, a8]);
-    } else if (a7 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5, a6, a7]);
-    } else if (a6 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5, a6]);
-    } else if (a5 != null) {
-      return DSX(this, [a1, a2, a3, a4, a5]);
-    } else if (a4 != null) {
-      return DSX(this, [a1, a2, a3, a4]);
-    } else if (a3 != null) {
-      return DSX(this, [a1, a2, a3]);
-    } else if (a2 != null) {
-      return DSX(this, [a1, a2]);
-    } else if (a1 != null) {
-      return DSX(this, [a1]);
+    if (this == null) return null;
+
+    var dsx = _toDSX(this, this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    if (dsx != null) return dsx;
+
+    var dsxValue = _toDSXValue(this);
+    if (dsxValue != null) {
+      dsx = _toDSX(this, dsxValue, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    return DSX(this);
+    dsx ??= DSX(this as Object, this);
+
+    return dsx;
   }
+
+  static dynamic _toDSX<T>(
+      dynamic oSrc, dynamic o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+    if (o is DSX) {
+      return o;
+    } else if (o is Future<T>) {
+      return DSX<Future<T>>(oSrc, o);
+    } else if (o is Function) {
+      return DSX<Function>.varArgs(
+          oSrc, o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    } else if (o is String) {
+      return DSX<String>(oSrc, o);
+    } else if (o is int) {
+      return DSX<int>(oSrc, o);
+    } else if (o is double) {
+      return DSX<double>(oSrc, o);
+    } else if (o is bool) {
+      return DSX<bool>(oSrc, o);
+    } else if (o is DSXType) {
+      return o.toDSX();
+    } else {
+      return null;
+    }
+  }
+}
+
+final Set<Type> _typesWithout_toDSXValue = <Type>{};
+
+Object? _toDSXValue(dynamic o, [dynamic def]) {
+  if (o == null ||
+      o is String ||
+      o is num ||
+      o is bool ||
+      o is Function ||
+      o is Future) {
+    return o;
+  }
+
+  var type = o.runtimeType;
+
+  if (_typesWithout_toDSXValue.contains(type)) {
+    return def;
+  }
+
+  try {
+    var value = o.toDSXValue();
+    return value;
+  } catch (e) {
+    _typesWithout_toDSXValue.add(type);
+    return def;
+  }
+}
+
+final Set<Type> _typesWithout_listenDSXValue = <Type>{};
+
+StreamSubscription? _listenDSXValue(
+    dynamic o, void Function(dynamic event) listener) {
+  if (o == null ||
+      o is String ||
+      o is num ||
+      o is bool ||
+      o is Function ||
+      o is Future) {
+    return null;
+  }
+
+  var type = o.runtimeType;
+
+  if (_typesWithout_listenDSXValue.contains(type)) {
+    return null;
+  }
+
+  try {
+    var subscription = o.listenDSXValue(listener);
+    return subscription;
+  } catch (e) {
+    _typesWithout_listenDSXValue.add(type);
+    return null;
+  }
+}
+
+/// DSX extensions for [Future].
+extension DSXFutureExtension<T> on Future<T> {
+  DSX<Future<T>> dsx() => DSX(this, this);
 }

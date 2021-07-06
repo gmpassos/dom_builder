@@ -310,7 +310,7 @@ abstract class DOMNodeRuntime<T> {
 
 class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
   DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T node)
-      : super(treeMap, domNode, node);
+      : super(treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()), domNode, node);
 
   @override
   String? get tagName => null;

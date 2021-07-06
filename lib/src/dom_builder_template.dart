@@ -20,6 +20,28 @@ abstract class DOMTemplate {
     return null;
   }
 
+  static String objectToString(dynamic o) {
+    if (o == null) {
+      return '';
+    } else if (o is String) {
+      return o;
+    } else if (o is DOMNode) {
+      return o.buildHTML();
+    } else if (o is List) {
+      return o.map(objectToString).join('');
+    } else if (o is Set) {
+      return o.map(objectToString).join('');
+    } else if (o is Map) {
+      return o.entries
+          .map((e) => '${objectToString(e.key)}: ${objectToString(e.value)}')
+          .join('');
+    } else if (o is Iterable) {
+      return o.map(objectToString).join('');
+    } else {
+      return o.toString();
+    }
+  }
+
   DOMTemplate();
 
   /// Returns `true` if this node is empty.
@@ -40,7 +62,7 @@ abstract class DOMTemplate {
   /// Returns a copy if this instance.
   DOMTemplate copy({bool resolveDSX = false});
 
-  /// Returns [true] if [s] can be a templace code, has `{{` and `}}`.
+  /// Returns [true] if [s] can be a template code, has `{{` and `}}`.
   static bool possiblyATemplate(String s) {
     var idx = s.indexOf('{{');
     if (idx < 0) return false;
@@ -308,8 +330,9 @@ abstract class DOMTemplate {
     return root;
   }
 
-  String? build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver});
 
   bool add(DOMTemplate entry) {
@@ -320,7 +343,7 @@ abstract class DOMTemplate {
   String toString();
 }
 
-typedef ElementHTMLProvider = String? Function(String query);
+typedef QueryElementProvider = dynamic Function(String query);
 
 class DOMTemplateNode extends DOMTemplate {
   List<DOMTemplate> nodes;
@@ -372,19 +395,38 @@ class DOMTemplateNode extends DOMTemplate {
     return true;
   }
 
-  @override
-  String? build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  String buildAsString(Object? context,
+      {QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
-    if (nodes.isEmpty) return '';
+    var built = build(context,
+        asElement: false,
+        elementProvider: elementProvider,
+        intlMessageResolver: intlMessageResolver);
 
-    var s = StringBuffer();
-    for (var n in nodes) {
-      s.write(n.build(context,
-          elementProvider: elementProvider,
-          intlMessageResolver: intlMessageResolver));
-    }
-    return s.toString();
+    var s = DOMTemplate.objectToString(built);
+    return s;
+  }
+
+  @override
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    if (nodes.isEmpty) return null;
+
+    var built = nodes
+        .map((n) {
+          var built = n.build(context,
+              asElement: asElement,
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver);
+          return built;
+        })
+        .where((e) => e != null)
+        .expand((e) => e is List ? e : [e])
+        .toList();
+
+    return built;
   }
 
   @override
@@ -416,7 +458,7 @@ class DOMTemplateNode extends DOMTemplate {
     if (resolveDSX) {
       var dsx = asDSX;
       if (dsx != null) {
-        var s = dsx.resolveAsString();
+        var s = dsx.createResolver().resolveValueAsString();
         return DOMTemplateContent(s);
       }
     }
@@ -521,13 +563,23 @@ class DOMTemplateVariable {
     return null;
   }
 
-  Object? getResolved(Object? context) {
+  Object? getResolved(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     var value = get(context);
-    return evaluateObject(context, value);
+    return evaluateObject(context, value,
+        asElement: asElement,
+        elementProvider: elementProvider,
+        intlMessageResolver: intlMessageResolver);
   }
 
-  String getResolvedAsString(Object? context) {
-    var value = getResolved(context);
+  String getResolvedAsString(Object? context,
+      {QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
+    var value = getResolved(context,
+        elementProvider: elementProvider,
+        intlMessageResolver: intlMessageResolver);
     return DOMTemplateVariable.valueToString(value);
   }
 
@@ -549,7 +601,10 @@ class DOMTemplateVariable {
     }
   }
 
-  static Object? evaluateObject(Object? context, Object? value) {
+  static Object? evaluateObject(Object? context, Object? value,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
+      IntlMessageResolver? intlMessageResolver}) {
     if (value == null) return null;
 
     if (value is String) {
@@ -559,24 +614,55 @@ class DOMTemplateVariable {
     } else if (value is num) {
       return value;
     } else if (value is List) {
-      return value.map((e) => evaluateObject(context, e)).toList();
+      return value
+          .map((e) => evaluateObject(context, e,
+              asElement: asElement,
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver))
+          .toList();
     } else if (value is Map) {
-      return Map.from(value.map((k, v) =>
-          MapEntry(evaluateObject(context, k), evaluateObject(context, v))));
+      return Map.from(value.map((k, v) => MapEntry(
+          evaluateObject(context, k,
+              asElement: asElement,
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver),
+          evaluateObject(context, v,
+              asElement: asElement,
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver))));
     } else if (value is DSX) {
-      var res = value.resolveAsString();
-      return res;
+      var resolver = value.createResolver();
+      var res = asElement
+          ? resolver.resolveElement(
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver)
+          : resolver.resolveValue(
+              elementProvider: elementProvider,
+              intlMessageResolver: intlMessageResolver);
+      return evaluateObject(context, res,
+          asElement: asElement,
+          elementProvider: elementProvider,
+          intlMessageResolver: intlMessageResolver);
     } else if (value is Function(Map? a)) {
       var res = value(context as Map<dynamic, dynamic>?);
-      return evaluateObject(context, res);
+      return evaluateObject(context, res,
+          asElement: asElement,
+          elementProvider: elementProvider,
+          intlMessageResolver: intlMessageResolver);
     } else if (value is Function(Object? a)) {
       var res = value(context);
-      return evaluateObject(context, res);
+      return evaluateObject(context, res,
+          asElement: asElement,
+          elementProvider: elementProvider,
+          intlMessageResolver: intlMessageResolver);
     } else if (value is Function()) {
       var res = value();
-      return evaluateObject(context, res);
+      return evaluateObject(context, res,
+          asElement: asElement,
+          elementProvider: elementProvider,
+          intlMessageResolver: intlMessageResolver);
     } else {
-      return value.toString();
+      return value;
     }
   }
 
@@ -626,7 +712,8 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
 
   @override
   String? build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (intlMessageResolver == null) return '';
 
@@ -664,8 +751,9 @@ class DOMTemplateContent extends DOMTemplate {
   bool get isEmpty => isEmptyString(content);
 
   @override
-  String? build(Object? context,
-          {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+          {bool asElement = true,
+          QueryElementProvider? elementProvider,
           IntlMessageResolver? intlMessageResolver}) =>
       content;
 
@@ -694,7 +782,7 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
     if (resolveDSX) {
       var dsx = asDSX;
       if (dsx != null) {
-        var s = dsx.resolveAsString();
+        var s = dsx.createResolver().resolveValueAsString();
         return DOMTemplateContent(s);
       }
     }
@@ -711,10 +799,14 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   bool get isEmpty => variable == null;
 
   @override
-  String build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
-    return variable!.getResolvedAsString(context);
+    return variable!.getResolved(context,
+        asElement: asElement,
+        elementProvider: elementProvider,
+        intlMessageResolver: intlMessageResolver);
   }
 
   @override
@@ -739,17 +831,28 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   bool get isEmpty => query.isEmpty;
 
   @override
-  String? build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (elementProvider == null) return '';
     var element = elementProvider(query)!;
 
-    var template = DOMTemplate.parse(element);
-    if (!template.hasOnlyContent) {
-      return template.build(context, elementProvider: elementProvider);
+    if (element == null) {
+      return null;
+    } else if (element is String) {
+      if (!asElement) {
+        return element;
+      }
+
+      var template = DOMTemplate.parse(element);
+      if (!template.hasOnlyContent) {
+        return template.build(context, elementProvider: elementProvider);
+      } else {
+        return element;
+      }
     } else {
-      return element;
+      return asElement ? element : DOMTemplateVariable.valueToString(element);
     }
   }
 
@@ -780,34 +883,43 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
   bool evaluate(Object? context);
 
   @override
-  String build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (evaluate(context)) {
-      return buildContent(context, elementProvider: elementProvider);
+      return buildContent(context,
+          asElement: asElement, elementProvider: elementProvider);
     } else {
       var elseCondition = this.elseCondition;
 
       while (elseCondition != null) {
         if (elseCondition.evaluate(context)) {
-          return elseCondition.build(context, elementProvider: elementProvider);
+          return elseCondition.build(context,
+              asElement: asElement, elementProvider: elementProvider);
         }
         elseCondition = elseCondition.elseCondition;
       }
 
-      return '';
+      return null;
     }
   }
 
-  String buildContent(Object? context, {ElementHTMLProvider? elementProvider}) {
-    if (nodes.isEmpty) return '';
+  dynamic buildContent(Object? context,
+      {bool asElement = true, QueryElementProvider? elementProvider}) {
+    if (nodes.isEmpty) return null;
 
-    var s = StringBuffer();
-    for (var n in nodes) {
-      s.write(n.build(context, elementProvider: elementProvider));
-    }
+    var built = nodes
+        .map((n) {
+          var built = n.build(context,
+              asElement: asElement, elementProvider: elementProvider);
+          return built;
+        })
+        .where((e) => e != null)
+        .expand((e) => e is List ? e : [e])
+        .toList();
 
-    return s.toString();
+    return built;
   }
 
   String _toStringRest() {
@@ -1055,14 +1167,16 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
   }
 
   @override
-  String? build(Object? context,
-      {ElementHTMLProvider? elementProvider,
+  dynamic build(Object? context,
+      {bool asElement = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = variable!.getResolved(context);
     if (variable!.evaluateValue(value)) {
-      return DOMTemplateVariable.valueToString(value);
+      return asElement ? value : DOMTemplateVariable.valueToString(value);
     } else {
-      return super.build(context, elementProvider: elementProvider);
+      return super.build(context,
+          asElement: asElement, elementProvider: elementProvider);
     }
   }
 
@@ -1090,19 +1204,20 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
   }
 
   @override
-  String buildContent(Object? context, {ElementHTMLProvider? elementProvider}) {
+  dynamic buildContent(Object? context,
+      {bool asElement = true, QueryElementProvider? elementProvider}) {
     var value = variable!.getResolved(context);
 
-    if (value is List) {
-      var s = StringBuffer();
-      for (var val in value) {
-        s.write(super.buildContent(val, elementProvider: elementProvider));
-      }
-      return s.toString();
-    } else if (value is Map) {
-      return super.buildContent(value, elementProvider: elementProvider);
+    if (value is Iterable) {
+      var built = value
+          .map((val) => super.buildContent(val,
+              asElement: asElement, elementProvider: elementProvider))
+          .expand((e) => e is List ? e : [e])
+          .toList();
+      return built;
     } else {
-      return super.buildContent(value, elementProvider: elementProvider);
+      return super.buildContent(value,
+          asElement: asElement, elementProvider: elementProvider);
     }
   }
 

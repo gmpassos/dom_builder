@@ -1,3 +1,11 @@
+## 2.0.4
+
+- Templates now can also generate a `DOMNode` and not only texts/String.
+- `DSX`:
+  - Allow DOM elements.
+  - Allow observation of mapped `DSX`.
+- Fix `hidden` parameter, to not be defined when `null` (default was `false` now is `null`). 
+
 ## 2.0.3
 
 - Implemented `DSX` support, similar to `JSX`.

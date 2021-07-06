@@ -275,7 +275,7 @@ class DOMNode implements AsDOMNode {
   /// associated with [treeMap] and [domGenerator].
   DOMNodeRuntime get runtime => treeMap != null
       ? treeMap!.getRuntimeNode(this)!
-      : DOMNodeRuntimeDummy(null, this, null);
+      : DOMNodeRuntimeDummy(treeMap, this, null);
 
   /// Same as [runtime], but casts to [DOMNodeRuntime<T>].
   DOMNodeRuntime<T> getRuntime<T>() => runtime as DOMNodeRuntime<T>;
@@ -1482,7 +1482,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false}) {
     if (tag == null) throw ArgumentError('Null tag');
 
@@ -1621,7 +1621,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : tag = normalizeTag(tag),
         super._(true, commented) {
@@ -1641,7 +1641,13 @@ class DOMElement extends DOMNode implements AsDOMElement {
       appendToAttribute('style', style);
     }
 
-    setAttributeIfAbsent('hidden', hidden);
+    if (hidden != null) {
+      if (hidden) {
+        setAttributeIfAbsent('hidden', hidden);
+      } else {
+        removeAttribute('hidden');
+      }
+    }
 
     if (content != null) {
       setContent(content);
@@ -1681,13 +1687,15 @@ class DOMElement extends DOMNode implements AsDOMElement {
         }
 
         if (dsx.isFunction) {
-          _resolveDSXFunction(attrName, dsx);
+          if (_resolveDSXEventFunction(attrName, dsx)) {
+            removeAttribute(attrName);
+          }
         }
       }
     }
   }
 
-  bool _resolveDSXFunction(String attrName, DSX<dynamic> dsx) {
+  bool _resolveDSXEventFunction(String attrName, DSX<dynamic> dsx) {
     if (attrName == 'onclick') {
       onClick.listen((_) => dsx.call());
       return true;
@@ -2623,7 +2631,7 @@ class DIVElement extends DOMElement {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('div',
             attributes: attributes,
@@ -2674,7 +2682,7 @@ class INPUTElement extends DOMElement implements WithValue {
       Object? classes,
       Object? style,
       Object? value,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('input',
             id: id,
@@ -2735,7 +2743,7 @@ class SELECTElement extends DOMElement {
       Object? style,
       Object? options,
       bool? multiple,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('select',
             id: id,
@@ -2975,7 +2983,7 @@ class TEXTAREAElement extends DOMElement implements WithValue {
       Object? cols,
       Object? rows,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('textarea',
             id: id,
@@ -3201,7 +3209,7 @@ abstract class TABLENode extends DOMElement {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._(tag,
             attributes: attributes,
@@ -3248,7 +3256,7 @@ class TABLEElement extends DOMElement {
       Object? body,
       Object? foot,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('table',
             attributes: attributes,
@@ -3292,7 +3300,7 @@ class THEADElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? rows,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('thead',
             attributes: attributes,
@@ -3336,7 +3344,7 @@ class CAPTIONElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('caption',
             attributes: attributes,
@@ -3380,7 +3388,7 @@ class TBODYElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? rows,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('tbody',
             attributes: attributes,
@@ -3424,7 +3432,7 @@ class TFOOTElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? rows,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('tfoot',
             attributes: attributes,
@@ -3469,7 +3477,7 @@ class TRowElement extends TABLENode {
       Object? style,
       Object? cells,
       bool headerRow = false,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('tr',
             attributes: attributes,
@@ -3520,7 +3528,7 @@ class THElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('th',
             attributes: attributes,
@@ -3569,7 +3577,7 @@ class TDElement extends TABLENode {
       Object? classes,
       Object? style,
       Object? content,
-      bool hidden = false,
+      bool? hidden,
       bool commented = false})
       : super._('td',
             attributes: attributes,

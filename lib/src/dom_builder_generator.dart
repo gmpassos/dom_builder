@@ -92,6 +92,33 @@ abstract class DOMGenerator<T> {
     throw UnsupportedError("Can't get element parent: $node");
   }
 
+  List<T> getNodeParentsUntilRoot(T? node) {
+    var list = <T>[];
+
+    while (true) {
+      var parent = getNodeParent(node);
+      if (parent == null) break;
+      list.add(parent);
+      node = parent;
+    }
+
+    return list;
+  }
+
+  bool isNodeInDOM(T? node) {
+    var parents = getNodeParentsUntilRoot(node);
+    if (parents.isEmpty) return false;
+
+    var root = parents.last;
+
+    if (isTextNode(root)) return false;
+
+    var rootTag = getElementTag(root) ?? '';
+    rootTag = rootTag.toLowerCase().trim();
+
+    return rootTag == 'html' || rootTag == 'body' || rootTag == 'head';
+  }
+
   List<T> getElementNodes(T? element) {
     throw UnsupportedError("Can't get element nodes: $element");
   }
@@ -309,11 +336,40 @@ abstract class DOMGenerator<T> {
     }
 
     var variables = context?.variables ?? <String, dynamic>{};
-    var text = domNode.template
+    var templateResolved = domNode.template
         .build(variables, intlMessageResolver: context?.intlMessageResolver);
 
-    if (possiblyWithHTML(text)) {
-      var nodes = parseHTML(text);
+    if (templateResolved is List) {
+      if (templateResolved.isEmpty) {
+        templateResolved = null;
+      } else if (templateResolved.length == 1) {
+        templateResolved = templateResolved.first;
+      } else if (templateResolved.where((e) => e is! DOMNode).isEmpty) {
+        templateResolved = $span(content: templateResolved);
+      } else if (templateResolved.whereType<DOMNode>().isNotEmpty) {
+        var nodes =
+            templateResolved.expand((e) => DOMNode.parseNodes(e)).toList();
+        templateResolved = $span(content: nodes);
+      }
+    }
+
+    String str;
+    if (templateResolved is DOMNode) {
+      var node = templateResolved;
+      if (node is! TextNode) {
+        if (domParent != null) {
+          node.parent = domParent;
+        }
+        return build(domParent, parent, node, treeMap, context);
+      } else {
+        str = templateResolved.text;
+      }
+    } else {
+      str = DOMTemplate.objectToString(templateResolved);
+    }
+
+    if (possiblyWithHTML(str)) {
+      var nodes = parseHTML(str);
       if (nodes != null && nodes.isNotEmpty) {
         DOMNode node;
         if (nodes.length == 1) {
@@ -333,9 +389,9 @@ abstract class DOMGenerator<T> {
 
     T? textNode;
     if (parent != null) {
-      textNode = appendElementText(parent, text);
+      textNode = appendElementText(parent, str);
     } else {
-      textNode = createTextNode(text);
+      textNode = createTextNode(str);
     }
 
     if (textNode != null) {
@@ -1418,6 +1474,13 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   T? getNodeParent(T? node) => domGenerator.getNodeParent(node);
 
   @override
+  List<T> getNodeParentsUntilRoot(T? node) =>
+      domGenerator.getNodeParentsUntilRoot(node);
+
+  @override
+  bool isNodeInDOM(T? node) => domGenerator.isNodeInDOM(node);
+
+  @override
   void ignoreAttributeEquivalence(String attributeName) =>
       domGenerator.ignoreAttributeEquivalence(attributeName);
 
@@ -1813,6 +1876,12 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   T? getNodeParent(T? node) => null;
+
+  @override
+  List<T> getNodeParentsUntilRoot(T? node) => <T>[];
+
+  @override
+  bool isNodeInDOM(T? node) => false;
 
   @override
   void ignoreAttributeEquivalence(String attributeName) {}
