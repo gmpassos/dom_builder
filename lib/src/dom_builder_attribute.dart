@@ -122,7 +122,7 @@ class DOMAttribute implements WithValue {
 
   List<String>? get values => valueHandler.asAttributeValues;
 
-  String? getValue([DOMContext? domContext]) =>
+  String? getValue([DOMContext? domContext, DOMTreeMap? treeMap]) =>
       valueHandler.getAttributeValue(domContext);
 
   int get valueLength => valueHandler.length;
@@ -192,7 +192,8 @@ abstract class DOMAttributeValue {
   /// Returns the attribute value.
   ///
   /// [domContext] Optional context, used by [DOMGenerator].
-  String? getAttributeValue([DOMContext? domContext]) => asAttributeValue;
+  String? getAttributeValue([DOMContext? domContext, DOMTreeMap? treeMap]) =>
+      asAttributeValue;
 
   /// Returns [true] if has a value.
   bool get hasAttributeValue;
@@ -301,9 +302,36 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
   DOMTemplate get template => _template;
 
   @override
+  String? getAttributeValue([DOMContext? domContext, DOMTreeMap? treeMap]) {
+    if (domContext == null) {
+      return super.getAttributeValue(domContext);
+    } else {
+      var build = template.build(domContext,
+          elementProvider: (q) => treeMap?.queryElement(q),
+          intlMessageResolver: domContext.intlMessageResolver);
+
+      if (build == null) {
+        return super.getAttributeValue(domContext);
+      } else if (build is String) {
+        return build;
+      } else if (build is Iterable) {
+        var list = build.map((e) => e?.toString()).toList();
+        return list.join();
+      } else {
+        return '$build';
+      }
+    }
+  }
+
+  @override
   void setAttributeValue(Object? value) {
     super.setAttributeValue(value);
     _template = DOMTemplate.parse(value as String);
+  }
+
+  @override
+  String toString() {
+    return 'DOMAttributeValueTemplate{template: $_template}';
   }
 }
 
@@ -559,7 +587,7 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   List<String> get asAttributeValues => _css.entriesAsString;
 
   @override
-  String? getAttributeValue([DOMContext? domContext]) {
+  String? getAttributeValue([DOMContext? domContext, DOMTreeMap? treeMap]) {
     if (hasAttributeValue) {
       return _css.toString(domContext);
     }

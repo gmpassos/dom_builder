@@ -314,6 +314,27 @@ class DOMTreeMap<T> {
 
     return null;
   }
+
+  static final RegExp REGEXP_TAG_REF =
+      RegExp(r'\{\{\s*([\w-]+|\*)\#([\w-]+)\s*\}\}');
+  static final RegExp REGEXP_TAG_OPEN =
+      RegExp(r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''');
+  static final RegExp REGEXP_TAG_CLOSE = RegExp(r'''<\/[\w-]+\s*>\s*$''');
+
+  String? queryElement(String query) {
+    if (isEmptyString(query)) return null;
+
+    var rootDOMNode = this.rootDOMNode as DOMElement;
+
+    var node = rootDOMNode.select(query)!;
+
+    var html = node.buildHTML();
+
+    html = html.replaceFirst(REGEXP_TAG_OPEN, '');
+    html = html.replaceFirst(REGEXP_TAG_CLOSE, '');
+
+    return html;
+  }
 }
 
 /// A wrapper for a mapped pair of a [DOMTreeMap].

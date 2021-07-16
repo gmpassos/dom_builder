@@ -47,7 +47,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   bool containsNode(T parent, T? node) => false;
 
   @override
-  void setAttributes(DOMElement domElement, T element,
+  void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
       {bool preserveClass = false, bool preserveStyle = false}) {
     _noDartHTML();
   }

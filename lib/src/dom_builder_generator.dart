@@ -438,7 +438,7 @@ abstract class DOMGenerator<T> {
       treeMap.map(domElement, element);
       _callOnElementCreated(treeMap, domElement, element, context);
 
-      setAttributes(domElement, element,
+      setAttributes(domElement, element, treeMap,
           preserveClass: true, preserveStyle: true);
 
       var length = domElement.length;
@@ -737,11 +737,11 @@ abstract class DOMGenerator<T> {
 
   bool containsNode(T parent, T? node);
 
-  void setAttributes(DOMElement domElement, T element,
+  void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
       {bool preserveClass = false, bool preserveStyle = false}) {
     for (var attrName in domElement.attributesNames) {
       var attr = domElement.getAttribute(attrName)!;
-      var attrVal = attr.getValue(_domContext);
+      var attrVal = attr.getValue(_domContext, treeMap);
 
       if (preserveClass && attrName == 'class') {
         var prev = getAttribute(element, attrName);
@@ -1520,9 +1520,9 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.revert(treeMap, node);
 
   @override
-  void setAttributes(DOMElement domElement, T element,
+  void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
           {bool preserveClass = false, bool preserveStyle = false}) =>
-      domGenerator.setAttributes(domElement, element,
+      domGenerator.setAttributes(domElement, element, treeMap,
           preserveClass: preserveClass, preserveStyle: preserveStyle);
 
   @override
@@ -1914,7 +1914,7 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   DOMNode? revert(DOMTreeMap<T>? treeMap, T? node) => null;
 
   @override
-  void setAttributes(DOMElement domElement, T element,
+  void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
       {bool preserveClass = false, bool preserveStyle = false}) {}
 
   @override

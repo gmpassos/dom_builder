@@ -1,3 +1,9 @@
+## 2.0.5
+
+- Added `DOMTreeMap.queryElement`.
+- Fix resolution of attributes with templates in some scenarios.
+- Added code coverage.
+
 ## 2.0.4
 
 - Templates now can also generate a `DOMNode` and not only texts/String.
