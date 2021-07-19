@@ -155,8 +155,10 @@ class DOMAttribute implements WithValue {
 
     String? htmlValue;
     if (resolveDSX && valueHandler is DOMAttributeValueTemplate) {
-      var templateBuilt =
-          valueHandler.template.build(domContext, asElement: false);
+      var templateBuilt = valueHandler.template.build(domContext,
+          asElement: false,
+          resolveDSX: resolveDSX,
+          intlMessageResolver: domContext?.intlMessageResolver);
 
       if (templateBuilt is String && !possiblyWithHTML(templateBuilt)) {
         htmlValue = templateBuilt;

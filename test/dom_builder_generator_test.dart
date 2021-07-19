@@ -329,5 +329,79 @@ void main() {
 
       expect(div2.buildHTML(), equals(div.buildHTML()));
     });
+
+    test('domActionExecutor', () {
+      var generator = TestGenerator();
+
+      generator.domActionExecutor = TestActionExecutor();
+
+      var div = $tagHTML<DIVElement>(
+          '<div class="container"><span id="hi">Hi!</span> <button action="#hi.show()">Click</button></div>')!;
+
+      var spanHi = div.selectByID('hi') as DOMElement;
+      expect(spanHi, isNotNull);
+
+      var clicks = <int>[];
+      spanHi.onClick.listen((event) => clicks.add(clicks.length));
+
+      var treeMap = generator.generateMapped(div);
+
+      var genDiv = treeMap.rootElement as TestElem;
+      expect(genDiv, isNotNull);
+    });
+
+    test('delegate', () {
+      var generator0 = TestGenerator();
+
+      var generator = DOMGeneratorDelegate(generator0);
+
+      generator.domActionExecutor = TestActionExecutor();
+
+      var div = $tagHTML<DIVElement>(
+          '<div class="container"><span id="hi">Hi!</span> <button action="#hi.show()">Click</button></div>')!;
+
+      div.add((parent) {
+        return TestElem('x-tag')..add(TestText('X'));
+      });
+
+      var spanHi = div.selectByID('hi') as DOMElement;
+      expect(spanHi, isNotNull);
+
+      var treeMap = generator.generateMapped(div);
+
+      var genDiv = treeMap.rootElement as TestElem;
+
+      expect(genDiv, isNotNull);
+
+      expect(generator.isNodeInDOM(genDiv), isFalse);
+
+      var body = TestElem('body');
+      body.add(genDiv);
+
+      expect(generator.isNodeInDOM(genDiv), isTrue);
+
+      var spanHiRuntime = spanHi.runtime;
+      var spanHiNode = spanHiRuntime.node as TestElem;
+
+      expect(spanHiNode.tag, equals('span'));
+      expect(spanHiNode.attributes['id'], equals('hi'));
+
+      expect(
+          spanHiRuntime.replaceBy([
+            TestElem('button')..attributes['id'] = 'hi',
+          ], remap: true),
+          isTrue);
+
+      expect(spanHiRuntime.remove(), isFalse);
+
+      var button = genDiv.nodes
+          .whereType<TestElem>()
+          .where((e) => e.tag == 'button')
+          .first;
+      expect(button.attributes['id'], equals('hi'));
+
+      var domButton = treeMap.getMappedDOMNode(button) as DOMElement;
+      expect(domButton['id'], equals('hi'));
+    });
   });
 }

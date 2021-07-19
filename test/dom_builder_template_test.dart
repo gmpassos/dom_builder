@@ -527,5 +527,79 @@ void main() {
           template1.buildAsString({'n': 2}, intlMessageResolver: msgResolver),
           equals('Hello children!'));
     });
+
+    test('DOMNode with template', () {
+      var clicks = <int>[];
+
+      var clickFunction = () {
+        clicks.add(clicks.length);
+        return '!RET!';
+      };
+
+      var source1 = '<div title="{{intl:hi}}" onclick="${clickFunction.dsx()}">'
+          '{{:period=="am"}}<b>morning</b>{{?:period=="pm"}}afternoon{{?}}day{{/}}'
+          '</div>';
+
+      var div = $htmlRoot(source1)!;
+
+      expect(div.hasTemplate, isTrue);
+      expect(div.hasUnresolvedTemplate, isTrue);
+
+      expect(clicks, isEmpty);
+
+      var context = DOMContext(
+          intlMessageResolver: (k, [p]) => '$k'.trim().toUpperCase(),
+          variables: {'period': 'am'});
+
+      var source2 = div.buildHTML(domContext: context);
+
+      expectFilteredDSXFunction(
+        source2,
+        '<div title="HI" onclick="{{__DSX__function_D}}">'
+        '{{:period=="am"}}<b>morning</b>{{?:period=="pm"}}afternoon{{?}}day{{/}}'
+        '</div>',
+      );
+
+      expect(clicks, isEmpty);
+
+      var template = DOMTemplate.parse(source2);
+
+      expect(template.hasOnlyContent, isFalse);
+
+      expect(clicks, isEmpty);
+
+      var s1 = template.buildAsString({'period': 'am'}, resolveDSX: false);
+      expectFilteredDSXFunction(s1,
+          '<div title="HI" onclick="{{__DSX__function_D}}"><b>morning</b></div>');
+
+      expect(clicks, isEmpty);
+
+      var s2 = template.buildAsString({'period': 'pm'}, resolveDSX: false);
+      expectFilteredDSXFunction(s2,
+          '<div title="HI" onclick="{{__DSX__function_D}}">afternoon</div>');
+
+      expect(clicks, isEmpty);
+
+      var s3 = template.buildAsString({'period': '?'}, resolveDSX: false);
+      expectFilteredDSXFunction(
+          s3, '<div title="HI" onclick="{{__DSX__function_D}}">day</div>');
+
+      expect(clicks, isEmpty);
+
+      var s4 = template.buildAsString({'period': 'am'}, resolveDSX: true);
+      expect(
+          s4, equals('<div title="HI" onclick="!RET!"><b>morning</b></div>'));
+
+      expect(clicks, isNotEmpty);
+    });
   });
+}
+
+void expectFilteredDSXFunction(String s, String expected) {
+  expectFiltered(
+      s, RegExp(r'__DSX__function_\d+'), '__DSX__function_D', expected);
+}
+
+void expectFiltered(String s, RegExp filter, String replace, String expected) {
+  expect(s.replaceAll(filter, replace), equals(expected));
 }

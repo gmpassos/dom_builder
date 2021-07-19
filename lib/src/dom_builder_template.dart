@@ -27,9 +27,7 @@ abstract class DOMTemplate {
       return o;
     } else if (o is DOMNode) {
       return o.buildHTML();
-    } else if (o is List) {
-      return o.map(objectToString).join('');
-    } else if (o is Set) {
+    } else if (o is Iterable) {
       return o.map(objectToString).join('');
     } else if (o is Map) {
       return o.entries
@@ -77,7 +75,11 @@ abstract class DOMTemplate {
   ///
   /// Returns [null] if [s] has no template or a not valid template code.
   static DOMTemplateNode? tryParse(String? s) {
-    return _parse(s, true);
+    try {
+      return _parse(s, true);
+    } catch (e) {
+      return null;
+    }
   }
 
   /// Parses [s] and returns a DOMTemplateNode.
@@ -332,6 +334,7 @@ abstract class DOMTemplate {
 
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver});
 
@@ -396,10 +399,12 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   String buildAsString(Object? context,
-      {QueryElementProvider? elementProvider,
+      {bool resolveDSX = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var built = build(context,
         asElement: false,
+        resolveDSX: resolveDSX,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
 
@@ -410,6 +415,7 @@ class DOMTemplateNode extends DOMTemplate {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (nodes.isEmpty) return null;
@@ -418,6 +424,7 @@ class DOMTemplateNode extends DOMTemplate {
         .map((n) {
           var built = n.build(context,
               asElement: asElement,
+              resolveDSX: resolveDSX,
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver);
           return built;
@@ -565,19 +572,24 @@ class DOMTemplateVariable {
 
   Object? getResolved(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = get(context);
     return evaluateObject(context, value,
         asElement: asElement,
+        resolveDSX: resolveDSX,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
   }
 
   String getResolvedAsString(Object? context,
-      {QueryElementProvider? elementProvider,
+      {bool resolveDSX = true,
+      QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = getResolved(context,
+        asElement: false,
+        resolveDSX: resolveDSX,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
     return DOMTemplateVariable.valueToString(value);
@@ -603,6 +615,7 @@ class DOMTemplateVariable {
 
   static Object? evaluateObject(Object? context, Object? value,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (value == null) return null;
@@ -631,18 +644,23 @@ class DOMTemplateVariable {
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver))));
     } else if (value is DSX) {
-      var resolver = value.createResolver();
-      var res = asElement
-          ? resolver.resolveElement(
-              elementProvider: elementProvider,
-              intlMessageResolver: intlMessageResolver)
-          : resolver.resolveValue(
-              elementProvider: elementProvider,
-              intlMessageResolver: intlMessageResolver);
-      return evaluateObject(context, res,
-          asElement: asElement,
-          elementProvider: elementProvider,
-          intlMessageResolver: intlMessageResolver);
+      if (resolveDSX) {
+        var resolver = value.createResolver();
+        var res = asElement
+            ? resolver.resolveElement(
+                elementProvider: elementProvider,
+                intlMessageResolver: intlMessageResolver)
+            : resolver.resolveValue(
+                elementProvider: elementProvider,
+                intlMessageResolver: intlMessageResolver);
+        return evaluateObject(context, res,
+            asElement: asElement,
+            resolveDSX: resolveDSX,
+            elementProvider: elementProvider,
+            intlMessageResolver: intlMessageResolver);
+      } else {
+        return value.toString();
+      }
     } else if (value is Function(Map? a)) {
       var res = value(context as Map<dynamic, dynamic>?);
       return evaluateObject(context, res,
@@ -713,6 +731,7 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   @override
   String? build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (intlMessageResolver == null) return '';
@@ -753,6 +772,7 @@ class DOMTemplateContent extends DOMTemplate {
   @override
   dynamic build(Object? context,
           {bool asElement = true,
+          bool resolveDSX = true,
           QueryElementProvider? elementProvider,
           IntlMessageResolver? intlMessageResolver}) =>
       content;
@@ -801,10 +821,12 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     return variable!.getResolved(context,
         asElement: asElement,
+        resolveDSX: resolveDSX,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
   }
@@ -833,6 +855,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (elementProvider == null) return '';
@@ -847,7 +870,11 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
 
       var template = DOMTemplate.parse(element);
       if (!template.hasOnlyContent) {
-        return template.build(context, elementProvider: elementProvider);
+        return template.build(context,
+            asElement: true,
+            resolveDSX: resolveDSX,
+            elementProvider: elementProvider,
+            intlMessageResolver: intlMessageResolver);
       } else {
         return element;
       }
@@ -885,18 +912,23 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (evaluate(context)) {
       return buildContent(context,
-          asElement: asElement, elementProvider: elementProvider);
+          asElement: asElement,
+          resolveDSX: resolveDSX,
+          elementProvider: elementProvider);
     } else {
       var elseCondition = this.elseCondition;
 
       while (elseCondition != null) {
         if (elseCondition.evaluate(context)) {
           return elseCondition.build(context,
-              asElement: asElement, elementProvider: elementProvider);
+              asElement: asElement,
+              resolveDSX: resolveDSX,
+              elementProvider: elementProvider);
         }
         elseCondition = elseCondition.elseCondition;
       }
@@ -906,13 +938,17 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
   }
 
   dynamic buildContent(Object? context,
-      {bool asElement = true, QueryElementProvider? elementProvider}) {
+      {bool asElement = true,
+      bool resolveDSX = true,
+      QueryElementProvider? elementProvider}) {
     if (nodes.isEmpty) return null;
 
     var built = nodes
         .map((n) {
           var built = n.build(context,
-              asElement: asElement, elementProvider: elementProvider);
+              asElement: asElement,
+              resolveDSX: resolveDSX,
+              elementProvider: elementProvider);
           return built;
         })
         .where((e) => e != null)
@@ -1169,6 +1205,7 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
+      bool resolveDSX = true,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = variable!.getResolved(context);
@@ -1176,7 +1213,9 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
       return asElement ? value : DOMTemplateVariable.valueToString(value);
     } else {
       return super.build(context,
-          asElement: asElement, elementProvider: elementProvider);
+          asElement: asElement,
+          resolveDSX: resolveDSX,
+          elementProvider: elementProvider);
     }
   }
 
@@ -1205,19 +1244,25 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
 
   @override
   dynamic buildContent(Object? context,
-      {bool asElement = true, QueryElementProvider? elementProvider}) {
+      {bool asElement = true,
+      bool resolveDSX = true,
+      QueryElementProvider? elementProvider}) {
     var value = variable!.getResolved(context);
 
     if (value is Iterable) {
       var built = value
           .map((val) => super.buildContent(val,
-              asElement: asElement, elementProvider: elementProvider))
+              asElement: asElement,
+              resolveDSX: resolveDSX,
+              elementProvider: elementProvider))
           .expand((e) => e is List ? e : [e])
           .toList();
       return built;
     } else {
       return super.buildContent(value,
-          asElement: asElement, elementProvider: elementProvider);
+          asElement: asElement,
+          resolveDSX: resolveDSX,
+          elementProvider: elementProvider);
     }
   }
 

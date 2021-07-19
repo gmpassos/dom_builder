@@ -1,3 +1,13 @@
+## 2.0.6
+
+- Allow built of `DOMTemplate` without resolve `DSX` entries.
+- `DOMNodeRuntime`:
+  - added `remap` parameter to `replaceBy`. 
+  - Improved documentation.
+- Improved test coverage.
+- swiss_knife: ^3.0.8
+- test: ^1.17.10
+
 ## 2.0.5
 
 - Added `DOMTreeMap.queryElement`.

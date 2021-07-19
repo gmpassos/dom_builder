@@ -8,7 +8,8 @@ void main() {
     setUp(() {});
 
     test('Basic div 1', () {
-      var div = $divHTML('<div class="container"><span>Builder</span></div>')!
+      var div = $divHTML(
+              '<div class="container"><span class="text-x shadow-y">Builder</span></div>')!
           .insertAt(0, $span(id: 's1', content: 'The '))
           .insertAfter('#s1',
               $span(id: 's2', content: 'DOM ', style: 'font-weight: bold'));
@@ -17,14 +18,35 @@ void main() {
       expect(
           div.buildHTML(),
           equals(
-              '<div class="container"><span id="s1">The </span><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
+              '<div class="container"><span id="s1">The </span><span id="s2" style="font-weight: bold">DOM </span><span class="text-x shadow-y">Builder</span></div>'));
+
+      expect(div.selectWithAnyClass(['noo']), isNull);
+      expect(div.selectWithAnyClass(['text-x'])!.buildHTML(),
+          equals('<span class="text-x shadow-y">Builder</span>'));
+
+      expect(div.selectWithAllClasses(['text-x', 'text-y']), isNull);
+      expect(div.selectWithAllClasses(['text-x', 'shadow-y'])!.buildHTML(),
+          equals('<span class="text-x shadow-y">Builder</span>'));
+
+      expect(div.selectByTag(['span'])!.buildHTML(),
+          equals('<span id="s1">The </span>'));
+
+      expect(div.selectAllByType<DOMElement>().length, equals(3));
+
+      var span2 = div.select('#s2') as DOMElement;
+      expect(span2, isNotNull);
+
+      expect(span2.style.isEmpty, isFalse);
+      expect(span2.style.isNoEmpty, isTrue);
+      expect(span2.style['font-weight'].toString(), equals('bold'));
+      expect(span2.style.toString(), equals('font-weight: bold'));
 
       div.select('#s1')!.remove();
 
       expect(
           div.buildHTML(),
           equals(
-              '<div class="container"><span id="s2" style="font-weight: bold">DOM </span><span>Builder</span></div>'));
+              '<div class="container"><span id="s2" style="font-weight: bold">DOM </span><span class="text-x shadow-y">Builder</span></div>'));
 
       var span = div.select(['#s1', '#s2']) as DOMElement;
 

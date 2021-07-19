@@ -9,14 +9,18 @@ import 'dom_builder_treemap.dart';
 abstract class DOMNodeRuntime<T> {
   final DOMTreeMap<T>? treeMap;
 
+  /// The [DOMGenerator] used to generate this [treeMap].
   DOMGenerator<T> get domGenerator => treeMap!.domGenerator;
 
+  /// The [DOMNode] of this [node].
   final DOMNode? domNode;
 
+  /// The runtime node (generated element/node).
   final T? node;
 
   DOMNodeRuntime(this.treeMap, this.domNode, this.node);
 
+  /// The [DOMNodeRuntime] of [parent].
   DOMNodeRuntime<T>? get parentRuntime {
     var domNodeParent = domNode != null ? domNode!.parent : null;
     var nodeParent = domGenerator.getNodeParent(node);
@@ -25,27 +29,43 @@ abstract class DOMNodeRuntime<T> {
         treeMap!, domNodeParent, nodeParent);
   }
 
+  /// This [node] parent.
+  T? get parent {
+    var nodeParent = domGenerator.getNodeParent(node);
+    return nodeParent;
+  }
+
+  /// Returns `true` if this [node] has a [parent].
   bool get hasParent {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null;
   }
 
+  /// The tag name of this [node].
   String? get tagName;
 
+  /// Returns `true` if this [node] is a String element (a Text node or [DOMElement.isStringTagName]).
   bool get isStringElement;
 
+  /// Returns the classes of this [node].
   List<String> get classes;
 
+  /// Adds a [className] to this [node] classes.
   void addClass(String? className);
 
+  /// Removes [className] from this [node] classes.
   bool removeClass(String? className);
 
+  /// Clears classes from this [node] classes.
   void clearClasses();
 
+  /// Returns `true` if this [node] and [domNode] exists.
   bool get exists => domNode != null && node != null;
 
+  /// Returns the text of this [node].
   String get text;
 
+  /// Sets the text of this [node].
   set text(String value);
 
   String? get value;
@@ -57,10 +77,13 @@ abstract class DOMNodeRuntime<T> {
   void operator []=(String name, Object? value) =>
       setAttribute(name, (value ?? '').toString());
 
+  /// Returns the value of the attribute of [name].
   String? getAttribute(String name);
 
+  /// Sets the value of the attribute of [name].
   void setAttribute(String name, String value);
 
+  /// Removes the attribute of [name].
   void removeAttribute(String name);
 
   /// Gets runtime `style` of [node] as [CSS].
@@ -136,14 +159,18 @@ abstract class DOMNodeRuntime<T> {
         removed.map((e) => MapEntry(e.name, e.valueAsString)));
   }
 
+  /// Returns the [List] of children nodes.
   List<T> get children;
 
+  /// Returns the number of children nodes.
   int get nodesLength;
 
+  /// Returns the node at [index].
   T? getNodeAt(int index);
 
   int get indexInParent;
 
+  /// Returns `true` if [other] is in the same [parent] of this [node].
   bool isInSameParent(T other) {
     var nodeParent = domGenerator.getNodeParent(node);
     return nodeParent != null &&
@@ -179,18 +206,24 @@ abstract class DOMNodeRuntime<T> {
     return isNextNode(other) || isPreviousNode(other);
   }
 
+  /// Returns the index of [child].
   int indexOf(T child);
 
+  /// Adds [child] node.
   void add(T child);
 
+  /// Inserts [child] node at [index].
   void insertAt(int index, T? child);
 
+  /// Removes [child] node.
   bool removeNode(T? child);
 
+  /// Removes child node at [index].
   T? removeAt(int index);
 
   void clear();
 
+  /// Removes this node.
   bool remove() {
     if (hasParent) {
       return parentRuntime!.removeNode(node);
@@ -198,10 +231,29 @@ abstract class DOMNodeRuntime<T> {
     return false;
   }
 
-  bool replaceBy(List? elements) {
+  /// Replaces this node with [elements].
+  ///
+  /// - [remap] If `true` will remap the new element at [treeMap] (only if [elements] represents 1 element).
+  bool replaceBy(List? elements, {bool remap = false}) {
     if (elements == null) return false;
     var e = domGenerator.toElements(elements);
-    return domGenerator.replaceElement(node, e);
+    var ok = domGenerator.replaceElement(node, e);
+
+    var treeMap = this.treeMap;
+
+    if (ok && treeMap != null && domNode != null) {
+      treeMap.removeByDOMNode(domNode);
+
+      if (remap && e != null && e.length == 1) {
+        var node2 = e.first;
+        var domNode2 = domGenerator.revert(treeMap, node2);
+        if (domNode2 != null) {
+          treeMap.mapTree(domNode2, node2);
+        }
+      }
+    }
+
+    return ok;
   }
 
   int _contentFromIndexBackwardWhere(
@@ -234,6 +286,7 @@ abstract class DOMNodeRuntime<T> {
     return -1;
   }
 
+  /// Moves this node up in parent's children.
   bool moveUp() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
@@ -254,6 +307,7 @@ abstract class DOMNodeRuntime<T> {
     return true;
   }
 
+  /// Moves this node down in parent's children.
   bool moveDown() {
     if (!hasParent) return false;
     var parentRuntime = this.parentRuntime;
@@ -274,8 +328,10 @@ abstract class DOMNodeRuntime<T> {
     return true;
   }
 
+  /// Copies this node.
   T? copy();
 
+  /// Duplicates this node, inserting it at parent.
   T? duplicate() {
     var parentRuntime = this.parentRuntime;
     var idx = indexInParent;

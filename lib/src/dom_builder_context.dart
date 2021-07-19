@@ -168,7 +168,15 @@ class DOMContext<T> {
       {this.parent,
       this.viewport,
       this.resolveCSSViewportUnit = false,
-      this.resolveCSSURL = false});
+      this.resolveCSSURL = false,
+      Map<String, dynamic>? variables,
+      IntlMessageResolver? intlMessageResolver}) {
+    if (variables != null) {
+      this.variables = variables;
+    }
+
+    this.intlMessageResolver = intlMessageResolver;
+  }
 
   /// Resolves a Viewport [CSSUnit] (`vw`, `vh`, `vmin`, `vmax`) [value]
   /// to a `px` value as [String].

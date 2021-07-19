@@ -310,6 +310,12 @@ class DOMNode implements AsDOMNode {
     }
   }
 
+  /// Returns `true` if this node has a [DOMTemplate].
+  bool get hasTemplate => false;
+
+  /// Returns `true` if this node has a text node with a unresolved [DOMTemplate].
+  bool get hasUnresolvedTemplate => false;
+
   @override
   DOMNode get asDOMNode => this;
 
@@ -863,7 +869,7 @@ class DOMNode implements AsDOMNode {
   }
 
   /// Returns a node [T] that has all [classes].
-  T? selectWithAllClass<T extends DOMNode>(List<String>? classes) {
+  T? selectWithAllClasses<T extends DOMNode>(List<String>? classes) {
     if (isEmptyObject(classes) || isEmptyContent) return null;
 
     classes = classes!
@@ -1180,18 +1186,35 @@ DOMNode _toTextNode(String? text) {
 
   if (DOMTemplate.possiblyATemplate(text)) {
     var template = DOMTemplate.tryParse(text);
-    return template != null ? TemplateNode(template) : TextNode(text);
+    return template != null ? TemplateNode(template) : TextNode(text, true);
   } else {
-    return TextNode(text);
+    return TextNode(text, false);
   }
 }
 
 /// Represents a text node in DOM.
 class TextNode extends DOMNode implements WithValue {
-  @override
-  String text;
+  String _text;
+  bool _hasUnresolvedTemplate;
 
-  TextNode(this.text) : super._(false, false);
+  TextNode(this._text, [bool? hasTemplateToResolve])
+      : _hasUnresolvedTemplate =
+            hasTemplateToResolve ?? DOMTemplate.possiblyATemplate(_text),
+        super._(false, false);
+
+  @override
+  String get text => _text;
+
+  set text(String value) {
+    _text = value;
+    _hasUnresolvedTemplate = DOMTemplate.possiblyATemplate(value);
+  }
+
+  @override
+  bool get hasTemplate => false;
+
+  @override
+  bool get hasUnresolvedTemplate => _hasUnresolvedTemplate;
 
   bool get isTextEmpty => text.isEmpty;
 
@@ -1281,7 +1304,7 @@ class TextNode extends DOMNode implements WithValue {
 
   @override
   TextNode copy() {
-    return TextNode(text);
+    return TextNode(_text, _hasUnresolvedTemplate);
   }
 
   @override
@@ -1309,6 +1332,12 @@ class TemplateNode extends DOMNode implements WithValue {
   set text(String value) {
     template = DOMTemplate.parse(value);
   }
+
+  @override
+  bool get hasTemplate => true;
+
+  @override
+  bool get hasUnresolvedTemplate => false;
 
   bool get isEmptyTemplate => template.isEmpty;
 
@@ -1656,11 +1685,13 @@ class DOMElement extends DOMNode implements AsDOMElement {
     resolveDSX();
   }
 
+  Map<String, DSX>? _resolvedDSXEventAttributes;
+
   void resolveDSX() {
     var attributes = _attributes;
     if (attributes == null || attributes.isEmpty) return;
 
-    Map<String, DSX?>? dsxAttributes;
+    Map<String, DSX>? dsxAttributes;
 
     for (var entry in attributes.entries) {
       var attrVal = entry.value;
@@ -1670,7 +1701,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       if (valueHandler is DOMAttributeValueTemplate) {
         var dsx = valueHandler.template.asDSX;
         if (dsx != null) {
-          dsxAttributes ??= <String, DSX?>{};
+          dsxAttributes ??= <String, DSX>{};
           dsxAttributes[entry.key] = dsx;
         }
       }
@@ -1678,16 +1709,14 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
     if (dsxAttributes != null) {
       for (var entry in dsxAttributes.entries) {
-        var attrName = entry.key.toLowerCase();
+        var attrName = entry.key;
         var dsx = entry.value;
-
-        if (dsx == null) {
-          removeAttribute(attrName);
-          continue;
-        }
 
         if (dsx.isFunction) {
           if (_resolveDSXEventFunction(attrName, dsx)) {
+            _resolvedDSXEventAttributes ??= <String, DSX>{};
+            _resolvedDSXEventAttributes![attrName] = dsx;
+
             removeAttribute(attrName);
           }
         }
@@ -1696,6 +1725,8 @@ class DOMElement extends DOMNode implements AsDOMElement {
   }
 
   bool _resolveDSXEventFunction(String attrName, DSX<dynamic> dsx) {
+    attrName = attrName.toLowerCase();
+
     if (attrName == 'onclick') {
       onClick.listen((_) => dsx.call());
       return true;
@@ -1714,6 +1745,40 @@ class DOMElement extends DOMNode implements AsDOMElement {
     } else if (attrName == 'onerror') {
       onError.listen((_) => dsx.call());
       return true;
+    }
+
+    return false;
+  }
+
+  @override
+  bool get hasTemplate {
+    if (_content != null) {
+      for (var node in _content!) {
+        if (node.hasTemplate) {
+          return true;
+        }
+      }
+    }
+
+    if (_attributes != null) {
+      for (var attr in _attributes!.values) {
+        if (attr.valueHandler is DOMAttributeValueTemplate) {
+          return true;
+        }
+      }
+    }
+
+    return false;
+  }
+
+  @override
+  bool get hasUnresolvedTemplate {
+    if (_content != null) {
+      for (var node in _content!) {
+        if (node.hasUnresolvedTemplate) {
+          return true;
+        }
+      }
     }
 
     return false;
@@ -2253,6 +2318,14 @@ class DOMElement extends DOMNode implements AsDOMElement {
       for (var attr in attributesBoolean) {
         html = DOMAttribute.append(html, ' ', attr,
             domContext: domContext, resolveDSX: resolveDSX);
+      }
+    }
+
+    if (_resolvedDSXEventAttributes != null) {
+      for (var entry in _resolvedDSXEventAttributes!.entries) {
+        var name = entry.key;
+        var value = entry.value.toString();
+        html += ' $name="$value"';
       }
     }
 
