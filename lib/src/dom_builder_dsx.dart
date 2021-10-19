@@ -494,7 +494,7 @@ class DSXResolver<T> {
 
 /// Parses [o] to a [List<DOMNode>], resolving [DSX] objects.
 List<DOMNode> $dsx(dynamic o) {
-  return _dsx_nodes(o);
+  return _dsxNodes(o);
 }
 
 /// Converts a call to [f] to a DSX object.
@@ -514,41 +514,41 @@ DSX $dsxCall(
   return f.dsx(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
 }
 
-List<DOMNode> _dsx_nodes(dynamic o) {
-  var list = _dsx_toList(o);
-  _dsx_joinStrings(list);
+List<DOMNode> _dsxNodes(dynamic o) {
+  var list = _dsxToList(o);
+  _dsxJoinStrings(list);
 
-  var list2 = list.expand(_dsx_toDOMNodeList).toList();
+  var list2 = list.expand(_dsxToDOMNodeList).toList();
 
-  var nodes = _dsx_toDOMNodeList(list2);
+  var nodes = _dsxToDOMNodeList(list2);
   return nodes;
 }
 
-List<DOMNode> _dsx_toDOMNodeList(dynamic o) {
+List<DOMNode> _dsxToDOMNodeList(dynamic o) {
   if (o is DOMNode) {
     return <DOMNode>[o];
   } else if (o is List<DOMNode>) {
     return o;
   } else if (o is List) {
-    return o.expand((e) => _dsx_toDOMNodeList(e)).toList();
+    return o.expand((e) => _dsxToDOMNodeList(e)).toList();
   }
 
   return $html('$o');
 }
 
-List _dsx_toList(dynamic o) {
+List _dsxToList(dynamic o) {
   if (o == null) {
     return [];
   } else if (o is List<DOMNode>) {
     return o;
   } else if (o is List) {
-    return o.expand(_dsx_toList).toList();
+    return o.expand(_dsxToList).toList();
   } else {
     return [o];
   }
 }
 
-void _dsx_joinStrings(List list) {
+void _dsxJoinStrings(List list) {
   for (var i = 1; i < list.length;) {
     var prev = list[i - 1];
     var elem = list[i];
@@ -621,7 +621,7 @@ extension DSXFutureOrExtension<T> on FutureOr<T> {
   }
 }
 
-final Set<Type> _typesWithout_toDSXValue = <Type>{};
+final Set<Type> _typesWithoutToDSXValue = <Type>{};
 
 Object? _toDSXValue(dynamic o, [dynamic def]) {
   if (o == null ||
@@ -635,7 +635,7 @@ Object? _toDSXValue(dynamic o, [dynamic def]) {
 
   var type = o.runtimeType;
 
-  if (_typesWithout_toDSXValue.contains(type)) {
+  if (_typesWithoutToDSXValue.contains(type)) {
     return def;
   }
 
@@ -643,12 +643,12 @@ Object? _toDSXValue(dynamic o, [dynamic def]) {
     var value = o.toDSXValue();
     return value;
   } catch (e) {
-    _typesWithout_toDSXValue.add(type);
+    _typesWithoutToDSXValue.add(type);
     return def;
   }
 }
 
-final Set<Type> _typesWithout_listenDSXValue = <Type>{};
+final Set<Type> _typesWithoutListenDSXValue = <Type>{};
 
 StreamSubscription? _listenDSXValue(
     dynamic o, void Function(dynamic event) listener) {
@@ -663,7 +663,7 @@ StreamSubscription? _listenDSXValue(
 
   var type = o.runtimeType;
 
-  if (_typesWithout_listenDSXValue.contains(type)) {
+  if (_typesWithoutListenDSXValue.contains(type)) {
     return null;
   }
 
@@ -671,7 +671,7 @@ StreamSubscription? _listenDSXValue(
     var subscription = o.listenDSXValue(listener);
     return subscription;
   } catch (e) {
-    _typesWithout_listenDSXValue.add(type);
+    _typesWithoutListenDSXValue.add(type);
     return null;
   }
 }

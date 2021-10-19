@@ -388,9 +388,9 @@ void main() {
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
-      var elementProvider = (q) {
+      String? elementProvider(String q) {
         return q == '#element_x' ? 'XXX' : null;
-      };
+      }
 
       var s1 = template
           .buildAsString({'ok': true}, elementProvider: elementProvider);
@@ -508,7 +508,7 @@ void main() {
       expect(template1.nodes.length, equals(4));
       expect(template1.toString(), equals(source1));
 
-      var msgResolver = (String key, [Map<String, dynamic>? parameters]) {
+      String msgResolver(String key, [Map<String, dynamic>? parameters]) {
         switch (key) {
           case 'hi':
             return 'Hello';
@@ -517,7 +517,7 @@ void main() {
           default:
             return '?';
         }
-      };
+      }
 
       expect(
           template1.buildAsString({'n': 1}, intlMessageResolver: msgResolver),
@@ -531,10 +531,10 @@ void main() {
     test('DOMNode with template', () {
       var clicks = <int>[];
 
-      var clickFunction = () {
+      String clickFunction() {
         clicks.add(clicks.length);
         return '!RET!';
-      };
+      }
 
       var source1 = '<div title="{{intl:hi}}" onclick="${clickFunction.dsx()}">'
           '{{:period=="am"}}<b>morning</b>{{?:period=="pm"}}afternoon{{?}}day{{/}}'
@@ -548,7 +548,7 @@ void main() {
       expect(clicks, isEmpty);
 
       var context = DOMContext(
-          intlMessageResolver: (k, [p]) => '$k'.trim().toUpperCase(),
+          intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
           variables: {'period': 'am'});
 
       var source2 = div.buildHTML(domContext: context);

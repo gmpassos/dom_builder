@@ -1,3 +1,13 @@
+## 2.0.7
+
+- Added `DOMHtml`, a portable HTML handler and parser.
+  - When compiling to the browser uses `dart:html`. 
+- Fix `OPTIONElement.toOptions`:
+- Migrated from package `pedantic` to `lints`.
+- Using Dart `coverage`.
+- lints: ^1.0.1
+- coverage: ^1.0.3
+
 ## 2.0.6
 
 - Allow built of `DOMTemplate` without resolve `DSX` entries.

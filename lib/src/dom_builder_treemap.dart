@@ -315,11 +315,11 @@ class DOMTreeMap<T> {
     return null;
   }
 
-  static final RegExp REGEXP_TAG_REF =
+  static final RegExp regexpTagRef =
       RegExp(r'\{\{\s*([\w-]+|\*)\#([\w-]+)\s*\}\}');
-  static final RegExp REGEXP_TAG_OPEN =
+  static final RegExp regexpTagOpen =
       RegExp(r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''');
-  static final RegExp REGEXP_TAG_CLOSE = RegExp(r'''<\/[\w-]+\s*>\s*$''');
+  static final RegExp regexpTagClose = RegExp(r'''<\/[\w-]+\s*>\s*$''');
 
   String? queryElement(String query) {
     if (isEmptyString(query)) return null;
@@ -330,8 +330,8 @@ class DOMTreeMap<T> {
 
     var html = node.buildHTML();
 
-    html = html.replaceFirst(REGEXP_TAG_OPEN, '');
-    html = html.replaceFirst(REGEXP_TAG_CLOSE, '');
+    html = html.replaceFirst(regexpTagOpen, '');
+    html = html.replaceFirst(regexpTagClose, '');
 
     return html;
   }

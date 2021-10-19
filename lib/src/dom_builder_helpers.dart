@@ -1,17 +1,21 @@
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dom_builder/dom_builder.dart';
-import 'package:html/dom.dart' as html_dom;
-import 'package:html/parser.dart' as html_parse;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_css.dart';
+import 'dom_builder_html.dart';
 
+// ignore: non_constant_identifier_names
 final RegExp STRING_LIST_DELIMITER = RegExp(r'[,;\s]+');
 
+// ignore: non_constant_identifier_names
 final RegExp ARGUMENT_LIST_DELIMITER = RegExp(r'\s*,\s*');
 
+// ignore: non_constant_identifier_names
 final RegExp CSS_LIST_DELIMITER = RegExp(r'\s*;\s*');
+
+final DOMHtml _domHTML = DOMHtml();
 
 /// Parses [s] as a flat [List<String>].
 ///
@@ -39,70 +43,69 @@ List<String> parseListOfStrings(Object? s, Pattern delimiter,
   return list;
 }
 
-final RegExp _REGEXP_HTML_TAG = RegExp(r'<\w+(?:>|\s)');
+final RegExp _regexpHtmlTag = RegExp(r'<\w+(?:>|\s)');
 
 bool possiblyWithHTML(String? s) =>
-    s != null && s.contains('<') && s.contains(_REGEXP_HTML_TAG);
+    s != null && s.contains('<') && s.contains(_regexpHtmlTag);
 
-final RegExp _REGEXP_DEPENDENT_TAG =
+final RegExp _regexpDependentTag =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
 
 /// Parses a [html] to nodes.
 List<DOMNode>? parseHTML(String? html) {
   if (html == null) return null;
 
-  var dependentTagMatch = _REGEXP_DEPENDENT_TAG.firstMatch(html);
+  var dependentTagMatch = _regexpDependentTag.firstMatch(html);
 
   if (dependentTagMatch != null) {
     var dependentTagName = dependentTagMatch.group(1)!.toLowerCase();
 
-    late html_dom.DocumentFragment parsed;
+    late Object parsed;
     if (dependentTagName == 'td' || dependentTagName == 'th') {
-      parsed = html_parse.parseFragment(
-          '<table><tbody><tr></tr>\n$html\n</tbody></table>',
-          container: 'div');
+      parsed =
+          _domHTML.parse('<table><tbody><tr></tr>\n$html\n</tbody></table>')!;
     } else if (dependentTagName == 'tbody' ||
         dependentTagName == 'thead' ||
         dependentTagName == 'tfoot') {
-      parsed = html_parse.parseFragment('<table>\n$html\n</table>',
-          container: 'div');
+      parsed = _domHTML.parse('<table>\n$html\n</table>')!;
     }
 
-    var node = parsed.querySelector(dependentTagName);
+    var node = _domHTML.querySelector(parsed, dependentTagName);
     return [DOMNode.from(node)!];
   }
 
-  var parsed = html_parse.parseFragment(html, container: 'div');
+  var parsed = _domHTML.parse(html);
 
-  if (parsed.nodes.isEmpty) {
+  var parsedNodes = _domHTML.getChildrenNodes(parsed);
+
+  if (parsedNodes.isEmpty) {
     return null;
-  } else if (parsed.nodes.length == 1) {
-    var node = parsed.nodes[0];
+  } else if (parsedNodes.length == 1) {
+    var node = parsedNodes[0];
     return [DOMNode.from(node)!];
   } else {
-    var list = parsed.nodes.toList();
-
-    while (list.isNotEmpty) {
-      var o = list[0];
-      if (o is html_dom.Text && o.text.trim().isEmpty) {
-        list.removeAt(0);
+    while (parsedNodes.isNotEmpty) {
+      var o = parsedNodes[0];
+      if (_domHTML.isEmptyTextNode(o)) {
+        parsedNodes.removeAt(0);
       } else {
         break;
       }
     }
 
-    while (list.isNotEmpty) {
-      var i = list.length - 1;
-      var o = list[i];
-      if (o is html_dom.Text && o.text.trim().isEmpty) {
-        list.removeAt(i);
+    while (parsedNodes.isNotEmpty) {
+      var i = parsedNodes.length - 1;
+      var o = parsedNodes[i];
+      if (_domHTML.isEmptyTextNode(o)) {
+        parsedNodes.removeAt(i);
       } else {
         break;
       }
     }
 
     var domList =
-        list.map((e) => DOMNode.from(e)).whereType<DOMNode>().toList();
+        parsedNodes.map((e) => DOMNode.from(e)).whereType<DOMNode>().toList();
+
     return domList;
   }
 }
@@ -111,9 +114,9 @@ List<DOMNode>? parseHTML(String? html) {
 List<DOMNode> $html<T extends DOMNode>(Object? html) {
   if (html == null) return <DOMNode>[];
   if (html is String) {
-    return parseHTML(html)!;
+    return parseHTML(html) ?? <DOMNode>[];
   } else if (html is List) {
-    return parseHTML(html.join(''))!;
+    return parseHTML(html.join('')) ?? <DOMNode>[];
   }
 
   throw ArgumentError("Can't parse type: ${html.runtimeType}");
@@ -159,7 +162,7 @@ T? $validate<T extends DOMNode>(
       if (rethrowErrors) {
         rethrow;
       } else {
-        dom_builder_log("Error calling 'preValidate' function: $preValidate",
+        domBuilderLog("Error calling 'preValidate' function: $preValidate",
             error: e, stackTrace: s);
       }
     }
@@ -170,7 +173,7 @@ T? $validate<T extends DOMNode>(
     try {
       theNode = instantiator();
     } catch (e, s) {
-      dom_builder_log("Error calling 'instantiator' function: $instantiator",
+      domBuilderLog("Error calling 'instantiator' function: $instantiator",
           error: e, stackTrace: s);
     }
   }
@@ -182,7 +185,7 @@ T? $validate<T extends DOMNode>(
       var valid = validate(theNode);
       if (!valid) return null;
     } catch (e, s) {
-      dom_builder_log("Error calling 'validate' function: $validate",
+      domBuilderLog("Error calling 'validate' function: $validate",
           error: e, stackTrace: s);
     }
   }
@@ -228,24 +231,24 @@ typedef DOMNodeInstantiator<T extends DOMNode> = T? Function();
 
 typedef DOMNodeValidator<T extends DOMNode> = bool Function(T? node);
 
-final RegExp _PATTERN_HTML_ELEMENT_INIT = RegExp(r'\s*<\w+', multiLine: false);
-final RegExp _PATTERN_HTML_ELEMENT_END = RegExp(r'>\s*$', multiLine: false);
+final RegExp _patternHtmlElementInit = RegExp(r'\s*<\w+', multiLine: false);
+final RegExp _patternHtmlElementEnd = RegExp(r'>\s*$', multiLine: false);
 
 bool isHTMLElement(String s) {
-  return s.startsWith(_PATTERN_HTML_ELEMENT_INIT) &&
-      _PATTERN_HTML_ELEMENT_END.hasMatch(s);
+  return s.startsWith(_patternHtmlElementInit) &&
+      _patternHtmlElementEnd.hasMatch(s);
 }
 
-final RegExp _PATTERN_HTML_ELEMENT = RegExp(r'<\w+.*>');
+final RegExp _patternHtmlElement = RegExp(r'<\w+.*>');
 
 bool hasHTMLTag(String s) {
-  return _PATTERN_HTML_ELEMENT.hasMatch(s);
+  return _patternHtmlElement.hasMatch(s);
 }
 
-final RegExp _PATTERN_HTML_ENTITY = RegExp(r'&(?:\w+|#\d+);');
+final RegExp _patternHtmlEntity = RegExp(r'&(?:\w+|#\d+);');
 
 bool hasHTMLEntity(String s) {
-  return _PATTERN_HTML_ENTITY.hasMatch(s);
+  return _patternHtmlEntity.hasMatch(s);
 }
 
 /// Creates a node with [tag].
@@ -1015,7 +1018,7 @@ DOMElement $footer(
 ///
 /// Note: A direct helper is only for tags that don't need parameters to be valid.
 bool isDOMBuilderDirectHelper(Object? f) {
-  if (f == null || !(f is Function)) return false;
+  if (f == null || f is! Function) return false;
 
   return identical(f, $br) ||
       identical(f, $p) ||

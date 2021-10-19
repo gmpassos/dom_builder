@@ -70,9 +70,6 @@ abstract class TestNode {
 
 class TestText extends TestNode {
   @override
-  TestNode? parent;
-
-  @override
   String text;
 
   TestText(String? text) : text = text ?? '';
@@ -102,8 +99,6 @@ class TestText extends TestNode {
 }
 
 class TestElem extends TestNode {
-  @override
-  TestNode? parent;
   final String? tag;
 
   TestElem(this.tag);

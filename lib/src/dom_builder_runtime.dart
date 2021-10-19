@@ -106,7 +106,7 @@ abstract class DOMNodeRuntime<T> {
   /// Gets a runtime [style] property for [name] from [node].
   String? getStyleProperty(String name) {
     var entry = getStyleEntry(name);
-    return entry != null ? entry.valueAsString : null;
+    return entry?.valueAsString;
   }
 
   String? setStyleProperty(String name, String value) {
@@ -132,7 +132,7 @@ abstract class DOMNodeRuntime<T> {
 
   String? removeStyleProperty(String name) {
     var entry = removeStyleEntry(name);
-    return entry != null ? entry.valueAsString : null;
+    return entry?.valueAsString;
   }
 
   List<CSSEntry> removeStyleEntries(List<String> names) {

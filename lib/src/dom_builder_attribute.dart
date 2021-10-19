@@ -9,34 +9,33 @@ import 'dom_builder_helpers.dart';
 
 /// Represents a [DOMElement] attribute entry (`name` and [DOMAttributeValue]).
 class DOMAttribute implements WithValue {
-  static final Set<String> _ATTRIBUTES_VALUE_AS_BOOLEAN = {
+  static final Set<String> _attributesValueAsBoolean = {
     'checked',
     'hidden',
     'selected',
     'multiple',
     'inert'
   };
-  static final Set<String> _ATTRIBUTES_VALUE_AS_SET = {'class'};
+  static final Set<String> _attributesValueAsSet = {'class'};
 
-  static final Map<String, String> _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS = {
+  static final Map<String, String> _attributesValueAsListDelimiters = {
     'class': ' ',
     'style': '; '
   };
 
   static bool isBooleanAttribute(String attrName) =>
-      _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(attrName);
+      _attributesValueAsBoolean.contains(attrName);
 
   static String? getAttributeDelimiter(String name) =>
-      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
+      _attributesValueAsListDelimiters[name];
 
-  static final Map<String, RegExp>
-      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS = {
+  static final Map<String, RegExp> _attributesValueAsListDelimitersPatterns = {
     'class': RegExp(r'\s+'),
     'style': RegExp(r'\s*;\s*')
   };
 
   static RegExp? getAttributeDelimiterPattern(String name) =>
-      _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name];
+      _attributesValueAsListDelimitersPatterns[name];
 
   static String? normalizeName(String? name) {
     if (name == null) return null;
@@ -73,13 +72,12 @@ class DOMAttribute implements WithValue {
       return DOMAttribute(name, DOMAttributeValueCSS(value));
     }
 
-    var delimiter = _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS[name];
+    var delimiter = _attributesValueAsListDelimiters[name];
 
     if (delimiter != null) {
-      var delimiterPattern =
-          _ATTRIBUTES_VALUE_AS_LIST_DELIMITERS_PATTERNS[name]!;
+      var delimiterPattern = _attributesValueAsListDelimitersPatterns[name]!;
 
-      var attrSet = _ATTRIBUTES_VALUE_AS_SET.contains(name);
+      var attrSet = _attributesValueAsSet.contains(name);
 
       if (attrSet) {
         return DOMAttribute(
@@ -89,7 +87,7 @@ class DOMAttribute implements WithValue {
             name, DOMAttributeValueList(value, delimiter, delimiterPattern));
       }
     } else {
-      var attrBoolean = _ATTRIBUTES_VALUE_AS_BOOLEAN.contains(name);
+      var attrBoolean = _attributesValueAsBoolean.contains(name);
 
       if (attrBoolean) {
         if (value != null) {
@@ -434,28 +432,28 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(Object? entry) {
-    if (entry == null) return false;
+  bool containsAttributeValueEntry(Object? value) {
+    if (value == null) return false;
     if (!hasAttributeValue) return false;
-    var entryStr = parseString(entry);
-    return entryStr != null && _values.contains(entryStr);
+    var valueStr = parseString(value);
+    return valueStr != null && _values.contains(valueStr);
   }
 
   @override
-  String? getAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? getAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
-    var idx = _values.indexOf(entry as String);
+    var idx = _values.indexOf(name as String);
     return idx >= 0 ? _values[idx] : null;
   }
 
   @override
-  String? removeAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? removeAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
-    var idx = _values.indexOf(entry as String);
+    var idx = _values.indexOf(name as String);
     return idx >= 0 ? _values.removeAt(idx) : null;
   }
 
@@ -536,29 +534,29 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  bool containsAttributeValueEntry(Object? value) {
+    if (!hasAttributeValue || value == null) {
       return false;
     }
-    var entryStr = parseString(entry);
-    return _values.contains(entryStr);
+    var valueStr = parseString(value);
+    return _values.contains(valueStr);
   }
 
   @override
-  String? getAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? getAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
-    var entryStr = parseString(entry);
-    return _values.contains(entryStr) ? entry as String? : null;
+    var entryStr = parseString(name);
+    return _values.contains(entryStr) ? name as String? : null;
   }
 
   @override
-  String? removeAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? removeAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
-    var entryStr = parseString(entry);
+    var entryStr = parseString(name);
     return _values.remove(entryStr) ? entryStr : null;
   }
 
@@ -635,12 +633,12 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  bool containsAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  bool containsAttributeValueEntry(Object? value) {
+    if (!hasAttributeValue || value == null) {
       return false;
     }
 
-    var cssEntry = CSSEntry.parse(entry as String);
+    var cssEntry = CSSEntry.parse(value as String);
     if (cssEntry == null) {
       return false;
     }
@@ -650,33 +648,33 @@ class DOMAttributeValueCSS extends DOMAttributeValueCollection {
   }
 
   @override
-  String? getAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? getAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
 
-    var cssEntry = CSSEntry.parse(entry as String);
-    var name = cssEntry != null ? cssEntry.name : entry.toString().trim();
+    var cssEntry = CSSEntry.parse(name as String);
+    var cssName = cssEntry != null ? cssEntry.name : name.toString().trim();
 
-    var cssEntry2 = _css.getEntry(name);
+    var cssEntry2 = _css.getEntry(cssName);
     return cssEntry2.toString();
   }
 
   @override
-  String? removeAttributeValueEntry(Object? entry) {
-    if (!hasAttributeValue || entry == null) {
+  String? removeAttributeValueEntry(Object? name) {
+    if (!hasAttributeValue || name == null) {
       return null;
     }
 
-    var cssEntry = CSSEntry.parse(entry as String);
+    var cssEntry = CSSEntry.parse(name as String);
     if (cssEntry == null) return null;
 
-    var name = cssEntry.name;
+    var cssName = cssEntry.name;
 
-    var cssEntry2 = _css.getEntry(name);
+    var cssEntry2 = _css.getEntry(cssName);
 
     if (cssEntry == cssEntry2) {
-      return _css.removeEntry(name).toString();
+      return _css.removeEntry(cssName).toString();
     }
     return null;
   }

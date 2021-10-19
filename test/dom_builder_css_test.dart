@@ -585,7 +585,7 @@ void main() {
       expect(
           cssValue,
           equals(CSSLength.fromCalc(
-              CSSCalc.withOperation('100%', CalcOperation.SUBTRACT, '20px'))));
+              CSSCalc.withOperation('100%', CalcOperation.subtract, '20px'))));
 
       var css2 = CSS('width: calc( 100% )');
       print(css2);

@@ -1,7 +1,7 @@
 import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
-final RegExpDialect _TEMPLATE_DIALECT = RegExpDialect({
+final RegExpDialect _templateDialect = RegExpDialect({
   'o': r'\{\{\s*',
   'c': r'\s*\}\}',
   'key': r'\w[\w-]*',
@@ -68,8 +68,8 @@ abstract class DOMTemplate {
     return idx2 > 0;
   }
 
-  static final RegExp REGEXP_TAG = _TEMPLATE_DIALECT.getPattern(r'$tag');
-  static final RegExp REGEXP_QUERY = _TEMPLATE_DIALECT.getPattern(r'$query');
+  static final RegExp regexpTag = _templateDialect.getPattern(r'$tag');
+  static final RegExp regexpQuery = _templateDialect.getPattern(r'$query');
 
   /// Tries to parse [s].
   ///
@@ -95,7 +95,7 @@ abstract class DOMTemplate {
       return DOMTemplateNode([DOMTemplateContent(s)]);
     }
 
-    var matches = REGEXP_TAG.allMatches(s);
+    var matches = regexpTag.allMatches(s);
     if (matches.isEmpty) {
       if (tryParsing) return null;
       return DOMTemplateNode([DOMTemplateContent(s)]);
@@ -393,7 +393,7 @@ class DOMTemplateNode extends DOMTemplate {
 
   bool get hasOnlyContent {
     for (var node in nodes) {
-      if (!(node is DOMTemplateContent)) return false;
+      if (node is! DOMTemplateContent) return false;
     }
     return true;
   }
@@ -991,7 +991,7 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
 
 enum DOMTemplateCmp { eq, notEq }
 
-String getDOMTemplateCmp_operator(DOMTemplateCmp? cmp) {
+String getDOMTemplateCmpOperator(DOMTemplateCmp? cmp) {
   switch (cmp) {
     case DOMTemplateCmp.eq:
       return '==';
@@ -1089,7 +1089,7 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
 
   @override
   String toString() {
-    return '{{${elseIf ? '?' : ''}:${variable!.keysFull}${getDOMTemplateCmp_operator(cmp)}${toStringValue()}}}' +
+    return '{{${elseIf ? '?' : ''}:${variable!.keysFull}${getDOMTemplateCmpOperator(cmp)}${toStringValue()}}}' +
         _toStringNodes() +
         _toStringRest();
   }

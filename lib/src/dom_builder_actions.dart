@@ -105,7 +105,7 @@ abstract class DOMActionExecutor<T> {
   }
 }
 
-final RegExpDialect _REGEXP_ACTIONS_DIALECT = RegExpDialect({
+final RegExpDialect _regexpActionsDialect = RegExpDialect({
   'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
   'bool': r'(?:true|false|yes|no|y|n)',
   'pos': r'$d(?:\%|\w+)',
@@ -126,14 +126,14 @@ final RegExpDialect _REGEXP_ACTIONS_DIALECT = RegExpDialect({
 }, multiLine: false, caseSensitive: false);
 
 abstract class DOMAction<T> {
-  static final RegExp _REGEXP_ACTION_CAPTURE =
-      _REGEXP_ACTIONS_DIALECT.getPattern(r'$action_capture\.?');
+  static final RegExp _regexpActionCapture =
+      _regexpActionsDialect.getPattern(r'$action_capture\.?');
 
-  static final RegExp _REGEXP_SEL_CAPTURE =
-      _REGEXP_ACTIONS_DIALECT.getPattern(r'$sel_capture\.?');
+  static final RegExp _regexpSelCapture =
+      _regexpActionsDialect.getPattern(r'$sel_capture\.?');
 
-  static final RegExp _REGEXP_CALL_CAPTURE =
-      _REGEXP_ACTIONS_DIALECT.getPattern(r'$call_capture\.?');
+  static final RegExp _regexpCallCapture =
+      _regexpActionsDialect.getPattern(r'$call_capture\.?');
 
   static DOMAction<T>? parse<T>(
       DOMActionExecutor<T> executor, String? actionLine) {
@@ -141,7 +141,7 @@ abstract class DOMAction<T> {
     actionLine = actionLine.trim();
     if (actionLine.isEmpty) return null;
 
-    var matches = _REGEXP_ACTION_CAPTURE.allMatches(actionLine);
+    var matches = _regexpActionCapture.allMatches(actionLine);
 
     var actions = <DOMAction<T>>[];
 
@@ -170,11 +170,11 @@ abstract class DOMAction<T> {
       DOMAction<T> action;
 
       if (sel != null) {
-        var selMatch = _REGEXP_SEL_CAPTURE.firstMatch(part)!;
+        var selMatch = _regexpSelCapture.firstMatch(part)!;
         var id = selMatch.group(1)!;
         action = DOMActionSelect<T>(executor, id);
       } else if (call != null) {
-        var callMatch = _REGEXP_CALL_CAPTURE.firstMatch(part)!;
+        var callMatch = _regexpCallCapture.firstMatch(part)!;
         var name = callMatch.group(1)!;
         var parametersLine = callMatch.group(2);
         var parameters = parseParameters(executor, parametersLine);
@@ -202,8 +202,8 @@ abstract class DOMAction<T> {
     return rootAction;
   }
 
-  static final RegExp _REGEXP_PARAMETER_CAPTURE =
-      _REGEXP_ACTIONS_DIALECT.getPattern(r'$parameter_capture');
+  static final RegExp _regexpParameterCapture =
+      _regexpActionsDialect.getPattern(r'$parameter_capture');
 
   static List<String>? parseParameters<T>(
       DOMActionExecutor executor, String? parametersLine) {
@@ -211,7 +211,7 @@ abstract class DOMAction<T> {
     parametersLine = parametersLine.trim();
     if (parametersLine.isEmpty) return null;
 
-    var matches = _REGEXP_PARAMETER_CAPTURE.allMatches(parametersLine);
+    var matches = _regexpParameterCapture.allMatches(parametersLine);
 
     var parameters = <String>[];
 

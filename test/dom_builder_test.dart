@@ -643,7 +643,7 @@ void main() {
 class TestText {
   String text;
 
-  TestText(String text) : text = text;
+  TestText(this.text);
 
   @override
   String toString() {

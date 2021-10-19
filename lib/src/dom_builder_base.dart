@@ -3,7 +3,7 @@ import 'dart:math';
 
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:dom_builder/dom_builder.dart';
-import 'package:html/dom.dart' as html_dom;
+import 'package:dom_builder/src/dom_builder_html.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_attribute.dart';
@@ -12,7 +12,7 @@ import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
-void dom_builder_log(String message,
+void domBuilderLog(String message,
     {bool warning = false, Object? error, StackTrace? stackTrace}) {
   if (error != null) {
     print('dom_builder> [ERROR] $message > $error');
@@ -39,7 +39,7 @@ abstract class WithValue {
 
 typedef NodeSelector = bool Function(DOMNode? node);
 
-final RegExp _SELECTOR_DELIMITER = RegExp(r'\s*,\s*');
+final RegExp _selectorDelimiter = RegExp(r'\s*,\s*');
 
 NodeSelector? asNodeSelector(Object? selector) {
   if (selector == null) return null;
@@ -50,7 +50,7 @@ NodeSelector? asNodeSelector(Object? selector) {
     var str = selector.trim();
     if (str.isEmpty) return null;
 
-    var selectors = str.split(_SELECTOR_DELIMITER);
+    var selectors = str.split(_selectorDelimiter);
     selectors.removeWhere((s) => s.isEmpty);
 
     if (selectors.isEmpty) {
@@ -88,6 +88,8 @@ NodeSelector? asNodeSelector(Object? selector) {
       "Can't use NodeSelector of type: [ ${selector.runtimeType}");
 }
 
+final DOMHtml _domHTML = DOMHtml();
+
 /// Represents a DOM Node.
 class DOMNode implements AsDOMNode {
   /// Converts [nodes] to a text [String].
@@ -98,8 +100,8 @@ class DOMNode implements AsDOMNode {
       return nodes;
     } else if (nodes is DOMNode) {
       return nodes.text;
-    } else if (nodes is html_dom.Node) {
-      return nodes.text!;
+    } else if (_domHTML.isHtmlNode(nodes)) {
+      return _domHTML.getNodeText(nodes);
     } else if (nodes is Iterable) {
       if (nodes.isEmpty) {
         return '';
@@ -127,8 +129,8 @@ class DOMNode implements AsDOMNode {
       return [element];
     } else if (entry is DOMNode) {
       return [entry];
-    } else if (entry is html_dom.Node) {
-      var domNode = DOMNode.from(entry);
+    } else if (_domHTML.isHtmlNode(entry)) {
+      var domNode = _domHTML.toDOMNode(entry);
       return domNode != null ? [domNode] : <DOMNode>[];
     } else if (entry is List) {
       entry.removeWhere((e) => e == null);
@@ -141,7 +143,7 @@ class DOMNode implements AsDOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>')!;
       } else {
-        return [_toTextNode(entry)];
+        return [TextNode.toTextNode(entry)];
       }
     } else if (entry is num || entry is bool) {
       return [TextNode(entry.toString())];
@@ -151,7 +153,7 @@ class DOMNode implements AsDOMNode {
         var tag = f();
         return parseNodes(tag);
       } catch (e, s) {
-        dom_builder_log('Error calling function: $entry',
+        domBuilderLog('Error calling function: $entry',
             error: e, stackTrace: s);
         return <DOMNode>[];
       }
@@ -175,8 +177,8 @@ class DOMNode implements AsDOMNode {
       return element;
     } else if (entry is DOMNode) {
       return entry;
-    } else if (entry is html_dom.Node) {
-      var domNode = DOMNode.from(entry);
+    } else if (_domHTML.isHtmlNode(entry)) {
+      var domNode = _domHTML.toDOMNode(entry);
       return domNode;
     } else if (entry is List) {
       entry.removeWhere((e) => e == null);
@@ -189,7 +191,7 @@ class DOMNode implements AsDOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>');
       } else {
-        return _toTextNode(entry);
+        return TextNode.toTextNode(entry);
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
@@ -199,7 +201,7 @@ class DOMNode implements AsDOMNode {
         var tag = f();
         return _parseNode(tag);
       } catch (e, s) {
-        dom_builder_log('Error calling function: $entry',
+        domBuilderLog('Error calling function: $entry',
             error: e, stackTrace: s);
         return null;
       }
@@ -220,8 +222,8 @@ class DOMNode implements AsDOMNode {
 
     if (entry is DOMNode) {
       return entry;
-    } else if (entry is html_dom.Node) {
-      return DOMNode._fromHtmlNode(entry);
+    } else if (_domHTML.isHtmlNode(entry)) {
+      return _domHTML.toDOMNode(entry);
     } else if (entry is List) {
       if (entry.isEmpty) return null;
       entry.removeWhere((e) => e == null);
@@ -233,7 +235,7 @@ class DOMNode implements AsDOMNode {
       } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
         return parseHTML('<span>$entry</span>')!.single;
       } else {
-        return _toTextNode(entry);
+        return TextNode.toTextNode(entry);
       }
     } else if (entry is num || entry is bool) {
       return TextNode(entry.toString());
@@ -243,26 +245,6 @@ class DOMNode implements AsDOMNode {
     } else {
       return ExternalElementNode(entry);
     }
-  }
-
-  static DOMNode? _fromHtmlNode(html_dom.Node entry) {
-    if (entry is html_dom.Text) {
-      return _toTextNode(entry.text);
-    } else if (entry is html_dom.Element) {
-      return DOMNode._fromHtmlNodeElement(entry);
-    }
-
-    return null;
-  }
-
-  factory DOMNode._fromHtmlNodeElement(html_dom.Element entry) {
-    var name = entry.localName;
-
-    var attributes = entry.attributes.map((k, v) => MapEntry(k.toString(), v));
-
-    var content = isNotEmptyObject(entry.nodes) ? List.from(entry.nodes) : null;
-
-    return DOMElement(name, attributes: attributes, content: content);
   }
 
   /// Returns the [parent] [DOMNode] of generated tree (by [DOMGenerator]).
@@ -677,8 +659,7 @@ class DOMNode implements AsDOMNode {
   /// tag: sup, i, em, u, b, strong.
   bool get isStringElement => false;
 
-  static final RegExp REGEXP_WHITE_SPACE =
-      RegExp(r'^(?:\s+)$', multiLine: false);
+  static final RegExp regexpWhiteSpace = RegExp(r'^(?:\s+)$', multiLine: false);
 
   /// Returns [true] if this node only have white space content.
   bool get isWhiteSpaceContent => false;
@@ -706,7 +687,7 @@ class DOMNode implements AsDOMNode {
   /// Returns [true] if this node only have [DOMElement] nodes.
   bool get hasOnlyElementNodes {
     if (isEmptyContent) return false;
-    return _content!.any((n) => !(n is DOMElement)) == false;
+    return _content!.any((n) => n is! DOMElement) == false;
   }
 
   /// Returns [true] if this node only have [TextNode] nodes.
@@ -809,7 +790,10 @@ class DOMNode implements AsDOMNode {
 
   void _setChildrenParent() {
     if (isEmptyContent) return;
-    _content!.forEach((e) => e.parent = this);
+
+    for (var e in _content!) {
+      e.parent = this;
+    }
   }
 
   void _checkAllowContent() {
@@ -1179,21 +1163,21 @@ class DOMNode implements AsDOMNode {
   }
 }
 
-DOMNode _toTextNode(String? text) {
-  if (text == null || text.isEmpty) {
-    return TextNode('');
-  }
-
-  if (DOMTemplate.possiblyATemplate(text)) {
-    var template = DOMTemplate.tryParse(text);
-    return template != null ? TemplateNode(template) : TextNode(text, true);
-  } else {
-    return TextNode(text, false);
-  }
-}
-
 /// Represents a text node in DOM.
 class TextNode extends DOMNode implements WithValue {
+  static DOMNode toTextNode(String? text) {
+    if (text == null || text.isEmpty) {
+      return TextNode('');
+    }
+
+    if (DOMTemplate.possiblyATemplate(text)) {
+      var template = DOMTemplate.tryParse(text);
+      return template != null ? TemplateNode(template) : TextNode(text, true);
+    } else {
+      return TextNode(text, false);
+    }
+  }
+
   String _text;
   bool _hasUnresolvedTemplate;
 
@@ -1276,7 +1260,7 @@ class TextNode extends DOMNode implements WithValue {
   bool get hasOnlyElementNodes => false;
 
   @override
-  bool get isWhiteSpaceContent => DOMNode.REGEXP_WHITE_SPACE.hasMatch(text);
+  bool get isWhiteSpaceContent => DOMNode.regexpWhiteSpace.hasMatch(text);
 
   @override
   String buildHTML(
@@ -1322,9 +1306,7 @@ class TextNode extends DOMNode implements WithValue {
 class TemplateNode extends DOMNode implements WithValue {
   DOMTemplateNode template;
 
-  TemplateNode(DOMTemplateNode template)
-      : template = template,
-        super._(false, false);
+  TemplateNode(this.template) : super._(false, false);
 
   @override
   String get text => isNotEmptyTemplate ? template.toString() : '';
@@ -1415,7 +1397,7 @@ class TemplateNode extends DOMNode implements WithValue {
   bool get hasOnlyElementNodes => false;
 
   @override
-  bool get isWhiteSpaceContent => DOMNode.REGEXP_WHITE_SPACE.hasMatch(text);
+  bool get isWhiteSpaceContent => DOMNode.regexpWhiteSpace.hasMatch(text);
 
   @override
   String buildHTML(
@@ -1487,14 +1469,14 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 
 /// A node for HTML elements.
 class DOMElement extends DOMNode implements AsDOMElement {
-  static final Set<String> _SELF_CLOSING_TAGS = {
+  static final Set<String> _selfClosingTags = {
     'hr',
     'br',
     'input',
     'img',
     'meta'
   };
-  static final Set<String> _SELF_CLOSING_TAGS_OPTIONAL = {'p'};
+  static final Set<String> _selfClosingTagsOptional = {'p'};
 
   /// Normalizes a tag name. Returns null for empty string.
   static String? normalizeTag(String? tag) {
@@ -1899,7 +1881,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       : _attributes!
           .map(((key, value) => MapEntry<String, String>(key, value.value!)));
 
-  static const Set<String> POSSIBLE_GLOBAL_ATTRIBUTES = {
+  static const Set<String> possibleGlobalAttributes = {
     'id',
     'navigate',
     'action',
@@ -1912,7 +1894,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   Map<String, String> get possibleAttributes {
     var attributes = attributesAsString;
 
-    for (var attr in POSSIBLE_GLOBAL_ATTRIBUTES) {
+    for (var attr in possibleGlobalAttributes) {
       attributes.putIfAbsent(attr, () => '');
     }
 
@@ -1969,7 +1951,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   /// [domContext] Optional context used by [DOMGenerator].
   String? getAttributeValue(String name, [DOMContext? domContext]) {
     var attr = getAttribute(name);
-    return attr != null ? attr.getValue(domContext) : null;
+    return attr?.getValue(domContext);
   }
 
   /// Calls [getAttributeValue] and returns parsed as [bool].
@@ -2155,14 +2137,14 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   @override
   DOMElement addEach<T>(Iterable<T> iterable,
-      [ContentGenerator<T>? elementGenerator]) {
-    return super.addEach(iterable, elementGenerator) as DOMElement;
+      [ContentGenerator<T>? contentGenerator]) {
+    return super.addEach(iterable, contentGenerator) as DOMElement;
   }
 
   @override
   DOMElement addEachAsTag<T>(String tag, Iterable<T> iterable,
-      [ContentGenerator<T>? elementGenerator]) {
-    return super.addEachAsTag(tag, iterable, elementGenerator) as DOMElement;
+      [ContentGenerator<T>? contentGenerator]) {
+    return super.addEachAsTag(tag, iterable, contentGenerator) as DOMElement;
   }
 
   @override
@@ -2171,18 +2153,18 @@ class DOMElement extends DOMNode implements AsDOMElement {
   }
 
   @override
-  DOMElement insertAfter(indexSelector, entry) {
+  DOMElement insertAfter(Object? indexSelector, Object? entry) {
     return super.insertAfter(indexSelector, entry) as DOMElement;
   }
 
   @override
-  DOMElement insertAt(indexSelector, entry) {
+  DOMElement insertAt(Object? indexSelector, Object? entry) {
     return super.insertAt(indexSelector, entry) as DOMElement;
   }
 
   @override
-  DOMElement setContent(elementContent) {
-    return super.setContent(elementContent) as DOMElement;
+  DOMElement setContent(Object? newContent) {
+    return super.setContent(newContent) as DOMElement;
   }
 
   @override
@@ -2281,7 +2263,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
   @override
   bool get isWhiteSpaceContent {
     if (hasOnlyTextNodes) {
-      return DOMNode.REGEXP_WHITE_SPACE.hasMatch(text);
+      return DOMNode.regexpWhiteSpace.hasMatch(text);
     }
     return false;
   }
@@ -2386,8 +2368,8 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
     var emptyContent = isEmptyObject(_content);
 
-    if (_SELF_CLOSING_TAGS.contains(tag) ||
-        (emptyContent && _SELF_CLOSING_TAGS_OPTIONAL.contains(tag))) {
+    if (_selfClosingTags.contains(tag) ||
+        (emptyContent && _selfClosingTagsOptional.contains(tag))) {
       var html = parentIndent +
           buildOpenTagHTML(
               openCloseTag: xhtml,
@@ -2681,8 +2663,8 @@ class ExternalElementNode extends DOMNode {
 class DIVElement extends DOMElement {
   static DIVElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is DIVElement) return entry;
@@ -2729,8 +2711,8 @@ class DIVElement extends DOMElement {
 class INPUTElement extends DOMElement implements WithValue {
   static INPUTElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is INPUTElement) return entry;
@@ -2790,8 +2772,8 @@ class INPUTElement extends DOMElement implements WithValue {
 class SELECTElement extends DOMElement {
   static SELECTElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is SELECTElement) return entry;
@@ -2898,14 +2880,14 @@ class OPTIONElement extends DOMElement implements WithValue {
     if (options == null) return [];
     if (options is OPTIONElement) return [options];
 
-    if (options is Iterable) {
-      return options
-          .map((e) => OPTIONElement.from(e))
+    if (options is Map) {
+      return options.entries
+          .map(OPTIONElement.from)
           .whereType<OPTIONElement>()
           .toList();
-    } else if (options is Map) {
-      return options.values
-          .map((e) => OPTIONElement.from(e))
+    } else if (options is Iterable) {
+      return options
+          .map(OPTIONElement.from)
           .whereType<OPTIONElement>()
           .toList();
     } else {
@@ -2915,8 +2897,8 @@ class OPTIONElement extends DOMElement implements WithValue {
 
   static OPTIONElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is OPTIONElement) return entry;
@@ -2989,7 +2971,7 @@ class OPTIONElement extends DOMElement implements WithValue {
             if (label != null) 'label': label,
             if (selected != null) 'selected': parseBool(selected),
           },
-          content: _toTextNode(text),
+          content: TextNode.toTextNode(text),
         );
 
   @override
@@ -3030,8 +3012,8 @@ class OPTIONElement extends DOMElement implements WithValue {
 class TEXTAREAElement extends DOMElement implements WithValue {
   static TEXTAREAElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TEXTAREAElement) return entry;
@@ -3114,18 +3096,15 @@ List createTableContent(content, caption, head, body, foot,
       createTableEntry(foot, footer: true)
     ];
   } else if (content is List) {
-    if (listMatchesAll(content, (dynamic e) => e is html_dom.Node)) {
+    if (listMatchesAll(content, (dynamic e) => _domHTML.isHtmlNode(e))) {
       var caption = content.firstWhere(
-          (e) => e is html_dom.Element && e.localName == 'caption',
+          (e) => _domHTML.getNodeTag(e) == 'caption',
           orElse: () => null);
-      var thread = content.firstWhere(
-          (e) => e is html_dom.Element && e.localName == 'thead',
+      var thread = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'thead',
           orElse: () => null);
-      var tfoot = content.firstWhere(
-          (e) => e is html_dom.Element && e.localName == 'tfoot',
+      var tfoot = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'tfoot',
           orElse: () => null);
-      var tbody = content.firstWhere(
-          (e) => e is html_dom.Element && e.localName == 'tbody',
+      var tbody = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'tbody',
           orElse: () => null);
 
       var list = [
@@ -3157,10 +3136,11 @@ TABLENode? createTableEntry(Object? entry, {bool? header, bool? footer}) {
     return entry;
   } else if (entry is TFOOTElement) {
     return entry;
-  } else if (entry is html_dom.Element) {
-    return DOMNode.from(entry) as TABLENode?;
-  } else if (entry is html_dom.Text) {
-    return DOMNode.from(entry) as TABLENode?;
+  } else if (_domHTML.isHtmlElementNode(entry)) {
+    return _domHTML.toDOMElement(entry) as TABLENode?;
+  } else if (_domHTML.isHtmlTextNode(entry)) {
+    var domNode = _domHTML.toTextNode(entry);
+    return domNode != null ? TDElement(content: domNode.text) : null;
   } else {
     if (header) {
       return $thead(rows: entry);
@@ -3180,9 +3160,9 @@ List<TRowElement> createTableRows(Object? rows, bool header) {
 
     if (listMatchesAll(rowsList, (dynamic e) => e is TRowElement)) {
       return rowsList.cast();
-    } else if (listMatchesAll(rowsList, (dynamic e) => e is html_dom.Node)) {
-      var trList =
-          rowsList.where((e) => e is html_dom.Element && e.localName == 'tr');
+    } else if (listMatchesAll(
+        rowsList, (dynamic e) => _domHTML.isHtmlNode(e))) {
+      var trList = rowsList.where((e) => _domHTML.getNodeTag(e) == 'tr');
       var list = trList.map((e) => DOMNode.from(e)).toList();
       list.removeWhere((e) => e == null);
       return list.cast();
@@ -3257,9 +3237,11 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
               (!header && e is TDElement) || (header && e is THElement))) {
     return rowCells.cast();
   } else if (rowCells is List &&
-      listMatchesAll(rowCells, (dynamic e) => e is html_dom.Node)) {
-    var tdList = rowCells.where((e) =>
-        e is html_dom.Element && (e.localName == 'td' || e.localName == 'th'));
+      listMatchesAll(rowCells, (dynamic e) => _domHTML.isHtmlNode(e))) {
+    var tdList = rowCells.where((e) {
+      var tag = _domHTML.getNodeTag(e);
+      return (tag == 'td' || tag == 'th');
+    });
     var list = tdList.map((e) => DOMNode.from(e)).toList();
     list.removeWhere((e) => e == null);
     return list.cast();
@@ -3302,8 +3284,8 @@ abstract class TABLENode extends DOMElement {
 class TABLEElement extends DOMElement {
   static TABLEElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TABLEElement) return entry;
@@ -3350,8 +3332,8 @@ class TABLEElement extends DOMElement {
 class THEADElement extends TABLENode {
   static THEADElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is THEADElement) return entry;
@@ -3394,8 +3376,8 @@ class THEADElement extends TABLENode {
 class CAPTIONElement extends TABLENode {
   static CAPTIONElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is CAPTIONElement) return entry;
@@ -3438,8 +3420,8 @@ class CAPTIONElement extends TABLENode {
 class TBODYElement extends TABLENode {
   static TBODYElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TBODYElement) return entry;
@@ -3482,8 +3464,8 @@ class TBODYElement extends TABLENode {
 class TFOOTElement extends TABLENode {
   static TFOOTElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TFOOTElement) return entry;
@@ -3526,8 +3508,8 @@ class TFOOTElement extends TABLENode {
 class TRowElement extends TABLENode {
   static TRowElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TRowElement) return entry;
@@ -3578,8 +3560,8 @@ class TRowElement extends TABLENode {
 class THElement extends TABLENode {
   static THElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is THElement) return entry;
@@ -3627,8 +3609,8 @@ class THElement extends TABLENode {
 class TDElement extends TABLENode {
   static TDElement? from(Object? entry) {
     if (entry == null) return null;
-    if (entry is html_dom.Node) {
-      entry = DOMNode.from(entry);
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
     }
 
     if (entry is TDElement) return entry;

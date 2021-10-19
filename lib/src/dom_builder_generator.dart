@@ -589,15 +589,14 @@ abstract class DOMGenerator<T> {
       var nodes = DOMNode.parseNodes(domAsync.loading);
 
       if (nodes.isNotEmpty) {
-        var rootNode;
+        DOMNode rootNode;
         if (nodes.length == 1) {
           rootNode = nodes.first;
         } else {
-          rootNode = $div(content: rootNode);
+          rootNode = $div(content: nodes);
         }
 
-        templateElement =
-            build(domParent, parent, nodes.first, treeMap, context);
+        templateElement = build(domParent, parent, rootNode, treeMap, context);
       }
     }
 
@@ -929,21 +928,21 @@ abstract class DOMGenerator<T> {
   DOMNode? _revertImp(
       DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) {
     if (isTextNode(node)) {
-      return _revert_TextNode(domParent!, parent, node);
+      return _revertTextNode(domParent!, parent, node);
     } else if (isElementNode(node)) {
-      return _revert_DOMElement(treeMap, domParent, parent, node);
+      return _revertDOMElement(treeMap, domParent, parent, node);
     } else {
       return null;
     }
   }
 
-  TextNode _revert_TextNode(DOMElement domParent, T? parent, T? node) {
+  TextNode _revertTextNode(DOMElement domParent, T? parent, T? node) {
     var domNode = TextNode(getNodeText(node)!);
     domParent.add(domNode);
     return domNode;
   }
 
-  DOMElement? _revert_DOMElement(
+  DOMElement? _revertDOMElement(
       DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) {
     var tag = getElementTag(node);
     tag = normalizeTag(tag);
@@ -1327,13 +1326,13 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator._revertImp(treeMap, domParent, parent, node);
 
   @override
-  DOMElement? _revert_DOMElement(
+  DOMElement? _revertDOMElement(
           DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) =>
-      domGenerator._revert_DOMElement(treeMap, domParent, parent, node);
+      domGenerator._revertDOMElement(treeMap, domParent, parent, node);
 
   @override
-  TextNode _revert_TextNode(DOMElement domParent, T? parent, T? node) =>
-      domGenerator._revert_TextNode(domParent, parent, node);
+  TextNode _revertTextNode(DOMElement domParent, T? parent, T? node) =>
+      domGenerator._revertTextNode(domParent, parent, node);
 
   @override
   T? build(DOMElement? domParent, T? parent, DOMNode domNode,
@@ -1646,14 +1645,13 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   void attachFutureElement(
-          DOMElement? domParent,
-          T? parent,
-          DOMNode domElement,
-          T? templateElement,
-          Object? futureElementResolved,
-          DOMTreeMap<T> treeMap,
-          DOMContext<T>? context) =>
-      null;
+      DOMElement? domParent,
+      T? parent,
+      DOMNode domElement,
+      T? templateElement,
+      Object? futureElementResolved,
+      DOMTreeMap<T> treeMap,
+      DOMContext<T>? context) {}
 
   @override
   String? getAttribute(T element, String attrName) => null;
@@ -1757,12 +1755,12 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
       null;
 
   @override
-  DOMElement? _revert_DOMElement(
+  DOMElement? _revertDOMElement(
           DOMTreeMap<T>? treeMap, DOMElement? domParent, T? parent, T? node) =>
       null;
 
   @override
-  TextNode _revert_TextNode(DOMElement domParent, T? parent, T? node) =>
+  TextNode _revertTextNode(DOMElement domParent, T? parent, T? node) =>
       TextNode('');
 
   @override

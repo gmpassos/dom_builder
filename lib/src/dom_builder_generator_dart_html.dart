@@ -17,9 +17,9 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  List<Node> getElementNodes(Node? node) {
-    if (node is Element) {
-      return List.from(node.nodes);
+  List<Node> getElementNodes(Node? element) {
+    if (element is Element) {
+      return List.from(element.nodes);
     }
     return <Node>[];
   }
@@ -117,10 +117,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  Text? appendElementText(Node node, String? text) {
+  Text? appendElementText(Node element, String? text) {
     if (text == null || text.isEmpty) return null;
     var textNode = Text(text);
-    node.append(textNode);
+    element.append(textNode);
     return textNode;
   }
 
@@ -189,54 +189,55 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  List<Node>? addExternalElementToElement(Node node, Object? externalElement) {
-    if (node is Element && externalElement is Node) {
-      node.children.add(externalElement as Element);
+  List<Node>? addExternalElementToElement(
+      Node element, Object? externalElement) {
+    if (element is Element && externalElement is Node) {
+      element.children.add(externalElement as Element);
       return [externalElement];
     }
     return null;
   }
 
   @override
-  void setAttribute(Node node, String attrName, String? attrVal) {
-    if (node is Element) {
+  void setAttribute(Node element, String attrName, String? attrVal) {
+    if (element is Element) {
       switch (attrName) {
         case 'selected':
           {
-            if (node is OptionElement) {
-              node.selected = _parseAttributeBoolValue(attrVal);
+            if (element is OptionElement) {
+              element.selected = _parseAttributeBoolValue(attrVal);
             } else {
-              node.setAttribute(attrName, attrVal!);
+              element.setAttribute(attrName, attrVal!);
             }
             break;
           }
         case 'multiple':
           {
-            if (node is SelectElement) {
-              node.multiple = _parseAttributeBoolValue(attrVal);
-            } else if (node is InputElement) {
-              node.multiple = _parseAttributeBoolValue(attrVal);
+            if (element is SelectElement) {
+              element.multiple = _parseAttributeBoolValue(attrVal);
+            } else if (element is InputElement) {
+              element.multiple = _parseAttributeBoolValue(attrVal);
             } else {
-              node.setAttribute(attrName, attrVal!);
+              element.setAttribute(attrName, attrVal!);
             }
             break;
           }
         case 'hidden':
           {
-            node.hidden = _parseAttributeBoolValue(attrVal);
+            element.hidden = _parseAttributeBoolValue(attrVal);
             break;
           }
         case 'inert':
           {
-            node.inert = _parseAttributeBoolValue(attrVal);
+            element.inert = _parseAttributeBoolValue(attrVal);
             break;
           }
         default:
           {
             if (attrVal == null) {
-              node.removeAttribute(attrName);
+              element.removeAttribute(attrName);
             } else {
-              node.setAttribute(attrName, attrVal);
+              element.setAttribute(attrName, attrVal);
             }
             break;
           }
@@ -253,9 +254,9 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  String? getAttribute(Node node, String attrName) {
-    if (node is Element) {
-      return node.getAttribute(attrName);
+  String? getAttribute(Node element, String attrName) {
+    if (element is Element) {
+      return element.getAttribute(attrName);
     }
     return null;
   }
@@ -266,12 +267,12 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  String? buildElementHTML(Node node) {
-    if (node is Element) {
-      var html = node.outerHtml;
+  String? buildElementHTML(Node element) {
+    if (element is Element) {
+      var html = element.outerHtml;
       return html;
-    } else if (node is Text) {
-      return node.text;
+    } else if (element is Text) {
+      return element.text;
     }
     return null;
   }
