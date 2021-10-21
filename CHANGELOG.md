@@ -1,3 +1,7 @@
+## 2.0.8
+
+- `dom_builder_html_browser.dart`: reuse `DomParser` instance. 
+
 ## 2.0.7
 
 - Added `DOMHtml`, a portable HTML handler and parser.

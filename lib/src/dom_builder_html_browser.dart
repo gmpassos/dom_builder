@@ -117,11 +117,15 @@ class DOMHtmlBrowser extends DOMHtml {
     }
   }
 
+  dart_html.DomParser? _domParserInstance;
+
+  dart_html.DomParser get _domParser =>
+      _domParserInstance ??= dart_html.DomParser();
+
   @override
   Object? parse(String html) {
     try {
-      var domParser = dart_html.DomParser();
-      dart_html.Node parsed = domParser.parseFromString(html, 'text/html');
+      dart_html.Node parsed = _domParser.parseFromString(html, 'text/html');
 
       if (parsed is dart_html.Document) {
         parsed = parsed.querySelector('body') ?? parsed;
