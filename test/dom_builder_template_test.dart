@@ -1,5 +1,4 @@
 import 'package:dom_builder/dom_builder.dart';
-import 'package:dom_builder/src/dom_builder_template.dart';
 import 'package:test/test.dart';
 
 void main() {

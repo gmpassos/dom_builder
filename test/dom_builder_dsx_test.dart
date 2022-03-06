@@ -37,7 +37,6 @@ void main() {
       expect(button.length, equals(1));
 
       var btn = button[0] as DOMElement;
-      expect(btn is DOMElement, isTrue);
 
       expect(btn.onClick.isUsed, isTrue);
 
@@ -60,7 +59,6 @@ void main() {
       expect(button.length, equals(1));
 
       var btn = button[0] as DOMElement;
-      expect(btn is DOMElement, isTrue);
 
       expect(btn.onClick.isUsed, isTrue);
 
@@ -83,7 +81,6 @@ void main() {
       expect(button.length, equals(1));
 
       var btn = button[0] as DOMElement;
-      expect(btn is DOMElement, isTrue);
 
       expect(btn.onClick.isUsed, isTrue);
 
@@ -106,7 +103,6 @@ void main() {
       expect(button.length, equals(1));
 
       var btn = button[0] as DOMElement;
-      expect(btn is DOMElement, isTrue);
 
       expect(btn.onClick.isUsed, isTrue);
 
@@ -127,7 +123,6 @@ void main() {
       expect(button.length, equals(1));
 
       var btn = button[0] as DOMElement;
-      expect(btn is DOMElement, isTrue);
 
       var html = btn.buildHTML();
       print(html);

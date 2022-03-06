@@ -1,13 +1,15 @@
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
+import 'dom_builder_actions.dart';
 import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator_none.dart'
     if (dart.library.html) 'dom_builder_generator_dart_html.dart';
+import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
+import 'dom_builder_template.dart';
 import 'dom_builder_treemap.dart';
 
 typedef DOMElementGenerator<T> = T Function(Object? parent);
@@ -1583,13 +1585,13 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   bool addChildToElement(T? parent, T? child) => false;
 
   @override
-  List<T>? addExternalElementToElement(T element, externalElement) {}
+  List<T>? addExternalElementToElement(T element, externalElement) => null;
 
   @override
-  T? appendElementText(T element, String? text) {}
+  T? appendElementText(T element, String? text) => null;
 
   @override
-  String? buildElementHTML(T element) {}
+  String? buildElementHTML(T element) => null;
 
   @override
   bool canHandleExternalElement(externalElement) => false;

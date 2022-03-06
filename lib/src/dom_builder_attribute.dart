@@ -1,11 +1,14 @@
 import 'dart:collection';
 
-import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
+import 'dom_builder_context.dart';
 import 'dom_builder_css.dart';
+import 'dom_builder_generator.dart';
 import 'dom_builder_helpers.dart';
+import 'dom_builder_template.dart';
+import 'dom_builder_treemap.dart';
 
 /// Represents a [DOMElement] attribute entry (`name` and [DOMAttributeValue]).
 class DOMAttribute implements WithValue {

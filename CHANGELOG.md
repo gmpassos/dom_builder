@@ -1,3 +1,10 @@
+## 2.0.9
+
+- Dart `2.16`:
+  - Organize imports.
+  - Fix new lints.
+- sdk: '>=2.13.0 <3.0.0'
+
 ## 2.0.8
 
 - `dom_builder_html_browser.dart`: reuse `DomParser` instance. 

@@ -2,14 +2,17 @@ import 'dart:collection';
 import 'dart:math';
 
 import 'package:collection/collection.dart' show IterableExtension;
-import 'package:dom_builder/dom_builder.dart';
-import 'package:dom_builder/src/dom_builder_html.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_attribute.dart';
+import 'dom_builder_context.dart';
+import 'dom_builder_css.dart';
+import 'dom_builder_dsx.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_helpers.dart';
+import 'dom_builder_html.dart';
 import 'dom_builder_runtime.dart';
+import 'dom_builder_template.dart';
 import 'dom_builder_treemap.dart';
 
 void domBuilderLog(String message,

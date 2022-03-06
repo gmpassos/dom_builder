@@ -1,6 +1,6 @@
 import 'dart:html';
 
-import 'package:dom_builder/dom_builder.dart';
+import 'dom_builder_base.dart';
 
 /// Creates an [Element] using [tag] name.
 @override

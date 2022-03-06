@@ -1,5 +1,10 @@
-import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
+
+import 'dom_builder_attribute.dart';
+import 'dom_builder_base.dart';
+import 'dom_builder_css.dart';
+import 'dom_builder_generator.dart';
+import 'dom_builder_treemap.dart';
 
 /// Represents browser window Viewport.
 class Viewport {

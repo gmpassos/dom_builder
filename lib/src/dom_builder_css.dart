@@ -1,7 +1,9 @@
 import 'dart:collection';
 
-import 'package:dom_builder/dom_builder.dart';
 import 'package:swiss_knife/swiss_knife.dart';
+
+import 'dom_builder_context.dart';
+import 'dom_builder_helpers.dart';
 
 class CSS {
   static final RegExp entriesDelimiter = RegExp(r'\s*;\s*', multiLine: false);

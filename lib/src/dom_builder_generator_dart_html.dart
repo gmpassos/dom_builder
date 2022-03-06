@@ -136,12 +136,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   @override
   bool containsNode(Node parent, Node? node) {
     if (node == null) return false;
-
-    if (parent is Node) {
-      return parent.contains(node);
-    }
-
-    return false;
+    return parent.contains(node);
   }
 
   @override

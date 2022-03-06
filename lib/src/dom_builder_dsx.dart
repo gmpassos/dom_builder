@@ -1,7 +1,11 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:dom_builder/dom_builder.dart';
+
+import 'dom_builder_base.dart';
+import 'dom_builder_context.dart';
+import 'dom_builder_helpers.dart';
+import 'dom_builder_template.dart';
 
 class _DSXKey {
   final int id;
