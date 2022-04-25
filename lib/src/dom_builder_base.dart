@@ -1924,6 +1924,12 @@ class DOMElement extends DOMNode implements AsDOMElement {
       attributes.putIfAbsent('height', () => '');
     }
 
+    if (tag == 'video') {
+      attributes.putIfAbsent('autoplay', () => '');
+      attributes.putIfAbsent('controls', () => '');
+      attributes.putIfAbsent('muted', () => '');
+    }
+
     return attributes;
   }
 

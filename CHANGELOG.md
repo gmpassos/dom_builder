@@ -4,6 +4,9 @@
   - Organize imports.
   - Fix new lints.
 - sdk: '>=2.13.0 <3.0.0'
+- Added helper `$radiobutton`.
+- Tag `video`:
+  - Allow boolean attributes: 'autoplay', 'controls' and 'muted'.
 
 ## 2.0.8
 

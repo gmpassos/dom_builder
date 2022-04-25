@@ -610,6 +610,44 @@ void main() {
               '<div><select><option value="v1">Val 1</option><option value="v2" selected>Val 2</option></select></div>'));
     });
 
+    test(r'tag: video', () {
+      var node = $div(
+          content:
+              '<video class="shadow" style="width: 80%; max-width: 90%; max-height: 70%" controls autoplay muted>'
+              '<source src="https://managersystems.com.br/manager-30anos.mp4" type="video/mp4">'
+              '</video>');
+
+      expect(
+          node.buildHTML(),
+          equals(
+              '<div><video class="shadow" style="width: 80%; max-width: 90%; max-height: 70%" controls autoplay muted>'
+              '<source src="https://managersystems.com.br/manager-30anos.mp4" type="video/mp4"></source>'
+              '</video></div>'));
+    });
+
+    test(r'$checkbox', () {
+      var chk1 = $checkbox(name: 'foo', value: 'a');
+      var chk2 = $checkbox(name: 'bar', value: 'b');
+
+      expect(chk1.buildHTML(),
+          equals('<input name="foo" type="checkbox" value="a">'));
+      expect(chk2.buildHTML(),
+          equals('<input name="bar" type="checkbox" value="b">'));
+    });
+
+    test(r'$radiobutton', () {
+      var rb1 = $radiobutton(name: 'foo', value: 'a');
+      var rb2 = $radiobutton(name: 'foo', value: 'b');
+      var rb3 = $radiobutton(name: 'foo', value: 'c');
+
+      expect(
+          rb1.buildHTML(), equals('<input name="foo" type="radio" value="a">'));
+      expect(
+          rb2.buildHTML(), equals('<input name="foo" type="radio" value="b">'));
+      expect(
+          rb3.buildHTML(), equals('<input name="foo" type="radio" value="c">'));
+    });
+
     test('Content: template', () {
       var templateSource = '{{:locale=="en"}}YES{{?}}OUI{{/}}';
       var node = $div(content: templateSource);

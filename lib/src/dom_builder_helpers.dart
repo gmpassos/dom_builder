@@ -773,6 +773,30 @@ INPUTElement $checkbox(
       commented: commented);
 }
 
+/// Creates an `input` node of type `radio`.
+INPUTElement $radiobutton(
+    {Object? id,
+    Object? name,
+    Object? classes,
+    Object? style,
+    Object? placeholder,
+    Map<String, String>? attributes,
+    Object? value,
+    bool? hidden,
+    bool commented = false}) {
+  return INPUTElement(
+      id: id,
+      name: name,
+      type: 'radio',
+      placeholder: placeholder,
+      classes: classes,
+      style: style,
+      attributes: attributes,
+      value: value,
+      hidden: hidden,
+      commented: commented);
+}
+
 /// Creates an `select` node.
 SELECTElement $select(
     {Object? id,

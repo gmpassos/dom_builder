@@ -17,7 +17,10 @@ class DOMAttribute implements WithValue {
     'hidden',
     'selected',
     'multiple',
-    'inert'
+    'inert',
+    'autoplay',
+    'controls',
+    'muted',
   };
   static final Set<String> _attributesValueAsSet = {'class'};
 
