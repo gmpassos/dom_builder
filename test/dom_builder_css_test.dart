@@ -31,6 +31,7 @@ void main() {
             'background-color',
             'border',
             'color',
+            'display',
             'height',
             'opacity',
             'width'
