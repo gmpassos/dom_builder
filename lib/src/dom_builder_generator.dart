@@ -191,13 +191,15 @@ abstract class DOMGenerator<T> {
       rootElement ??= build(null, null, domRoot, treeMap, context);
     }
 
+    if (rootElement == null) throw StateError("Null `rootElement`.");
+
     domRoot ??= treeMap.getMappedDOMNode(rootElement) as DOMElement?;
 
     if (rootParent != null) {
       addChildToElement(rootParent, rootElement);
     }
 
-    treeMap.map(domRoot!, rootElement!);
+    treeMap.map(domRoot!, rootElement);
 
     for (var node in nodes) {
       if (!domRoot.containsNode(node)) {
@@ -548,7 +550,12 @@ abstract class DOMGenerator<T> {
       var listNodes = externalElement as List<DOMNode>;
       var elements = <T>[];
       for (var node in listNodes) {
-        T element = build(domParent, parent, node, treeMap, context)!;
+        var elem = build(domParent, parent, node, treeMap, context);
+        if (elem == null) {
+          throw StateError(
+              "Can't build element for `DOMNode` in `externalElement` List: $node");
+        }
+        T element = elem;
         elements.add(element);
         treeMap.map(node, element);
       }
@@ -574,7 +581,12 @@ abstract class DOMGenerator<T> {
 
       var elements = <T>[];
       for (var node in list) {
-        T element = build(domParent, parent, node, treeMap, context)!;
+        var elem = build(domParent, parent, node, treeMap, context);
+        if (elem == null) {
+          throw StateError(
+              "Can't build element for `DOMNode` in `externalElement` List: $node");
+        }
+        T element = elem;
         elements.add(element);
         treeMap.map(node, element);
       }
@@ -707,10 +719,16 @@ abstract class DOMGenerator<T> {
       return [elements as T];
     } else if (elements is DOMNode) {
       var e = generate(elements);
-      return [e!];
+      if (e == null) {
+        throw StateError("Can't generate element for `DOMNode`: $elements");
+      }
+      return [e];
     } else if (elements is String) {
       var e = generateFromHTML(elements);
-      return [e!];
+      if (e == null) {
+        throw StateError("Can't generate element from `HTML`: $elements");
+      }
+      return [e];
     } else if (elements is Function) {
       var e = elements();
       return toElements(e);

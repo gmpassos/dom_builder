@@ -253,7 +253,7 @@ abstract class DOMAction<T> {
   String toString() {
     var s = actionString();
     if (next != null) {
-      s += '.' + next.toString();
+      s += '.$next';
     }
     return s;
   }

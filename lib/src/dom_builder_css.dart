@@ -190,6 +190,7 @@ class CSS {
 
   void putAllProperties(Map<String, dynamic> properties) {
     if (properties.isEmpty) return;
+
     for (var entry in properties.entries) {
       put(entry.key, entry.value);
     }
@@ -197,22 +198,38 @@ class CSS {
 
   void putAll(List<CSSEntry> entries) {
     if (entries.isEmpty) return;
+
     for (var entry in entries) {
       putEntry(entry);
     }
   }
 
-  void putEntry<V extends CSSValue>(CSSEntry<V> entry) {
-    _putImpl(entry.name, entry);
+  void putAllIfAbsent(List<CSSEntry> entries) {
+    if (entries.isEmpty) return;
+
+    for (var entry in entries) {
+      putEntryIfAbsent(entry);
+    }
   }
 
-  void put(String name, Object? value) {
-    _putImpl(name, value);
-  }
+  void putEntry<V extends CSSValue>(CSSEntry<V> entry) =>
+      _putImpl(entry.name, entry, false);
 
-  void _putImpl(String? name, Object? value) {
+  void putEntryIfAbsent<V extends CSSValue>(CSSEntry<V> entry) =>
+      _putImpl(entry.name, entry, true);
+
+  void put(String name, Object? value) => _putImpl(name, value, false);
+
+  void putIfAbsent(String name, Object? value) => _putImpl(name, value, true);
+
+  void _putImpl(String? name, Object? value, bool ifAbsent) {
     name = CSSEntry.normalizeName(name);
     if (name == null) return;
+
+    if (ifAbsent) {
+      var prev = _entries[name];
+      if (prev != null) return;
+    }
 
     if (value == null) {
       removeEntry(name);
@@ -253,6 +270,11 @@ class CSS {
       case 'opacity':
         {
           opacity = value;
+          break;
+        }
+      case 'display':
+        {
+          display = value;
           break;
         }
       default:
@@ -310,6 +332,7 @@ class CSS {
           sampleValue: CSSLength(1), defaultValue: CSSGeneric('auto')),
       _getEntry('border', sampleValue: CSSBorder.parse('1px solid #000000')),
       _getEntry('opacity', sampleValue: CSSNumber(1)),
+      _getEntry('display', sampleValue: CSSGeneric('inline')),
     ];
 
     var map = LinkedHashMap<String, CSSEntry>.fromEntries(list
@@ -391,6 +414,11 @@ class CSS {
 
   set opacity(Object? value) =>
       _addEntry('opacity', CSSEntry.from<CSSNumber>('opacity', value));
+
+  CSSEntry<CSSGeneric>? get display => _getEntry<CSSGeneric>('display');
+
+  set display(Object? value) =>
+      _addEntry('display', CSSEntry.from<CSSGeneric>('display', value));
 
   String get style => toString();
 
@@ -580,6 +608,8 @@ abstract class CSSValue {
         return CSSBorder.from(value);
       case 'opacity':
         return CSSNumber.from(value);
+      case 'display':
+        return CSSGeneric.from(value);
       default:
         return CSSValue.from(value);
     }
@@ -938,7 +968,7 @@ String? getCSSUnitName(CSSUnit? unit, [CSSUnit? def]) {
 
 class CSSLength extends CSSValue {
   static final RegExp pattern =
-      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(\%|\w+)?\s*$', multiLine: false);
+      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(%|\w+)?\s*$', multiLine: false);
 
   num value;
 
@@ -1384,7 +1414,7 @@ class CSSColorRGBA extends CSSColorRGB {
 
 class CSSColorHEX extends CSSColorRGB {
   static final RegExp patternHex = RegExp(
-      r'(?:^([0-9a-f]{6-8})$|^\s*#([0-9a-f]{3,8})\s*$)',
+      r'^([\da-f]{6-8})$|^\s*#([\da-f]{3,8})\s*$',
       multiLine: false,
       caseSensitive: false);
 

@@ -26,7 +26,7 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
 
     var prevClass = elem.attributes['class'] ?? '';
 
-    elem.attributes['class'] = (classes + ' ' + prevClass).trim();
+    elem.attributes['class'] = '$classes $prevClass'.trim();
 
     if (contentHolder != null) {
       elem.add(TestText(contentHolder.text));

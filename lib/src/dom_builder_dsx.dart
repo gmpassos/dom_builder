@@ -186,7 +186,7 @@ class DSX<T> {
 
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx.key] ??= dsx;
+      _keyToDSK[dsx._key] ??= dsx;
 
       print('primitive> $dsx > $objSource ; $obj');
 
@@ -213,7 +213,7 @@ class DSX<T> {
       _objectsToDSX[obj as Object] = prevDSX;
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx.key] ??= dsx;
+      _keyToDSK[dsx._key] ??= dsx;
 
       return dsx;
     } else {
@@ -223,7 +223,7 @@ class DSX<T> {
       _objectsToDSX[obj as Object] = [dsx];
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx.key] ??= dsx;
+      _keyToDSK[dsx._key] ??= dsx;
 
       return dsx;
     }
@@ -235,11 +235,13 @@ class DSX<T> {
 
   final List? parameters;
 
-  late final _DSXKey key;
+  late final _DSXKey _key;
 
   DSX._([this.parameters]) {
-    key = _DSXKey(id);
+    _key = _DSXKey(id);
   }
+
+  int get keyID => _key.id;
 
   DSXResolver createResolver() => DSXResolver(this);
 
@@ -255,7 +257,7 @@ class DSX<T> {
     if (objSrc == null && obj == null) {
       _dsxToObjectSource[this] = null;
       _dsxToObject[this] = null;
-      _keyToDSK.remove(key);
+      _keyToDSK.remove(_key);
     }
 
     return this;

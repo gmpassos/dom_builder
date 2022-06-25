@@ -302,7 +302,7 @@ abstract class DOMTemplate {
               } else {
                 if (tryParsing) return null;
                 throw StateError(
-                    'Error paring! No block open: $cursor > $stack <${s.length < 100 ? s : s.substring(0, 100) + '...'}>');
+                    'Error paring! No block open: $cursor > $stack <${s.length < 100 ? s : '${s.substring(0, 100)}...'}>');
               }
 
               cursor = stack.removeLast();
@@ -988,7 +988,7 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
 
   @override
   String toString() {
-    return '{{:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{:${variable!.keysFull}}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1092,9 +1092,7 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
 
   @override
   String toString() {
-    return '{{${elseIf ? '?' : ''}:${variable!.keysFull}${getDOMTemplateCmpOperator(cmp)}${toStringValue()}}}' +
-        _toStringNodes() +
-        _toStringRest();
+    return '{{${elseIf ? '?' : ''}:${variable!.keysFull}${getDOMTemplateCmpOperator(cmp)}${toStringValue()}}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1116,7 +1114,7 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
 
   @override
   String toString() {
-    return '{{!${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{!${variable!.keysFull}}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1143,7 +1141,7 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
 
   @override
   String toString() {
-    return '{{?}}' + _toStringNodes() + _toStringRest();
+    return '{{?}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1166,7 +1164,7 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
 
   @override
   String toString() {
-    return '{{?:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{?:${variable!.keysFull}}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1189,7 +1187,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
 
   @override
   String toString() {
-    return '{{?!:${variable!.keysFull}}' + _toStringRest();
+    return '{{?!:${variable!.keysFull}}${_toStringRest()}';
   }
 }
 
@@ -1224,7 +1222,7 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
 
   @override
   String toString() {
-    return '{{?${variable!.keysFull}}}' + _toStringNodes() + '{{/}}';
+    return '{{?${variable!.keysFull}}}${_toStringNodes()}{{/}}';
   }
 }
 
@@ -1271,6 +1269,6 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
 
   @override
   String toString() {
-    return '{{*:${variable!.keysFull}}}' + _toStringNodes() + _toStringRest();
+    return '{{*:${variable!.keysFull}}}${_toStringNodes()}${_toStringRest()}';
   }
 }

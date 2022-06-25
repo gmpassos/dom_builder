@@ -1,3 +1,14 @@
+## 2.0.10
+
+- `CSS`:
+  - Added `putIfAbsent` and `putAllIfAbsent`.
+- `$table`:
+  - Parameters `thsStyle`, `trsStyle` and `tdsStyle` won't override a CSS style already defined in the table elements.  
+- GitHub CI: fix coverage command for dart 2.17+
+- swiss_knife: ^3.1.1
+- collection: ^1.16.0
+- lints: ^2.0.0
+
 ## 2.0.9
 
 - Dart `2.16`:

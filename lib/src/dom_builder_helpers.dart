@@ -326,21 +326,21 @@ TABLEElement $table(
     var css = CSS(thsStyle);
     tableElement
         .selectAllByType<THElement>()
-        .forEach((e) => e.style.putAll(css.entries));
+        .forEach((e) => e.style.putAllIfAbsent(css.entries));
   }
 
   if (tdsStyle != null) {
     var css = CSS(tdsStyle);
     tableElement
         .selectAllByType<TDElement>()
-        .forEach((e) => e.style.putAll(css.entries));
+        .forEach((e) => e.style.putAllIfAbsent(css.entries));
   }
 
   if (trsStyle != null) {
     var css = CSS(trsStyle);
     tableElement
         .selectAllByType<TRowElement>()
-        .forEach((e) => e.style.putAll(css.entries));
+        .forEach((e) => e.style.putAllIfAbsent(css.entries));
   }
 
   return tableElement;
