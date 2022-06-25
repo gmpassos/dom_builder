@@ -2,9 +2,12 @@
 
 - `CSS`:
   - Added `putIfAbsent` and `putAllIfAbsent`.
+  - Ensure that number values when converted to `String` won't end in unnecessary `.0`.
 - `$table`:
   - Parameters `thsStyle`, `trsStyle` and `tdsStyle` won't override a CSS style already defined in the table elements.  
-- GitHub CI: fix coverage command for dart 2.17+
+- GitHub CI:
+  - Remove use of Dart container.
+  - Fix coverage command for dart 2.17+
 - swiss_knife: ^3.1.1
 - collection: ^1.16.0
 - lints: ^2.0.0

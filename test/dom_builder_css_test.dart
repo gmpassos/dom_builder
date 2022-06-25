@@ -672,7 +672,7 @@ void main() {
       expect(css.toString(), equals('width: 80vw'));
 
       expect(css.toString(domContext),
-          equals('width: 640.0px /* DOMContext-original-value: 80vw */'));
+          equals('width: 640px /* DOMContext-original-value: 80vw */'));
 
       expect(CSS.parse(css.toString()).toString(), equals('width: 80vw'));
 
@@ -694,7 +694,7 @@ void main() {
       expect(
           div.buildHTML(domContext: domContext),
           equals(
-              '<div style="width: 640.0px /* DOMContext-original-value: 80vw */">x</div>'));
+              '<div style="width: 640px /* DOMContext-original-value: 80vw */">x</div>'));
     });
 
     test('CSS DOMContext 3', () {
@@ -709,7 +709,7 @@ void main() {
       expect(
           css.toString(domContext),
           equals(
-              'max-width: 640.0px /* DOMContext-original-value: 80vw */; width: 200px; height: 300.0px /* DOMContext-original-value: 50vh */'));
+              'max-width: 640px /* DOMContext-original-value: 80vw */; width: 200px; height: 300px /* DOMContext-original-value: 50vh */'));
 
       expect(CSS.parse(css.toString()).toString(),
           equals('max-width: 80vw; width: 200px; height: 50vh'));

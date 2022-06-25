@@ -1059,7 +1059,12 @@ class CSSLength extends CSSValue {
 
   static String valueToString(num value, CSSUnit unit) {
     var unitName = getCSSUnitName(unit);
-    return '$value$unitName';
+    var n = value.toString();
+    if (value is! int && n.endsWith('.0')) {
+      n = n.substring(0, n.length - 2);
+    }
+
+    return '$n$unitName';
   }
 
   static String resolveValueAsString(
@@ -1169,7 +1174,15 @@ class CSSNumber extends CSSValue {
   }
 
   String _resolveValue(DOMContext? domContext) {
-    return '$_value';
+    if (_value is int) {
+      return '$_value';
+    } else {
+      var s = '$_value';
+      if (s.endsWith('.0')) {
+        s = s.substring(0, s.length - 2);
+      }
+      return s;
+    }
   }
 
   @override
