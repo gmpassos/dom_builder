@@ -123,7 +123,7 @@ void main() {
       print(css3);
 
       expect(css3.style,
-          equals('color: rgb(255, 0, 0, 1.0); background-color: #ff0000'));
+          equals('color: rgb(255, 0, 0); background-color: #ff0000'));
 
       var css4 = CSS()
         ..color = CSSColorRGBA(255, 0, 0, 0.50)

@@ -3,6 +3,7 @@
 - `CSS`:
   - Added `putIfAbsent` and `putAllIfAbsent`.
   - Ensure that number values when converted to `String` won't end in unnecessary `.0`.
+  - `CSSColorRGBA`: ensure that when alpha is `1.0` it will generate `rgb` (not `rgba`) with only 3 elements.
 - `$table`:
   - Parameters `thsStyle`, `trsStyle` and `tdsStyle` won't override a CSS style already defined in the table elements.  
 - GitHub CI:

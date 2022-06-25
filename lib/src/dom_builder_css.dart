@@ -1415,10 +1415,15 @@ class CSSColorRGBA extends CSSColorRGB {
     return '${super.args}, $a';
   }
 
+  String get argsWithoutAlpha => super.args;
+
   @override
   String toString([DOMContext? domContext]) {
-    if (alpha == 1) return super.toString();
-    return 'rgba($args)';
+    if (alpha == 1) {
+      return 'rgb($argsWithoutAlpha)';
+    } else {
+      return 'rgba($args)';
+    }
   }
 
   @override
