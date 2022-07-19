@@ -1,4 +1,4 @@
-## 2.0.11
+## 2.1.0
 
 - Added helpers `$ul`, `$ol`, `$li`.
 - Better handling of content as `Iterable` (auto converted to `List`, to avoid re-iteration).
