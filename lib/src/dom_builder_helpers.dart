@@ -699,6 +699,60 @@ DOMElement $label(
         hidden: hidden,
         commented: commented);
 
+/// Creates a `ul` node.
+DOMElement $ul(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool? hidden,
+        bool commented = false}) =>
+    $tag('ul',
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        hidden: hidden,
+        commented: commented);
+
+/// Creates a `ol` node.
+DOMElement $ol(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool? hidden,
+        bool commented = false}) =>
+    $tag('ol',
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        hidden: hidden,
+        commented: commented);
+
+/// Creates a `li` node.
+DOMElement $li(
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool? hidden,
+        bool commented = false}) =>
+    $tag('li',
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        hidden: hidden,
+        commented: commented);
+
 /// Creates a `textarea` node.
 TEXTAREAElement $textarea(
     {Object? id,

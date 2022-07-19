@@ -106,6 +106,7 @@ class DOMNode implements AsDOMNode {
     } else if (_domHTML.isHtmlNode(nodes)) {
       return _domHTML.getNodeText(nodes);
     } else if (nodes is Iterable) {
+      nodes = nodes.asList;
       if (nodes.isEmpty) {
         return '';
       } else if (nodes.length == 1) {
@@ -123,6 +124,10 @@ class DOMNode implements AsDOMNode {
   /// Parses [entry] to a list of nodes.
   static List<DOMNode> parseNodes(Object? entry) {
     if (entry == null) return <DOMNode>[];
+
+    if (entry is Iterable) {
+      entry = entry.asList;
+    }
 
     if (entry is AsDOMNode) {
       var node = entry.asDOMNode;
@@ -171,6 +176,10 @@ class DOMNode implements AsDOMNode {
   /// Same as [parseNodes], but returns a [DOMNode] or a [List<DOMNode>].
   static Object? _parseNode(Object? entry) {
     if (entry == null) return null;
+
+    if (entry is Iterable) {
+      entry = entry.asList;
+    }
 
     if (entry is AsDOMNode) {
       var node = entry.asDOMNode;
@@ -222,6 +231,10 @@ class DOMNode implements AsDOMNode {
   /// a [Function] or an external element.
   static DOMNode? from(Object? entry) {
     if (entry == null) return null;
+
+    if (entry is Iterable) {
+      entry = entry.asList;
+    }
 
     if (entry is DOMNode) {
       return entry;
@@ -662,7 +675,7 @@ class DOMNode implements AsDOMNode {
   /// tag: sup, i, em, u, b, strong.
   bool get isStringElement => false;
 
-  static final RegExp regexpWhiteSpace = RegExp(r'^(?:\s+)$', multiLine: false);
+  static final RegExp regexpWhiteSpace = RegExp(r'^\s+$', multiLine: false);
 
   /// Returns [true] if this node only have white space content.
   bool get isWhiteSpaceContent => false;
@@ -700,20 +713,21 @@ class DOMNode implements AsDOMNode {
   }
 
   void _addToContent(Object? entry) {
-    if (entry is List) {
+    if (entry is Iterable) {
       _addListToContent(entry.whereType<DOMNode>());
     } else if (entry is DOMNode) {
       _addNodeToContent(entry);
     }
   }
 
-  void _addListToContent(Iterable<DOMNode> list) {
+  void _addListToContent(Iterable<DOMNode> nodes) {
+    var list = nodes.toList();
     if (list.isEmpty) return;
 
     _checkAllowContent();
 
     if (_content == null) {
-      _content = list.toList();
+      _content = list;
       for (var elem in _content!) {
         elem.parent = this;
       }
@@ -745,7 +759,8 @@ class DOMNode implements AsDOMNode {
     }
   }
 
-  void _insertListToContent(int index, Iterable<DOMNode> list) {
+  void _insertListToContent(int index, Iterable<DOMNode> nodes) {
+    var list = nodes.toList();
     if (list.isEmpty) return;
 
     _checkAllowContent();
@@ -1473,12 +1488,21 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 /// A node for HTML elements.
 class DOMElement extends DOMNode implements AsDOMElement {
   static final Set<String> _selfClosingTags = {
-    'hr',
+    'area',
+    'base',
     'br',
-    'input',
+    'embed',
+    'hr',
     'img',
-    'meta'
+    'input',
+    'link',
+    'meta',
+    'param',
+    'source',
+    'track',
+    'wbr',
   };
+
   static final Set<String> _selfClosingTagsOptional = {'p'};
 
   /// Normalizes a tag name. Returns null for empty string.
@@ -2937,6 +2961,7 @@ class OPTIONElement extends DOMElement implements WithValue {
       value = entry.a;
       text = entry.b;
     } else if (entry is Iterable) {
+      entry = entry.asList;
       if (entry.length == 1) {
         value = text = entry.first?.toString();
       } else if (entry.length >= 2) {
@@ -3104,7 +3129,13 @@ List createTableContent(content, caption, head, body, foot,
       createTableEntry(body),
       createTableEntry(foot, footer: true)
     ];
-  } else if (content is List) {
+  }
+
+  if (content is Iterable) {
+    content = content.asList;
+  }
+
+  if (content is List) {
     if (listMatchesAll(content, (dynamic e) => _domHTML.isHtmlNode(e))) {
       var caption = content.firstWhere(
           (e) => _domHTML.getNodeTag(e) == 'caption',
@@ -3165,7 +3196,7 @@ List<TRowElement> createTableRows(Object? rows, bool header) {
   List<TRowElement> tableRows;
 
   if (rows is Iterable) {
-    var rowsList = List.from(rows);
+    var rowsList = rows.toList();
 
     if (listMatchesAll(rowsList, (dynamic e) => e is TRowElement)) {
       return rowsList.cast();
@@ -3239,6 +3270,10 @@ TRowElement createTableRow(Object? rowCells, [bool? header]) {
 }
 
 List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
+  if (rowCells is Iterable) {
+    rowCells = rowCells.asList;
+  }
+
   if (rowCells is List &&
       listMatchesAll(
           rowCells,
@@ -3716,4 +3751,15 @@ abstract class AsDOMNode {
 /// Interface for objects that can be cast as [DOMElement].
 abstract class AsDOMElement {
   DOMElement get asDOMElement;
+}
+
+extension _IterableExtension<T> on Iterable<T> {
+  List<T> get asList {
+    var self = this;
+    if (self is List<T>) {
+      return self;
+    } else {
+      return toList();
+    }
+  }
 }

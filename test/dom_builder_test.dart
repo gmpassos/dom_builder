@@ -519,6 +519,29 @@ void main() {
       expect(div4.buildHTML(), equals('<div>foo</div>'));
     });
 
+    test('Helper \$ul', () {
+      var props = {'a': 1, 'b': 2};
+
+      var items = props.entries
+          .map((e) => $li(content: [$label(content: e.key), e.value]));
+
+      var ul = $ul(id: 'list1', attributes: {'lang': 'en'}, content: items);
+
+      expect(ul.runtimeType, equals(DOMElement));
+      expect(
+          ul.buildHTML(),
+          equals(
+              '<ul id="list1" lang="en"><li><label>a</label>1</li><li><label>b</label>2</li></ul>'));
+
+      var ol = $ol(id: 'list2', attributes: {'lang': 'en'}, content: items);
+
+      expect(ol.runtimeType, equals(DOMElement));
+      expect(
+          ol.buildHTML(),
+          equals(
+              '<ol id="list2" lang="en"><li><label>a</label>1</li><li><label>b</label>2</li></ol>'));
+    });
+
     test('Helper \$tag', () {
       var div = $tag('div', attributes: {'title': 'aaa'}, content: ['wow']);
 
@@ -621,7 +644,7 @@ void main() {
           node.buildHTML(),
           equals(
               '<div><video class="shadow" style="width: 80%; max-width: 90%; max-height: 70%" controls autoplay muted>'
-              '<source src="https://managersystems.com.br/manager-30anos.mp4" type="video/mp4"></source>'
+              '<source src="https://managersystems.com.br/manager-30anos.mp4" type="video/mp4">'
               '</video></div>'));
     });
 

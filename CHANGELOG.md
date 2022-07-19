@@ -1,3 +1,13 @@
+## 2.0.11
+
+- Added helpers `$ul`, `$ol`, `$li`.
+- Better handling of content as `Iterable` (auto converted to `List`, to avoid re-iteration).
+- Updated list of self-closing tags:
+  - `area`, `base`, `br`, `embed`, `hr`, `img`, `input`, `link`, `meta`, `param`, `source`, `track`, `wbr`.
+- sdk: '>=2.15.0 <3.0.0'
+- dependency_validator: ^3.2.2
+- coverage: ^1.5.0
+
 ## 2.0.10
 
 - `CSS`:
