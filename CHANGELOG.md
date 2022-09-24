@@ -1,3 +1,7 @@
+## 2.1.1
+
+- Added element events for `onKeyPress` and `onKeyUp`.
+
 ## 2.1.0
 
 - Added helpers `$ul`, `$ol`, `$li`.

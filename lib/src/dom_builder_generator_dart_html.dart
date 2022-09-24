@@ -290,6 +290,20 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
         });
       }
 
+      if (domElement.hasOnKeyPressListener) {
+        element.onKeyPress.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onKeyPress.add(domEvent);
+        });
+      }
+
+      if (domElement.hasOnKeyUpListener) {
+        element.onKeyUp.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onKeyUp.add(domEvent);
+        });
+      }
+
       if (domElement.hasOnMouseOverListener) {
         element.onMouseOver.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event)!;

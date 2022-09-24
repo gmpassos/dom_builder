@@ -1751,6 +1751,12 @@ class DOMElement extends DOMNode implements AsDOMElement {
     } else if (attrName == 'onchange') {
       onChange.listen((_) => dsx.call());
       return true;
+    } else if (attrName == 'onkeypress') {
+      onKeyPress.listen((_) => dsx.call());
+      return true;
+    } else if (attrName == 'onkeyup') {
+      onKeyUp.listen((_) => dsx.call());
+      return true;
     } else if (attrName == 'onerror') {
       onError.listen((_) => dsx.call());
       return true;
@@ -2492,6 +2498,28 @@ class DOMElement extends DOMNode implements AsDOMElement {
   EventStream<DOMEvent> get onChange {
     _onChange ??= EventStream();
     return _onChange!;
+  }
+
+  EventStream<DOMEvent>? _onKeyPress;
+
+  /// Returns [true] if has any [onKeyPress] listener registered.
+  bool get hasOnKeyPressListener => _onKeyPress != null;
+
+  /// Event handler for `change` events.
+  EventStream<DOMEvent> get onKeyPress {
+    _onKeyPress ??= EventStream();
+    return _onKeyPress!;
+  }
+
+  EventStream<DOMEvent>? _onKeyUp;
+
+  /// Returns [true] if has any [onKeyUp] listener registered.
+  bool get hasOnKeyUpListener => _onKeyUp != null;
+
+  /// Event handler for `change` events.
+  EventStream<DOMEvent> get onKeyUp {
+    _onKeyUp ??= EventStream();
+    return _onKeyUp!;
   }
 
   EventStream<DOMMouseEvent>? _onMouseOver;
