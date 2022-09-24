@@ -1,6 +1,6 @@
 ## 2.1.1
 
-- Added element events for `onKeyPress` and `onKeyUp`.
+- Added element events for `onKeyPress`, `onKeyDown` and `onKeyUp`.
 
 ## 2.1.0
 

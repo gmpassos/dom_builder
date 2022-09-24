@@ -2522,6 +2522,17 @@ class DOMElement extends DOMNode implements AsDOMElement {
     return _onKeyUp!;
   }
 
+  EventStream<DOMEvent>? _onKeyDown;
+
+  /// Returns [true] if has any [onKeyDown] listener registered.
+  bool get hasOnKeyDownListener => _onKeyDown != null;
+
+  /// Event handler for `change` events.
+  EventStream<DOMEvent> get onKeyDown {
+    _onKeyDown ??= EventStream();
+    return _onKeyDown!;
+  }
+
   EventStream<DOMMouseEvent>? _onMouseOver;
 
   /// Returns [true] if has any [onMouseOver] listener registered.
