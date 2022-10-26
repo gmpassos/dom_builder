@@ -1,3 +1,10 @@
+## 2.1.2
+
+- `$button`: Added `name` and `disabled`.
+- `$input`, `$checkbox`, `$radiobutton`, `$select`, `$option`: Added `disabled`.
+- `INPUTElement`, `TEXTAREAElement`, `SELECTElement`, `OPTIONElement`: Added `disabled`.
+- collection: ^1.17.0
+
 ## 2.1.1
 
 - Added element events for `onKeyPress`, `onKeyDown` and `onKeyUp`.

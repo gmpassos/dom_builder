@@ -650,25 +650,25 @@ void main() {
 
     test(r'$checkbox', () {
       var chk1 = $checkbox(name: 'foo', value: 'a');
-      var chk2 = $checkbox(name: 'bar', value: 'b');
+      var chk2 = $checkbox(name: 'bar', value: 'b', disabled: true);
 
       expect(chk1.buildHTML(),
           equals('<input name="foo" type="checkbox" value="a">'));
       expect(chk2.buildHTML(),
-          equals('<input name="bar" type="checkbox" value="b">'));
+          equals('<input name="bar" type="checkbox" value="b" disabled>'));
     });
 
     test(r'$radiobutton', () {
       var rb1 = $radiobutton(name: 'foo', value: 'a');
-      var rb2 = $radiobutton(name: 'foo', value: 'b');
-      var rb3 = $radiobutton(name: 'foo', value: 'c');
+      var rb2 = $radiobutton(name: 'foo', value: 'b', disabled: false);
+      var rb3 = $radiobutton(name: 'foo', value: 'c', disabled: true);
 
       expect(
           rb1.buildHTML(), equals('<input name="foo" type="radio" value="a">'));
       expect(
           rb2.buildHTML(), equals('<input name="foo" type="radio" value="b">'));
-      expect(
-          rb3.buildHTML(), equals('<input name="foo" type="radio" value="c">'));
+      expect(rb3.buildHTML(),
+          equals('<input name="foo" type="radio" value="c" disabled>'));
     });
 
     test('Content: template', () {

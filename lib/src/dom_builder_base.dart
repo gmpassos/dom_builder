@@ -2810,6 +2810,7 @@ class INPUTElement extends DOMElement implements WithValue {
       Object? style,
       Object? value,
       bool? hidden,
+      bool disabled = false,
       bool commented = false})
       : super._('input',
             id: id,
@@ -2820,6 +2821,7 @@ class INPUTElement extends DOMElement implements WithValue {
               if (type != null) 'type': type,
               if (placeholder != null) 'placeholder': placeholder,
               if (value != null) 'value': value,
+              if (disabled) 'disabled': disabled,
               ...?attributes
             },
             hidden: hidden,
@@ -2871,6 +2873,7 @@ class SELECTElement extends DOMElement {
       Object? options,
       bool? multiple,
       bool? hidden,
+      bool disabled = false,
       bool commented = false})
       : super._('select',
             id: id,
@@ -2881,6 +2884,7 @@ class SELECTElement extends DOMElement {
               if (name != null) 'name': name,
               if (type != null) 'type': type,
               if (multiple != null && multiple) 'multiple': true,
+              if (disabled) 'disabled': disabled,
             },
             content: OPTIONElement.toOptions(options),
             hidden: hidden,
@@ -3033,6 +3037,7 @@ class OPTIONElement extends DOMElement implements WithValue {
       Object? value,
       String? label,
       bool? selected,
+      bool disabled = false,
       String? text})
       : super._(
           'option',
@@ -3043,6 +3048,7 @@ class OPTIONElement extends DOMElement implements WithValue {
             if (value != null) 'value': parseString(value),
             if (label != null) 'label': label,
             if (selected != null) 'selected': parseBool(selected),
+            if (disabled) 'disabled': disabled,
           },
           content: TextNode.toTextNode(text),
         );
@@ -3112,15 +3118,17 @@ class TEXTAREAElement extends DOMElement implements WithValue {
       Object? rows,
       Object? content,
       bool? hidden,
+      bool disabled = false,
       bool commented = false})
       : super._('textarea',
             id: id,
             classes: classes,
             style: style,
             attributes: {
-              if (name != null) 'name': cols,
+              if (name != null) 'name': name,
               if (cols != null) 'cols': cols,
               if (rows != null) 'rows': rows,
+              if (disabled) 'disabled': disabled,
               ...?attributes
             },
             content: content,

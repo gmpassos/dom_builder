@@ -255,7 +255,7 @@ DOMElement $tag(String tag,
     {Object? id,
     Object? classes,
     Object? style,
-    Map<String, String>? attributes,
+    Map<String, dynamic>? attributes,
     Object? content,
     bool? hidden,
     bool commented = false}) {
@@ -661,12 +661,14 @@ DOMElement $span(
 /// Creates a `button` node.
 DOMElement $button(
         {Object? id,
+        Object? name,
         Object? classes,
         Object? style,
         String? type,
-        Map<String, String>? attributes,
+        Map<String, dynamic>? attributes,
         Object? content,
         bool? hidden,
+        bool disabled = false,
         bool commented = false}) =>
     $tag('button',
         id: id,
@@ -674,6 +676,8 @@ DOMElement $button(
         style: style,
         attributes: {
           'type': isNotEmptyString(type) ? type! : 'button',
+          if (name != null) 'name': name,
+          if (disabled) 'disabled': disabled,
           ...?attributes
         },
         content: content,
@@ -764,6 +768,7 @@ TEXTAREAElement $textarea(
     Map<String, String>? attributes,
     Object? content,
     bool? hidden,
+    bool disabled = false,
     bool commented = false}) {
   return TEXTAREAElement(
       id: id,
@@ -775,6 +780,7 @@ TEXTAREAElement $textarea(
       attributes: attributes,
       content: content,
       hidden: hidden,
+      disabled: disabled,
       commented: commented);
 }
 
@@ -789,6 +795,7 @@ INPUTElement $input(
     Map<String, String>? attributes,
     Object? value,
     bool? hidden,
+    bool disabled = false,
     bool commented = false}) {
   return INPUTElement(
       id: id,
@@ -800,6 +807,7 @@ INPUTElement $input(
       attributes: attributes,
       value: value,
       hidden: hidden,
+      disabled: disabled,
       commented: commented);
 }
 
@@ -813,6 +821,7 @@ INPUTElement $checkbox(
     Map<String, String>? attributes,
     Object? value,
     bool? hidden,
+    bool disabled = false,
     bool commented = false}) {
   return INPUTElement(
       id: id,
@@ -824,6 +833,7 @@ INPUTElement $checkbox(
       attributes: attributes,
       value: value,
       hidden: hidden,
+      disabled: disabled,
       commented: commented);
 }
 
@@ -837,6 +847,7 @@ INPUTElement $radiobutton(
     Map<String, String>? attributes,
     Object? value,
     bool? hidden,
+    bool disabled = false,
     bool commented = false}) {
   return INPUTElement(
       id: id,
@@ -848,6 +859,7 @@ INPUTElement $radiobutton(
       attributes: attributes,
       value: value,
       hidden: hidden,
+      disabled: disabled,
       commented: commented);
 }
 
@@ -862,6 +874,7 @@ SELECTElement $select(
     Object? selected,
     bool? multiple,
     bool? hidden,
+    bool disabled = false,
     bool commented = false}) {
   var selectElement = SELECTElement(
       id: id,
@@ -872,6 +885,7 @@ SELECTElement $select(
       options: options,
       multiple: multiple,
       hidden: hidden,
+      disabled: disabled,
       commented: commented);
 
   selectElement.selectOption(selected);
@@ -887,6 +901,7 @@ OPTIONElement $option(
     Object? value,
     String? label,
     bool? selected,
+    bool disabled = false,
     Object? text,
     Object? valueAndText}) {
   return OPTIONElement(
@@ -896,6 +911,7 @@ OPTIONElement $option(
       value: value ?? valueAndText,
       label: label,
       selected: selected,
+      disabled: disabled,
       text: DOMNode.toText(text ?? valueAndText));
 }
 

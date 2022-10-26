@@ -15,6 +15,7 @@ class DOMAttribute implements WithValue {
   static final Set<String> _attributesValueAsBoolean = {
     'checked',
     'hidden',
+    'disabled',
     'selected',
     'multiple',
     'inert',
