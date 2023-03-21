@@ -29,7 +29,7 @@ abstract class DOMTemplate {
     } else if (o is String) {
       return o;
     } else if (o is DOMNode) {
-      return o.buildHTML();
+      return o.buildHTML(buildTemplates: false);
     } else if (o is Iterable) {
       return o.map(objectToString).join('');
     } else if (o is Map) {
@@ -746,6 +746,8 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
     } else if (context is Map) {
       parameters =
           context.map((key, value) => MapEntry('$key', value as dynamic));
+    } else if (context is DOMContext) {
+      parameters = context.variables;
     }
 
     var s = intlMessageResolver(key, parameters);

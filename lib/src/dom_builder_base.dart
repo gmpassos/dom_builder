@@ -337,6 +337,7 @@ class DOMNode implements AsDOMNode {
       bool disableIndent = false,
       bool xhtml = false,
       bool resolveDSX = false,
+      bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
@@ -353,6 +354,8 @@ class DOMNode implements AsDOMNode {
             indent: indent,
             disableIndent: disableIndent,
             xhtml: xhtml,
+            resolveDSX: resolveDSX,
+            buildTemplates: buildTemplates,
             parentNode: parentNode,
             previousNode: prev,
             domContext: domContext);
@@ -1288,6 +1291,7 @@ class TextNode extends DOMNode implements WithValue {
       bool disableIndent = false,
       bool xhtml = false,
       bool resolveDSX = false,
+      bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
@@ -1425,23 +1429,45 @@ class TemplateNode extends DOMNode implements WithValue {
       bool disableIndent = false,
       bool xhtml = false,
       bool resolveDSX = false,
+      bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
-    var text = this.text;
+    String? html;
 
     if (resolveDSX) {
       if (template.isDSX) {
-        text = template.build(domContext) ?? '';
+        html = template.buildAsString(domContext,
+            resolveDSX: true,
+            intlMessageResolver: domContext?.intlMessageResolver);
       } else if (template.hasDSX) {
         var template2 = template.copy(resolveDSX: true);
-        text = template2.toString();
+
+        if (buildTemplates) {
+          var built = template2.build(domContext,
+              asElement: false,
+              resolveDSX: true,
+              intlMessageResolver: domContext?.intlMessageResolver);
+          html = DOMTemplate.objectToString(built);
+        } else {
+          html = template2.toString();
+        }
+      }
+    }
+
+    if (html == null) {
+      if (buildTemplates) {
+        html = template.buildAsString(domContext,
+            resolveDSX: resolveDSX,
+            intlMessageResolver: domContext?.intlMessageResolver);
+      } else {
+        html = text;
       }
     }
 
     var nbsp = xhtml ? '&#160;' : '&nbsp;';
 
-    return text.replaceAll('\xa0', nbsp);
+    return html.replaceAll('\xa0', nbsp);
   }
 
   @override
@@ -2384,9 +2410,35 @@ class DOMElement extends DOMNode implements AsDOMElement {
       bool disableIndent = false,
       bool xhtml = false,
       bool resolveDSX = false,
+      bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
+    if (buildTemplates && hasUnresolvedTemplate) {
+      var htmlUnresolvedTemplate =
+          buildHTML(withIndent: true, buildTemplates: false, resolveDSX: false);
+
+      var template = DOMTemplate.tryParse(htmlUnresolvedTemplate);
+
+      if (template != null) {
+        var templateNode = TemplateNode(template);
+
+        var html = templateNode.buildHTML(
+            withIndent: withIndent,
+            parentIndent: parentIndent,
+            indent: indent,
+            disableIndent: disableIndent,
+            xhtml: xhtml,
+            resolveDSX: resolveDSX,
+            buildTemplates: true,
+            parentNode: parentNode,
+            previousNode: previousNode,
+            domContext: domContext);
+
+        return html;
+      }
+    }
+
     if (!disableIndent && !_tagAllowsInnerIndent(tag)) {
       disableIndent = true;
     }
@@ -2431,6 +2483,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
             disableIndent: disableIndent,
             xhtml: xhtml,
             resolveDSX: resolveDSX,
+            buildTemplates: buildTemplates,
             parentNode: this,
             previousNode: prev,
             domContext: domContext);
@@ -2701,6 +2754,7 @@ class ExternalElementNode extends DOMNode {
       bool disableIndent = false,
       bool xhtml = false,
       bool resolveDSX = false,
+      bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
