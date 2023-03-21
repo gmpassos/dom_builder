@@ -316,19 +316,21 @@ class DOMTreeMap<T> {
   }
 
   static final RegExp regexpTagRef =
-      RegExp(r'\{\{\s*([\w-]+|\*)\#([\w-]+)\s*\}\}');
+      RegExp(r'\{\{\s*([\w-]+|\*)#([\w-]+)\s*\}\}');
   static final RegExp regexpTagOpen =
       RegExp(r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''');
   static final RegExp regexpTagClose = RegExp(r'''<\/[\w-]+\s*>\s*$''');
 
-  String? queryElement(String query) {
+  String? queryElement(String query,
+      {DOMContext? domContext, bool buildTemplates = false}) {
     if (isEmptyString(query)) return null;
 
     var rootDOMNode = this.rootDOMNode as DOMElement;
 
     var node = rootDOMNode.select(query)!;
 
-    var html = node.buildHTML();
+    var html =
+        node.buildHTML(domContext: domContext, buildTemplates: buildTemplates);
 
     html = html.replaceFirst(regexpTagOpen, '');
     html = html.replaceFirst(regexpTagClose, '');

@@ -1,3 +1,17 @@
+## 2.1.3
+
+- `DOMNode`:
+  - `buildHTML`: added parameter `buildTemplates = false`.
+- `TemplateNode`:
+  - `buildHTML`:
+    - respect `buildTemplates` parameter.
+    - pass `domContext` to `build` calls.
+- html: ^0.15.2
+- swiss_knife: ^3.1.3
+- lints: ^2.0.1
+- test: ^1.23.1
+- coverage: ^1.6.3
+
 ## 2.1.2
 
 - `$button`: Added `name` and `disabled`.
@@ -203,7 +217,7 @@
 
 - `DOMNodeRuntime`: Can manipulate CSS/style.
 - Added `DOMContext` and `Viewport` for `DOMGenerator`.
-- `CSS`: now is capable to convert viewport units to pixel units, based into [DOMContext] [Viewport].
+- `CSS`: now is capable to convert viewport units to pixel units, based into [DOMContext] and [Viewport].
 - Better `CSSLength`, `CSSBorder`, `CSSColorRGB`, `CSSColorHEX` and `CSSURL` parsing. 
 - swiss_knife: ^2.5.12
 

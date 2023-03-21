@@ -546,17 +546,35 @@ void main() {
 
       expect(clicks, isEmpty);
 
-      var context = DOMContext(
+      var contextAM = DOMContext(
           intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
           variables: {'period': 'am'});
 
-      var source2 = div.buildHTML(domContext: context);
+      var contextPM = DOMContext(
+          intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
+          variables: {'period': 'pm'});
+
+      var source2 = div.buildHTML(domContext: contextAM);
 
       expectFilteredDSXFunction(
         source2,
         '<div title="HI" onclick="{{__DSX__function_D}}">'
         '{{:period=="am"}}<b>morning</b>{{?:period=="pm"}}afternoon{{?}}day{{/}}'
         '</div>',
+      );
+
+      var source3 = div.buildHTML(domContext: contextAM, buildTemplates: true);
+
+      expectFilteredDSXFunction(
+        source3,
+        '<div title="HI" onclick="{{__DSX__function_D}}"><b>morning</b></div>',
+      );
+
+      var source4 = div.buildHTML(domContext: contextPM, buildTemplates: true);
+
+      expectFilteredDSXFunction(
+        source4,
+        '<div title="HI" onclick="{{__DSX__function_D}}">afternoon</div>',
       );
 
       expect(clicks, isEmpty);

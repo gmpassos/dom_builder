@@ -314,7 +314,8 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
       return super.getAttributeValue(domContext);
     } else {
       var build = template.build(domContext,
-          elementProvider: (q) => treeMap?.queryElement(q),
+          elementProvider: (q) => treeMap?.queryElement(q,
+              domContext: domContext, buildTemplates: true),
           intlMessageResolver: domContext.intlMessageResolver);
 
       if (build == null) {
