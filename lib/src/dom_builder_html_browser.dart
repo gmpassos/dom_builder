@@ -108,6 +108,13 @@ class DOMHtmlBrowser extends DOMHtml {
 
       var attributes = node.attributes.map((k, v) => MapEntry(k.toString(), v));
 
+      if (node is dart_html.InputElementBase) {
+        var value = node.value;
+        if (value != null && !attributes.containsKey('value')) {
+          attributes['value'] = value;
+        }
+      }
+
       var nodes = node.nodes;
       var content = isNotEmptyObject(nodes) ? List.from(nodes) : null;
 

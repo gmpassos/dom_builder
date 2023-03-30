@@ -1,3 +1,10 @@
+## 2.1.4
+
+- `DOMHtmlBrowser`:
+  - `toDOMElement`: resolve `input` `value` as attribute.
+- `DOMElement` constructor:
+  - Optimize tag resolution.
+
 ## 2.1.3
 
 - `DOMNode`:

@@ -1552,130 +1552,144 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
     tag = tag.toLowerCase().trim();
 
-    if (tag == 'div') {
-      return DIVElement(
+    switch (tag) {
+      case 'div':
+        return DIVElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'input':
+        return INPUTElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            value: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'select':
+        return SELECTElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            options: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'option':
+        return OPTIONElement(
           attributes: attributes,
-          id: id,
           classes: classes,
           style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'input') {
-      return INPUTElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          value: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'select') {
-      return SELECTElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          options: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'option') {
-      return OPTIONElement(
-        attributes: attributes,
-        classes: classes,
-        style: style,
-        text: DOMNode.toText(content),
-      );
-    } else if (tag == 'textarea') {
-      return TEXTAREAElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'table') {
-      return TABLEElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'thead') {
-      return THEADElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          rows: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'caption') {
-      return CAPTIONElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'tbody') {
-      return TBODYElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          rows: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'tfoot') {
-      return TFOOTElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          rows: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'tr') {
-      return TRowElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          cells: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'td') {
-      return TDElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else if (tag == 'th') {
-      return THElement(
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
-    } else {
-      return DOMElement._(tag,
-          attributes: attributes,
-          id: id,
-          classes: classes,
-          style: style,
-          content: content,
-          hidden: hidden,
-          commented: commented);
+          text: DOMNode.toText(content),
+        );
+
+      case 'textarea':
+        return TEXTAREAElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'table':
+        return TABLEElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'thead':
+        return THEADElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            rows: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'caption':
+        return CAPTIONElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'tbody':
+        return TBODYElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            rows: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'tfoot':
+        return TFOOTElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            rows: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'tr':
+        return TRowElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            cells: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'td':
+        return TDElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      case 'th':
+        return THElement(
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
+
+      default:
+        return DOMElement._(tag,
+            attributes: attributes,
+            id: id,
+            classes: classes,
+            style: style,
+            content: content,
+            hidden: hidden,
+            commented: commented);
     }
   }
 
