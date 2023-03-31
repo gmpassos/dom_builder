@@ -1,3 +1,10 @@
+## 2.1.5
+
+- `DOMAction`: implement `==` and `hashCode`.
+- `DOMGenerator`:
+  - `resolveActionAttribute`: ensure that `eventStream.listen` is singleton.
+- swiss_knife: ^3.1.4
+
 ## 2.1.4
 
 - `DOMHtmlBrowser`:

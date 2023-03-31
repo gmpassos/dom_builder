@@ -1,3 +1,4 @@
+import 'package:collection/collection.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_context.dart';
@@ -239,9 +240,10 @@ abstract class DOMAction<T> {
     var result = executor.execute(this, target, self,
         treeMap: treeMap, context: context);
 
+    var next = this.next;
     if (next != null) {
-      result = next!
-          .execute(target, self: result, treeMap: treeMap, context: context);
+      result = next.execute(target,
+          self: result, treeMap: treeMap, context: context);
     }
 
     return result;
@@ -257,6 +259,12 @@ abstract class DOMAction<T> {
     }
     return s;
   }
+
+  @override
+  bool operator ==(Object other);
+
+  @override
+  int get hashCode;
 }
 
 class DOMActionList<T> extends DOMAction<T> {
@@ -280,6 +288,16 @@ class DOMActionList<T> extends DOMAction<T> {
   String actionString() {
     return actions.join(';');
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DOMActionList &&
+          runtimeType == other.runtimeType &&
+          ListEquality().equals(actions, other.actions);
+
+  @override
+  int get hashCode => ListEquality().hash(actions);
 }
 
 class DOMActionSelect<T> extends DOMAction<T> {
@@ -291,6 +309,16 @@ class DOMActionSelect<T> extends DOMAction<T> {
   String actionString() {
     return '#$id';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DOMActionSelect &&
+          runtimeType == other.runtimeType &&
+          id == other.id;
+
+  @override
+  int get hashCode => id.hashCode;
 }
 
 class DOMActionCall<T> extends DOMAction<T> {
@@ -308,4 +336,15 @@ class DOMActionCall<T> extends DOMAction<T> {
     var paramsLine = parameters.join(' , ');
     return '$name($paramsLine)';
   }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is DOMActionCall &&
+          runtimeType == other.runtimeType &&
+          name == other.name &&
+          parameters.equals(other.parameters);
+
+  @override
+  int get hashCode => name.hashCode ^ ListEquality<String>().hash(parameters);
 }

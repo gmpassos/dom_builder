@@ -901,23 +901,28 @@ abstract class DOMGenerator<T> {
         eventStream = domElement.onChange;
       }
 
-      eventStream.listen((event) {
-        var target = domElement.getRuntimeNode();
-        var elementValue = getElementValue(element);
+      eventStream.listen(
+        (event) {
+          var target = domElement.getRuntimeNode();
+          var elementValue = getElementValue(element);
 
-        var context2 = context?.copy() ?? DOMContext();
+          var context2 = context?.copy() ?? DOMContext();
 
-        var variables = context2.variables;
-        variables['event'] = {
-          'target': domElement,
-          'value': elementValue,
-          'event': '$event'
-        };
+          var variables = context2.variables;
+          variables['event'] = {
+            'target': domElement,
+            'value': elementValue,
+            'event': '$event'
+          };
 
-        context2.variables = variables;
+          context2.variables = variables;
 
-        domAction.execute(target, treeMap: treeMap, context: context2);
-      });
+          domAction.execute(target, treeMap: treeMap, context: context2);
+        },
+        singletonIdentifier: domAction,
+        singletonIdentifyByInstance: false,
+        overwriteSingletonSubscription: true,
+      );
     }
   }
 
