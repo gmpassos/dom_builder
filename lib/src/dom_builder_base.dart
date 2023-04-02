@@ -3409,7 +3409,7 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
     return [rowCells as TABLENode];
   }
 
-  if (rowCells is! Iterable) {
+  if (rowCells != null && rowCells is! Iterable) {
     rowCells = [rowCells];
   }
 
