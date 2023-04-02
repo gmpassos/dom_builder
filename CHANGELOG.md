@@ -1,3 +1,7 @@
+## 2.1.6
+
+- Fix `createTableCells`.
+
 ## 2.1.5
 
 - `DOMAction`: implement `==` and `hashCode`.

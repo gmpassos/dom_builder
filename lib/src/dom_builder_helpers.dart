@@ -447,7 +447,7 @@ TRowElement $tr(
 }
 
 /// Creates a `td` node.
-DOMElement $td(
+TDElement $td(
         {Object? id,
         Object? classes,
         Object? style,
@@ -458,7 +458,7 @@ DOMElement $td(
         Object? content,
         bool? hidden,
         bool commented = false}) =>
-    $tag('td',
+    TDElement(
         id: id,
         classes: classes,
         style: style,
@@ -473,7 +473,7 @@ DOMElement $td(
         commented: commented);
 
 /// Creates a `th` node.
-DOMElement $th(
+THElement $th(
         {Object? id,
         Object? classes,
         Object? style,
@@ -485,7 +485,7 @@ DOMElement $th(
         Object? content,
         bool? hidden,
         bool commented = false}) =>
-    $tag('td',
+    THElement(
         id: id,
         classes: classes,
         style: style,
@@ -509,14 +509,14 @@ DIVElement $div(
         Object? content,
         bool? hidden,
         bool commented = false}) =>
-    $tag('div',
+    DIVElement(
         id: id,
         classes: classes,
         style: style,
         attributes: attributes,
         content: content,
         hidden: hidden,
-        commented: commented) as DIVElement;
+        commented: commented);
 
 /// Creates a `div` node with `display: inline-block`.
 DIVElement $divInline(
@@ -527,7 +527,7 @@ DIVElement $divInline(
         Object? content,
         bool? hidden,
         bool commented = false}) =>
-    $tag('div',
+    DIVElement(
         id: id,
         classes: classes,
         style: toFlatListOfStrings(['display: inline-block', style],
@@ -535,7 +535,7 @@ DIVElement $divInline(
         attributes: attributes,
         content: content,
         hidden: hidden,
-        commented: commented) as DIVElement;
+        commented: commented);
 
 /// Creates a `div` node from HTML.
 DIVElement? $divHTML(Object? html) => $tagHTML(html);

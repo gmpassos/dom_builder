@@ -3389,21 +3389,28 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
     rowCells = rowCells.asList;
   }
 
-  if (rowCells is List &&
-      listMatchesAll(
-          rowCells,
-          (dynamic e) =>
-              (!header && e is TDElement) || (header && e is THElement))) {
-    return rowCells.cast();
-  } else if (rowCells is List &&
-      listMatchesAll(rowCells, (dynamic e) => _domHTML.isHtmlNode(e))) {
-    var tdList = rowCells.where((e) {
-      var tag = _domHTML.getNodeTag(e);
-      return (tag == 'td' || tag == 'th');
-    });
-    var list = tdList.map((e) => DOMNode.from(e)).toList();
-    list.removeWhere((e) => e == null);
-    return list.cast();
+  if (rowCells is List) {
+    if (listMatchesAll(
+        rowCells,
+        (dynamic e) =>
+            (!header && e is TDElement) || (header && e is THElement))) {
+      return rowCells.cast();
+    } else if (listMatchesAll(
+        rowCells, (dynamic e) => _domHTML.isHtmlNode(e))) {
+      var tdList = rowCells.where((e) {
+        var tag = _domHTML.getNodeTag(e);
+        return (tag == 'td' || tag == 'th');
+      });
+      var list = tdList.map((e) => DOMNode.from(e)).toList();
+      list.removeWhere((e) => e == null);
+      return list.cast();
+    }
+  } else if (rowCells is TDElement || rowCells is THElement) {
+    return [rowCells as TABLENode];
+  }
+
+  if (rowCells is! Iterable) {
+    rowCells = [rowCells];
   }
 
   List list;
