@@ -603,7 +603,95 @@ void main() {
           equals(
               'min-height: 62px; width: calc(100% - 156px); margin-left: 10px'));
 
-      //
+      var css5 = CSS('width: calc( 100px - 20px )');
+      print(css5);
+      expect(css5.style, equals('width: 80px'));
+
+      var css6 = CSS('width: calc( 100px + 20px )');
+      print(css6);
+      expect(css6.style, equals('width: 120px'));
+
+      var css7 = CSS('width: calc( 100vw - 40px )');
+      print(css7);
+      expect(css7.style, equals('width: calc(100vw - 40px)'));
+    });
+
+    test('CSS max', () {
+      var css = CSS('width: max( 100vw , 20px )');
+      print(css);
+      expect(css.style, equals('width: max(100vw, 20px)'));
+
+      var cssValue = css.get('width');
+
+      expect(
+          cssValue, equals(CSSLength.fromFunction(CSSMax(['100px', '20px']))));
+
+      var css2 = CSS('width: max( 100% )');
+      print(css2);
+      expect(css2.style, equals('width: 100%'));
+
+      var css3 = CSS('height: max(100%,20px)');
+      print(css3);
+      expect(css3.style, equals('height: max(100%, 20px)'));
+
+      var css4 =
+          CSS('min-height: 62p; width: max(100% , 156px); margin-left: 10px;');
+      print(css4);
+      expect(
+          css4.style,
+          equals(
+              'min-height: 62px; width: max(100%, 156px); margin-left: 10px'));
+
+      var css5 = CSS('width: max( 100px , 20px )');
+      print(css5);
+      expect(css5.style, equals('width: 100px'));
+
+      var css6 = CSS('width: max( 20px , 100px )');
+      print(css6);
+      expect(css6.style, equals('width: 100px'));
+
+      var css7 = CSS('width: max( 100px , 20px , 200px, 80px)');
+      print(css7);
+      expect(css7.style, equals('width: 200px'));
+    });
+
+    test('CSS min', () {
+      var css = CSS('width: min( 100vw , 20px )');
+      print(css);
+      expect(css.style, equals('width: min(100vw, 20px)'));
+
+      var cssValue = css.get('width');
+
+      expect(
+          cssValue, equals(CSSLength.fromFunction(CSSMin(['100px', '20px']))));
+
+      var css2 = CSS('width: min( 100% )');
+      print(css2);
+      expect(css2.style, equals('width: 100%'));
+
+      var css3 = CSS('height: min(100%,20px)');
+      print(css3);
+      expect(css3.style, equals('height: min(100%, 20px)'));
+
+      var css4 =
+          CSS('min-height: 62p; width: min(100% , 156px); margin-left: 10px;');
+      print(css4);
+      expect(
+          css4.style,
+          equals(
+              'min-height: 62px; width: min(100%, 156px); margin-left: 10px'));
+
+      var css5 = CSS('width: min( 100px , 20px )');
+      print(css5);
+      expect(css5.style, equals('width: 20px'));
+
+      var css6 = CSS('width: min( 20px , 100px )');
+      print(css6);
+      expect(css6.style, equals('width: 20px'));
+
+      var css7 = CSS('width: min( 100px , 20px , 200px, 10px)');
+      print(css7);
+      expect(css7.style, equals('width: 10px'));
     });
 
     test('CSS multiple', () {

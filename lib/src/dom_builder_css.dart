@@ -1,10 +1,14 @@
 import 'dart:collection';
 
+import 'package:collection/collection.dart';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_context.dart';
 import 'dom_builder_helpers.dart';
 
+/// CSS entries.
+///
+/// - CSS Specification: https://www.w3.org/Style/CSS/specs.en.html.
 class CSS {
   static final RegExp entriesDelimiter = RegExp(r'\s*;\s*', multiLine: false);
 
@@ -57,7 +61,7 @@ class CSS {
   }
 
   static List<String> _parseEntriesList(String? css) {
-    if (css == null) return <String>[];
+    if (css == null || css.isEmpty) return <String>[];
 
     var delimiter = RegExp('[;"\'/]');
 
@@ -458,6 +462,7 @@ class CSS {
   void operator []=(String key, value) => put(key, value);
 }
 
+/// A CSS entry (a pair of key and [CSSValue]).
 class CSSEntry<V extends CSSValue> {
   static String? normalizeName(String? name) {
     if (name == null) return null;
@@ -466,10 +471,13 @@ class CSSEntry<V extends CSSValue> {
 
   static final RegExp pairDelimiter = RegExp(r'\s*:\s*', multiLine: false);
 
+  /// The name/key of the [CSS] entry.
   final String name;
 
+  /// The [CSSValue] of the entry.
   V? value;
 
+  /// A sample value for this [CSS] entry (based on [name]).
   V? sampleValue;
 
   String? _comment;
@@ -535,8 +543,10 @@ class CSSEntry<V extends CSSValue> {
   @override
   int get hashCode => name.hashCode ^ value.hashCode;
 
+  /// Returns [value] as [String].
   String get valueAsString => value != null ? value.toString() : '';
 
+  /// Returns [sampleValue] as [String].
   String get sampleValueAsString =>
       sampleValue != null ? sampleValue.toString() : '';
 
@@ -566,6 +576,7 @@ class CSSEntry<V extends CSSValue> {
   }
 }
 
+/// Base class for [CSSEntry] values.
 abstract class CSSValue {
   static CSSValue? from(Object value, [String? name]) {
     if (name != null && name.isNotEmpty) {
@@ -586,7 +597,7 @@ abstract class CSSValue {
     cssValue = CSSURL.from(value);
     if (cssValue != null) return cssValue;
 
-    cssValue = CSSCalc.from(value);
+    cssValue = CSSFunction.from(value);
     if (cssValue != null) return cssValue;
 
     return CSSGeneric.from(value);
@@ -617,13 +628,22 @@ abstract class CSSValue {
 
   CSSValue();
 
-  CSSCalc? _calc;
+  CSSFunction? _cssFunction;
 
-  CSSValue.fromCalc(this._calc);
+  CSSValue.fromFunction(this._cssFunction);
 
-  CSSCalc? get calc => _calc;
+  CSSFunction? get function => _cssFunction;
 
-  bool get isCalc => _calc != null;
+  bool get isFunction => _cssFunction != null;
+
+  CSSValue.fromCalc(CSSCalc calc) : this.fromFunction(calc);
+
+  CSSCalc? get calc {
+    var cssFunction = _cssFunction;
+    return cssFunction is CSSCalc ? cssFunction : null;
+  }
+
+  bool get isCalc => _cssFunction is CSSCalc;
 
   @override
   String toString([DOMContext? domContext]) {
@@ -631,7 +651,7 @@ abstract class CSSValue {
   }
 
   String? toStringCalc([DOMContext? domContext]) {
-    return isCalc ? _calc!.toString(domContext) : null;
+    return isFunction ? _cssFunction!.toString(domContext) : null;
   }
 
   @override
@@ -639,10 +659,10 @@ abstract class CSSValue {
       identical(this, other) ||
       other is CSSValue &&
           runtimeType == other.runtimeType &&
-          _calc == other._calc;
+          _cssFunction == other._cssFunction;
 
   @override
-  int get hashCode => _calc != null ? _calc.hashCode : 0;
+  int get hashCode => _cssFunction != null ? _cssFunction.hashCode : 0;
 }
 
 enum CalcOperation { sum, subtract, multiply, divide }
@@ -698,7 +718,59 @@ num computeCalcOperationSymbol(CalcOperation op, num a, num b) {
   }
 }
 
-class CSSCalc extends CSSValue {
+/// Base class for a [CSSValue] that is a [CSS] function.
+abstract class CSSFunction extends CSSValue {
+  static CSSFunction? from(Object? o) {
+    if (o == null) return null;
+
+    if (o is CSSCalc) {
+      return o;
+    } else if (o is CSSMax) {
+      return o;
+    } else if (o is CSSMin) {
+      return o;
+    } else if (o is String) {
+      return CSSFunction.parse(o);
+    }
+
+    return null;
+  }
+
+  static CSSFunction? parse(String? s) {
+    CSSFunction? cssF = CSSCalc.parse(s);
+    if (cssF != null) return cssF;
+
+    cssF = CSSMax.parse(s);
+    if (cssF != null) return cssF;
+
+    cssF = CSSMin.parse(s);
+    if (cssF != null) return cssF;
+
+    return null;
+  }
+
+  CSSUnit? computeUnit([DOMContext? domContext]);
+
+  CSSValue? compute([DOMContext? domContext]);
+
+  static CSSValue? computeValue(CSSValue cssValue, [DOMContext? domContext]) {
+    if (cssValue is CSSFunction) {
+      return cssValue.compute(domContext);
+    } else if (cssValue.isFunction) {
+      return CSSFunction.computeValue(cssValue._cssFunction!, domContext);
+    } else if (cssValue is CSSNumber) {
+      return cssValue;
+    } else if (cssValue is CSSLength) {
+      var resolved =
+          CSSLength.resolveValue(domContext, cssValue.value, cssValue.unit);
+      return resolved;
+    }
+    return null;
+  }
+}
+
+/// A [CSS] `calc(...)` value.
+class CSSCalc extends CSSFunction {
   static final RegExp pattern =
       RegExp(r'^\s*calc\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
 
@@ -765,16 +837,46 @@ class CSSCalc extends CSSValue {
     }
   }
 
-  CSSValue? compute([DOMContext? domContext]) {
+  @override
+  CSSUnit? computeUnit([DOMContext? domContext]) {
     var valA = CSSValue.from(a);
     if (valA == null) return null;
-    var compA = computeValue(valA);
+    var compA = CSSFunction.computeValue(valA);
     if (compA == null) return null;
 
     if (operation != null) {
       var valB = CSSValue.from(b!);
       if (valB == null) return null;
-      var compB = computeValue(valB);
+      var compB = CSSFunction.computeValue(valB);
+      if (compB == null) return null;
+
+      if (compA is CSSLength && compB is CSSLength) {
+        if (compA.unit == compB.unit) {
+          return compA.unit;
+        } else {
+          return null;
+        }
+      } else {
+        return null;
+      }
+    } else if (compA is CSSLength) {
+      return compA.unit;
+    }
+
+    return null;
+  }
+
+  @override
+  CSSValue? compute([DOMContext? domContext]) {
+    var valA = CSSValue.from(a);
+    if (valA == null) return null;
+    var compA = CSSFunction.computeValue(valA);
+    if (compA == null) return null;
+
+    if (operation != null) {
+      var valB = CSSValue.from(b!);
+      if (valB == null) return null;
+      var compB = CSSFunction.computeValue(valB);
       if (compB == null) return null;
 
       if (compA is CSSLength && compB is CSSLength) {
@@ -797,19 +899,6 @@ class CSSCalc extends CSSValue {
     return compA;
   }
 
-  static CSSValue? computeValue(CSSValue cssValue, [DOMContext? domContext]) {
-    if (cssValue.isCalc) {
-      return CSSCalc.computeValue(cssValue.calc!, domContext);
-    } else if (cssValue is CSSNumber) {
-      return cssValue;
-    } else if (cssValue is CSSLength) {
-      var resolved =
-          CSSLength.resolveValue(domContext, cssValue.value, cssValue.unit);
-      return resolved;
-    }
-    return null;
-  }
-
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -823,6 +912,253 @@ class CSSCalc extends CSSValue {
   int get hashCode => a.hashCode ^ operation.hashCode ^ b.hashCode;
 }
 
+/// A [CSS] `max(...)` value.
+class CSSMax extends CSSFunction {
+  static final RegExp pattern =
+      RegExp(r'^\s*max\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
+
+  static final RegExp patternArgsDelimiter =
+      RegExp(r'\s*,\s*', multiLine: false);
+
+  final List<String> args;
+
+  CSSMax(List<String> args) : args = _normalizeArgs(args);
+
+  static List<String> _normalizeArgs(List<String> args) =>
+      args.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+  static CSSMax? from(Object? o) {
+    if (o == null) return null;
+
+    if (o is CSSMax) {
+      return o;
+    } else if (o is String) {
+      return CSSMax.parse(o);
+    }
+
+    return null;
+  }
+
+  static CSSMax? parse(String? s) {
+    if (s == null) return null;
+    s = s.trim().toLowerCase();
+    if (s.isEmpty) return null;
+
+    var match = pattern.firstMatch(s);
+    if (match == null) return null;
+
+    var call = match.group(1)!;
+
+    var args = call.split(patternArgsDelimiter);
+    args = _normalizeArgs(args);
+
+    if (args.isNotEmpty) {
+      return CSSMax(args);
+    }
+
+    return null;
+  }
+
+  @override
+  String toString([DOMContext? domContext]) {
+    return 'max(${args.join(', ')})';
+  }
+
+  @override
+  CSSUnit? computeUnit([DOMContext? domContext]) {
+    if (args.isEmpty) return null;
+
+    var values = args.map((a) => CSSValue.from(a)).toList();
+    var valuesNotNull = values.whereNotNull().toList();
+    if (valuesNotNull.length != values.length) return null;
+
+    var computed =
+        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computedNotNull = computed.whereNotNull().toList();
+    if (computedNotNull.length != computed.length) return null;
+
+    var computedCSSLength = computedNotNull.whereType<CSSLength>();
+
+    if (computedCSSLength.length == computedNotNull.length) {
+      var firstUnit = computedCSSLength.first.unit;
+
+      if (computedCSSLength.every((a) => a.unit == firstUnit)) {
+        return firstUnit;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  CSSValue? compute([DOMContext? domContext]) {
+    if (args.isEmpty) return null;
+
+    var values = args.map((a) => CSSValue.from(a)).toList();
+    var valuesNotNull = values.whereNotNull().toList();
+    if (valuesNotNull.length != values.length) return null;
+
+    var computed =
+        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computedNotNull = computed.whereNotNull().toList();
+    if (computedNotNull.length != computed.length) return null;
+
+    var computedCSSLength = computedNotNull.whereType<CSSLength>();
+
+    if (computedCSSLength.length == computedNotNull.length) {
+      var firstUnit = computedCSSLength.first.unit;
+
+      if (computedCSSLength.every((a) => a.unit == firstUnit)) {
+        var maxVal = computedCSSLength.map((a) => a.value).max;
+        return CSSLength(maxVal, firstUnit);
+      }
+    }
+
+    var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
+
+    if (computedCSSNumber.length == computedNotNull.length) {
+      var maxVal = computedCSSLength.map((a) => a.value).max;
+      return CSSNumber(maxVal);
+    }
+
+    return null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CSSMax &&
+          runtimeType == other.runtimeType &&
+          ListEquality<String>().equals(args, other.args);
+
+  @override
+  int get hashCode => ListEquality<String>().hash(args);
+}
+
+/// A [CSS] `min(...)` value.
+class CSSMin extends CSSFunction {
+  static final RegExp pattern =
+      RegExp(r'^\s*min\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
+
+  static final RegExp patternArgsDelimiter =
+      RegExp(r'\s*,\s*', multiLine: false);
+
+  final List<String> args;
+
+  CSSMin(List<String> args) : args = _normalizeArgs(args);
+
+  static List<String> _normalizeArgs(List<String> args) =>
+      args.map((e) => e.trim()).where((e) => e.isNotEmpty).toList();
+
+  static CSSMin? from(Object? o) {
+    if (o == null) return null;
+
+    if (o is CSSMin) {
+      return o;
+    } else if (o is String) {
+      return CSSMin.parse(o);
+    }
+
+    return null;
+  }
+
+  static CSSMin? parse(String? s) {
+    if (s == null) return null;
+    s = s.trim().toLowerCase();
+    if (s.isEmpty) return null;
+
+    var match = pattern.firstMatch(s);
+    if (match == null) return null;
+
+    var call = match.group(1)!;
+
+    var args = call.split(patternArgsDelimiter);
+    args = _normalizeArgs(args);
+
+    if (args.isNotEmpty) {
+      return CSSMin(args);
+    }
+
+    return null;
+  }
+
+  @override
+  String toString([DOMContext? domContext]) {
+    return 'min(${args.join(', ')})';
+  }
+
+  @override
+  CSSUnit? computeUnit([DOMContext? domContext]) {
+    if (args.isEmpty) return null;
+
+    var values = args.map((a) => CSSValue.from(a)).toList();
+    var valuesNotNull = values.whereNotNull().toList();
+    if (valuesNotNull.length != values.length) return null;
+
+    var computed =
+        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computedNotNull = computed.whereNotNull().toList();
+    if (computedNotNull.length != computed.length) return null;
+
+    var computedCSSLength = computedNotNull.whereType<CSSLength>();
+
+    if (computedCSSLength.length == computedNotNull.length) {
+      var firstUnit = computedCSSLength.first.unit;
+
+      if (computedCSSLength.every((a) => a.unit == firstUnit)) {
+        return firstUnit;
+      }
+    }
+
+    return null;
+  }
+
+  @override
+  CSSValue? compute([DOMContext? domContext]) {
+    if (args.isEmpty) return null;
+
+    var values = args.map((a) => CSSValue.from(a)).toList();
+    var valuesNotNull = values.whereNotNull().toList();
+    if (valuesNotNull.length != values.length) return null;
+
+    var computed =
+        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computedNotNull = computed.whereNotNull().toList();
+    if (computedNotNull.length != computed.length) return null;
+
+    var computedCSSLength = computedNotNull.whereType<CSSLength>();
+
+    if (computedCSSLength.length == computedNotNull.length) {
+      var firstUnit = computedCSSLength.first.unit;
+
+      if (computedCSSLength.every((a) => a.unit == firstUnit)) {
+        var minVal = computedCSSLength.map((a) => a.value).min;
+        return CSSLength(minVal, firstUnit);
+      }
+    }
+
+    var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
+
+    if (computedCSSNumber.length == computedNotNull.length) {
+      var minVal = computedCSSLength.map((a) => a.value).min;
+      return CSSNumber(minVal);
+    }
+
+    return null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is CSSMin &&
+          runtimeType == other.runtimeType &&
+          ListEquality<String>().equals(args, other.args);
+
+  @override
+  int get hashCode => ListEquality<String>().hash(args);
+}
+
+/// A generic [CSS] value.
 class CSSGeneric extends CSSValue {
   String value;
 
@@ -860,6 +1196,7 @@ class CSSGeneric extends CSSValue {
   int get hashCode => value.hashCode;
 }
 
+/// The [CSS] numeric units.
 enum CSSUnit {
   px,
   cm,
@@ -966,6 +1303,7 @@ String? getCSSUnitName(CSSUnit? unit, [CSSUnit? def]) {
   }
 }
 
+/// A [CSS] value that represents a length with a [unit].
 class CSSLength extends CSSValue {
   static final RegExp pattern =
       RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(%|\w+)?\s*$', multiLine: false);
@@ -981,23 +1319,28 @@ class CSSLength extends CSSValue {
         unit = CSSUnit.px,
         super.fromCalc(calc);
 
+  CSSLength.fromFunction(CSSFunction f)
+      : value = 0,
+        unit = CSSUnit.px,
+        super.fromFunction(f);
+
   static CSSLength? from(Object? value) {
     if (value == null) return null;
 
     if (value is CSSLength) return value;
 
     if (value is String) {
-      var calc = CSSCalc.parse(value);
+      var f = CSSFunction.parse(value);
 
-      if (calc != null) {
-        if (!calc.hasOperation) {
-          var calcLength = CSSLength.parse(calc.a);
-          if (calcLength.toString() == calc.a) {
+      if (f != null) {
+        if (f is CSSCalc && !f.hasOperation) {
+          var calcLength = CSSLength.parse(f.a);
+          if (calcLength.toString() == f.a) {
             return calcLength;
           }
         }
 
-        return CSSLength.fromCalc(calc);
+        return CSSLength.fromFunction(f);
       } else {
         return CSSLength.parse(value);
       }
@@ -1036,9 +1379,9 @@ class CSSLength extends CSSValue {
 
   @override
   String toString([DOMContext? domContext]) {
-    if (isCalc) {
-      var calc = this.calc!;
-      var computed = calc.compute(domContext);
+    if (isFunction) {
+      var function = this.function!;
+      var computed = function.compute(domContext);
 
       if (computed != null) {
         if (computed is CSSLength) {
@@ -1049,7 +1392,7 @@ class CSSLength extends CSSValue {
           return computed.toString(domContext);
         }
       } else {
-        return calc.toString(domContext);
+        return function.toString(domContext);
       }
     }
 
@@ -1104,9 +1447,10 @@ class CSSLength extends CSSValue {
           calc == other.calc);
 
   @override
-  int get hashCode => isCalc ? super.hashCode : value.hashCode ^ unit.index;
+  int get hashCode => isFunction ? super.hashCode : value.hashCode ^ unit.index;
 }
 
+/// A [CSS] value that represents a number (without a unit).
 class CSSNumber extends CSSValue {
   static final RegExp pattern =
       RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*$', multiLine: false);
@@ -1117,23 +1461,25 @@ class CSSNumber extends CSSValue {
 
   CSSNumber.fromCalc(CSSCalc calc) : super.fromCalc(calc);
 
+  CSSNumber.fromFunction(CSSFunction calc) : super.fromFunction(calc);
+
   static CSSNumber? from(Object? value) {
     if (value == null) return null;
 
     if (value is CSSNumber) return value;
 
     if (value is String) {
-      var calc = CSSCalc.parse(value);
+      var f = CSSFunction.parse(value);
 
-      if (calc != null) {
-        if (!calc.hasOperation) {
-          var calcNumber = CSSNumber.parse(calc.a);
-          if (calcNumber.toString() == calc.a) {
+      if (f != null) {
+        if (f is CSSCalc && !f.hasOperation) {
+          var calcNumber = CSSNumber.parse(f.a);
+          if (calcNumber.toString() == f.a) {
             return calcNumber;
           }
         }
 
-        return CSSNumber.fromCalc(calc);
+        return CSSNumber.fromFunction(f);
       } else {
         return CSSNumber.parse(value);
       }
@@ -1191,9 +1537,10 @@ class CSSNumber extends CSSValue {
       (other is CSSNumber && _value == other._value && calc == other.calc);
 
   @override
-  int get hashCode => isCalc ? super.hashCode : _value.hashCode;
+  int get hashCode => isFunction ? super.hashCode : _value.hashCode;
 }
 
+/// Base class for [CSS] colors.
 abstract class CSSColor extends CSSValue {
   CSSColor() : super();
 
@@ -1288,6 +1635,7 @@ abstract class CSSColor extends CSSValue {
   int get hashCode => args.hashCode;
 }
 
+/// A [CSSColor] in RGB.
 class CSSColorRGB extends CSSColor {
   static final RegExp patternRGB = RegExp(
       r'^\s*(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)\s*$',
@@ -1430,6 +1778,7 @@ class CSSColorRGBA extends CSSColorRGB {
   CSSColorRGBA get asCSSColorRGBA => this;
 }
 
+/// A [CSSColor] in HEX (no alpha).
 class CSSColorHEX extends CSSColorRGB {
   static final RegExp patternHex = RegExp(
       r'^([\da-f]{6-8})$|^\s*#([\da-f]{3,8})\s*$',
@@ -1527,6 +1876,7 @@ class CSSColorHEX extends CSSColorRGB {
   CSSColorHEX get asCSSColorHEX => this;
 }
 
+/// A [CSSColor] in HEX with alpha.
 class CSSColorHEXAlpha extends CSSColorHEX {
   double _alpha;
 
@@ -1571,6 +1921,7 @@ class CSSColorHEXAlpha extends CSSColorHEX {
   CSSColorRGBA get asCSSColorRGBA => CSSColorRGBA(red, green, blue, alpha);
 }
 
+/// A [CSSColor] by name.
 class CSSColorName extends CSSColorRGB {
   static const Map<String, String> colorsNames = {
     'transparent': '#00000000',
@@ -1856,6 +2207,7 @@ String? getCSSBorderStyleName(CSSBorderStyle borderStyle) {
   }
 }
 
+/// A [CSS] border value.
 class CSSBorder extends CSSValue {
   static final RegExp pattern = RegExp(
       r'^\s*((?:-?\d+(?:\.\d+)?|-?\.\d+)(?:\%|\w+)?)?'
@@ -2047,6 +2399,7 @@ RegExpDialect _regexpBackgroundDialect = RegExpDialect({
   'image_layers': r'$image(?:\s*,\s*$image)*',
 }, multiLine: false, caseSensitive: false);
 
+/// A [CSS] background gradient value.
 class CSSBackgroundGradient {
   final String? type;
 
@@ -2246,6 +2599,7 @@ class CSSBackgroundImage {
   }
 }
 
+/// A [CSS] background value.
 class CSSBackground extends CSSValue {
   static final RegExp patternColor =
       _regexpBackgroundDialect.getPattern(r'^\s*($color)\s*$');
@@ -2391,6 +2745,7 @@ class CSSBackground extends CSSValue {
   }
 }
 
+/// A [CSS] `url(...)` value.
 class CSSURL extends CSSValue {
   static final RegExp pattern = RegExp(
       r'''^\s*url\(\s*(?:"(.*?)"|'(.*?)'|(.*?))\s*\)\s*$''',
