@@ -1,3 +1,10 @@
+## 2.1.7
+
+- Added `CSSFunction` (extends `CSSValues`):
+  - New `CSSValues`: `CSSMax` and `CSSMin`.
+  - `CSSCalc` now extends `CSSFunction`.
+- swiss_knife: ^3.1.5
+
 ## 2.1.6
 
 - Fix `createTableCells`.
