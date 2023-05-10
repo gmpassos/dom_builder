@@ -473,6 +473,7 @@ void main() {
     test('tryParse', () {
       var source1 = 'Hello! Period: {{:period!=hourPeriod}}diff{{?}}eq{{/}}!';
       var source2 = 'Hello! Period: {{:period!=hourPeriod}}diff{{?}}eq!';
+      var source3 = '{{x}}';
 
       var template1 = DOMTemplate.tryParse(source1)!;
       expect(template1.nodes.length, equals(3));
@@ -480,6 +481,29 @@ void main() {
 
       var template2 = DOMTemplate.tryParse(source2);
       expect(template2, isNull);
+
+      var template3 = DOMTemplate.tryParse(source3)!;
+      expect(template3.nodes.length, equals(1));
+      expect(template3.toString(), equals('{{x}}'));
+
+      expect(DOMTemplate.tryParse(''), isNull);
+      expect(DOMTemplate.tryParse('x'), isNull);
+
+      expect(DOMTemplate.tryParse('{{}}'), isNull);
+    });
+
+    test('parse empty', () {
+      var template1 = DOMTemplate.parse('');
+      expect(template1.nodes.length, equals(1));
+      expect(template1.toString(), equals(''));
+
+      var template2 = DOMTemplate.parse(' ');
+      expect(template2.nodes.length, equals(1));
+      expect(template2.toString(), equals(' '));
+
+      var template3 = DOMTemplate.parse('{{}}');
+      expect(template3.nodes.length, equals(0));
+      expect(template3.toString(), equals(''));
     });
 
     test('intl:hi', () {

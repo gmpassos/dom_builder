@@ -15,6 +15,8 @@ final RegExpDialect _templateDialect = RegExpDialect({
       r'$o([\:\!\?\/\#\.]|[\?\*][:!]|\.|intl?:)?($var)?(?:($cmp)(?:($quote)|($var)))?$c',
 }, multiLine: false, caseSensitive: false);
 
+final int _templateMinimalLength = '{{x}}'.length;
+
 abstract class DOMTemplate {
   static DOMTemplate? from(Object? value) {
     if (value == null) return null;
@@ -65,6 +67,7 @@ abstract class DOMTemplate {
 
   /// Returns [true] if [s] can be a template code, has `{{` and `}}`.
   static bool possiblyATemplate(String s) {
+    if (s.length < _templateMinimalLength) return false;
     var idx = s.indexOf('{{');
     if (idx < 0) return false;
     var idx2 = s.indexOf('}}', idx);
@@ -72,7 +75,6 @@ abstract class DOMTemplate {
   }
 
   static final RegExp regexpTag = _templateDialect.getPattern(r'$tag');
-  static final RegExp regexpQuery = _templateDialect.getPattern(r'$query');
 
   /// Tries to parse [s].
   ///
@@ -95,10 +97,19 @@ abstract class DOMTemplate {
   static DOMTemplateNode? _parse(String? s, bool tryParsing) {
     if (s == null) {
       if (tryParsing) return null;
-      return DOMTemplateNode([DOMTemplateContent(s)]);
+      return DOMTemplateNode([]);
     }
 
-    var matches = regexpTag.allMatches(s);
+    if (s.length < _templateMinimalLength) {
+      if (tryParsing) return null;
+      if (s == '{{}}') {
+        return DOMTemplateNode([]);
+      } else {
+        return DOMTemplateNode([DOMTemplateContent(s)]);
+      }
+    }
+
+    var matches = regexpTag.allMatches(s).toList(growable: false);
     if (matches.isEmpty) {
       if (tryParsing) return null;
       return DOMTemplateNode([DOMTemplateContent(s)]);

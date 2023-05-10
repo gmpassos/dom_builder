@@ -68,7 +68,7 @@ class DOMAttribute implements WithValue {
     name = normalizeName(name);
     if (name == null) return null;
 
-    if (value is String) {
+    if (value is String && DOMTemplate.possiblyATemplate(value)) {
       var template = DOMTemplate.parse(value);
       if (!template.hasOnlyContent) {
         return DOMAttribute(name, DOMAttributeValueTemplate(value));

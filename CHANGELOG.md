@@ -1,3 +1,19 @@
+## 2.1.8
+
+- Optimize:
+  - `DOMAttribute.from`:
+    - Check `DOMTemplate.possiblyATemplate` before call `DOMTemplate.parse`.
+  - `DOMTemplate`:
+    - `possiblyATemplate` and `_parse`: check for minimal template length.
+  - `DOMNode`:
+    - `from`, `parseNodes` and `_parseNode`: optimize `Iterable` nodes resolution.
+    - `_addListToContent` and `__insertListToContent`: Avoid input list copy.
+  - `DOMElement`:
+    - Field `tag`:
+      - Changed to NOT null.
+      - Always lower-case.
+- html: ^0.15.3
+
 ## 2.1.7
 
 - Added `CSSFunction` (extends `CSSValues`):

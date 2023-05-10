@@ -826,7 +826,7 @@ abstract class DOMGenerator<T> {
   T? createWithRegisteredElementGenerator(DOMElement? domParent, T? parent,
       DOMElement domElement, DOMTreeMap<T> treeMap, DOMContext<T>? context) {
     var tag = domElement.tag;
-    var generator = _elementsGenerators[tag!];
+    var generator = _elementsGenerators[tag];
     if (generator == null) return null;
 
     T? contentHolder;
@@ -875,7 +875,8 @@ abstract class DOMGenerator<T> {
   static String? normalizeTag(String? tag) {
     if (tag == null) return null;
     tag = tag.toLowerCase().trim();
-    return tag.isNotEmpty ? tag : null;
+    if (tag.isEmpty) return null;
+    return tag;
   }
 
   bool registerElementGeneratorFrom(DOMGenerator<T> otherGenerator) {
