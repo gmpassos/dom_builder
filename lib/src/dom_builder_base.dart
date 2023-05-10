@@ -1,7 +1,8 @@
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:collection/collection.dart' show IterableExtension;
+import 'package:collection/collection.dart'
+    show IterableExtension, IterableNullableExtension;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_attribute.dart';
@@ -54,7 +55,9 @@ NodeSelector? asNodeSelector(Object? selector) {
     if (str.isEmpty) return null;
 
     var selectors = str.split(_selectorDelimiter);
-    selectors.removeWhere((s) => s.isEmpty);
+    if (selectors.any((s) => s.isEmpty)) {
+      selectors = selectors.where((s) => s.isNotEmpty).toList();
+    }
 
     if (selectors.isEmpty) {
       return null;
@@ -123,39 +126,18 @@ class DOMNode implements AsDOMNode {
 
   /// Parses [entry] to a list of nodes.
   static List<DOMNode> parseNodes(Object? entry) {
-    if (entry == null) return <DOMNode>[];
-
-    if (entry is Iterable) {
-      entry = entry.asList;
+    if (entry == null) {
+      return <DOMNode>[];
+    } else if (entry is String) {
+      return _parseStringNodes(entry);
+    } else if (entry is Iterable) {
+      return _parseListNodes(entry);
     }
 
-    if (entry is AsDOMNode) {
-      var node = entry.asDOMNode;
-      return [node];
-    } else if (entry is AsDOMElement) {
-      var element = entry.asDOMElement;
-      return [element];
-    } else if (entry is DOMNode) {
-      return [entry];
-    } else if (_domHTML.isHtmlNode(entry)) {
-      var domNode = _domHTML.toDOMNode(entry);
-      return domNode != null ? [domNode] : <DOMNode>[];
-    } else if (entry is List) {
-      entry.removeWhere((e) => e == null);
-      if (entry.isEmpty) return <DOMNode>[];
-      var list = entry.expand(parseNodes).toList();
-      return list;
-    } else if (entry is String) {
-      if (isHTMLElement(entry)) {
-        return parseHTML(entry) ?? <DOMNode>[];
-      } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
-        return parseHTML('<span>$entry</span>')!;
-      } else {
-        return [TextNode.toTextNode(entry)];
-      }
-    } else if (entry is num || entry is bool) {
-      return [TextNode(entry.toString())];
-    } else if (isDOMBuilderDirectHelper(entry)) {
+    var domNode = _parseSingleNode(entry);
+    if (domNode != null) return <DOMNode>[domNode];
+
+    if (isDOMBuilderDirectHelper(entry)) {
       try {
         dynamic f = entry;
         var tag = f();
@@ -175,39 +157,18 @@ class DOMNode implements AsDOMNode {
 
   /// Same as [parseNodes], but returns a [DOMNode] or a [List<DOMNode>].
   static Object? _parseNode(Object? entry) {
-    if (entry == null) return null;
-
-    if (entry is Iterable) {
-      entry = entry.asList;
+    if (entry == null) {
+      return null;
+    } else if (entry is String) {
+      return _parseStringNodes(entry);
+    } else if (entry is Iterable) {
+      return _parseListNodes(entry);
     }
 
-    if (entry is AsDOMNode) {
-      var node = entry.asDOMNode;
-      return node;
-    } else if (entry is AsDOMElement) {
-      var element = entry.asDOMElement;
-      return element;
-    } else if (entry is DOMNode) {
-      return entry;
-    } else if (_domHTML.isHtmlNode(entry)) {
-      var domNode = _domHTML.toDOMNode(entry);
-      return domNode;
-    } else if (entry is List) {
-      entry.removeWhere((e) => e == null);
-      if (entry.isEmpty) return <DOMNode>[];
-      var list = entry.expand(parseNodes).toList();
-      return list;
-    } else if (entry is String) {
-      if (isHTMLElement(entry)) {
-        return parseHTML(entry);
-      } else if (hasHTMLEntity(entry) || hasHTMLTag(entry)) {
-        return parseHTML('<span>$entry</span>');
-      } else {
-        return TextNode.toTextNode(entry);
-      }
-    } else if (entry is num || entry is bool) {
-      return TextNode(entry.toString());
-    } else if (isDOMBuilderDirectHelper(entry)) {
+    var domNode = _parseSingleNode(entry);
+    if (domNode != null) return domNode;
+
+    if (isDOMBuilderDirectHelper(entry)) {
       try {
         dynamic f = entry;
         var tag = f();
@@ -225,26 +186,72 @@ class DOMNode implements AsDOMNode {
     }
   }
 
+  static List<DOMNode> _parseStringNodes(String s) {
+    if (isHTMLElement(s)) {
+      return parseHTML(s) ?? <DOMNode>[];
+    } else if (hasHTMLEntity(s) || hasHTMLTag(s)) {
+      return parseHTML('<span>$s</span>')!;
+    } else {
+      return <DOMNode>[TextNode.toTextNode(s)];
+    }
+  }
+
+  static List<DOMNode> _parseListNodes(Iterable l) {
+    if (l is List) {
+      if (l is List<DOMNode>) {
+        return l;
+      } else if (l is List<DOMNode?>) {
+        return l.whereNotNull().toList();
+      }
+
+      final lng = l.length;
+      if (lng == 0) {
+        return <DOMNode>[];
+      } else if (lng == 1) {
+        return parseNodes(l.first);
+      }
+    }
+
+    var list = l.whereNotNull().expand(parseNodes).toList();
+    return list;
+  }
+
+  static DOMNode? _parseSingleNode(Object o) {
+    if (o is DOMNode) {
+      return o;
+    } else if (o is AsDOMNode) {
+      var node = o.asDOMNode;
+      return node;
+    } else if (o is AsDOMElement) {
+      var element = o.asDOMElement;
+      return element;
+    } else if (_domHTML.isHtmlNode(o)) {
+      var domNode = _domHTML.toDOMNode(o);
+      return domNode;
+    } else if (o is num || o is bool) {
+      return TextNode(o.toString());
+    } else {
+      return null;
+    }
+  }
+
   /// Creates a [DOMNode] from dynamic parameter [entry].
   ///
   /// [entry] Can be a [DOMNode], a String with HTML, a Text,
   /// a [Function] or an external element.
   static DOMNode? from(Object? entry) {
-    if (entry == null) return null;
-
-    if (entry is Iterable) {
-      entry = entry.asList;
-    }
-
-    if (entry is DOMNode) {
+    if (entry == null) {
+      return null;
+    } else if (entry is DOMNode) {
       return entry;
     } else if (_domHTML.isHtmlNode(entry)) {
       return _domHTML.toDOMNode(entry);
-    } else if (entry is List) {
-      if (entry.isEmpty) return null;
-      entry.removeWhere((e) => e == null);
-      if (entry.isEmpty) return null;
-      return DOMNode.from(entry.single);
+    } else if (entry is Iterable) {
+      var l = entry.asList;
+      if (l.isEmpty) return null;
+      l = entry.whereNotNull().toList();
+      if (l.isEmpty) return null;
+      return DOMNode.from(l.single);
     } else if (entry is String) {
       if (isHTMLElement(entry)) {
         return parseHTML(entry)!.single;
@@ -717,26 +724,27 @@ class DOMNode implements AsDOMNode {
 
   void _addToContent(Object? entry) {
     if (entry is Iterable) {
-      _addListToContent(entry.whereType<DOMNode>());
+      _addListToContent(entry.whereType<DOMNode>().toList());
     } else if (entry is DOMNode) {
       _addNodeToContent(entry);
     }
   }
 
-  void _addListToContent(Iterable<DOMNode> nodes) {
-    var list = nodes.toList();
+  // [list] should NOT be shared:
+  void _addListToContent(List<DOMNode> list) {
     if (list.isEmpty) return;
 
     _checkAllowContent();
 
-    if (_content == null) {
-      _content = list;
-      for (var elem in _content!) {
+    var content = _content;
+    if (content == null) {
+      _content = content = list;
+      for (var elem in content) {
         elem.parent = this;
       }
     } else {
       for (var elem in list) {
-        _content!.add(elem);
+        content.add(elem);
         elem.parent = this;
       }
     }
@@ -745,25 +753,26 @@ class DOMNode implements AsDOMNode {
   void _addNodeToContent(DOMNode entry) {
     _checkAllowContent();
 
-    if (_content == null) {
+    var content = _content;
+    if (content == null) {
       _content = [entry];
     } else {
-      _content!.add(entry);
+      content.add(entry);
     }
 
     entry.parent = this;
   }
 
   void _insertToContent(int index, Object? entry) {
-    if (entry is List) {
-      _insertListToContent(index, entry.whereType<DOMNode>());
+    if (entry is Iterable) {
+      _insertListToContent(index, entry.whereType<DOMNode>().toList());
     } else if (entry is DOMNode) {
       _insertNodeToContent(index, entry);
     }
   }
 
-  void _insertListToContent(int index, Iterable<DOMNode> nodes) {
-    var list = nodes.toList();
+  // [list] should NOT be shared:
+  void _insertListToContent(int index, List<DOMNode> list) {
     if (list.isEmpty) return;
 
     _checkAllowContent();
@@ -779,7 +788,7 @@ class DOMNode implements AsDOMNode {
     }
 
     if (_content == null) {
-      _content = list.toList();
+      _content = list;
       _setChildrenParent();
     } else {
       if (index >= _content!.length) {
@@ -1531,14 +1540,29 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   static final Set<String> _selfClosingTagsOptional = {'p'};
 
+  static String _normalizeTag(String? tag) {
+    if (tag == null) {
+      throw ArgumentError("Null tag!");
+    }
+
+    tag = tag.toLowerCase().trim();
+    if (tag.isEmpty) {
+      throw ArgumentError("Empty tag!");
+    }
+
+    return tag;
+  }
+
   /// Normalizes a tag name. Returns null for empty string.
   static String? normalizeTag(String? tag) {
     if (tag == null) return null;
     tag = tag.toLowerCase().trim();
-    return tag.isNotEmpty ? tag : null;
+    if (tag.isEmpty) return null;
+    return tag;
   }
 
-  final String? tag;
+  /// The tag name in lower-case.
+  final String tag;
 
   factory DOMElement(String? tag,
       {Map<String, dynamic>? attributes,
@@ -1548,9 +1572,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       Object? content,
       bool? hidden,
       bool commented = false}) {
-    if (tag == null) throw ArgumentError('Null tag');
-
-    tag = tag.toLowerCase().trim();
+    tag = _normalizeTag(tag);
 
     switch (tag) {
       case 'div':
@@ -1693,7 +1715,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
     }
   }
 
-  DOMElement._(String? tag,
+  DOMElement._(this.tag,
       {Map<String, dynamic>? attributes,
       Object? id,
       Object? classes,
@@ -1701,10 +1723,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
       Object? content,
       bool? hidden,
       bool commented = false})
-      : tag = normalizeTag(tag),
-        super._(true, commented) {
-    if (tag == null) throw ArgumentError.notNull('tag');
-
+      : super._(true, commented) {
     addAllAttributes(attributes);
 
     if (id != null) {
@@ -1844,7 +1863,7 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   /// Returns [true] if [tag] is one of [tags].
   bool isTagOneOf(Iterable<String> tags) {
-    if (tag == null || tag!.isEmpty) return false;
+    if (tag.isEmpty) return false;
 
     for (var t in tags) {
       var t2 = normalizeTag(t);
@@ -2242,9 +2261,8 @@ class DOMElement extends DOMNode implements AsDOMElement {
   }
 
   @override
-  DOMElement setContent(Object? newContent) {
-    return super.setContent(newContent) as DOMElement;
-  }
+  DOMElement setContent(Object? newContent) =>
+      super.setContent(newContent) as DOMElement;
 
   @override
   bool absorbNode(DOMNode other) {
@@ -3041,6 +3059,7 @@ class OPTIONElement extends DOMElement implements WithValue {
 
   static OPTIONElement? from(Object? entry) {
     if (entry == null) return null;
+
     if (_domHTML.isHtmlNode(entry)) {
       entry = _domHTML.toDOMNode(entry);
     }
@@ -3262,13 +3281,13 @@ List createTableContent(content, caption, head, body, foot,
       var tbody = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'tbody',
           orElse: () => null);
 
-      var list = [
+      var list = <DOMNode?>[
         DOMNode.from(caption),
         DOMNode.from(thread),
         DOMNode.from(tbody),
         DOMNode.from(tfoot)
-      ];
-      list.removeWhere((e) => e == null);
+      ].whereNotNull().toList();
+
       return list;
     } else {
       return content.map((e) => createTableEntry(e)).toList();
@@ -3314,13 +3333,13 @@ List<TRowElement> createTableRows(Object? rows, bool header) {
     var rowsList = rows.toList();
 
     if (listMatchesAll(rowsList, (dynamic e) => e is TRowElement)) {
-      return rowsList.cast();
+      return rowsList.whereType<TRowElement>().toList();
     } else if (listMatchesAll(
         rowsList, (dynamic e) => _domHTML.isHtmlNode(e))) {
       var trList = rowsList.where((e) => _domHTML.getNodeTag(e) == 'tr');
-      var list = trList.map((e) => DOMNode.from(e)).toList();
-      list.removeWhere((e) => e == null);
-      return list.cast();
+      var list =
+          trList.map((e) => DOMNode.from(e)).whereType<TRowElement>().toList();
+      return list;
     } else if (listMatchesAll(rowsList, (dynamic e) => e is MapEntry)) {
       var mapEntries = rowsList.whereType<MapEntry>().toList();
       tableRows = mapEntries
@@ -3394,16 +3413,19 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
         rowCells,
         (dynamic e) =>
             (!header && e is TDElement) || (header && e is THElement))) {
-      return rowCells.cast();
+      return rowCells.whereType<TABLENode>().toList();
     } else if (listMatchesAll(
         rowCells, (dynamic e) => _domHTML.isHtmlNode(e))) {
       var tdList = rowCells.where((e) {
         var tag = _domHTML.getNodeTag(e);
         return (tag == 'td' || tag == 'th');
       });
-      var list = tdList.map((e) => DOMNode.from(e)).toList();
-      list.removeWhere((e) => e == null);
-      return list.cast();
+      var list = tdList
+          .map((e) => DOMNode.from(e))
+          .whereNotNull()
+          .whereType<TABLENode>()
+          .toList();
+      return list;
     }
   } else if (rowCells is TDElement || rowCells is THElement) {
     return [rowCells as TABLENode];

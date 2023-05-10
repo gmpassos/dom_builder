@@ -80,8 +80,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     if (node is Text) {
       return domNode is TextNode;
     } else if (node is Element) {
-      return domNode is DOMElement &&
-          domNode.tag!.toLowerCase() == node.tagName.toLowerCase();
+      return domNode is DOMElement && domNode.tag == node.tagName.toLowerCase();
     }
     return false;
   }
