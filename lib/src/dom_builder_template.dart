@@ -96,8 +96,9 @@ abstract class DOMTemplate {
 
   static DOMTemplateNode? _parse(String? s, bool tryParsing) {
     if (s == null) {
-      if (tryParsing) return null;
-      return DOMTemplateNode([]);
+      // Only `tryParse` can pass a `null` [s].
+      assert(tryParsing);
+      return null;
     }
 
     if (s.length < _templateMinimalLength) {

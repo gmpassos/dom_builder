@@ -482,6 +482,8 @@ void main() {
       var template2 = DOMTemplate.tryParse(source2);
       expect(template2, isNull);
 
+      expect(() => DOMTemplate.parse(source2), throwsA(isA<StateError>()));
+
       var template3 = DOMTemplate.tryParse(source3)!;
       expect(template3.nodes.length, equals(1));
       expect(template3.toString(), equals('{{x}}'));
@@ -504,6 +506,11 @@ void main() {
       var template3 = DOMTemplate.parse('{{}}');
       expect(template3.nodes.length, equals(0));
       expect(template3.toString(), equals(''));
+
+      var template4 = DOMTemplate.parse('Hello World');
+      expect(template4.nodes.length, equals(1));
+      expect(template4.hasOnlyContent, isTrue);
+      expect(template4.toString(), equals('Hello World'));
     });
 
     test('intl:hi', () {
