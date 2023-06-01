@@ -303,6 +303,13 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
         });
       }
 
+      if (domElement.hasOnKeyDownListener) {
+        element.onKeyDown.listen((event) {
+          var domEvent = createDOMEvent(treeMap, event)!;
+          domElement.onKeyDown.add(domEvent);
+        });
+      }
+
       if (domElement.hasOnMouseOverListener) {
         element.onMouseOver.listen((event) {
           var domEvent = createDOMMouseEvent(treeMap, event)!;

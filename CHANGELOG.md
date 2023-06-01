@@ -1,3 +1,7 @@
+## 2.1.9
+
+- Fix `onKeyDown` handling and building.
+
 ## 2.1.8
 
 - Optimize:

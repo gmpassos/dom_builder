@@ -1816,6 +1816,9 @@ class DOMElement extends DOMNode implements AsDOMElement {
     } else if (attrName == 'onkeyup') {
       onKeyUp.listen((_) => dsx.call());
       return true;
+    } else if (attrName == 'onkeydown') {
+      onKeyDown.listen((_) => dsx.call());
+      return true;
     } else if (attrName == 'onerror') {
       onError.listen((_) => dsx.call());
       return true;
