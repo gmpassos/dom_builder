@@ -4,7 +4,7 @@ version: 2.1.9
 homepage: https://github.com/gmpassos/dom_builder
 
 environment:
-  sdk: '>=2.15.0 <3.0.0'
+  sdk: '>=2.15.0 <4.0.0'
 
 dependencies:
   html: ^0.15.3
