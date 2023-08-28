@@ -3,6 +3,7 @@
 - `DOMEvent`:
   - Change field `target` from `DOMElement` to `DOMNode`
     to allow `ExternalElementNode` as target or any other `DOMNode` implementation. 
+- Dart CI: update and optimize jobs.
 
 - sdk: '>=3.0.0 <4.0.0'
 
