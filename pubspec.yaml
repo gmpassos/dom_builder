@@ -1,19 +1,19 @@
 name: dom_builder
 description: Generate and manipulate DOM elements (virtual or real), DSX (like JSX) and HTML declarations (Web and Native support).
-version: 2.1.9
+version: 2.2.0
 homepage: https://github.com/gmpassos/dom_builder
 
 environment:
-  sdk: '>=2.15.0 <4.0.0'
+  sdk: '>=3.0.0 <4.0.0'
 
 dependencies:
-  html: ^0.15.3
+  html: ^0.15.4
   swiss_knife: ^3.1.5
-  collection: ^1.17.0
+  collection: ^1.18.0
 
 dev_dependencies:
-  lints: ^2.0.1
-  test: ^1.23.1
+  lints: ^2.1.1
+  test: ^1.24.6
   dependency_validator: ^3.2.2
   coverage: ^1.6.3
 

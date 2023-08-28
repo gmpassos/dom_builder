@@ -2675,7 +2675,7 @@ class DOMEvent<T> {
   final DOMTreeMap<T> treeMap;
   final Object? event;
   final Object? eventTarget;
-  final DOMElement? target;
+  final DOMNode? target;
 
   DOMEvent(this.treeMap, this.event, this.eventTarget, this.target);
 
@@ -2727,7 +2727,7 @@ class DOMMouseEvent<T> extends DOMEvent<T> {
       this.ctrlKey,
       this.shiftKey,
       this.metaKey)
-      : super(treeMap, event, eventTarget, target as DOMElement?);
+      : super(treeMap, event, eventTarget, target);
 
   /// Creates an artificial event. Useful to generated events programmatically.
   factory DOMMouseEvent.synthetic({

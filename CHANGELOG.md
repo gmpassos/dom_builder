@@ -1,3 +1,16 @@
+## 2.2.0
+
+- `DOMEvent`:
+  - Change field `target` from `DOMElement` to `DOMNode`
+    to allow `ExternalElementNode` as target or any other `DOMNode` implementation. 
+
+- sdk: '>=3.0.0 <4.0.0'
+
+- html: ^0.15.4
+- collection: ^1.18.0
+- lints: ^2.1.1
+- test: ^1.24.6
+
 ## 2.1.9
 
 - Fix `onKeyDown` handling and building.
