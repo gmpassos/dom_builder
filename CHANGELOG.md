@@ -3,6 +3,9 @@
 - `DOMHtmlBrowser`:
   - Fix `toDOMElement` for `checkbox`.
 - `$checkbox`: added parameter `checked`.
+- `WithValue`:
+  - Changed from interface to mixin.
+  - Added `valueAsBool`, `valueAsInt`, `valueAsDouble`, `valueAsNum`.
 
 - dependency_validator: ^3.2.3
 

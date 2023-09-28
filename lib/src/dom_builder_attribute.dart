@@ -11,7 +11,7 @@ import 'dom_builder_template.dart';
 import 'dom_builder_treemap.dart';
 
 /// Represents a [DOMElement] attribute entry (`name` and [DOMAttributeValue]).
-class DOMAttribute implements WithValue {
+class DOMAttribute with WithValue {
   static final Set<String> _attributesValueAsBoolean = {
     'checked',
     'hidden',

@@ -31,10 +31,22 @@ void domBuilderLog(String message,
   }
 }
 
-abstract class WithValue {
+mixin WithValue {
   bool get hasValue;
 
   String? get value;
+
+  /// Returns [value] as [bool].
+  bool? get valueAsBool => parseBool(value);
+
+  /// Returns [value] as [bool].
+  int? get valueAsInt => parseInt(value);
+
+  /// Returns [value] as [double].
+  double? get valueAsDouble => parseDouble(value);
+
+  /// Returns [value] as [num].
+  num? get valueAsNum => parseNum(value);
 }
 
 //
@@ -1194,7 +1206,7 @@ class DOMNode implements AsDOMNode {
 }
 
 /// Represents a text node in DOM.
-class TextNode extends DOMNode implements WithValue {
+class TextNode extends DOMNode with WithValue {
   static DOMNode toTextNode(String? text) {
     if (text == null || text.isEmpty) {
       return TextNode('');
@@ -1334,7 +1346,7 @@ class TextNode extends DOMNode implements WithValue {
 }
 
 /// Represents a template node in DOM.
-class TemplateNode extends DOMNode implements WithValue {
+class TemplateNode extends DOMNode with WithValue {
   DOMTemplateNode template;
 
   TemplateNode(this.template) : super._(false, false);
@@ -2869,7 +2881,7 @@ class DIVElement extends DOMElement {
 // INPUTElement:
 //
 
-class INPUTElement extends DOMElement implements WithValue {
+class INPUTElement extends DOMElement with WithValue {
   static INPUTElement? from(Object? entry) {
     if (entry == null) return null;
     if (_domHTML.isHtmlNode(entry)) {
@@ -3040,7 +3052,7 @@ class SELECTElement extends DOMElement {
 // OPTIONElement:
 //
 
-class OPTIONElement extends DOMElement implements WithValue {
+class OPTIONElement extends DOMElement with WithValue {
   static List<OPTIONElement> toOptions(Object? options) {
     if (options == null) return [];
     if (options is OPTIONElement) return [options];
@@ -3178,7 +3190,7 @@ class OPTIONElement extends DOMElement implements WithValue {
 // TEXTAREAElement:
 //
 
-class TEXTAREAElement extends DOMElement implements WithValue {
+class TEXTAREAElement extends DOMElement with WithValue {
   static TEXTAREAElement? from(Object? entry) {
     if (entry == null) return null;
     if (_domHTML.isHtmlNode(entry)) {
