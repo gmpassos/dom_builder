@@ -819,6 +819,7 @@ INPUTElement $checkbox(
     Object? style,
     Object? placeholder,
     Map<String, String>? attributes,
+    bool? checked,
     Object? value,
     bool? hidden,
     bool disabled = false,
@@ -830,7 +831,12 @@ INPUTElement $checkbox(
       placeholder: placeholder,
       classes: classes,
       style: style,
-      attributes: attributes,
+      attributes: attributes != null || checked != null
+          ? {
+              ...?attributes,
+              if (checked != null) 'checked': '$checked',
+            }
+          : null,
       value: value,
       hidden: hidden,
       disabled: disabled,

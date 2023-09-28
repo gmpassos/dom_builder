@@ -2,6 +2,8 @@
 
 - `DOMHtmlBrowser`:
   - Fix `toDOMElement` for `checkbox`.
+- `$checkbox`: added parameter `checked`.
+
 - dependency_validator: ^3.2.3
 
 ## 2.2.0
