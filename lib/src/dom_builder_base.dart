@@ -3023,7 +3023,7 @@ class CHECKBOXElement extends INPUTElement with WithValue {
   String? get value => getAttributeValue('value');
 
   /// Returns `true` if the checkbox is checked.
-  bool? get checked => parseBool(getAttributeValue('checked'));
+  bool? get checked => getAttributeValueAsBool('checked');
 }
 
 //
