@@ -32,7 +32,11 @@ void domBuilderLog(String message,
 }
 
 mixin WithValue {
-  bool get hasValue;
+  /// Returns `true` if has [value].
+  bool get hasValue {
+    final value = this.value;
+    return value != null && value.isNotEmpty;
+  }
 
   String? get value;
 
@@ -1533,7 +1537,7 @@ void _checkTag(String expectedTag, DOMElement domElement) {
 //
 
 /// A node for HTML elements.
-class DOMElement extends DOMNode implements AsDOMElement {
+class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   static final Set<String> _selfClosingTags = {
     'area',
     'base',
@@ -1598,14 +1602,29 @@ class DOMElement extends DOMNode implements AsDOMElement {
             commented: commented);
 
       case 'input':
-        return INPUTElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            value: content,
-            hidden: hidden,
-            commented: commented);
+        {
+          var type = attributes?['type'];
+
+          if (type == 'checkbox') {
+            return CHECKBOXElement(
+                attributes: attributes,
+                id: id,
+                classes: classes,
+                style: style,
+                value: content,
+                hidden: hidden,
+                commented: commented);
+          }
+
+          return INPUTElement(
+              attributes: attributes,
+              id: id,
+              classes: classes,
+              style: style,
+              value: content,
+              hidden: hidden,
+              commented: commented);
+        }
 
       case 'select':
         return SELECTElement(
@@ -2055,9 +2074,8 @@ class DOMElement extends DOMNode implements AsDOMElement {
 
   void operator []=(String name, Object? value) => setAttribute(name, value);
 
-  String? get value {
-    return text;
-  }
+  @override
+  String? get value => text;
 
   /// Returns attribute value for [name].
   ///
@@ -2938,6 +2956,74 @@ class INPUTElement extends DOMElement with WithValue {
 
   @override
   String? get value => getAttributeValue('value');
+}
+
+//
+// CHECKBOXElement:
+//
+
+class CHECKBOXElement extends INPUTElement with WithValue {
+  static CHECKBOXElement? from(Object? entry) {
+    if (entry == null) return null;
+    if (_domHTML.isHtmlNode(entry)) {
+      entry = _domHTML.toDOMNode(entry);
+    }
+
+    if (entry is CHECKBOXElement) return entry;
+
+    if (entry is DOMElement) {
+      _checkTag('input', entry);
+      return CHECKBOXElement(
+          attributes: entry._attributes,
+          value: entry.value,
+          commented: entry.isCommented);
+    }
+
+    return null;
+  }
+
+  CHECKBOXElement(
+      {Map<String, dynamic>? attributes,
+      Object? id,
+      Object? name,
+      Object? type,
+      Object? placeholder,
+      Object? classes,
+      Object? style,
+      Object? value,
+      bool? checked,
+      bool? hidden,
+      bool disabled = false,
+      bool commented = false})
+      : super(
+            id: id,
+            classes: classes,
+            style: style,
+            attributes: {
+              if (name != null) 'name': name,
+              'type': 'checkbox',
+              if (placeholder != null) 'placeholder': placeholder,
+              if (value != null) 'value': value,
+              if (checked != null) 'checked': checked,
+              if (disabled) 'disabled': disabled,
+              ...?attributes
+            },
+            hidden: hidden,
+            commented: commented);
+
+  @override
+  CHECKBOXElement copy() {
+    return CHECKBOXElement(attributes: attributes, commented: isCommented);
+  }
+
+  @override
+  bool get hasValue => isNotEmptyObject(value);
+
+  @override
+  String? get value => getAttributeValue('value');
+
+  /// Returns `true` if the checkbox is checked.
+  bool? get checked => parseBool(getAttributeValue('checked'));
 }
 
 //

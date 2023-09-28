@@ -2,6 +2,7 @@
 
 - `DOMHtmlBrowser`:
   - Fix `toDOMElement` for `checkbox`.
+- New `CHECKBOXElement`.
 - `$checkbox`: added parameter `checked`.
 - `WithValue`:
   - Changed from interface to mixin.

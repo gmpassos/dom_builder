@@ -812,7 +812,7 @@ INPUTElement $input(
 }
 
 /// Creates an `input` node of type `checkbox`.
-INPUTElement $checkbox(
+CHECKBOXElement $checkbox(
     {Object? id,
     Object? name,
     Object? classes,
@@ -824,20 +824,16 @@ INPUTElement $checkbox(
     bool? hidden,
     bool disabled = false,
     bool commented = false}) {
-  return INPUTElement(
+  return CHECKBOXElement(
       id: id,
       name: name,
       type: 'checkbox',
       placeholder: placeholder,
       classes: classes,
       style: style,
-      attributes: attributes != null || checked != null
-          ? {
-              ...?attributes,
-              if (checked != null) 'checked': '$checked',
-            }
-          : null,
+      attributes: attributes,
       value: value,
+      checked: checked,
       hidden: hidden,
       disabled: disabled,
       commented: commented);
