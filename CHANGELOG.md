@@ -1,3 +1,9 @@
+## 2.2.1
+
+- `DOMHtmlBrowser`:
+  - Fix `toDOMElement` for `checkbox`.
+- dependency_validator: ^3.2.3
+
 ## 2.2.0
 
 - `DOMEvent`:

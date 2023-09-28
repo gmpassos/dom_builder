@@ -115,6 +115,13 @@ class DOMHtmlBrowser extends DOMHtml {
         }
       }
 
+      if (node is dart_html.CheckboxInputElement) {
+        var checked = node.checked;
+        if (checked != null && checked && !attributes.containsKey('checked')) {
+          attributes['checked'] = 'true';
+        }
+      }
+
       var nodes = node.nodes;
       var content = isNotEmptyObject(nodes) ? List.from(nodes) : null;
 
