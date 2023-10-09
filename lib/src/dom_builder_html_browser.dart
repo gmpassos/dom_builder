@@ -4,6 +4,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_html.dart';
+import 'dom_builder_treemap.dart';
 
 class DOMHtmlBrowser extends DOMHtml {
   DOMHtmlBrowser() : super.create();
@@ -104,6 +105,15 @@ class DOMHtmlBrowser extends DOMHtml {
   @override
   DOMElement? toDOMElement(Object? node) {
     if (node is dart_html.Element) {
+      // Check if this `Element` was built from a `DOMNode`:
+      var treeMap = DOMTreeMap.getElementDOMTreeMap<dart_html.Node>(node);
+      if (treeMap != null) {
+        var domNode = treeMap.getMappedDOMNode(node);
+        if (domNode is DOMElement) {
+          return domNode;
+        }
+      }
+
       var name = node.tagName.toLowerCase().trim();
 
       var attributes = node.attributes.map((k, v) => MapEntry(k.toString(), v));

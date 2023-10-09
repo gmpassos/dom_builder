@@ -1,3 +1,7 @@
+## 2.2.2
+
+- Added `DOMTreeMap.getElementDOMTreeMap`.
+
 ## 2.2.1
 
 - `DOMHtmlBrowser`:
