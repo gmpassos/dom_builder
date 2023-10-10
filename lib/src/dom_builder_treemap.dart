@@ -40,6 +40,16 @@ class DOMTreeMap<T> {
 
   Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
 
+  static final Expando _elementsDOMTreeMap =
+      Expando<DOMTreeMap>('Elements->DOMTreeMap');
+
+  /// Returns the [DOMTreeMap] of the [element],
+  /// if it's associated with some [DOMElement].
+  static DOMTreeMap<T>? getElementDOMTreeMap<T>(T? element) {
+    if (element == null) return null;
+    return _elementsDOMTreeMap[element] as DOMTreeMap<T>?;
+  }
+
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element,
       {DOMContext<T>? context, bool allowOverwrite = false}) {
@@ -65,6 +75,7 @@ class DOMTreeMap<T> {
     _elementToDOMNodeMap[element] = domNode;
 
     domNode.treeMap = this;
+    _elementsDOMTreeMap[element] = this;
 
     if (domNode is DOMElement) {
       domGenerator.resolveActionAttribute(this, domNode, element, context);
