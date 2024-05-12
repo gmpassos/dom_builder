@@ -42,10 +42,19 @@ List<String> parseListOfStrings(Object? s, Pattern delimiter,
   return list;
 }
 
-final RegExp _regexpHtmlTag = RegExp(r'<\w+(?:>|\s)');
+bool possiblyWithHTML(String? s) {
+  return s != null && (possiblyWithHTMLTag(s) || possiblyWithHTMLEntity(s));
+}
 
-bool possiblyWithHTML(String? s) =>
-    s != null && s.contains('<') && s.contains(_regexpHtmlTag);
+final RegExp _regexpPossiblyHtmlTag = RegExp(r'<\w+(?:>|\s)');
+
+bool possiblyWithHTMLTag(String? s) =>
+    s != null && s.contains('<') && s.contains(_regexpPossiblyHtmlTag);
+
+final RegExp _regexpPossiblyHtmlEntity = RegExp(r'&#?\w+;');
+
+bool possiblyWithHTMLEntity(String? s) =>
+    s != null && s.contains('&') && s.contains(_regexpPossiblyHtmlEntity);
 
 final RegExp _regexpDependentTag =
     RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
