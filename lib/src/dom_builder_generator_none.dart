@@ -100,7 +100,7 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
-  T? createTextNode(String? text) {
+  T? createTextNode(Object? text) {
     _noDartHTML();
     return null;
   }

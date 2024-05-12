@@ -382,7 +382,20 @@ abstract class DOMGenerator<T> {
           node = $tag('span', content: nodes);
         }
 
-        if (node is! TextNode) {
+        if (node is TextNode) {
+          T? textNode;
+          if (parent != null) {
+            textNode = appendElementTextNode(parent, node);
+          } else {
+            textNode = createTextNode(node);
+          }
+
+          if (textNode != null) {
+            treeMap.map(domNode, textNode);
+          }
+
+          return textNode;
+        } else {
           if (domParent != null) {
             node.parent = domParent;
           }
@@ -412,6 +425,9 @@ abstract class DOMGenerator<T> {
   String? getNodeText(T? node);
 
   T? appendElementText(T element, String? text);
+
+  T? appendElementTextNode(T element, TextNode? textNode) =>
+      appendElementText(element, textNode?.text);
 
   T buildElement(DOMElement? domParent, T? parent, DOMElement domElement,
       DOMTreeMap<T> treeMap, DOMContext<T>? context) {
@@ -748,7 +764,7 @@ abstract class DOMGenerator<T> {
 
   T? createElement(String? tag, [DOMElement? domElement]);
 
-  T? createTextNode(String? text);
+  T? createTextNode(Object? text);
 
   bool isTextNode(T? node);
 
@@ -1158,6 +1174,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.appendElementText(element, text);
 
   @override
+  T? appendElementTextNode(T element, TextNode? textNode) =>
+      domGenerator.appendElementTextNode(element, textNode);
+
+  @override
   String? buildElementHTML(T element) => domGenerator.buildElementHTML(element);
 
   @override
@@ -1181,7 +1201,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.createElement(tag, domElement);
 
   @override
-  T? createTextNode(String? text) => domGenerator.createTextNode(text);
+  T? createTextNode(Object? text) => domGenerator.createTextNode(text);
 
   @override
   T? generateDOMAsyncElement(DOMElement? domParent, T? parent,
@@ -1615,6 +1635,9 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   T? appendElementText(T element, String? text) => null;
 
   @override
+  T? appendElementTextNode(T element, TextNode? textNode) => null;
+
+  @override
   String? buildElementHTML(T element) => null;
 
   @override
@@ -1635,7 +1658,7 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   T? createElement(String? tag, [DOMElement? domElement]) => null;
 
   @override
-  T? createTextNode(String? text) => null;
+  T? createTextNode(Object? text) => null;
 
   @override
   T? generateDOMAsyncElement(DOMElement? domParent, T? parent,

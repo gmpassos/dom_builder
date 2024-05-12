@@ -124,9 +124,18 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  Text? createTextNode(String? text) {
-    if (text == null || text.isEmpty) return null;
-    return Text(text);
+  Text? createTextNode(Object? text) {
+    if (text == null) return null;
+
+    if (text is Text) {
+      return text;
+    } else if (text is TextNode) {
+      return Text(text.text);
+    }
+
+    var s = text.toString();
+    if (s.isEmpty) return null;
+    return Text(s);
   }
 
   @override
