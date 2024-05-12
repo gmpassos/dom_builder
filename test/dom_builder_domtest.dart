@@ -321,8 +321,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  TestNode createTextNode(String? text) {
-    return TestText(text);
+  TestNode? createTextNode(Object? text) {
+    if (text == null) return null;
+    var s = text.toString();
+    if (s.isEmpty) return null;
+    return TestText(s);
   }
 
   @override
