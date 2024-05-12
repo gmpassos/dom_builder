@@ -22,7 +22,7 @@ abstract class DOMNodeRuntime<T> {
 
   /// The [DOMNodeRuntime] of [parent].
   DOMNodeRuntime<T>? get parentRuntime {
-    var domNodeParent = domNode != null ? domNode!.parent : null;
+    var domNodeParent = domNode?.parent;
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
     return domGenerator.createDOMNodeRuntime(

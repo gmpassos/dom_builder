@@ -302,8 +302,7 @@ class DOMNode implements AsDOMNode {
   DOMNodeRuntime<T> getRuntime<T>() => runtime as DOMNodeRuntime<T>;
 
   /// Returns [runtime.node].
-  dynamic get runtimeNode =>
-      treeMap != null ? treeMap!.getMappedElement(this) : null;
+  dynamic get runtimeNode => treeMap?.getMappedElement(this);
 
   /// Same as [runtimeNode], but casts to [T].
   T? getRuntimeNode<T>() => runtimeNode as T?;
@@ -312,8 +311,7 @@ class DOMNode implements AsDOMNode {
   bool get isGenerated => treeMap != null;
 
   /// Returns the [DOMGenerator] associated with [treeMap].
-  DOMGenerator? get domGenerator =>
-      treeMap != null ? treeMap!.domGenerator : null;
+  DOMGenerator? get domGenerator => treeMap?.domGenerator;
 
   /// Indicates if this node accepts content.
   final bool allowContent;
