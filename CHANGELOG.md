@@ -1,3 +1,15 @@
+## 2.2.3
+
+- Added `possiblyWithHTMLTag` and `possiblyWithHTMLEntity`.
+
+- `possiblyWithHTML`: also check for HTML entities.
+
+- `DOMGenerator.buildTemplate`: fix resolution of entries with an HTML entity but without an HTML tag.
+
+- swiss_knife: ^3.2.0
+- test: ^1.25.5
+- coverage: ^1.8.0
+
 ## 2.2.2
 
 - Added `DOMTreeMap.getElementDOMTreeMap`.
