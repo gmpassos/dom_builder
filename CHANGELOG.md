@@ -1,3 +1,11 @@
+## 2.2.4
+
+- `$p`: added parameter `content`.
+- Added `$emsp`.
+- Optimized `$nbsp`.
+
+- Optimized `_parseStringNodes` and `_parseListNodes`.
+
 ## 2.2.3
 
 - Added `possiblyWithHTMLTag` and `possiblyWithHTMLEntity`.
