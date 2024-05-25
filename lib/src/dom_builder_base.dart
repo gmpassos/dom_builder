@@ -206,7 +206,7 @@ class DOMNode implements AsDOMNode {
     if (isHTMLElement(s)) {
       return parseHTML(s) ?? <DOMNode>[];
     } else if (hasHTMLEntity(s) || hasHTMLTag(s)) {
-      return parseHTML('<span>$s</span>')!;
+      return [DOMElement._('span', content: parseHTML(s))];
     } else {
       return <DOMNode>[TextNode.toTextNode(s)];
     }
@@ -228,8 +228,21 @@ class DOMNode implements AsDOMNode {
       }
     }
 
-    var list = l.whereNotNull().expand(parseNodes).toList();
-    return list;
+    var nodes = <DOMNode>[];
+
+    for (var e in l) {
+      if (e == null) continue;
+
+      var node = _parseNode(e);
+
+      if (node is DOMNode) {
+        nodes.add(node);
+      } else {
+        nodes.addAll(node as Iterable<DOMNode>);
+      }
+    }
+
+    return nodes;
   }
 
   static DOMNode? _parseSingleNode(Object o) {
@@ -866,12 +879,12 @@ class DOMNode implements AsDOMNode {
   /// Sets the content of this node.
   DOMNode setContent(Object? newContent) {
     var nodes = DOMNode.parseNodes(newContent);
-    if (nodes.isNotEmpty) {
+    if (nodes.isEmpty) {
+      _content = null;
+    } else {
       _content = nodes;
       _setChildrenParent();
       normalizeContent();
-    } else {
-      _content = null;
     }
     return this;
   }

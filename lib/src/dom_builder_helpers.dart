@@ -994,6 +994,7 @@ DOMElement $p(
         Object? classes,
         Object? style,
         Map<String, String>? attributes,
+        Object? content,
         bool? hidden,
         bool commented = false}) =>
     $tag('p',
@@ -1001,6 +1002,7 @@ DOMElement $p(
         classes: classes,
         style: style,
         attributes: attributes,
+        content: content,
         hidden: hidden,
         commented: commented);
 
@@ -1020,11 +1022,30 @@ DOMElement $br({int amount = 1, bool commented = false}) {
 }
 
 String $nbsp([int length = 1]) {
-  if (length < 1) return '';
+  if (length == 1) {
+    return '&nbsp;';
+  } else if (length < 1) {
+    return '';
+  }
 
-  var s = StringBuffer('&nbsp;');
-  for (var i = 1; i < length; i++) {
+  var s = StringBuffer('&nbsp;&nbsp;');
+  for (var i = 2; i < length; i++) {
     s.write('&nbsp;');
+  }
+
+  return s.toString();
+}
+
+String $emsp([int length = 1]) {
+  if (length == 1) {
+    return '&emsp;';
+  } else if (length < 1) {
+    return '';
+  }
+
+  var s = StringBuffer('&emsp;&emsp;');
+  for (var i = 2; i < length; i++) {
+    s.write('&emsp;');
   }
 
   return s.toString();
