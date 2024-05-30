@@ -202,6 +202,26 @@ class DOMNode implements AsDOMNode {
     }
   }
 
+  static Object? parseString(String s) {
+    if (hasHTMLEntity(s) || hasHTMLTag(s)) {
+      return parseHTML(s);
+    } else if (s.isNotEmpty) {
+      return TextNode.toTextNode(s);
+    } else {
+      return null;
+    }
+  }
+
+  static List<DOMNode>? parseStringNodes(String s) {
+    if (hasHTMLEntity(s) || hasHTMLTag(s)) {
+      return parseHTML(s);
+    } else if (s.isNotEmpty) {
+      return <DOMNode>[TextNode.toTextNode(s)];
+    } else {
+      return null;
+    }
+  }
+
   static List<DOMNode> _parseStringNodes(String s) {
     if (isHTMLElement(s)) {
       return parseHTML(s) ?? <DOMNode>[];
