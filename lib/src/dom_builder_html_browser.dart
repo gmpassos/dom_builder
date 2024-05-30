@@ -3,7 +3,6 @@ import 'dart:html' as dart_html;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
-import 'dom_builder_helpers.dart';
 import 'dom_builder_html.dart';
 import 'dom_builder_treemap.dart';
 
@@ -222,10 +221,6 @@ class DOMHtmlBrowser extends DOMHtml {
 
   Object? _parseImpl(String html) {
     try {
-      if (!hasHTMLEntity(html) && !hasHTMLTag(html)) {
-        return TextNode.toTextNode(html);
-      }
-
       dart_html.Node parsed = _domParser.parseFromString(html, 'text/html');
 
       if (parsed is dart_html.Document) {

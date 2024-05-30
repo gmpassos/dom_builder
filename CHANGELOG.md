@@ -3,6 +3,11 @@
 - `DOMHtmlBrowser`:
   - Optimize `parse`.
 
+- `DOMNode`:
+  - Added `parseString` and `parseStringNodes`.
+
+- `$html`: optimize using `DOMNode.parseStringNodes`.
+
 ## 2.2.4
 
 - `$p`: added parameter `content`.
