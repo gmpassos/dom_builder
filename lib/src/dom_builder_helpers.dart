@@ -128,9 +128,9 @@ List<DOMNode>? parseHTML(String? html) {
 List<DOMNode> $html<T extends DOMNode>(Object? html) {
   if (html == null) return <DOMNode>[];
   if (html is String) {
-    return parseHTML(html) ?? <DOMNode>[];
-  } else if (html is List) {
-    return parseHTML(html.join('')) ?? <DOMNode>[];
+    return DOMNode.parseStringNodes(html) ?? <DOMNode>[];
+  } else if (html is Iterable) {
+    return DOMNode.parseStringNodes(html.join('')) ?? <DOMNode>[];
   }
 
   throw ArgumentError("Can't parse type: ${html.runtimeType}");
