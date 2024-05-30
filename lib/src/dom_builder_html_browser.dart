@@ -3,6 +3,7 @@ import 'dart:html' as dart_html;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
+import 'dom_builder_helpers.dart';
 import 'dom_builder_html.dart';
 import 'dom_builder_treemap.dart';
 
@@ -148,7 +149,83 @@ class DOMHtmlBrowser extends DOMHtml {
 
   @override
   Object? parse(String html) {
+    switch (html) {
+      case '&nbsp;':
+        {
+          return TextNode('\u00A0', false);
+        }
+      case '&nbsp;&nbsp;':
+        {
+          return TextNode('\u00A0\u00A0', false);
+        }
+      case '&nbsp;&nbsp;&nbsp;':
+        {
+          return TextNode('\u00A0\u00A0\u00A0', false);
+        }
+      case '&nbsp;&nbsp;&nbsp;&nbsp;':
+        {
+          return TextNode('\u00A0\u00A0\u00A0\u00A0', false);
+        }
+
+      case '&emsp;':
+        {
+          return TextNode('\u2003', false);
+        }
+      case '&emsp;&emsp;':
+        {
+          return TextNode('\u2003\u2003', false);
+        }
+      case '&emsp;&emsp;&emsp;':
+        {
+          return TextNode('\u2003\u2003\u2003', false);
+        }
+      case '&emsp;&emsp;&emsp;&emsp;':
+        {
+          return TextNode('\u2003\u2003\u2003\u2003', false);
+        }
+
+      case '<br>':
+        {
+          return DOMElement('br');
+        }
+      case '<br><br>':
+        {
+          return <DOMNode>[
+            DOMElement('br'),
+            DOMElement('br'),
+          ];
+        }
+      case '<br><br><br>':
+        {
+          return <DOMNode>[
+            DOMElement('br'),
+            DOMElement('br'),
+            DOMElement('br'),
+          ];
+        }
+      case '<br><br><br><br>':
+        {
+          return <DOMNode>[
+            DOMElement('br'),
+            DOMElement('br'),
+            DOMElement('br'),
+            DOMElement('br'),
+          ];
+        }
+
+      default:
+        {
+          return _parseImpl(html);
+        }
+    }
+  }
+
+  Object? _parseImpl(String html) {
     try {
+      if (!hasHTMLEntity(html) && !hasHTMLTag(html)) {
+        return TextNode.toTextNode(html);
+      }
+
       dart_html.Node parsed = _domParser.parseFromString(html, 'text/html');
 
       if (parsed is dart_html.Document) {

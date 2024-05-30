@@ -58,6 +58,7 @@ abstract class DOMHtml {
   DOMElement? toDOMElement(Object? node);
 
   /// Parses [html].
+  /// This can return a [DOMNode] or a native `Node`.
   Object? parse(String html);
 
   /// Performs a [node] selection for [selector].

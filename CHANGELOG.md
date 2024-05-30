@@ -1,3 +1,8 @@
+## 2.2.5
+
+- `DOMHtmlBrowser`:
+  - Optimize `parse`.
+
 ## 2.2.4
 
 - `$p`: added parameter `content`.

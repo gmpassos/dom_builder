@@ -84,6 +84,12 @@ List<DOMNode>? parseHTML(String? html) {
 
   var parsed = _domHTML.parse(html);
 
+  if (parsed is DOMNode) {
+    return <DOMNode>[parsed];
+  } else if (parsed is List<DOMNode>) {
+    return parsed;
+  }
+
   var parsedNodes = _domHTML.getChildrenNodes(parsed);
 
   if (parsedNodes.isEmpty) {
