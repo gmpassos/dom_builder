@@ -1,8 +1,8 @@
+import 'dart:async';
 import 'dart:collection';
 import 'dart:math';
 
-import 'package:collection/collection.dart'
-    show IterableExtension, IterableNullableExtension;
+import 'package:collection/collection.dart' show IterableExtension;
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_attribute.dart';
@@ -2724,6 +2724,39 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   EventStream<DOMEvent> get onError {
     _onError ??= EventStream();
     return _onError!;
+  }
+
+  /// Sets the validator of this [DOMElement].
+  StreamSubscription<DOMEvent> validator(Function validator,
+      {String? errorClass, String? validClass}) {
+    return onChange.listen((_) {
+      Object? result;
+
+      var rt = runtime;
+
+      if (validator is Function(DOMElement)) {
+        result = validator(this);
+      } else if (validator is Function(String?)) {
+        var value = rt.value;
+        result = validator(value);
+      } else if (validator is Function(String)) {
+        var value = rt.value ?? '';
+        result = validator(value);
+      } else if (validator is Function(Object)) {
+        var node = rt.node;
+        result = validator(node);
+      }
+
+      var valid = parseBool(result, false)!;
+
+      if (valid) {
+        if (errorClass != null) rt.removeClass(errorClass);
+        if (validClass != null) rt.addClass(validClass);
+      } else {
+        if (validClass != null) rt.removeClass(validClass);
+        if (errorClass != null) rt.addClass(errorClass);
+      }
+    });
   }
 }
 

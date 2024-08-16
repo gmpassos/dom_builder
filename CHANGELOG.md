@@ -1,5 +1,9 @@
 ## 2.2.6
 
+- `DOMElement`: added `validator`.
+
+- Change `whereNotNull()` to `nonNulls`.
+
 - swiss_knife: ^3.2.1
 - test: ^1.25.8
 - coverage: ^1.9.0
