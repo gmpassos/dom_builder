@@ -237,7 +237,7 @@ class DOMNode implements AsDOMNode {
       if (l is List<DOMNode>) {
         return l;
       } else if (l is List<DOMNode?>) {
-        return l.whereNotNull().toList();
+        return l.nonNulls.toList();
       }
 
       final lng = l.length;
@@ -298,7 +298,7 @@ class DOMNode implements AsDOMNode {
     } else if (entry is Iterable) {
       var l = entry.asList;
       if (l.isEmpty) return null;
-      l = entry.whereNotNull().toList();
+      l = entry.nonNulls.toList();
       if (l.isEmpty) return null;
       return DOMNode.from(l.single);
     } else if (entry is String) {
@@ -3418,7 +3418,7 @@ List createTableContent(content, caption, head, body, foot,
         DOMNode.from(thread),
         DOMNode.from(tbody),
         DOMNode.from(tfoot)
-      ].whereNotNull().toList();
+      ].nonNulls.toList();
 
       return list;
     } else {
@@ -3554,7 +3554,7 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
       });
       var list = tdList
           .map((e) => DOMNode.from(e))
-          .whereNotNull()
+          .nonNulls
           .whereType<TABLENode>()
           .toList();
       return list;
