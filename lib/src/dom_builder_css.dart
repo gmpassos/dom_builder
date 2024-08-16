@@ -969,12 +969,12 @@ class CSSMax extends CSSFunction {
     if (args.isEmpty) return null;
 
     var values = args.map((a) => CSSValue.from(a)).toList();
-    var valuesNotNull = values.whereNotNull().toList();
+    var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
     var computed =
         valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
-    var computedNotNull = computed.whereNotNull().toList();
+    var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
     var computedCSSLength = computedNotNull.whereType<CSSLength>();
@@ -995,12 +995,12 @@ class CSSMax extends CSSFunction {
     if (args.isEmpty) return null;
 
     var values = args.map((a) => CSSValue.from(a)).toList();
-    var valuesNotNull = values.whereNotNull().toList();
+    var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
     var computed =
         valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
-    var computedNotNull = computed.whereNotNull().toList();
+    var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
     var computedCSSLength = computedNotNull.whereType<CSSLength>();
@@ -1092,12 +1092,12 @@ class CSSMin extends CSSFunction {
     if (args.isEmpty) return null;
 
     var values = args.map((a) => CSSValue.from(a)).toList();
-    var valuesNotNull = values.whereNotNull().toList();
+    var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
     var computed =
         valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
-    var computedNotNull = computed.whereNotNull().toList();
+    var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
     var computedCSSLength = computedNotNull.whereType<CSSLength>();
@@ -1118,12 +1118,12 @@ class CSSMin extends CSSFunction {
     if (args.isEmpty) return null;
 
     var values = args.map((a) => CSSValue.from(a)).toList();
-    var valuesNotNull = values.whereNotNull().toList();
+    var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
     var computed =
         valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
-    var computedNotNull = computed.whereNotNull().toList();
+    var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
     var computedCSSLength = computedNotNull.whereType<CSSLength>();
