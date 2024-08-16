@@ -1,3 +1,9 @@
+## 2.2.6
+
+- swiss_knife: ^3.2.1
+- test: ^1.25.8
+- coverage: ^1.9.0
+
 ## 2.2.5
 
 - `DOMHtmlBrowser`:
