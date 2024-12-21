@@ -270,6 +270,7 @@ abstract class DOMAction<T> {
 class DOMActionList<T> extends DOMAction<T> {
   final List<DOMAction<T>> actions;
 
+  // ignore: use_super_parameters
   DOMActionList(DOMActionExecutor<T> executor, this.actions) : super(executor);
 
   @override
@@ -303,6 +304,7 @@ class DOMActionList<T> extends DOMAction<T> {
 class DOMActionSelect<T> extends DOMAction<T> {
   final String id;
 
+  // ignore: use_super_parameters
   DOMActionSelect(DOMActionExecutor<T> executor, this.id) : super(executor);
 
   @override
@@ -326,6 +328,7 @@ class DOMActionCall<T> extends DOMAction<T> {
 
   final List<String> parameters;
 
+  // ignore: use_super_parameters
   DOMActionCall(
       DOMActionExecutor<T> executor, this.name, List<String>? parameters)
       : parameters = parameters ?? <String>[],
