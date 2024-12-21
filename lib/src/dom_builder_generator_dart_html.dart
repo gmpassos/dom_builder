@@ -170,18 +170,28 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
   @override
   bool addChildToElement(Node? parent, Node? child) {
-    if (parent is Element && !parent.nodes.contains(child)) {
-      parent.append(child!);
-      return true;
+    if (parent == null || child == null) return false;
+
+    if (parent is Element) {
+      if (!_isChildOfElementImpl(parent, child)) {
+        parent.append(child);
+        return true;
+      }
     }
+
     return false;
   }
 
   @override
   bool removeChildFromElement(Node parent, Node? child) {
+    if (child == null) return false;
+
     if (parent is Element) {
-      return parent.children.remove(child);
+      if (_isChildOfElementImpl(parent, child)) {
+        return parent.nodes.remove(child);
+      }
     }
+
     return false;
   }
 
@@ -427,9 +437,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 }
 
 class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
-  DOMNodeRuntimeDartHTMLImpl(
-      DOMTreeMap<Node> treeMap, DOMNode? domNode, Node node)
-      : super(treeMap, domNode, node);
+  DOMNodeRuntimeDartHTMLImpl(super.treeMap, super.domNode, super.node)
+      : super();
 
   bool get isNodeElement => node is Element;
 
