@@ -14,6 +14,12 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   }
 
   @override
+  bool isChildOfElement(T? parent, T? child) {
+    _noDartHTML();
+    return false;
+  }
+
+  @override
   bool addChildToElement(T? parent, T? child) {
     _noDartHTML();
     return false;

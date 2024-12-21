@@ -715,6 +715,8 @@ abstract class DOMGenerator<T> {
     }
   }
 
+  bool isChildOfElement(T? parent, T? child);
+
   bool addChildToElement(T? parent, T? child);
 
   bool removeChildFromElement(T parent, T? child);
@@ -1160,6 +1162,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 
   @override
   void reset() => domGenerator.reset();
+
+  @override
+  bool isChildOfElement(T? parent, T? child) =>
+      domGenerator.isChildOfElement(parent, child);
 
   @override
   bool addChildToElement(T? parent, T? child) =>
@@ -1624,6 +1630,9 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   void reset() {}
+
+  @override
+  bool isChildOfElement(T? parent, T? child) => false;
 
   @override
   bool addChildToElement(T? parent, T? child) => false;
