@@ -228,48 +228,48 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
   @override
   void setAttribute(Node element, String attrName, String? attrVal) {
-    if (element is Element) {
-      switch (attrName) {
-        case 'selected':
-          {
-            if (element is OptionElement) {
-              element.selected = _parseAttributeBoolValue(attrVal);
-            } else {
-              element.setAttribute(attrName, attrVal!);
-            }
-            break;
+    if (element is! Element) return;
+
+    switch (attrName) {
+      case 'selected':
+        {
+          if (element is OptionElement) {
+            element.selected = _parseAttributeBoolValue(attrVal);
+          } else {
+            element.setAttribute(attrName, attrVal!);
           }
-        case 'multiple':
-          {
-            if (element is SelectElement) {
-              element.multiple = _parseAttributeBoolValue(attrVal);
-            } else if (element is InputElement) {
-              element.multiple = _parseAttributeBoolValue(attrVal);
-            } else {
-              element.setAttribute(attrName, attrVal!);
-            }
-            break;
+          break;
+        }
+      case 'multiple':
+        {
+          if (element is SelectElement) {
+            element.multiple = _parseAttributeBoolValue(attrVal);
+          } else if (element is InputElement) {
+            element.multiple = _parseAttributeBoolValue(attrVal);
+          } else {
+            element.setAttribute(attrName, attrVal!);
           }
-        case 'hidden':
-          {
-            element.hidden = _parseAttributeBoolValue(attrVal);
-            break;
+          break;
+        }
+      case 'hidden':
+        {
+          element.hidden = _parseAttributeBoolValue(attrVal);
+          break;
+        }
+      case 'inert':
+        {
+          element.inert = _parseAttributeBoolValue(attrVal);
+          break;
+        }
+      default:
+        {
+          if (attrVal == null) {
+            element.removeAttribute(attrName);
+          } else {
+            element.setAttribute(attrName, attrVal);
           }
-        case 'inert':
-          {
-            element.inert = _parseAttributeBoolValue(attrVal);
-            break;
-          }
-        default:
-          {
-            if (attrVal == null) {
-              element.removeAttribute(attrName);
-            } else {
-              element.setAttribute(attrName, attrVal);
-            }
-            break;
-          }
-      }
+          break;
+        }
     }
   }
 
