@@ -698,8 +698,6 @@ String? getCalcOperationSymbol(CalcOperation? op) {
       return '*';
     case CalcOperation.divide:
       return '/';
-    default:
-      return null;
   }
 }
 
@@ -713,8 +711,6 @@ num computeCalcOperationSymbol(CalcOperation op, num a, num b) {
       return a * b;
     case CalcOperation.divide:
       return a / b;
-    default:
-      throw StateError("Can't compute: $op");
   }
 }
 
@@ -1298,8 +1294,6 @@ String? getCSSUnitName(CSSUnit? unit, [CSSUnit? def]) {
       return 'vmax';
     case CSSUnit.percent:
       return '%';
-    default:
-      return null;
   }
 }
 
@@ -1314,15 +1308,15 @@ class CSSLength extends CSSValue {
 
   CSSLength(this.value, [this.unit = CSSUnit.px]);
 
-  CSSLength.fromCalc(CSSCalc calc)
+  CSSLength.fromCalc(super.calc)
       : value = 0,
         unit = CSSUnit.px,
-        super.fromCalc(calc);
+        super.fromCalc();
 
-  CSSLength.fromFunction(CSSFunction f)
+  CSSLength.fromFunction(CSSFunction super.f)
       : value = 0,
         unit = CSSUnit.px,
-        super.fromFunction(f);
+        super.fromFunction();
 
   static CSSLength? from(Object? value) {
     if (value == null) return null;
@@ -1459,9 +1453,9 @@ class CSSNumber extends CSSValue {
 
   CSSNumber(num? value) : _value = value ?? 0;
 
-  CSSNumber.fromCalc(CSSCalc calc) : super.fromCalc(calc);
+  CSSNumber.fromCalc(super.calc) : super.fromCalc();
 
-  CSSNumber.fromFunction(CSSFunction calc) : super.fromFunction(calc);
+  CSSNumber.fromFunction(CSSFunction super.calc) : super.fromFunction();
 
   static CSSNumber? from(Object? value) {
     if (value == null) return null;
@@ -1738,9 +1732,8 @@ class CSSColorRGB extends CSSColor {
 class CSSColorRGBA extends CSSColorRGB {
   double _alpha;
 
-  CSSColorRGBA(int? red, int? green, int? blue, double? alpha)
-      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double),
-        super(red, green, blue);
+  CSSColorRGBA(super.red, super.green, super.blue, double? alpha)
+      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double);
 
   static CSSColorRGBA? from(Object? color) =>
       CSSColorRGB.from(color) as CSSColorRGBA?;
@@ -1790,7 +1783,7 @@ class CSSColorHEX extends CSSColorRGB {
   factory CSSColorHEX.fromRGB(int red, int green, int blue) =>
       CSSColorHEX._(red, green, blue);
 
-  CSSColorHEX._(int? red, int? green, int? blue) : super(red, green, blue);
+  CSSColorHEX._(super.red, super.green, super.blue);
 
   static CSSColorHEX? from(Object? color) {
     if (color == null) return null;
@@ -1883,9 +1876,10 @@ class CSSColorHEXAlpha extends CSSColorHEX {
   factory CSSColorHEXAlpha(String hexColor) =>
       CSSColorHEXAlpha.parse(hexColor)!;
 
-  CSSColorHEXAlpha._(int red, int green, int blue, double alpha)
+  CSSColorHEXAlpha._(
+      int super.red, int super.green, int super.blue, double alpha)
       : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double),
-        super._(red, green, blue);
+        super._();
 
   static CSSColorHEXAlpha? from(Object? color) =>
       CSSColorHEX.from(color) as CSSColorHEXAlpha?;
@@ -2202,8 +2196,6 @@ String? getCSSBorderStyleName(CSSBorderStyle borderStyle) {
       return 'none';
     case CSSBorderStyle.hidden:
       return 'hidden';
-    default:
-      throw StateError("Can't handle $borderStyle");
   }
 }
 
@@ -2300,8 +2292,6 @@ String? getCSSBackgroundRepeatName(CSSBackgroundRepeat? repeat) {
       return 'space';
     case CSSBackgroundRepeat.round:
       return 'round';
-    default:
-      return null;
   }
 }
 
@@ -2332,8 +2322,6 @@ String? getCSSBackgroundBoxName(CSSBackgroundBox? clip) {
       return 'padding-box';
     case CSSBackgroundBox.contentBox:
       return 'content-box';
-    default:
-      return null;
   }
 }
 
@@ -2364,8 +2352,6 @@ String? getCSSBackgroundAttachmentName(CSSBackgroundAttachment? clip) {
       return 'fixed';
     case CSSBackgroundAttachment.local:
       return 'local';
-    default:
-      return null;
   }
 }
 
