@@ -783,6 +783,8 @@ class DOMNode implements AsDOMNode {
   }
 
   void _addToContent(Object? entry) {
+    if (entry == null) return;
+
     if (entry is Iterable) {
       _addListToContent(entry.whereType<DOMNode>().toList());
     } else if (entry is DOMNode) {
@@ -1177,29 +1179,46 @@ class DOMNode implements AsDOMNode {
   /// Parses [html] and add it to [content].
   DOMNode addHTML(String html) {
     var list = $html(html);
-    _addToContent(list);
-    normalizeContent();
-    return this;
-  }
-
-  DOMNode add(Object? entry) {
-    _addImpl(entry);
-    normalizeContent();
-    return this;
-  }
-
-  /// Adds all [entries] to children nodes.
-  DOMNode addAll(Iterable? entries) {
-    if (entries != null && entries.isNotEmpty) {
-      for (var e in entries) {
-        _addImpl(e);
-      }
+    if (list.isNotEmpty) {
+      _addToContent(list);
       normalizeContent();
     }
     return this;
   }
 
+  DOMNode add(Object? entry) {
+    if (entry != null) {
+      _addNotNullImpl(entry);
+      normalizeContent();
+    }
+    return this;
+  }
+
+  /// Adds all [entries] to children nodes.
+  DOMNode addAll(Iterable? entries) {
+    if (entries != null) {
+      var added = false;
+      for (var e in entries) {
+        if (e != null) {
+          _addNotNullImpl(e);
+          added = true;
+        }
+      }
+      if (added) {
+        normalizeContent();
+      }
+    }
+    return this;
+  }
+
   void _addImpl(Object? entry) {
+    if (entry != null) {
+      var node = _parseNode(entry);
+      _addToContent(node);
+    }
+  }
+
+  void _addNotNullImpl(Object entry) {
     var node = _parseNode(entry);
     _addToContent(node);
   }
