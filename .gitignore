@@ -14,6 +14,7 @@ test/.test_cov.dart
 # Directory created by dartdoc
 doc/api/
 
-coverage/
 test/.test_coverage.dart
 coverage_badge.svg
+
+.DS_Store
