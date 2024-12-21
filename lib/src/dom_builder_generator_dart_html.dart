@@ -154,19 +154,44 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  bool addChildToElement(Node? parent, Node? child) {
-    if (parent is Element && !parent.nodes.contains(child)) {
-      parent.append(child!);
-      return true;
+  bool isChildOfElement(Node? parent, Node? child) {
+    if (parent == null || child == null) return false;
+
+    if (parent is Element) {
+      return _isChildOfElementImpl(parent, child);
     }
+
+    return false;
+  }
+
+  bool _isChildOfElementImpl(Element parent, Node child) {
+    return identical(child.parentNode, parent);
+  }
+
+  @override
+  bool addChildToElement(Node? parent, Node? child) {
+    if (parent == null || child == null) return false;
+
+    if (parent is Element) {
+      if (!_isChildOfElementImpl(parent, child)) {
+        parent.append(child);
+        return true;
+      }
+    }
+
     return false;
   }
 
   @override
   bool removeChildFromElement(Node parent, Node? child) {
+    if (child == null) return false;
+
     if (parent is Element) {
-      return parent.children.remove(child);
+      if (_isChildOfElementImpl(parent, child)) {
+        return parent.nodes.remove(child);
+      }
     }
+
     return false;
   }
 
@@ -203,48 +228,48 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
   @override
   void setAttribute(Node element, String attrName, String? attrVal) {
-    if (element is Element) {
-      switch (attrName) {
-        case 'selected':
-          {
-            if (element is OptionElement) {
-              element.selected = _parseAttributeBoolValue(attrVal);
-            } else {
-              element.setAttribute(attrName, attrVal!);
-            }
-            break;
+    if (element is! Element) return;
+
+    switch (attrName) {
+      case 'selected':
+        {
+          if (element is OptionElement) {
+            element.selected = _parseAttributeBoolValue(attrVal);
+          } else {
+            element.setAttribute(attrName, attrVal!);
           }
-        case 'multiple':
-          {
-            if (element is SelectElement) {
-              element.multiple = _parseAttributeBoolValue(attrVal);
-            } else if (element is InputElement) {
-              element.multiple = _parseAttributeBoolValue(attrVal);
-            } else {
-              element.setAttribute(attrName, attrVal!);
-            }
-            break;
+          break;
+        }
+      case 'multiple':
+        {
+          if (element is SelectElement) {
+            element.multiple = _parseAttributeBoolValue(attrVal);
+          } else if (element is InputElement) {
+            element.multiple = _parseAttributeBoolValue(attrVal);
+          } else {
+            element.setAttribute(attrName, attrVal!);
           }
-        case 'hidden':
-          {
-            element.hidden = _parseAttributeBoolValue(attrVal);
-            break;
+          break;
+        }
+      case 'hidden':
+        {
+          element.hidden = _parseAttributeBoolValue(attrVal);
+          break;
+        }
+      case 'inert':
+        {
+          element.inert = _parseAttributeBoolValue(attrVal);
+          break;
+        }
+      default:
+        {
+          if (attrVal == null) {
+            element.removeAttribute(attrName);
+          } else {
+            element.setAttribute(attrName, attrVal);
           }
-        case 'inert':
-          {
-            element.inert = _parseAttributeBoolValue(attrVal);
-            break;
-          }
-        default:
-          {
-            if (attrVal == null) {
-              element.removeAttribute(attrName);
-            } else {
-              element.setAttribute(attrName, attrVal);
-            }
-            break;
-          }
-      }
+          break;
+        }
     }
   }
 
@@ -412,9 +437,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 }
 
 class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
-  DOMNodeRuntimeDartHTMLImpl(
-      DOMTreeMap<Node> treeMap, DOMNode? domNode, Node node)
-      : super(treeMap, domNode, node);
+  DOMNodeRuntimeDartHTMLImpl(super.treeMap, super.domNode, super.node)
+      : super();
 
   bool get isNodeElement => node is Element;
 

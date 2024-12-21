@@ -918,9 +918,7 @@ abstract class DOMTemplateBlock extends DOMTemplateNode {
 }
 
 abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
-  DOMTemplateBlockCondition(DOMTemplateVariable? variable,
-      [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockCondition(super.variable, [super.content]);
 
   DOMTemplateBlockCondition? elseCondition;
 
@@ -985,8 +983,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 }
 
 class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
-  DOMTemplateBlockIf(DOMTemplateVariable? variable, [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockIf(super.variable, [super.content]);
 
   @override
   DOMTemplateBlockIf copy({bool resolveDSX = false}) {
@@ -1111,8 +1108,7 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
 }
 
 class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
-  DOMTemplateBlockNot(DOMTemplateVariable? variable, [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockNot(super.variable, [super.content]);
 
   @override
   DOMTemplateBlockNot copy({bool resolveDSX = false}) {
@@ -1133,9 +1129,7 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
 }
 
 abstract class DOMTemplateBlockElseCondition extends DOMTemplateBlockCondition {
-  DOMTemplateBlockElseCondition(DOMTemplateVariable? variable,
-      [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockElseCondition(super.variable, [super.content]);
 }
 
 class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
@@ -1160,9 +1154,7 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
 }
 
 class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
-  DOMTemplateBlockElseIf(DOMTemplateVariable? variable,
-      [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockElseIf(super.variable, [super.content]);
 
   @override
   DOMTemplateBlockElseIf copy({bool resolveDSX = false}) {
@@ -1183,9 +1175,7 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
 }
 
 class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
-  DOMTemplateBlockElseNot(DOMTemplateVariable? variable,
-      [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockElseNot(super.variable, [super.content]);
 
   @override
   DOMTemplateBlockElseNot copy({bool resolveDSX = false}) {
@@ -1206,9 +1196,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
 }
 
 class DOMTemplateBlockVarElse extends DOMTemplateBlock {
-  DOMTemplateBlockVarElse(DOMTemplateVariable? variable,
-      [DOMTemplateNode? contentElse])
-      : super(variable, contentElse);
+  DOMTemplateBlockVarElse(super.variable, [super.contentElse]);
 
   @override
   DOMTemplateBlockVarElse copy({bool resolveDSX = false}) {
@@ -1241,9 +1229,7 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
 }
 
 class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
-  DOMTemplateBlockIfCollection(DOMTemplateVariable? variable,
-      [DOMTemplateNode? content])
-      : super(variable, content);
+  DOMTemplateBlockIfCollection(super.variable, [super.content]);
 
   @override
   DOMTemplateBlockIfCollection copy({bool resolveDSX = false}) {

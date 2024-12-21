@@ -370,7 +370,7 @@ class DOMNodeMapping<T> {
 
 /// A Dummy DOMTreeMap, that won't map anything.
 class DOMTreeMapDummy<T> extends DOMTreeMap<T> {
-  DOMTreeMapDummy(DOMGenerator<T> domGenerator) : super(domGenerator);
+  DOMTreeMapDummy(super.domGenerator) : super();
 
   @override
   void map(DOMNode domNode, T element,

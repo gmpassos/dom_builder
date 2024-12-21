@@ -1,3 +1,26 @@
+## 2.2.7
+
+- Improve null-safe code.
+
+- `DOMGenerator`:
+  - Added `isChildOfElement`.
+  - `buildElement`: call `setAttributes` before `addChildToElement`, to avoid DOM state update.
+
+- `DOMGeneratorDartHTMLImpl`:
+  - Optimize `addChildToElement` and `removeChildFromElement`.
+
+
+- sdk: '>=3.4.0 <4.0.0'
+
+- html: ^0.15.5
+- swiss_knife: ^3.2.3
+- collection: ^1.18.0
+
+- lints: ^4.0.0
+- test: ^1.25.14
+- dependency_validator: ^4.1.2
+- coverage: ^1.11.1
+
 ## 2.2.6
 
 - `DOMElement`: added `validator`.

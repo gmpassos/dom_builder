@@ -439,9 +439,10 @@ abstract class DOMGenerator<T> {
         domParent, parent, domElement, treeMap, context);
 
     if (element == null) {
-      if (_domContext != null) {
-        element = _domContext!
-            .resolveNamedElement(domParent, parent, domElement, treeMap);
+      final domContext = _domContext;
+      if (domContext != null) {
+        element = domContext.resolveNamedElement(
+            domParent, parent, domElement, treeMap);
         element ??= createElement(domElement.tag, domElement);
       } else {
         element = createElement(domElement.tag, domElement);
@@ -451,15 +452,15 @@ abstract class DOMGenerator<T> {
         throw StateError("Can't create element for tag: ${domElement.tag}");
       }
 
+      setAttributes(domElement, element, treeMap,
+          preserveClass: true, preserveStyle: true);
+
       if (parent != null) {
         addChildToElement(parent, element);
       }
 
       treeMap.map(domElement, element);
       _callOnElementCreated(treeMap, domElement, element, context);
-
-      setAttributes(domElement, element, treeMap,
-          preserveClass: true, preserveStyle: true);
 
       var length = domElement.length;
 
@@ -715,6 +716,8 @@ abstract class DOMGenerator<T> {
     }
   }
 
+  bool isChildOfElement(T? parent, T? child);
+
   bool addChildToElement(T? parent, T? child);
 
   bool removeChildFromElement(T parent, T? child);
@@ -787,9 +790,12 @@ abstract class DOMGenerator<T> {
       } else if (preserveStyle && attrName == 'style') {
         var prev = getAttribute(element, attrName);
         if (prev != null && prev.isNotEmpty) {
-          if (!prev.endsWith(';')) prev += ';';
-          attrVal =
-              attrVal != null && attrVal.isNotEmpty ? '$prev $attrVal' : prev;
+          if (attrVal != null && attrVal.isNotEmpty) {
+            attrVal =
+                !prev.endsWith(';') ? '$prev; $attrVal' : '$prev $attrVal';
+          } else {
+            attrVal = prev;
+          }
         }
       } else if ((attrName == 'src' || attrName == 'href') &&
           attrVal != null &&
@@ -1160,6 +1166,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 
   @override
   void reset() => domGenerator.reset();
+
+  @override
+  bool isChildOfElement(T? parent, T? child) =>
+      domGenerator.isChildOfElement(parent, child);
 
   @override
   bool addChildToElement(T? parent, T? child) =>
@@ -1624,6 +1634,9 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   void reset() {}
+
+  @override
+  bool isChildOfElement(T? parent, T? child) => false;
 
   @override
   bool addChildToElement(T? parent, T? child) => false;
