@@ -255,6 +255,14 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
+  bool isChildOfElement(TestNode? parent, TestNode? child) {
+    if (parent is TestElem && parent.contains(child)) {
+      return true;
+    }
+    return false;
+  }
+
+  @override
   bool addChildToElement(TestNode? parent, TestNode? child) {
     if (parent is TestElem && !parent.contains(child)) {
       parent.add(child!);
@@ -383,8 +391,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
 }
 
 class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
-  TestNodeRuntime(DOMTreeMap<TestNode> treeMap, DOMNode? domNode, TestElem node)
-      : super(treeMap, domNode, node);
+  TestNodeRuntime(super.treeMap, super.domNode, super.node) : super();
 
   @override
   String? get tagName {
