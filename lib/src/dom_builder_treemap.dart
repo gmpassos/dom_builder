@@ -7,7 +7,7 @@ import 'dom_builder_runtime.dart';
 
 /// Represents a mapping tree. Can be used to map a [DOMNode] to a generated
 /// node [T], or a node [T] to a [DOMNode].
-class DOMTreeMap<T> {
+class DOMTreeMap<T extends Object> {
   final DOMGenerator<T> domGenerator;
 
   DOMTreeMap(this.domGenerator);
@@ -45,7 +45,7 @@ class DOMTreeMap<T> {
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
-  static DOMTreeMap<T>? getElementDOMTreeMap<T>(T? element) {
+  static DOMTreeMap<T>? getElementDOMTreeMap<T extends Object>(T? element) {
     if (element == null) return null;
     return _elementsDOMTreeMap[element] as DOMTreeMap<T>?;
   }
@@ -53,8 +53,6 @@ class DOMTreeMap<T> {
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element,
       {DOMContext<T>? context, bool allowOverwrite = false}) {
-    if (element == null) return;
-
     var prevElement = _domNodeToElementMap[domNode];
     var prevDomNode = _elementToDOMNodeMap[element];
 
@@ -85,8 +83,6 @@ class DOMTreeMap<T> {
 
   /// Unmap from this instance the pair [domNode] and [element].
   bool unmap(DOMNode domNode, T element) {
-    if (element == null) return false;
-
     var prev = _domNodeToElementMap[domNode];
 
     if (prev == element) {
@@ -170,7 +166,6 @@ class DOMTreeMap<T> {
   }
 
   bool mapTree(DOMNode domRoot, T root) {
-    if (root == null) return false;
     map(domRoot, root);
 
     if (domRoot is TextNode) return false;
@@ -243,18 +238,15 @@ class DOMTreeMap<T> {
   DOMNodeMapping<T>? duplicateByDOMNode(DOMNode? domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
-    var nodeRuntime = domNode.runtime;
+    var nodeRuntime = domNode.getRuntime<T>();
 
     var domCopy = domNode.duplicate();
     var copy = nodeRuntime.duplicate();
 
-    if (domCopy == null && copy == null) return null;
+    if (domCopy == null || copy == null) return null;
 
-    if (domCopy != null && copy != null) {
-      mapTree(domCopy, copy);
-    }
-
-    return DOMNodeMapping(this, domCopy!, copy);
+    mapTree(domCopy, copy);
+    return DOMNodeMapping(this, domCopy, copy);
   }
 
   /// Empties [element] children nodes. Also performs on mapped [DOMNode].
@@ -280,14 +272,16 @@ class DOMTreeMap<T> {
   DOMNodeMapping<T>? removeByDOMNode(DOMNode? domNode) {
     if (domNode == null || !domNode.hasParent) return null;
 
-    var nodeRuntime = domNode.runtime;
+    var nodeRuntime = domNode.getRuntime<T>();
 
     nodeRuntime.remove();
     domNode.remove();
 
-    unmap(domNode, nodeRuntime.node);
+    var node = nodeRuntime.node;
+    if (node == null) return null;
 
-    return DOMNodeMapping(this, domNode, nodeRuntime.node);
+    unmap(domNode, node);
+    return DOMNodeMapping(this, domNode, node);
   }
 
   DOMNodeMapping<T>? mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
@@ -296,20 +290,23 @@ class DOMTreeMap<T> {
       return null;
     }
 
-    var nodeRuntime1 = domNode1.runtime;
-    var nodeRuntime2 = domNode2.runtime;
+    var nodeRuntime1 = domNode1.getRuntime<T>();
+    var nodeRuntime2 = domNode2.getRuntime<T>();
+
+    var node1 = nodeRuntime1.node;
+    var node2 = nodeRuntime2.node;
 
     if (domNode1.isNextNode(domNode2)) {
-      if (domNode1.merge(domNode2) &&
-          nodeRuntime1.mergeNode(nodeRuntime2.node)) {
-        unmap(domNode2, nodeRuntime2.node);
-        return DOMNodeMapping(this, domNode1, nodeRuntime1.node);
+      if (domNode1.merge(domNode2) && nodeRuntime1.mergeNode(node2)) {
+        if (node1 == null || node2 == null) return null;
+        unmap(domNode2, node2);
+        return DOMNodeMapping(this, domNode1, node1);
       }
     } else if (domNode1.isPreviousNode(domNode2)) {
-      if (domNode2.merge(domNode1) &&
-          nodeRuntime2.mergeNode(nodeRuntime1.node)) {
-        unmap(domNode1, nodeRuntime1.node);
-        return DOMNodeMapping(this, domNode2, nodeRuntime2.node);
+      if (domNode2.merge(domNode1) && nodeRuntime2.mergeNode(node1)) {
+        if (node1 == null || node2 == null) return null;
+        unmap(domNode1, node1);
+        return DOMNodeMapping(this, domNode2, node2);
       }
     }
 
@@ -351,7 +348,7 @@ class DOMTreeMap<T> {
 }
 
 /// A wrapper for a mapped pair of a [DOMTreeMap].
-class DOMNodeMapping<T> {
+class DOMNodeMapping<T extends Object> {
   /// The [DOMTreeMap] of this pair.
   final DOMTreeMap<T> treeMap;
 
@@ -369,7 +366,7 @@ class DOMNodeMapping<T> {
 }
 
 /// A Dummy DOMTreeMap, that won't map anything.
-class DOMTreeMapDummy<T> extends DOMTreeMap<T> {
+class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   DOMTreeMapDummy(super.domGenerator) : super();
 
   @override

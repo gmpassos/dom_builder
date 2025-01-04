@@ -88,7 +88,7 @@ class Viewport {
   }
 }
 
-typedef NamedElementGenerator<T> = T Function(
+typedef NamedElementGenerator<T extends Object> = T Function(
     String name,
     DOMGenerator<T>? domGenerator,
     DOMTreeMap<T> treeMap,
@@ -125,7 +125,7 @@ IntlMessageResolver? toIntlMessageResolver(Object? resolver) {
 ///
 /// Used by [DOMGenerator] to configure some behaviors,
 /// like CSS unit conversion.
-class DOMContext<T> {
+class DOMContext<T extends Object> {
   /// Creates a copy of this instance.
   DOMContext<T> copy() {
     var context = DOMContext(
@@ -243,7 +243,7 @@ class DOMContext<T> {
 
   String namedElementAttribute = defaultNamedElementAttribute;
 
-  NamedElementGenerator? namedElementProvider;
+  NamedElementGenerator<T>? namedElementProvider;
 
   bool hasNamedElementNameValue(DOMElement domElement) {
     var elementName = getNamedElementNameValue(domElement);
@@ -263,12 +263,13 @@ class DOMContext<T> {
 
   T? resolveNamedElement(DOMElement? domParent, T? parent,
       DOMElement domElement, DOMTreeMap<T> treeMap) {
+    final namedElementProvider = this.namedElementProvider;
     if (namedElementProvider == null) return null;
 
     var elementName = domElement.getAttributeValue(namedElementAttribute);
 
     if (elementName != null && elementName.isNotEmpty) {
-      var element = namedElementProvider!(elementName, _domGenerator, treeMap,
+      var element = namedElementProvider(elementName, _domGenerator, treeMap,
           domParent, parent, domElement.tag, domElement.domAttributes);
       return element;
     } else {

@@ -335,8 +335,15 @@ class DOMNode implements AsDOMNode {
         : DOMNodeRuntimeDummy(treeMap, this, null);
   }
 
-  /// Same as [runtime], but casts to [DOMNodeRuntime<T>].
-  DOMNodeRuntime<T> getRuntime<T>() => runtime as DOMNodeRuntime<T>;
+  /// Same as [runtime], but casted to [DOMNodeRuntime]<[T]>.
+  DOMNodeRuntime<T> getRuntime<T extends Object>() {
+    final treeMap = this.treeMap as DOMTreeMap<T>?;
+    return treeMap != null
+        ? treeMap.getRuntimeNode(this) ??
+            (throw StateError(
+                "This `DOMNode` is not associated with `treeMap`!"))
+        : DOMNodeRuntimeDummy(treeMap, this, null);
+  }
 
   /// Returns [runtime.node].
   dynamic get runtimeNode => treeMap?.getMappedElement(this);
@@ -430,6 +437,8 @@ class DOMNode implements AsDOMNode {
   ///
   /// Note that `dom_builder_generator_dart_html.dart` should be imported
   /// to enable `dart:html`.
+  @Deprecated(
+      "Use `setDefaultDomGeneratorToWeb`. Package `dart:html` is deprecated.")
   static DOMGenerator setDefaultDomGeneratorToDartHTML() {
     return _defaultDomGenerator = DOMGenerator.dartHTML();
   }
@@ -449,7 +458,7 @@ class DOMNode implements AsDOMNode {
   ///
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
-  T? buildDOM<T>(
+  T? buildDOM<T extends Object>(
       {DOMGenerator<T>? generator, T? parent, DOMContext<T>? context}) {
     if (isCommented) return null;
 
@@ -2785,6 +2794,9 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         result = validator(value);
       } else if (validator is Function(Object)) {
         var node = rt.node;
+        result = node != null && validator(node);
+      } else if (validator is Function(Object?)) {
+        var node = rt.node;
         result = validator(node);
       }
 
@@ -2806,7 +2818,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 //
 
 /// Base class for [DOMElement] events.
-class DOMEvent<T> {
+class DOMEvent<T extends Object> {
   final DOMTreeMap<T> treeMap;
   final Object? event;
   final Object? eventTarget;
@@ -2826,7 +2838,7 @@ class DOMEvent<T> {
 }
 
 /// Represents a mouse event.
-class DOMMouseEvent<T> extends DOMEvent<T> {
+class DOMMouseEvent<T extends Object> extends DOMEvent<T> {
   final Point<num> client;
 
   final Point<num> offset;

@@ -6,7 +6,7 @@ import 'dom_builder_generator.dart';
 import 'dom_builder_treemap.dart';
 
 /// Wraps the actual generated node [T] and allows some operations over it.
-abstract class DOMNodeRuntime<T> {
+abstract class DOMNodeRuntime<T extends Object> {
   final DOMTreeMap<T>? treeMap;
 
   /// The [DOMGenerator] used to generate this [treeMap].
@@ -364,8 +364,8 @@ abstract class DOMNodeRuntime<T> {
   }
 }
 
-class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
-  DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T node)
+class DOMNodeRuntimeDummy<T extends Object> extends DOMNodeRuntime<T> {
+  DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T? node)
       : super(treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()), domNode, node);
 
   @override

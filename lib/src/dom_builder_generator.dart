@@ -16,7 +16,7 @@ typedef DOMElementGenerator<T> = T Function(Object? parent);
 typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
-abstract class DOMGenerator<T> {
+abstract class DOMGenerator<T extends Object> {
   static DOMGeneratorDartHTML? _dartHTML;
 
   static DOMGeneratorDartHTML<T> dartHTML<T>() {
@@ -559,7 +559,7 @@ abstract class DOMGenerator<T> {
     if (externalElement == null) return null;
 
     if (externalElement is T) {
-      treeMap.map(domElement, externalElement as T);
+      treeMap.map(domElement, externalElement);
       addChildToElement(parent, externalElement as T?);
       return externalElement as T?;
     } else if (externalElement is List &&
@@ -694,10 +694,9 @@ abstract class DOMGenerator<T> {
     if (futureElementResolved == null) {
       return;
     } else if (futureElementResolved is T) {
-      treeMap.map(domElement, futureElementResolved as T, allowOverwrite: true);
+      treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
       if (parent != null) {
-        replaceChildElement(
-            parent, templateElement, [futureElementResolved as T]);
+        replaceChildElement(parent, templateElement, [futureElementResolved]);
       }
     } else if (parent != null) {
       var children = addExternalElementToElement(parent, futureElementResolved);
@@ -735,7 +734,7 @@ abstract class DOMGenerator<T> {
     if (elements == null) {
       return null;
     } else if (elements is T) {
-      return [elements as T];
+      return [elements];
     } else if (elements is DOMNode) {
       var e = generate(elements);
       if (e == null) {
@@ -752,10 +751,7 @@ abstract class DOMGenerator<T> {
       var e = elements();
       return toElements(e);
     } else if (elements is Iterable) {
-      return elements
-          .expand((e) => toElements(e)!)
-          .where((e) => e != null)
-          .toList();
+      return elements.expand((e) => toElements(e)!).toList();
     } else {
       return null;
     }
@@ -1026,9 +1022,7 @@ abstract class DOMGenerator<T> {
 
       if (children.isNotEmpty) {
         for (var child in children) {
-          if (child != null) {
-            _revertImp(treeMap, domNode, node, child);
-          }
+          _revertImp(treeMap, domNode, node, child);
         }
       }
     }
@@ -1068,7 +1062,7 @@ abstract class DOMGenerator<T> {
   void finalizeGeneratedTree(DOMTreeMap<T> treeMap) {}
 }
 
-abstract class ElementGenerator<T> {
+abstract class ElementGenerator<T extends Object> {
   String get tag;
 
   /// If [true] indicated that this generated element has children nodes.
@@ -1096,7 +1090,7 @@ abstract class ElementGenerator<T> {
   bool isGeneratedElement(T element) => false;
 }
 
-typedef ElementGeneratorFunction<T> = T Function(
+typedef ElementGeneratorFunction<T extends Object> = T Function(
     DOMGenerator<T> domGenerator,
     String? tag,
     T? parent,
@@ -1105,16 +1099,17 @@ typedef ElementGeneratorFunction<T> = T Function(
     List<DOMNode>? contentNodes,
     DOMContext<T>? context);
 
-typedef ElementRevertFunction<T> = DOMElement Function(
+typedef ElementRevertFunction<T extends Object> = DOMElement Function(
     DOMGenerator<T> domGenerator,
     DOMTreeMap<T>? treeMap,
     DOMElement? domParent,
     T? parent,
     T? node);
 
-typedef ElementGeneratedMatchingFunction<T> = bool Function(T element);
+typedef ElementGeneratedMatchingFunction<T extends Object> = bool Function(
+    T element);
 
-class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
+class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
   @override
   final String tag;
   final ElementGeneratorFunction<T> generator;
@@ -1159,7 +1154,7 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
 abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
 
 /// Delegates operations to another [DOMGenerator].
-class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
+class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   final DOMGenerator<T> domGenerator;
 
   DOMGeneratorDelegate(this.domGenerator);
@@ -1629,7 +1624,7 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 }
 
 /// A dummy [DOMGenerator] implementation.
-class DOMGeneratorDummy<T> implements DOMGenerator<T> {
+class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   DOMGeneratorDummy();
 
   @override
