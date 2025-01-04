@@ -1,4 +1,5 @@
-library dom_builder;
+/// DOM Builder library.
+library;
 
 export 'src/dom_builder_actions.dart';
 export 'src/dom_builder_attribute.dart';
