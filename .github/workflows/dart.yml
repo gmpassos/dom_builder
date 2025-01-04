@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
       - name: Dart version
         run: |
@@ -37,7 +37,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
       - name: Dart version
         run: |
@@ -51,11 +51,11 @@ jobs:
         run: dart test --platform vm
 
 
-  test_chrome:
+  test_chrome_js:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
       - name: Dart version
         run: |
@@ -66,14 +66,31 @@ jobs:
       - name: Upgrade dependencies
         run: dart pub upgrade
       - name: Run tests (Chrome)
-        run: dart test --platform chrome
+        run: dart test --platform chrome  --compiler dart2js
+
+  test_chrome_wasm:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dart-lang/setup-dart@v1
+      - name: Dart version
+        run: |
+          dart --version
+          uname -a
+      - name: Install dependencies
+        run: dart pub get
+      - name: Upgrade dependencies
+        run: dart pub upgrade
+      - name: Run tests (Chrome)
+        run: dart test --platform chrome  --compiler dart2wasm
 
 
   tests_coverage:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - uses: dart-lang/setup-dart@v1
       - name: Dart version
         run: |
