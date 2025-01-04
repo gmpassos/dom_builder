@@ -1,3 +1,30 @@
+## 3.0.0-beta.1
+
+- `DOMGenerator`:
+  - `T` now extends `Object` (non-nullable): `DOMGenerator<T extends Object>`
+
+- `DOMGeneratorDartHTMLUnsupported` renamed to `DOMGeneratorUnsupported` as a generic `DOMGenerator` unsupported class.
+
+- New library `dom_builder_web.dart`.
+  - New `DOMGeneratorWeb` and `DOMHtmlBrowserWeb`.
+  - Added `DOMGenerator.web` and `DOMGenerator.setDefaultDomGeneratorToWeb`.
+  - Change from `dart:html` to `package:web/web.dart`.
+  - Change to `dart:js_interop`.
+
+- Deprecate `DOMGenerator.dartHTML`, `DOMGeneratorDartHTML` and `DOMGeneratorDartHTMLImpl`.
+- Deprecate library `dom_builder_dart_html.dart`.
+
+- CI: test with `dart2js` and `dart2wasm` (on Chrome).
+
+- sdk: '>=3.6.0 <4.0.0'
+
+- web: ^1.1.0
+- web_utils: ^1.0.2
+- js_interop_utils: ^1.0.2
+- collection: ^1.19.0
+
+- lints: ^5.1.1
+
 ## 2.2.7
 
 - Improve null-safe code.
