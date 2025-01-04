@@ -26,6 +26,13 @@ abstract class DOMGenerator<T extends Object> {
     return _dartHTML as DOMGeneratorDartHTML<T>;
   }
 
+  static DOMGeneratorWeb? _web;
+
+  static DOMGeneratorWeb<T> web<T extends Object>() {
+    _web ??= createDOMGeneratorWeb<T>();
+    return _web as DOMGeneratorWeb<T>;
+  }
+
   DOMActionExecutor<T>? _domActionExecutor;
 
   DOMActionExecutor<T>? get domActionExecutor => _domActionExecutor;
@@ -1156,6 +1163,8 @@ class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
 @Deprecated(
     "Use `DOMGeneratorWeb` with package `web`. Package `dart:html` is deprecated.")
 abstract class DOMGeneratorDartHTML<T extends Object> extends DOMGenerator<T> {}
+
+abstract class DOMGeneratorWeb<T extends Object> extends DOMGenerator<T> {}
 
 /// Delegates operations to another [DOMGenerator].
 class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
