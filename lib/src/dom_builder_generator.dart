@@ -19,8 +19,10 @@ typedef DOMElementGeneratorFunction<T> = T Function();
 abstract class DOMGenerator<T extends Object> {
   static DOMGeneratorDartHTML? _dartHTML;
 
-  static DOMGeneratorDartHTML<T> dartHTML<T>() {
-    _dartHTML ??= createDOMGeneratorDartHTML();
+  @Deprecated(
+      "Use `DOMGenerator.web` with package `web`. Package `dart:html` is deprecated.")
+  static DOMGeneratorDartHTML<T> dartHTML<T extends Object>() {
+    _dartHTML ??= createDOMGeneratorDartHTML<T>();
     return _dartHTML as DOMGeneratorDartHTML<T>;
   }
 
@@ -1152,6 +1154,9 @@ class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
 }
 
 abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
+@Deprecated(
+    "Use `DOMGeneratorWeb` with package `web`. Package `dart:html` is deprecated.")
+abstract class DOMGeneratorDartHTML<T extends Object> extends DOMGenerator<T> {}
 
 /// Delegates operations to another [DOMGenerator].
 class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {

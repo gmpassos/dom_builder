@@ -11,6 +11,7 @@ import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
 /// [DOMGenerator] based in `dart:html`.
+@Deprecated("Use package `web`. Package `dart:html` is deprecated.")
 class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   DOMGeneratorDartHTMLImpl() {
     domActionExecutor = DOMActionExecutorDartHTML();
@@ -926,6 +927,11 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
   }
 }
 
-DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
+@Deprecated("Use package `web`. Package `dart:html` is deprecated.")
+DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T extends Object>() {
   return DOMGeneratorDartHTMLImpl() as DOMGeneratorDartHTML<T>;
+}
+
+DOMGeneratorWeb<T> createDOMGeneratorWeb<T extends Object>() {
+  throw StateError("`DOMGeneratorWeb` not loaded!");
 }
