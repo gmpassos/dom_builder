@@ -3,7 +3,6 @@ import 'dart:html';
 import 'dom_builder_base.dart';
 
 /// Creates an [Element] using [tag] name.
-@override
 Element? createElement(String tag, [DOMElement? domElement]) {
   switch (tag) {
     case 'a':
@@ -67,7 +66,7 @@ Element? createElement(String tag, [DOMElement? domElement]) {
     case 'input':
       return createInputElement(domElement?.getAttributeValue('type'));
     default:
-      return Element.isTagSupported(tag) ? Element.tag(tag) : null;
+      return isTagSupported(tag) ? Element.tag(tag) : null;
   }
 }
 
@@ -116,4 +115,16 @@ InputElementBase createInputElement([String? type]) {
     default:
       return InputElement();
   }
+}
+
+final Map<String, bool> _supportedTags = {};
+
+bool isTagSupported(String? tag) {
+  if (tag == null) return false;
+  return _supportedTags[tag] ??= _isTagSupportedImpl(tag);
+}
+
+bool _isTagSupportedImpl(String tag) {
+  tag = tag.trim().toLowerCase();
+  return Element.isTagSupported(tag);
 }
