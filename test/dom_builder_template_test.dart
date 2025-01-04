@@ -20,17 +20,17 @@ void main() {
     });
 
     test('parse: var 2', () {
-      var source = 'My name is {{name}}!!!';
+      var source = 'My name is {{name}}!!';
 
       var template = DOMTemplate.parse(source);
       expect(template.nodes.length, equals(3));
       expect(template.toString(), equals(source));
 
       var s1 = template.buildAsString({'name': 'Joe'});
-      expect(s1, equals('My name is Joe!!!'));
+      expect(s1, equals('My name is Joe!!'));
 
       var s2 = template.buildAsString({});
-      expect(s2, equals('My name is !!!'));
+      expect(s2, equals('My name is !!'));
     });
 
     test('parse: var 3', () {
