@@ -1153,7 +1153,6 @@ class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
   }
 }
 
-abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
 @Deprecated(
     "Use `DOMGeneratorWeb` with package `web`. Package `dart:html` is deprecated.")
 abstract class DOMGeneratorDartHTML<T extends Object> extends DOMGenerator<T> {}
