@@ -443,6 +443,14 @@ class DOMNode implements AsDOMNode {
     return _defaultDomGenerator = DOMGenerator.dartHTML();
   }
 
+  /// Sets the default [DOMGenerator] to `web` implementation.
+  ///
+  /// Note that `dom_builder_generator_web.dart` should be imported
+  /// to enable package `web`.
+  static DOMGenerator setDefaultDomGeneratorToWeb() {
+    return _defaultDomGenerator = DOMGenerator.web();
+  }
+
   static DOMGenerator? _defaultDomGenerator;
 
   /// Returns the default [DOMGenerator].
