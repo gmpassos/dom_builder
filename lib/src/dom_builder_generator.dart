@@ -6,6 +6,7 @@ import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator_none.dart'
+    if (dart.library.js_interop) 'dom_builder_generator_web.dart'
     if (dart.library.html) 'dom_builder_generator_dart_html.dart';
 import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
@@ -787,6 +788,8 @@ abstract class DOMGenerator<T extends Object> {
       var attrVal = attr.getValue(_domContext, treeMap);
 
       if (preserveClass && attrName == 'class') {
+        // print('[WASM ISSUE: not entering method] getAttribute: $attrName ... ($this)[${this.runtimeType}]');
+        // print(StackTrace.current);
         var prev = getAttribute(element, attrName);
         if (prev != null && prev.isNotEmpty) {
           attrVal =
