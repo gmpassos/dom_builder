@@ -7,7 +7,7 @@ import 'dom_builder_treemap.dart';
 
 /// Dummy [DOMGeneratorUnsupported] for platforms that doesn't support a [DOMGenerator].
 ///
-/// Useful when [DOMGenerator.dartHTML] or [DOMGenerator.web] is called in the wrong platform.
+/// Useful when a [DOMGenerator] is used in the wrong platform.
 class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   final String unsupportedDOMGenerator;
 
@@ -135,6 +135,7 @@ class DOMActionExecutorDartHTMLUnsupported<T extends Object>
   }
 }
 
+@Deprecated("Use `_DOMGeneratorWebUnsupported`")
 class _DOMGeneratorDartHTMLUnsupported<T extends Object>
     extends DOMGeneratorUnsupported<T> implements DOMGeneratorDartHTML<T> {
   _DOMGeneratorDartHTMLUnsupported()
@@ -146,6 +147,7 @@ class _DOMGeneratorWebUnsupported<T extends Object>
   _DOMGeneratorWebUnsupported() : super('DOMGeneratorWeb', 'web');
 }
 
+@Deprecated("Use `createDOMGeneratorWeb`")
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T extends Object>() {
   return _DOMGeneratorDartHTMLUnsupported<T>();
 }

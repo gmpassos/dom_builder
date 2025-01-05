@@ -1026,6 +1026,7 @@ DOMGeneratorWeb<T> createDOMGeneratorWeb<T extends Object>() {
   return DOMGeneratorWebImpl() as DOMGeneratorWeb<T>;
 }
 
+@Deprecated("Use `createDOMGeneratorWeb`")
 DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T extends Object>() {
   throw UnsupportedError("`DOMGeneratorDartHTML` not loaded!");
 }

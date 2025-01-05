@@ -18,6 +18,7 @@ typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
 abstract class DOMGenerator<T extends Object> {
+  @Deprecated("Use `_web`")
   static DOMGeneratorDartHTML? _dartHTML;
 
   @Deprecated(
