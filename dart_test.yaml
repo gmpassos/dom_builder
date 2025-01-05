@@ -1,6 +1,13 @@
 
 concurrency: 1
 
+
+tags:
+  # Tests with issues on Wasm (--compiler `dart2wasm`)
+  wasm_issue:
+    timeout: 1m
+
+
 override_platforms:
   chrome:
     settings:

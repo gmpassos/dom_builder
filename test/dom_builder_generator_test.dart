@@ -1,3 +1,6 @@
+@Tags(['wasm_issue'])
+library;
+
 import 'package:dom_builder/dom_builder.dart';
 import 'package:test/test.dart';
 
