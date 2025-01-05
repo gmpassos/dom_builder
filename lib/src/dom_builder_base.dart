@@ -455,7 +455,7 @@ class DOMNode implements AsDOMNode {
 
   /// Returns the default [DOMGenerator].
   static DOMGenerator get defaultDomGenerator {
-    return _defaultDomGenerator ?? DOMGenerator.dartHTML();
+    return _defaultDomGenerator ?? DOMGenerator.web();
   }
 
   static set defaultDomGenerator(DOMGenerator value) {
