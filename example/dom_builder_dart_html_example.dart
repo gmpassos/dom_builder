@@ -1,9 +1,9 @@
-import 'dart:html';
+import 'package:web/web.dart';
 
 import 'package:dom_builder/dom_builder.dart';
 
 class BootstrapNavbarToggler {
-  static DOMGenerator domGenerator = DOMGenerator.dartHTML();
+  static DOMGenerator domGenerator = DOMGenerator.web();
 
   Element? render() {
     var button = $button(
