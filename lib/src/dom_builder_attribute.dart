@@ -263,13 +263,19 @@ class DOMAttributeValueString extends DOMAttributeValue {
   DOMAttributeValueString(Object? value) : _value = parseString(value, '');
 
   @override
-  bool get hasAttributeValue => _value != null && _value!.isNotEmpty;
+  bool get hasAttributeValue {
+    final value = _value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
-  int get length => _value != null ? _value!.length : 0;
+  int get length {
+    final value = _value;
+    return value != null ? value.length : 0;
+  }
 
   @override
-  String? get asAttributeValue => hasAttributeValue ? _value.toString() : null;
+  String? get asAttributeValue => hasAttributeValue ? _value! : null;
 
   @override
   List<String>? get asAttributeValues =>
