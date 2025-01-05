@@ -3,6 +3,9 @@
 - `DOMGenerator`:
   - `T` now extends `Object` (non-nullable): `DOMGenerator<T extends Object>`
 
+- `DOMNode`:
+  - `defaultDomGenerator`: change to `DOMGenerator.web()`.
+
 - `DOMGeneratorDartHTMLUnsupported` renamed to `DOMGeneratorUnsupported` as a generic `DOMGenerator` unsupported class.
 
 - New library `dom_builder_web.dart`.
