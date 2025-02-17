@@ -1,3 +1,4 @@
+// ignore: deprecated_member_use
 import 'dart:html';
 
 import 'dom_builder_base.dart';

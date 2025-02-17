@@ -1,3 +1,4 @@
+// ignore: deprecated_member_use
 import 'dart:html' as dart_html;
 
 import 'package:swiss_knife/swiss_knife.dart';
