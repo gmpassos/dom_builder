@@ -22,11 +22,12 @@
 - sdk: '>=3.6.0 <4.0.0'
 
 - web: ^1.1.0
-- web_utils: ^1.0.2
-- js_interop_utils: ^1.0.2
+- web_utils: ^1.0.5
+- js_interop_utils: ^1.0.5
 - collection: ^1.19.0
 
 - lints: ^5.1.1
+- test: ^1.25.15
 
 ## 2.2.7
 

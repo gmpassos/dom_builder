@@ -509,11 +509,13 @@ abstract class DOMGenerator<T extends Object> {
     var parsedElement = _parseExternalElement(
         domParent, parent, domElement, domElement, treeMap, context);
 
-    if (parent != null && !containsNode(parent, parsedElement)) {
-      addChildToElement(parent, parsedElement);
-    }
+    if (parsedElement != null) {
+      if (parent != null && !containsNode(parent, parsedElement)) {
+        addChildToElement(parent, parsedElement);
+      }
 
-    domElement.notifyElementGenerated(parsedElement);
+      domElement.notifyElementGenerated(parsedElement);
+    }
 
     return parsedElement;
   }

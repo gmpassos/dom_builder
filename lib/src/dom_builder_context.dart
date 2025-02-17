@@ -88,7 +88,7 @@ class Viewport {
   }
 }
 
-typedef NamedElementGenerator<T extends Object> = T Function(
+typedef NamedElementGenerator<T extends Object> = T? Function(
     String name,
     DOMGenerator<T>? domGenerator,
     DOMTreeMap<T> treeMap,
