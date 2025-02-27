@@ -12,6 +12,11 @@ class DOMTreeMap<T extends Object> {
 
   DOMTreeMap(this.domGenerator);
 
+  /// Returns `true` if [node1] and [node2] are the same instance.
+  bool equalsNodes(T? node1, T? node2) =>
+      domGenerator.equalsNodes(node1, node2);
+
+  /// Alias to [DOMGenerator.generate].
   T? generate(DOMGenerator<T> domGenerator, DOMNode root,
           {T? parent, DOMContext<T>? context}) =>
       domGenerator.generate(root,
@@ -57,7 +62,7 @@ class DOMTreeMap<T extends Object> {
     var prevDomNode = _elementToDOMNodeMap[element];
 
     if (prevElement != null || prevDomNode != null) {
-      var samePrevElement = identical(prevElement, element);
+      var samePrevElement = equalsNodes(prevElement, element);
       var samePrevDomNode = identical(prevDomNode, domNode);
       if (samePrevElement && samePrevDomNode) {
         return;
@@ -162,7 +167,7 @@ class DOMTreeMap<T extends Object> {
 
   /// Returns [true] if the mapping for [domNode] matches [node].
   bool matchesMapping(DOMNode domNode, T node) {
-    return identical(_elementToDOMNodeMap[domNode], node);
+    return identical(_domNodeToElementMap[domNode], node);
   }
 
   bool mapTree(DOMNode domRoot, T root) {

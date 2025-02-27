@@ -180,7 +180,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   bool _isChildOfElementImpl(Element parent, Node child) {
-    return identical(child.parentNode, parent);
+    return child.parentNode == parent;
   }
 
   @override
@@ -534,7 +534,7 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
 
   @override
   set text(String value) {
-    node?.text = value;
+    node?.textContent = value;
   }
 
   @override
@@ -692,12 +692,12 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
 
     if (node.isA<Text>()) {
       if (other.isA<Text>()) {
-        node.text =
+        node.textContent =
             ((node as Text).textContent ?? '') + (other.textContent ?? '');
-        other.text = '';
+        other.textContent = '';
         return true;
       } else if (other.isA<Element>()) {
-        node.text = ((node as Text).textContent ?? '') +
+        node.textContent = ((node as Text).textContent ?? '') +
             ((other as Element).textContent ?? '');
         other.clear();
         return true;

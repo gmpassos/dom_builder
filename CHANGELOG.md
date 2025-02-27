@@ -1,3 +1,16 @@
+## 3.0.0-beta.3
+
+- `DOMGenerator`:
+  - Added `equalsNodes` (avoids using identical with JSObject and inconsistencies in Wasm).
+
+- `DOMTreeMap`:
+  - Fix `matchesMapping`: use `_domNodeToElementMap` instead of `_elementToDOMNodeMap`.
+
+- web_utils: ^1.0.9
+- js_interop_utils: ^1.0.6
+- swiss_knife: ^3.3.0
+- web: ^1.1.1
+
 ## 3.0.0-beta.2
 
 - web_utils: ^1.0.6

@@ -59,6 +59,15 @@ abstract class DOMGenerator<T extends Object> {
 
   Viewport? get viewport => _domContext?.viewport;
 
+  /// Returns `true` if [node1] and [node2] are the same instance.
+  bool equalsNodes(T? node1, T? node2) {
+    if (node1 == null || node2 == null) return false;
+
+    if (identical(node1, node2)) return true;
+
+    return node1 == node2;
+  }
+
   bool isEquivalentNode(DOMNode domNode, T node) {
     if (!isEquivalentNodeType(domNode, node)) {
       return false;
@@ -1182,6 +1191,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   void reset() => domGenerator.reset();
 
   @override
+  bool equalsNodes(T? node1, T? node2) =>
+      domGenerator.equalsNodes(node1, node2);
+
+  @override
   bool isChildOfElement(T? parent, T? child) =>
       domGenerator.isChildOfElement(parent, child);
 
@@ -1648,6 +1661,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   void reset() {}
+
+  @override
+  bool equalsNodes(T? node1, T? node2) => false;
 
   @override
   bool isChildOfElement(T? parent, T? child) => false;

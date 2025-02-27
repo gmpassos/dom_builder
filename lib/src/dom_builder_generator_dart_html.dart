@@ -167,7 +167,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   bool _isChildOfElementImpl(Element parent, Node child) {
-    return identical(child.parentNode, parent);
+    return child.parentNode == parent;
   }
 
   @override
