@@ -1,3 +1,13 @@
+## 2.2.8
+
+- sdk: '>=3.6.0 <4.0.0'
+
+- swiss_knife: ^3.3.0
+- collection: ^1.19.0
+
+- lints: ^5.1.1
+- test: ^1.25.15
+
 ## 2.2.7
 
 - Improve null-safe code.
