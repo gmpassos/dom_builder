@@ -167,7 +167,7 @@ class DOMTreeMap<T extends Object> {
 
   /// Returns [true] if the mapping for [domNode] matches [node].
   bool matchesMapping(DOMNode domNode, T node) {
-    return identical(_domNodeToElementMap[domNode], node);
+    return equalsNodes(_domNodeToElementMap[domNode], node);
   }
 
   bool mapTree(DOMNode domRoot, T root) {
