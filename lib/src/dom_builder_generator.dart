@@ -6,6 +6,7 @@ import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator_none.dart'
+    if (dart.library.js_interop) 'dom_builder_generator_web.dart'
     if (dart.library.html) 'dom_builder_generator_dart_html.dart';
 import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
@@ -16,12 +17,22 @@ typedef DOMElementGenerator<T> = T Function(Object? parent);
 typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
-abstract class DOMGenerator<T> {
+abstract class DOMGenerator<T extends Object> {
+  @Deprecated("Use `_web`")
   static DOMGeneratorDartHTML? _dartHTML;
 
-  static DOMGeneratorDartHTML<T> dartHTML<T>() {
-    _dartHTML ??= createDOMGeneratorDartHTML();
+  @Deprecated(
+      "Use `DOMGenerator.web` with package `web`. Package `dart:html` is deprecated.")
+  static DOMGeneratorDartHTML<T> dartHTML<T extends Object>() {
+    _dartHTML ??= createDOMGeneratorDartHTML<T>();
     return _dartHTML as DOMGeneratorDartHTML<T>;
+  }
+
+  static DOMGeneratorWeb? _web;
+
+  static DOMGeneratorWeb<T> web<T extends Object>() {
+    _web ??= createDOMGeneratorWeb<T>();
+    return _web as DOMGeneratorWeb<T>;
   }
 
   DOMActionExecutor<T>? _domActionExecutor;
@@ -47,6 +58,15 @@ abstract class DOMGenerator<T> {
   }
 
   Viewport? get viewport => _domContext?.viewport;
+
+  /// Returns `true` if [node1] and [node2] are the same instance.
+  bool equalsNodes(T? node1, T? node2) {
+    if (node1 == null || node2 == null) return false;
+
+    if (identical(node1, node2)) return true;
+
+    return node1 == node2;
+  }
 
   bool isEquivalentNode(DOMNode domNode, T node) {
     if (!isEquivalentNodeType(domNode, node)) {
@@ -498,11 +518,13 @@ abstract class DOMGenerator<T> {
     var parsedElement = _parseExternalElement(
         domParent, parent, domElement, domElement, treeMap, context);
 
-    if (parent != null && !containsNode(parent, parsedElement)) {
-      addChildToElement(parent, parsedElement);
-    }
+    if (parsedElement != null) {
+      if (parent != null && !containsNode(parent, parsedElement)) {
+        addChildToElement(parent, parsedElement);
+      }
 
-    domElement.notifyElementGenerated(parsedElement);
+      domElement.notifyElementGenerated(parsedElement);
+    }
 
     return parsedElement;
   }
@@ -559,7 +581,7 @@ abstract class DOMGenerator<T> {
     if (externalElement == null) return null;
 
     if (externalElement is T) {
-      treeMap.map(domElement, externalElement as T);
+      treeMap.map(domElement, externalElement);
       addChildToElement(parent, externalElement as T?);
       return externalElement as T?;
     } else if (externalElement is List &&
@@ -694,10 +716,9 @@ abstract class DOMGenerator<T> {
     if (futureElementResolved == null) {
       return;
     } else if (futureElementResolved is T) {
-      treeMap.map(domElement, futureElementResolved as T, allowOverwrite: true);
+      treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
       if (parent != null) {
-        replaceChildElement(
-            parent, templateElement, [futureElementResolved as T]);
+        replaceChildElement(parent, templateElement, [futureElementResolved]);
       }
     } else if (parent != null) {
       var children = addExternalElementToElement(parent, futureElementResolved);
@@ -735,7 +756,7 @@ abstract class DOMGenerator<T> {
     if (elements == null) {
       return null;
     } else if (elements is T) {
-      return [elements as T];
+      return [elements];
     } else if (elements is DOMNode) {
       var e = generate(elements);
       if (e == null) {
@@ -752,10 +773,7 @@ abstract class DOMGenerator<T> {
       var e = elements();
       return toElements(e);
     } else if (elements is Iterable) {
-      return elements
-          .expand((e) => toElements(e)!)
-          .where((e) => e != null)
-          .toList();
+      return elements.expand((e) => toElements(e)!).toList();
     } else {
       return null;
     }
@@ -782,6 +800,8 @@ abstract class DOMGenerator<T> {
       var attrVal = attr.getValue(_domContext, treeMap);
 
       if (preserveClass && attrName == 'class') {
+        // print('[WASM ISSUE: not entering method] getAttribute: $attrName ... ($this)[${this.runtimeType}]');
+        // print(StackTrace.current);
         var prev = getAttribute(element, attrName);
         if (prev != null && prev.isNotEmpty) {
           attrVal =
@@ -1026,9 +1046,7 @@ abstract class DOMGenerator<T> {
 
       if (children.isNotEmpty) {
         for (var child in children) {
-          if (child != null) {
-            _revertImp(treeMap, domNode, node, child);
-          }
+          _revertImp(treeMap, domNode, node, child);
         }
       }
     }
@@ -1068,7 +1086,7 @@ abstract class DOMGenerator<T> {
   void finalizeGeneratedTree(DOMTreeMap<T> treeMap) {}
 }
 
-abstract class ElementGenerator<T> {
+abstract class ElementGenerator<T extends Object> {
   String get tag;
 
   /// If [true] indicated that this generated element has children nodes.
@@ -1096,7 +1114,7 @@ abstract class ElementGenerator<T> {
   bool isGeneratedElement(T element) => false;
 }
 
-typedef ElementGeneratorFunction<T> = T Function(
+typedef ElementGeneratorFunction<T extends Object> = T Function(
     DOMGenerator<T> domGenerator,
     String? tag,
     T? parent,
@@ -1105,16 +1123,17 @@ typedef ElementGeneratorFunction<T> = T Function(
     List<DOMNode>? contentNodes,
     DOMContext<T>? context);
 
-typedef ElementRevertFunction<T> = DOMElement Function(
+typedef ElementRevertFunction<T extends Object> = DOMElement Function(
     DOMGenerator<T> domGenerator,
     DOMTreeMap<T>? treeMap,
     DOMElement? domParent,
     T? parent,
     T? node);
 
-typedef ElementGeneratedMatchingFunction<T> = bool Function(T element);
+typedef ElementGeneratedMatchingFunction<T extends Object> = bool Function(
+    T element);
 
-class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
+class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
   @override
   final String tag;
   final ElementGeneratorFunction<T> generator;
@@ -1156,16 +1175,24 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
   }
 }
 
-abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
+@Deprecated(
+    "Use `DOMGeneratorWeb` with package `web`. Package `dart:html` is deprecated.")
+abstract class DOMGeneratorDartHTML<T extends Object> extends DOMGenerator<T> {}
+
+abstract class DOMGeneratorWeb<T extends Object> extends DOMGenerator<T> {}
 
 /// Delegates operations to another [DOMGenerator].
-class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
+class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   final DOMGenerator<T> domGenerator;
 
   DOMGeneratorDelegate(this.domGenerator);
 
   @override
   void reset() => domGenerator.reset();
+
+  @override
+  bool equalsNodes(T? node1, T? node2) =>
+      domGenerator.equalsNodes(node1, node2);
 
   @override
   bool isChildOfElement(T? parent, T? child) =>
@@ -1629,11 +1656,14 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 }
 
 /// A dummy [DOMGenerator] implementation.
-class DOMGeneratorDummy<T> implements DOMGenerator<T> {
+class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   DOMGeneratorDummy();
 
   @override
   void reset() {}
+
+  @override
+  bool equalsNodes(T? node1, T? node2) => false;
 
   @override
   bool isChildOfElement(T? parent, T? child) => false;

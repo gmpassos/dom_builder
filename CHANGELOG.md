@@ -1,3 +1,51 @@
+## 3.0.0-beta.3
+
+- `DOMGenerator`:
+  - Added `equalsNodes` (avoids using identical with JSObject and inconsistencies in Wasm).
+
+- `DOMTreeMap`:
+  - Fix `matchesMapping`: use `_domNodeToElementMap` instead of `_elementToDOMNodeMap`.
+
+- web_utils: ^1.0.9
+- js_interop_utils: ^1.0.6
+- swiss_knife: ^3.3.0
+- web: ^1.1.1
+
+## 3.0.0-beta.2
+
+- web_utils: ^1.0.6
+
+## 3.0.0-beta.1
+
+- `DOMGenerator`:
+  - `T` now extends `Object` (non-nullable): `DOMGenerator<T extends Object>`
+
+- `DOMNode`:
+  - `defaultDomGenerator`: change to `DOMGenerator.web()`.
+
+- `DOMGeneratorDartHTMLUnsupported` renamed to `DOMGeneratorUnsupported` as a generic `DOMGenerator` unsupported class.
+
+- New library `dom_builder_web.dart`.
+  - New `DOMGeneratorWeb` and `DOMHtmlBrowserWeb`.
+  - Added `DOMGenerator.web` and `DOMGenerator.setDefaultDomGeneratorToWeb`.
+  - Change from `dart:html` to `package:web/web.dart`.
+  - Change to `dart:js_interop`.
+
+- Deprecate `DOMGenerator.dartHTML`, `DOMGeneratorDartHTML` and `DOMGeneratorDartHTMLImpl`.
+- Deprecate library `dom_builder_dart_html.dart`.
+
+- CI: test with `dart2js` and `dart2wasm` (on Chrome).
+
+- sdk: '>=3.6.0 <4.0.0'
+
+- web: ^1.1.0
+- web_utils: ^1.0.5
+- js_interop_utils: ^1.0.5
+- collection: ^1.19.0
+
+- lints: ^5.1.1
+- test: ^1.25.15
+
 ## 2.2.8
 
 - sdk: '>=3.6.0 <4.0.0'

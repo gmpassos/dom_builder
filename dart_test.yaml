@@ -1,0 +1,28 @@
+
+concurrency: 1
+
+
+tags:
+  # Tests with issues on Wasm (--compiler `dart2wasm`)
+  wasm_issue:
+    timeout: 1m
+
+
+override_platforms:
+  chrome:
+    settings:
+      headless: true
+  firefox:
+    settings:
+      arguments: -headless
+
+define_platforms:
+  firefox-esr:
+    name: Firefox-ESR
+    extends: firefox
+    settings:
+      executable:
+        linux: firefox-esr
+
+platforms: [vm, chrome]
+compilers: [kernel, dart2js, dart2wasm]

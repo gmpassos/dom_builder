@@ -1,5 +1,6 @@
 import 'dom_builder_base.dart';
 import 'dom_builder_html_generic.dart'
+    if (dart.library.js_interop) 'dom_builder_html_web.dart'
     if (dart.library.html) 'dom_builder_html_browser.dart';
 
 /// Class to parse HTML and handle HTML nodes.
