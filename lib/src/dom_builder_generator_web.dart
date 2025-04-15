@@ -304,7 +304,28 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           if (attrVal == null) {
             element2.removeAttribute(attrName);
           } else {
-            element2.setAttribute(attrName, attrVal);
+            switch (attrName) {
+              case 'id':
+                {
+                  element2.id = attrVal;
+                  break;
+                }
+              case 'class':
+                {
+                  element2.className = attrVal;
+                  break;
+                }
+              case 'style':
+                {
+                  element2.style?.cssText = attrVal;
+                  break;
+                }
+              default:
+                {
+                  element2.setAttribute(attrName, attrVal);
+                  break;
+                }
+            }
           }
           break;
         }

@@ -1,3 +1,8 @@
+## 3.0.0-beta.4
+
+- `DOMGeneratorWebImpl`:
+  - Optimize `setAttribute` for common attributes (avoid call to `Element.setAttribute`).
+
 ## 3.0.0-beta.3
 
 - `DOMGenerator`:
