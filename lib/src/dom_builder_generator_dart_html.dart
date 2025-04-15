@@ -268,7 +268,33 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
           if (attrVal == null) {
             element.removeAttribute(attrName);
           } else {
-            element.setAttribute(attrName, attrVal);
+            switch (attrName) {
+              case 'id':
+                {
+                  element.id = attrVal;
+                  break;
+                }
+              case 'class':
+                {
+                  element.className = attrVal;
+                  break;
+                }
+              case 'title':
+                {
+                  element.title = attrVal;
+                  break;
+                }
+              case 'style':
+                {
+                  element.style.cssText = attrVal;
+                  break;
+                }
+              default:
+                {
+                  element.setAttribute(attrName, attrVal);
+                  break;
+                }
+            }
           }
           break;
         }
