@@ -5,7 +5,7 @@ import 'dom_builder_context.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_treemap.dart';
 
-abstract class DOMActionExecutor<T> {
+abstract class DOMActionExecutor<T extends Object> {
   DOMGenerator<T>? _domGenerator;
 
   DOMGenerator<T>? get domGenerator => _domGenerator;
@@ -127,7 +127,7 @@ final RegExpDialect _regexpActionsDialect = RegExpDialect({
   'action_capture': r'(?:($sel)|($call))',
 }, multiLine: false, caseSensitive: false);
 
-abstract class DOMAction<T> {
+abstract class DOMAction<T extends Object> {
   static final RegExp _regexpActionCapture =
       _regexpActionsDialect.getPattern(r'$action_capture\.?');
 
@@ -137,7 +137,7 @@ abstract class DOMAction<T> {
   static final RegExp _regexpCallCapture =
       _regexpActionsDialect.getPattern(r'$call_capture\.?');
 
-  static DOMAction<T>? parse<T>(
+  static DOMAction<T>? parse<T extends Object>(
       DOMActionExecutor<T> executor, String? actionLine) {
     if (actionLine == null) return null;
     actionLine = actionLine.trim();
@@ -267,7 +267,7 @@ abstract class DOMAction<T> {
   int get hashCode;
 }
 
-class DOMActionList<T> extends DOMAction<T> {
+class DOMActionList<T extends Object> extends DOMAction<T> {
   final List<DOMAction<T>> actions;
 
   // ignore: use_super_parameters
@@ -301,7 +301,7 @@ class DOMActionList<T> extends DOMAction<T> {
   int get hashCode => ListEquality().hash(actions);
 }
 
-class DOMActionSelect<T> extends DOMAction<T> {
+class DOMActionSelect<T extends Object> extends DOMAction<T> {
   final String id;
 
   // ignore: use_super_parameters
@@ -323,7 +323,7 @@ class DOMActionSelect<T> extends DOMAction<T> {
   int get hashCode => id.hashCode;
 }
 
-class DOMActionCall<T> extends DOMAction<T> {
+class DOMActionCall<T extends Object> extends DOMAction<T> {
   final String name;
 
   final List<String> parameters;

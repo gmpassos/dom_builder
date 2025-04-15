@@ -1,3 +1,4 @@
+// ignore: deprecated_member_use
 import 'dart:html' as dart_html;
 
 import 'package:swiss_knife/swiss_knife.dart';
@@ -6,8 +7,8 @@ import 'dom_builder_base.dart';
 import 'dom_builder_html.dart';
 import 'dom_builder_treemap.dart';
 
-class DOMHtmlBrowser extends DOMHtml {
-  DOMHtmlBrowser() : super.create();
+class DOMHtmlBrowserDartHtml extends DOMHtml {
+  DOMHtmlBrowserDartHtml() : super.create();
 
   @override
   bool isHtmlNode(Object? o) {
@@ -354,4 +355,4 @@ dart_html.NodeValidatorBuilder _createStandardNodeValidator(
   return validator;
 }
 
-DOMHtml createDOMHtml() => DOMHtmlBrowser();
+DOMHtml createDOMHtml() => DOMHtmlBrowserDartHtml();
