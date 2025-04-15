@@ -1,3 +1,8 @@
+## 2.2.9
+
+- `DOMGeneratorDartHTMLImpl`:
+  - Optimize `setAttribute` for common attributes (avoid call to `Element.setAttribute`).
+
 ## 2.2.8
 
 - sdk: '>=3.6.0 <4.0.0'
