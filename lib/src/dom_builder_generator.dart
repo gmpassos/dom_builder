@@ -704,6 +704,25 @@ abstract class DOMGenerator<T extends Object> {
     return futureResult;
   }
 
+  Object? resolveElements(Object? elements) {
+    elements = toElements(elements);
+    if (elements == null) return null;
+
+    if (elements is List) {
+      if (elements.isEmpty) {
+        return null;
+      }
+
+      if (elements.length == 1) {
+        return elements.first;
+      }
+
+      elements = elements.expand((Object? e) => e.expandNonNullable()).toList();
+    }
+
+    return elements;
+  }
+
   void attachFutureElement(
       DOMElement? domParent,
       T? parent,
@@ -1276,6 +1295,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
           templateElement, futureResult, treeMap, context);
 
   @override
+  Object? resolveElements(Object? elements) =>
+      domGenerator.resolveElements(elements);
+
+  @override
   void attachFutureElement(
           DOMElement? domParent,
           T? parent,
@@ -1735,6 +1758,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
       null;
 
   @override
+  Object? resolveElements(Object? elements) => null;
+
+  @override
   void attachFutureElement(
       DOMElement? domParent,
       T? parent,
@@ -2044,4 +2070,15 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   set _domActionExecutor(DOMActionExecutor<T>? value) {}
+}
+
+extension on Object? {
+  List<Object> expandNonNullable() {
+    var self = this;
+    if (self == null) return [];
+    if (self is List<Object?>) {
+      return self.expand((e) => e.expandNonNullable()).toList();
+    }
+    return [self];
+  }
 }
