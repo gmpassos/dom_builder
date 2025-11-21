@@ -1,5 +1,4 @@
 import 'package:js_interop_utils/js_interop_utils.dart';
-import 'package:swiss_knife/swiss_knife.dart';
 import 'package:web_utils/web_utils.dart' as web;
 
 import 'dom_builder_base.dart';
@@ -174,7 +173,7 @@ class DOMHtmlBrowserWeb extends DOMHtml {
       }
 
       var nodes = element.childNodes.toList();
-      var content = isNotEmptyObject(nodes) ? List.from(nodes) : null;
+      var content = nodes.isNotEmpty ? List.from(nodes) : null;
 
       return DOMElement(name, attributes: attributes, content: content);
     } else {
