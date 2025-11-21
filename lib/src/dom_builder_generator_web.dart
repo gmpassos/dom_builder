@@ -233,6 +233,19 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
+  Node? wrapElements(List<Node>? elements) {
+    if (elements == null || elements.isEmpty) return null;
+
+    var span = HTMLSpanElement();
+
+    for (var child in elements) {
+      span.appendChild(child);
+    }
+
+    return span;
+  }
+
+  @override
   bool canHandleExternalElement(Object? externalElement) {
     if (externalElement == null) return false;
 

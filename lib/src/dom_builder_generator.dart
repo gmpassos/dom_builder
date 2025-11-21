@@ -723,6 +723,18 @@ abstract class DOMGenerator<T extends Object> {
     return elements;
   }
 
+  T? wrapElements(List<T>? elements) {
+    if (elements == null || elements.isEmpty) return null;
+
+    var span = createElement('span');
+
+    for (var child in elements) {
+      addChildToElement(span, child);
+    }
+
+    return span;
+  }
+
   void attachFutureElement(
       DOMElement? domParent,
       T? parent,
@@ -1299,6 +1311,9 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.resolveElements(elements);
 
   @override
+  T? wrapElements(List<T>? elements) => domGenerator.wrapElements(elements);
+
+  @override
   void attachFutureElement(
           DOMElement? domParent,
           T? parent,
@@ -1759,6 +1774,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   Object? resolveElements(Object? elements) => null;
+
+  @override
+  T? wrapElements(List<T>? elements) => null;
 
   @override
   void attachFutureElement(
