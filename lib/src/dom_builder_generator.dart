@@ -557,8 +557,8 @@ abstract class DOMGenerator<T extends Object> {
 
     if (parent != null) {
       var children = addExternalElementToElement(parent, externalElement);
-      if (isEmptyObject(children)) return null;
-      var node = children!.first;
+      if (children == null || children.isEmpty) return null;
+      var node = children.first;
       treeMap.map(domElement, node);
 
       domElement.notifyElementGenerated(node);
@@ -723,10 +723,10 @@ abstract class DOMGenerator<T extends Object> {
     } else if (parent != null) {
       var children = addExternalElementToElement(parent, futureElementResolved);
 
-      if (isEmptyObject(children)) {
+      if (children == null || children.isEmpty) {
         removeChildFromElement(parent, templateElement);
       } else {
-        var node = children!.first;
+        var node = children.first;
         treeMap.map(domElement, node);
 
         for (var child in children) {
@@ -932,7 +932,7 @@ abstract class DOMGenerator<T extends Object> {
     if (_domActionExecutor == null || domElement.tag == 'form') return;
 
     var actionValue = domElement.getAttributeValue('action', domContext);
-    if (isEmptyString(actionValue)) return;
+    if (actionValue == null || actionValue.isEmpty) return;
 
     var domAction = _domActionExecutor!.parse(actionValue);
 
