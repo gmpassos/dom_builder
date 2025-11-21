@@ -483,8 +483,8 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   void addClass(String? className) {
-    if (isEmptyObject(className)) return;
-    className = className!.trim();
+    if (className == null || className.isEmpty) return;
+    className = className.trim();
     if (className.isEmpty) return;
 
     if (node is Element) {
@@ -506,7 +506,7 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   bool removeClass(String? className) {
-    if (isEmptyObject(className)) return false;
+    if (className == null || className.isEmpty) return false;
     if (isNodeElement) {
       return nodeAsElement!.classes.remove(className);
     }
@@ -704,7 +704,7 @@ String? _getElementValue(Element? element, [String? def]) {
     value = element.text;
   }
 
-  return def != null && isEmptyObject(value) ? def : value;
+  return def != null && (value == null || value.isEmpty) ? def : value;
 }
 
 bool _setElementValue(Element? element, String? value) {
