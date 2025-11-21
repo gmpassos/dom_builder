@@ -580,12 +580,7 @@ abstract class DOMGenerator<T extends Object> {
       Object? externalElement, DOMTreeMap<T> treeMap, DOMContext<T>? context) {
     if (externalElement == null) return null;
 
-    if (externalElement is T) {
-      treeMap.map(domElement, externalElement);
-      addChildToElement(parent, externalElement as T?);
-      return externalElement as T?;
-    } else if (externalElement is List &&
-        listMatchesAll(externalElement, (dynamic e) => e is DOMNode)) {
+    if (externalElement is List && externalElement.every((e) => e is DOMNode)) {
       var listNodes = externalElement as List<DOMNode>;
       var elements = <T>[];
       for (var node in listNodes) {
@@ -630,6 +625,10 @@ abstract class DOMGenerator<T extends Object> {
         treeMap.map(node, element);
       }
       return elements.isEmpty ? null : elements.first;
+    } else if (externalElement is T) {
+      treeMap.map(domElement, externalElement);
+      addChildToElement(parent, externalElement as T?);
+      return externalElement as T?;
     }
 
     return null;
