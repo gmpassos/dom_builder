@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_attribute.dart';
@@ -48,10 +50,10 @@ class Viewport {
   }
 
   /// The smallest side of the viewport: `Math.min(width, height)`
-  int get vmin => Math.min(width, height);
+  int get vmin => math.min(width, height);
 
   /// The biggest side of the viewport: `Math.max(width, height)`
-  int get vmax => Math.max(width, height);
+  int get vmax => math.max(width, height);
 
   /// Returns [width] as a px String.
   String get widthAsPx => '${width}px';
