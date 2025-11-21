@@ -1,4 +1,4 @@
-import 'package:swiss_knife/swiss_knife.dart';
+import 'dart:math' as math;
 
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
@@ -178,7 +178,7 @@ class DOMTreeMap<T extends Object> {
     var domNodes = domRoot.nodes.toList();
     var nodes = domGenerator.getElementNodes(root);
 
-    var limit = Math.min(domNodes.length, nodes.length);
+    var limit = math.min(domNodes.length, nodes.length);
 
     for (var i = 0; i < limit; i++) {
       var domNode = domNodes[i];
@@ -336,7 +336,7 @@ class DOMTreeMap<T extends Object> {
 
   String? queryElement(String query,
       {DOMContext? domContext, bool buildTemplates = false}) {
-    if (isEmptyString(query)) return null;
+    if (query.isEmpty) return null;
 
     var rootDOMNode = this.rootDOMNode as DOMElement;
 
