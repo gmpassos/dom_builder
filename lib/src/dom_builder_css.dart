@@ -1,4 +1,5 @@
 import 'dart:collection';
+import 'dart:math' as math;
 
 import 'package:collection/collection.dart';
 import 'package:swiss_knife/swiss_knife.dart';
@@ -2102,7 +2103,7 @@ class CSSColorName extends CSSColorRGB {
     var r = hex.substring(1, 3);
     var g = hex.substring(3, 5);
     var b = hex.substring(5, 7);
-    var a = hex.length > 7 ? hex.substring(7, Math.min(9, hex.length)) : null;
+    var a = hex.length > 7 ? hex.substring(7, math.min(9, hex.length)) : null;
 
     var nR = _parseHex(r);
     var nG = _parseHex(g);
@@ -2552,12 +2553,16 @@ class CSSBackgroundImage {
   String _toStringParameters(DOMContext? domContext) {
     var s = '';
 
-    if (isNotEmptyString(position)) {
+    var position = this.position;
+
+    if (position != null && position.isNotEmpty) {
       s += ' ';
-      s += position!;
-      if (isNotEmptyString(size)) {
+      s += position;
+
+      var size = this.size;
+      if (size != null && size.isNotEmpty) {
         s += ' / ';
-        s += size!;
+        s += size;
       }
     }
 
@@ -2713,11 +2718,11 @@ class CSSBackground extends CSSValue {
 
   @override
   String toString([DOMContext? domContext]) {
-    var hasColor = color != null;
-    var hasImages = isNotEmptyObject(_images);
+    final hasColor = color != null;
 
-    if (hasImages) {
-      var s = _images!.map((e) => e.toString(domContext)).join(', ');
+    final images = _images;
+    if (images != null && images.isNotEmpty) {
+      var s = images.map((e) => e.toString(domContext)).join(', ');
       if (hasColor) {
         s += ' ';
         s += color!.toString(domContext);
