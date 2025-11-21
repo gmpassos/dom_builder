@@ -513,8 +513,8 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
 
   @override
   void addClass(String? className) {
-    if (isEmptyObject(className)) return;
-    className = className!.trim();
+    if (className == null || className.isEmpty) return;
+    className = className.trim();
     if (className.isEmpty) return;
 
     final element = nodeAsElement;
@@ -773,7 +773,7 @@ String? _getElementValue(Element? element, [String? def]) {
     value = element.text;
   }
 
-  return def != null && isEmptyObject(value) ? def : value;
+  return def != null && (value == null || value.isEmpty) ? def : value;
 }
 
 bool _setElementValue(Element? element, String? value) {
