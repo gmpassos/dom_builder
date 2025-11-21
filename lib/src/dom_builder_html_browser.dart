@@ -1,8 +1,6 @@
 // ignore: deprecated_member_use
 import 'dart:html' as dart_html;
 
-import 'package:swiss_knife/swiss_knife.dart';
-
 import 'dom_builder_base.dart';
 import 'dom_builder_html.dart';
 import 'dom_builder_treemap.dart';
@@ -134,7 +132,7 @@ class DOMHtmlBrowserDartHtml extends DOMHtml {
       }
 
       var nodes = node.nodes;
-      var content = isNotEmptyObject(nodes) ? List.from(nodes) : null;
+      var content = nodes.isNotEmpty ? List.from(nodes) : null;
 
       return DOMElement(name, attributes: attributes, content: content);
     } else {
