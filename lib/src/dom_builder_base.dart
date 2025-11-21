@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
-import 'dart:math';
+import 'dart:math' as math;
+import 'dart:math' show Point;
 
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:swiss_knife/swiss_knife.dart';
@@ -568,7 +569,7 @@ class DOMNode implements AsDOMNode {
 
   int _contentFromIndexBackwardWhere(
       int idx, int steps, bool Function(DOMNode node) test) {
-    for (var i = Math.min(idx, _content!.length - 1); i >= 0; i--) {
+    for (var i = math.min(idx, _content!.length - 1); i >= 0; i--) {
       var node = _content![i];
       if (test(node)) {
         if (steps <= 0) {
@@ -965,9 +966,9 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that has all [classes].
   T? selectWithAllClasses<T extends DOMNode>(List<String>? classes) {
-    if (isEmptyObject(classes) || isEmptyContent) return null;
+    if (classes == null || classes.isEmpty || isEmptyContent) return null;
 
-    classes = classes!
+    classes = classes
         .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
@@ -980,9 +981,9 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that has any of [classes].
   T? selectWithAnyClass<T extends DOMNode>(List<String>? classes) {
-    if (isEmptyObject(classes) || isEmptyContent) return null;
+    if (classes == null || classes.isEmpty || isEmptyContent) return null;
 
-    classes = classes!
+    classes = classes
         .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
@@ -995,9 +996,9 @@ class DOMNode implements AsDOMNode {
 
   /// Returns a node [T] that is one of [tags].
   T? selectByTag<T extends DOMNode>(List<String>? tags) {
-    if (isEmptyObject(tags) || isEmptyContent) return null;
+    if (tags == null || tags.isEmpty || isEmptyContent) return null;
 
-    tags = tags!
+    tags = tags
         .whereType<String>()
         .map((c) => c.trim())
         .where((c) => c.isNotEmpty)
@@ -1333,7 +1334,7 @@ class TextNode extends DOMNode with WithValue {
   bool get isTextEmpty => text.isEmpty;
 
   @override
-  bool get hasValue => isNotEmptyObject(text);
+  bool get hasValue => text.isNotEmpty;
 
   @override
   bool absorbNode(DOMNode other) {
@@ -3077,7 +3078,10 @@ class INPUTElement extends DOMElement with WithValue {
   }
 
   @override
-  bool get hasValue => isNotEmptyObject(value);
+  bool get hasValue {
+    var value = this.value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
   String? get value => getAttributeValue('value');
@@ -3136,7 +3140,10 @@ class CHECKBOXElement extends INPUTElement with WithValue {
   }
 
   @override
-  bool get hasValue => isNotEmptyObject(value);
+  bool get hasValue {
+    var value = this.value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
   String? get value => getAttributeValue('value');
@@ -3330,8 +3337,8 @@ class OPTIONElement extends DOMElement with WithValue {
     var valueStr = parseString(value);
     var textStr = parseString(text);
 
-    if (isNotEmptyString(valueStr, trim: true) ||
-        isNotEmptyString(textStr, trim: true)) {
+    if ((valueStr != null && valueStr.trim().isNotEmpty) ||
+        (textStr != null && textStr.trim().isNotEmpty)) {
       return OPTIONElement(
         value: valueStr,
         text: textStr,
@@ -3373,7 +3380,10 @@ class OPTIONElement extends DOMElement with WithValue {
   }
 
   @override
-  bool get hasValue => isNotEmptyObject(value);
+  bool get hasValue {
+    var value = this.value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
   String? get value => getAttributeValue('value');
@@ -3453,7 +3463,10 @@ class TEXTAREAElement extends DOMElement with WithValue {
   }
 
   @override
-  bool get hasValue => isNotEmptyObject(value);
+  bool get hasValue {
+    var value = this.value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
   String? get value => getAttributeValue('value');
