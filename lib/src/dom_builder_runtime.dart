@@ -1,4 +1,4 @@
-import 'package:swiss_knife/swiss_knife.dart';
+import 'dart:math' as math;
 
 import 'dom_builder_base.dart';
 import 'dom_builder_css.dart';
@@ -258,7 +258,7 @@ abstract class DOMNodeRuntime<T extends Object> {
 
   int _contentFromIndexBackwardWhere(
       int idx, int steps, bool Function(T? node) test) {
-    for (var i = Math.min(idx, nodesLength - 1); i >= 0; i--) {
+    for (var i = math.min(idx, nodesLength - 1); i >= 0; i--) {
       var node = getNodeAt(i);
       if (test(node)) {
         if (steps <= 0) {
