@@ -580,8 +580,10 @@ abstract class DOMGenerator<T extends Object> {
       Object? externalElement, DOMTreeMap<T> treeMap, DOMContext<T>? context) {
     if (externalElement == null) return null;
 
-    if (externalElement is List && externalElement.every((e) => e is DOMNode)) {
-      var listNodes = externalElement as List<DOMNode>;
+    if (externalElement is List) {
+      var listNodes = _resolveListOfDOMNode(externalElement).toList();
+      if (listNodes.isEmpty) return null;
+
       var elements = <T>[];
       for (var node in listNodes) {
         var elem = build(domParent, parent, node, treeMap, context);
@@ -589,11 +591,17 @@ abstract class DOMGenerator<T extends Object> {
           throw StateError(
               "Can't build element for `DOMNode` in `externalElement` List: $node");
         }
-        T element = elem;
-        elements.add(element);
-        treeMap.map(node, element);
+        elements.add(elem);
+        treeMap.map(node, elem);
       }
-      return elements.isEmpty ? null : elements.first;
+
+      if (elements.isEmpty) {
+        return null;
+      } else if (elements.length == 1) {
+        return elements.first;
+      } else {
+        return wrapElements(elements);
+      }
     } else if (externalElement is DOMAsync) {
       return generateDOMAsyncElement(
           domParent, parent, externalElement, treeMap, context);
