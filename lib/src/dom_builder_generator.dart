@@ -635,6 +635,7 @@ abstract class DOMGenerator<T extends Object> {
         elements.add(element);
         treeMap.map(node, element);
       }
+
       return elements.isEmpty ? null : elements.first;
     } else if (externalElement is T) {
       treeMap.map(domElement, externalElement);
@@ -729,22 +730,14 @@ abstract class DOMGenerator<T extends Object> {
   }
 
   Object? resolveElements(Object? elements) {
-    elements = toElements(elements);
-    if (elements == null) return null;
+    var elementsList = toElements(elements);
+    if (elementsList == null || elementsList.isEmpty) return null;
 
-    if (elements is List) {
-      if (elements.isEmpty) {
-        return null;
-      }
-
-      if (elements.length == 1) {
-        return elements.first;
-      }
-
-      elements = elements.expand((Object? e) => e.expandNonNullable()).toList();
+    if (elementsList.length == 1) {
+      return elementsList.first;
     }
 
-    return elements;
+    return elementsList;
   }
 
   T? wrapElements(List<T>? elements) {
@@ -770,8 +763,34 @@ abstract class DOMGenerator<T extends Object> {
       Object? futureElementResolved,
       DOMTreeMap<T> treeMap,
       DOMContext<T>? context) {
-    if (futureElementResolved == null) {
-      return;
+    futureElementResolved = resolveElements(futureElementResolved);
+    if (futureElementResolved == null) return;
+
+    if (futureElementResolved is List<Object?>) {
+      var futureElementResolvedListTyped = futureElementResolved
+          .expand((e) => e.expandNonNullable())
+          .whereType<T>()
+          .toList();
+
+      if (futureElementResolvedListTyped.isEmpty) return;
+
+      if (futureElementResolvedListTyped.length == 1) {
+        var futureElementResolved = futureElementResolvedListTyped.first;
+        treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
+        if (parent != null) {
+          replaceChildElement(parent, templateElement, [futureElementResolved]);
+        }
+      } else {
+        var wrap = wrapElements(futureElementResolvedListTyped);
+        if (wrap != null) {
+          treeMap.map(domElement, wrap, allowOverwrite: true);
+        }
+
+        if (parent != null) {
+          replaceChildElement(
+              parent, templateElement, futureElementResolvedListTyped);
+        }
+      }
     } else if (futureElementResolved is T) {
       treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
       if (parent != null) {
