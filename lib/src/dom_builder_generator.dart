@@ -743,7 +743,7 @@ abstract class DOMGenerator<T extends Object> {
     if (elements == null || elements.isEmpty) return null;
 
     var div = createElement('div');
-    if (div==null) return null;
+    if (div == null) return null;
 
     setAttribute(div, 'style', 'display: contents');
 
