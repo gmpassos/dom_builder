@@ -1,3 +1,22 @@
+## 3.0.0-beta.5
+
+- `DOMGenerator`:
+  - `_parseExternalElement`:
+    - Improve element resolution.
+    - Allow unresolved Object as `toString`.
+  - `toElements`: optimize and allow unresolved Object as `toString`.
+  - Added `resolveElements`.
+  - Added `wrapElements`.
+
+- web_utils: ^1.0.16
+- js_interop_utils: ^1.0.9
+- html: ^0.15.6
+- swiss_knife: ^3.3.3
+
+- test: ^1.26.3
+- dependency_validator: ^4.1.3
+- coverage: ^1.15.0
+
 ## 3.0.0-beta.4
 
 - `DOMGeneratorWebImpl`:
