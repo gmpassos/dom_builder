@@ -726,13 +726,16 @@ abstract class DOMGenerator<T extends Object> {
   T? wrapElements(List<T>? elements) {
     if (elements == null || elements.isEmpty) return null;
 
-    var span = createElement('span');
+    var div = createElement('div');
+    if (div==null) return null;
+
+    setAttribute(div, 'style', 'display: contents');
 
     for (var child in elements) {
-      addChildToElement(span, child);
+      addChildToElement(div, child);
     }
 
-    return span;
+    return div;
   }
 
   void attachFutureElement(

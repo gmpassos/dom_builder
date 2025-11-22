@@ -236,13 +236,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   Node? wrapElements(List<Node>? elements) {
     if (elements == null || elements.isEmpty) return null;
 
-    var span = HTMLSpanElement();
+    var div = HTMLDivElement()..style.display = 'contents';
 
     for (var child in elements) {
-      span.appendChild(child);
+      div.appendChild(child);
     }
 
-    return span;
+    return div;
   }
 
   @override
