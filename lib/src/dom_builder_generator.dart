@@ -642,6 +642,14 @@ abstract class DOMGenerator<T extends Object> {
     return null;
   }
 
+  static Iterable<DOMNode> _resolveListOfDOMNode(List<Object?> list) {
+    return list.nonNulls.expand(
+      (e) => e is List
+          ? _resolveListOfDOMNode(e)
+          : (e is DOMNode ? <DOMNode>[e] : <DOMNode>[]),
+    );
+  }
+
   T? generateDOMAsyncElement(DOMElement? domParent, T? parent,
       DOMAsync domAsync, DOMTreeMap<T> treeMap, DOMContext<T>? context) {
     T? templateElement;
