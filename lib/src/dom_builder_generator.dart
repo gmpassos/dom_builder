@@ -619,6 +619,9 @@ abstract class DOMGenerator<T extends Object> {
       return generateFutureElement(domParent, parent,
           domElement as ExternalElementNode, externalElement, treeMap, context);
     } else if (externalElement is String) {
+      externalElement = externalElement.trim();
+      if (externalElement.isEmpty) return null;
+
       var list = DOMNode.parseNodes(externalElement);
 
       var elements = <T>[];
