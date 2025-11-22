@@ -804,8 +804,6 @@ abstract class DOMGenerator<T extends Object> {
   List<T>? toElements(Object? elements) {
     if (elements == null) {
       return null;
-    } else if (elements is T) {
-      return [elements];
     } else if (elements is DOMNode) {
       var e = generate(elements);
       if (e == null) {
@@ -822,9 +820,15 @@ abstract class DOMGenerator<T extends Object> {
       var e = elements();
       return toElements(e);
     } else if (elements is Iterable) {
-      return elements.expand((e) => toElements(e)!).toList();
+      return elements.expand((e) => toElements(e) ?? <T>[]).toList();
+    } else if (elements is T) {
+      return [elements];
     } else {
-      return null;
+      var s = elements.toString();
+      if (s.isEmpty) return null;
+      var e = generateFromHTML(s);
+      if (e == null) return null;
+      return [e];
     }
   }
 
