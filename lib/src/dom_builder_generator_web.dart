@@ -256,11 +256,37 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   @override
   List<Node>? addExternalElementToElement(
       Node element, Object? externalElement) {
-    if (element.isA<Element>()) {
+    if (externalElement == null) return null;
+    if (!element.isA<Element>()) return null;
+
+    externalElement = resolveElements(externalElement);
+
+    if (externalElement is List) {
+      var added = <Node>[];
+      for (var e in externalElement) {
+        if (e == null) continue;
+
+        if (e is List) {
+          var l = addExternalElementToElement(element, e);
+          if (l != null) {
+            added.addAll(l);
+          }
+        } else {
+          var jsAny = externalElement.asJSAny;
+          if (jsAny.isA<Node>()) {
+            var node = jsAny as Node;
+            element.appendChild(node);
+            added.add(node);
+          }
+        }
+      }
+      return added;
+    } else {
       var jsAny = externalElement.asJSAny;
       if (jsAny.isA<Node>()) {
-        element.appendChild(externalElement as Node);
-        return [externalElement];
+        var node = jsAny as Node;
+        element.appendChild(node);
+        return [node];
       }
     }
 
