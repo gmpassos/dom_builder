@@ -640,6 +640,11 @@ abstract class DOMGenerator<T extends Object> {
       treeMap.map(domElement, externalElement);
       addChildToElement(parent, externalElement as T?);
       return externalElement as T?;
+    } else {
+      var s = externalElement.toString();
+      if (s.trim().isEmpty) return null;
+      var e = generateFromHTML(s);
+      return e;
     }
 
     return null;
@@ -828,7 +833,7 @@ abstract class DOMGenerator<T extends Object> {
       return [elements];
     } else {
       var s = elements.toString();
-      if (s.isEmpty) return null;
+      if (s.trim().isEmpty) return null;
       var e = generateFromHTML(s);
       if (e == null) return null;
       return [e];
