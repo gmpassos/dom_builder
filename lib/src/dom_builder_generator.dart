@@ -647,8 +647,6 @@ abstract class DOMGenerator<T extends Object> {
       var e = generateFromHTML(s);
       return e;
     }
-
-    return null;
   }
 
   static Iterable<DOMNode> _resolveListOfDOMNode(List<Object?> list) {
