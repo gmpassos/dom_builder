@@ -1,3 +1,7 @@
+## 3.0.0-beta.6
+
+- web_utils: ^1.0.18
+
 ## 3.0.0-beta.5
 
 - `DOMGenerator`:
