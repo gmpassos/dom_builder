@@ -2949,17 +2949,16 @@ class ExternalElementNode extends DOMNode {
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
+    final externalElement = this.externalElement;
     if (externalElement == null) return '';
 
     if (externalElement is String) {
-      return externalElement as String;
+      return externalElement;
     } else if (externalElement is DOMElementGenerator) {
-      var function = externalElement as DOMElementGenerator;
-      var element = function(parentNode);
+      var element = externalElement(parentNode);
       return element != null ? '$element' : '';
     } else if (externalElement is DOMElementGeneratorFunction) {
-      var function = externalElement as DOMElementGeneratorFunction;
-      var element = function();
+      var element = externalElement();
       return element != null ? '$element' : '';
     } else {
       return '$externalElement';
