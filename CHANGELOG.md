@@ -1,3 +1,10 @@
+## 3.0.0-beta.7
+
+- `DOMNodeRuntime`:
+  - `getAttribute`: fix, use `getAttributeValue`.
+
+- web_utils: ^1.0.19
+
 ## 3.0.0-beta.6
 
 - web_utils: ^1.0.18

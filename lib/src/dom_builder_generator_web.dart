@@ -636,7 +636,7 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
   String? getAttribute(String name) {
     final element = nodeAsElement;
     if (element != null) {
-      return element.attributes.get(name)?.toString();
+      return element.attributes.getAttributeValue(name);
     }
     return null;
   }
