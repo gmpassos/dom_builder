@@ -47,6 +47,11 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   }
 
   @override
+  T? createSVGElement(DOMElement domElement) {
+    _notSupported();
+  }
+
+  @override
   bool isTextNode(T? node) {
     _notSupported();
   }

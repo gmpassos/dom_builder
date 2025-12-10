@@ -356,6 +356,10 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
+  TestElem createSVGElement(DOMElement domElement) =>
+      createElement('svg', domElement);
+
+  @override
   String getNodeText(TestNode? node) {
     return node!.text;
   }

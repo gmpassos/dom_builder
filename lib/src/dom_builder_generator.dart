@@ -463,30 +463,45 @@ abstract class DOMGenerator<T extends Object> {
       if (domContext != null) {
         element = domContext.resolveNamedElement(
             domParent, parent, domElement, treeMap);
-        element ??= createElement(domElement.tag, domElement);
+      }
+
+      final domTag = domElement.tag;
+      if (domTag == 'svg') {
+        element ??= createSVGElement(domElement);
+        if (element == null) {
+          throw StateError("Can't create SVG element!");
+        }
+
+        if (parent != null) {
+          addChildToElement(parent, element);
+        }
+
+        treeMap.map(domElement, element);
+        _callOnElementCreated(treeMap, domElement, element, context);
       } else {
-        element = createElement(domElement.tag, domElement);
-      }
+        element ??= createElement(domTag, domElement);
+        if (element == null) {
+          throw StateError("Can't create element for tag: $domTag");
+        }
 
-      if (element == null) {
-        throw StateError("Can't create element for tag: ${domElement.tag}");
-      }
+        setAttributes(domElement, element, treeMap,
+            preserveClass: true, preserveStyle: true);
 
-      setAttributes(domElement, element, treeMap,
-          preserveClass: true, preserveStyle: true);
+        if (parent != null) {
+          addChildToElement(parent, element);
+        }
 
-      if (parent != null) {
-        addChildToElement(parent, element);
-      }
+        treeMap.map(domElement, element);
+        _callOnElementCreated(treeMap, domElement, element, context);
 
-      treeMap.map(domElement, element);
-      _callOnElementCreated(treeMap, domElement, element, context);
-
-      var length = domElement.length;
-
-      for (var i = 0; i < length; i++) {
-        var node = domElement.nodeByIndex(i)!;
-        build(domElement, element, node, treeMap, context);
+        final length = domElement.length;
+        if (length > 0) {
+          final domContent = domElement.content!;
+          for (var i = 0; i < length; ++i) {
+            var node = domContent[i];
+            build(domElement, element, node, treeMap, context);
+          }
+        }
       }
     } else if (parent != null) {
       addChildToElement(parent, element);
@@ -862,6 +877,8 @@ abstract class DOMGenerator<T extends Object> {
   List<T>? addExternalElementToElement(T element, Object? externalElement);
 
   T? createElement(String? tag, [DOMElement? domElement]);
+
+  T? createSVGElement(DOMElement domElement);
 
   T? createTextNode(Object? text);
 
@@ -1314,6 +1331,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   @override
   T? createElement(String? tag, [DOMElement? domElement]) =>
       domGenerator.createElement(tag, domElement);
+
+  @override
+  T? createSVGElement(DOMElement domElement) =>
+      domGenerator.createSVGElement(domElement);
 
   @override
   T? createTextNode(Object? text) => domGenerator.createTextNode(text);
@@ -1784,6 +1805,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   T? createElement(String? tag, [DOMElement? domElement]) => null;
+
+  @override
+  T? createSVGElement(DOMElement domElement) => null;
 
   @override
   T? createTextNode(Object? text) => null;

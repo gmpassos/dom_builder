@@ -4,6 +4,12 @@
   - Added `appendTo`.
   - Optimize string building/concatenation.
 
+- `DOMElement`
+  - `buildHTML`: Optimize string building/concatenation.
+
+- `DOMGenerator`:
+  - Added `createSVGElement`.
+
 ## 3.0.0-beta.7
 
 - `DOMNodeRuntime`:

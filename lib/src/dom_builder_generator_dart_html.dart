@@ -323,6 +323,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  Element? createSVGElement(DOMElement domElement) =>
+      createElement('svg', domElement);
+
+  @override
   String? buildElementHTML(Node element) {
     if (element is Element) {
       var html = element.outerHtml;
