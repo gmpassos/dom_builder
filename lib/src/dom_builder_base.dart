@@ -409,29 +409,29 @@ class DOMNode implements AsDOMNode {
       DOMContext? domContext}) {
     if (isCommented) return '';
 
-    var html = '';
-
     final content = _content;
-    if (content != null && content.isNotEmpty) {
-      DOMNode? prev;
-      for (var node in content) {
-        var subHtml = node.buildHTML(
-            withIndent: withIndent,
-            parentIndent: parentIndent + indent,
-            indent: indent,
-            disableIndent: disableIndent,
-            xhtml: xhtml,
-            resolveDSX: resolveDSX,
-            buildTemplates: buildTemplates,
-            parentNode: parentNode,
-            previousNode: prev,
-            domContext: domContext);
-        html += subHtml;
-        prev = node;
-      }
+    if (content == null || content.isEmpty) return '';
+
+    var html = StringBuffer();
+
+    DOMNode? prev;
+    for (var node in content) {
+      var subHtml = node.buildHTML(
+          withIndent: withIndent,
+          parentIndent: parentIndent + indent,
+          indent: indent,
+          disableIndent: disableIndent,
+          xhtml: xhtml,
+          resolveDSX: resolveDSX,
+          buildTemplates: buildTemplates,
+          parentNode: parentNode,
+          previousNode: prev,
+          domContext: domContext);
+      html.write(subHtml);
+      prev = node;
     }
 
-    return html;
+    return html.toString();
   }
 
   /// Sets the default [DOMGenerator] to `dart:html` implementation.
@@ -2491,7 +2491,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       {bool openCloseTag = false,
       bool resolveDSX = false,
       DOMContext? domContext}) {
-    var html = '<$tag';
+    var html = StringBuffer('<$tag');
 
     final attributes = _attributes;
     if (attributes != null && attributes.isNotEmpty) {
@@ -2499,18 +2499,18 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       var attributeClass = attributes['class'];
       var attributeStyle = attributes['style'];
 
-      html = DOMAttribute.append(html, ' ', attributeId,
+      DOMAttribute.appendTo(html, ' ', attributeId,
           domContext: domContext, resolveDSX: resolveDSX);
-      html = DOMAttribute.append(html, ' ', attributeClass,
+      DOMAttribute.appendTo(html, ' ', attributeClass,
           domContext: domContext, resolveDSX: resolveDSX);
-      html = DOMAttribute.append(html, ' ', attributeStyle,
+      DOMAttribute.appendTo(html, ' ', attributeStyle,
           domContext: domContext, resolveDSX: resolveDSX);
 
       var attributesNormal = attributes.values
           .where((v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
 
       for (var attr in attributesNormal) {
-        html = DOMAttribute.append(html, ' ', attr,
+        DOMAttribute.appendTo(html, ' ', attr,
             domContext: domContext, resolveDSX: resolveDSX);
       }
 
@@ -2518,7 +2518,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           .where((v) => v.hasValue && !_isPriorityAttribute(v) && v.isBoolean);
 
       for (var attr in attributesBoolean) {
-        html = DOMAttribute.append(html, ' ', attr,
+        DOMAttribute.appendTo(html, ' ', attr,
             domContext: domContext, resolveDSX: resolveDSX);
       }
     }
@@ -2527,13 +2527,18 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       for (var entry in _resolvedDSXEventAttributes!.entries) {
         var name = entry.key;
         var value = entry.value.toString();
-        html += ' $name="$value"';
+
+        html.write(' ');
+        html.write(name);
+        html.write('="');
+        html.write(value);
+        html.write('"');
       }
     }
 
-    html += openCloseTag ? '/>' : '>';
+    html.write(openCloseTag ? '/>' : '>');
 
-    return html;
+    return html.toString();
   }
 
   bool _isPriorityAttribute(DOMAttribute attr) {
@@ -2616,7 +2621,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     var emptyContent = content == null || content.isEmpty;
 
     if (_selfClosingTags.contains(tag) ||
-        (emptyContent && _selfClosingTagsOptional.contains(tag))) {
+        (emptyContent && (xhtml || _selfClosingTagsOptional.contains(tag)))) {
       var html = parentIndent +
           buildOpenTagHTML(
               openCloseTag: xhtml,
@@ -2625,32 +2630,76 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       return html;
     }
 
-    var html = parentIndent +
-        buildOpenTagHTML(resolveDSX: resolveDSX, domContext: domContext) +
-        innerBreakLine;
+    var html = StringBuffer();
+
+    html.write(parentIndent);
+    html.write(
+        buildOpenTagHTML(resolveDSX: resolveDSX, domContext: domContext));
+    html.write(innerBreakLine);
 
     if (!emptyContent) {
-      DOMNode? prev;
-      for (var node in content) {
-        var subElement = node.buildHTML(
-            withIndent: withIndent,
-            parentIndent: innerIndent,
-            indent: indent,
-            disableIndent: disableIndent,
-            xhtml: xhtml,
-            resolveDSX: resolveDSX,
-            buildTemplates: buildTemplates,
-            parentNode: this,
-            previousNode: prev,
-            domContext: domContext);
-        html += subElement + innerBreakLine;
-        prev = node;
-      }
+      buildHTMLContent(
+        output: html,
+        withIndent: withIndent,
+        innerIndent: innerIndent,
+        innerBreakLine: innerBreakLine,
+        indent: indent,
+        disableIndent: disableIndent,
+        xhtml: xhtml,
+        resolveDSX: resolveDSX,
+        buildTemplates: buildTemplates,
+        domContext: domContext,
+      );
     }
 
-    html += (allowIndent ? parentIndent : '') + buildCloseTagHTML();
+    if (allowIndent) {
+      html.write(parentIndent);
+    }
 
-    return html;
+    html.write(buildCloseTagHTML());
+
+    return html.toString();
+  }
+
+  StringBuffer buildHTMLContent(
+      {bool withIndent = false,
+      String indent = '  ',
+      bool disableIndent = false,
+      bool xhtml = false,
+      bool resolveDSX = false,
+      bool buildTemplates = false,
+      String innerIndent = '',
+      String innerBreakLine = '',
+      DOMNode? parentNode,
+      DOMNode? previousNode,
+      DOMContext? domContext,
+      StringBuffer? output}) {
+    output ??= StringBuffer();
+
+    final content = _content;
+    if (content == null || content.isEmpty) {
+      return output;
+    }
+
+    DOMNode? prev;
+    for (var node in content) {
+      var subElement = node.buildHTML(
+          withIndent: withIndent,
+          parentIndent: innerIndent,
+          indent: indent,
+          disableIndent: disableIndent,
+          xhtml: xhtml,
+          resolveDSX: resolveDSX,
+          buildTemplates: buildTemplates,
+          parentNode: this,
+          previousNode: prev,
+          domContext: domContext);
+      output.write(subElement);
+      output.write(innerBreakLine);
+      prev = node;
+    }
+
+    return output;
   }
 
   /// Returns true if [other] is fully equals.
