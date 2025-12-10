@@ -387,7 +387,34 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
   @override
   Element? createElement(String? tag, [DOMElement? domElement]) {
-    return web.createElement(tag!, domElement);
+    if (domElement != null && tag == 'svg') {
+      return createSVGElement(domElement);
+    } else {
+      return web.createElement(tag!, domElement);
+    }
+  }
+
+  static const _svgNS = "http://www.w3.org/2000/svg";
+
+  @override
+  Element createSVGElement(DOMElement domElement) {
+    var element = document.createElementNS(_svgNS, 'svg');
+
+    for (var attrName in domElement.attributesNames) {
+      var attr = domElement.getAttribute(attrName)!;
+      var attrVal = attr.getValue();
+      if (attrVal != null) {
+        if (attrName == 'viewbox') {
+          attrName = 'viewBox';
+        }
+        element.setAttributeNS(null, attrName, attrVal);
+      }
+    }
+
+    var svgContent = domElement.buildHTMLContent().toString();
+    element.innerHTML = svgContent.toJS;
+
+    return element;
   }
 
   @override

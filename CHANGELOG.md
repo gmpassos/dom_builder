@@ -10,6 +10,8 @@
 - `DOMGenerator`:
   - Added `createSVGElement`.
 
+- `DOMGeneratorWebImpl`: implement `createSVGElement`.
+
 ## 3.0.0-beta.7
 
 - `DOMNodeRuntime`:
