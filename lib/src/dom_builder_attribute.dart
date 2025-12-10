@@ -58,6 +58,18 @@ class DOMAttribute with WithValue {
     return s + delimiter + append;
   }
 
+  static StringBuffer appendTo(
+      StringBuffer s, String delimiter, DOMAttribute? attribute,
+      {DOMContext? domContext, bool resolveDSX = false}) {
+    if (attribute == null) return s;
+    var append =
+        attribute.buildHTML(domContext: domContext, resolveDSX: resolveDSX);
+    if (append.isEmpty) return s;
+    s.write(delimiter);
+    s.write(append);
+    return s;
+  }
+
   final String name;
 
   final DOMAttributeValue valueHandler;
@@ -176,9 +188,19 @@ class DOMAttribute with WithValue {
     }
 
     if (htmlValue != null) {
-      var html = '$name=';
-      html += htmlValue.contains('"') ? "'$htmlValue'" : '"$htmlValue"';
-      return html;
+      var html = StringBuffer('$name=');
+
+      if (htmlValue.contains('"')) {
+        html.write("'");
+        html.write(htmlValue);
+        html.write("'");
+      } else {
+        html.write('"');
+        html.write(htmlValue);
+        html.write('"');
+      }
+
+      return html.toString();
     } else {
       return '';
     }

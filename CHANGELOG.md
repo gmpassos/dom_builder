@@ -1,3 +1,9 @@
+## 3.0.0-beta.8
+
+- `DOMAttribute`:
+  - Added `appendTo`.
+  - Optimize string building/concatenation.
+
 ## 3.0.0-beta.7
 
 - `DOMNodeRuntime`:
