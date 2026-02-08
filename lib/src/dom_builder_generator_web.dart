@@ -80,10 +80,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   @override
   Map<String, String>? getElementAttributes(Node? element) {
     if (element.isA<Element>()) {
-      var attributes = (element as Element)
-          .attributes
-          .toMap()
-          .map((k, v) => MapEntry(k, 'v'));
+      var attributes = (element as Element).attributes.toMap();
       return attributes;
     }
     return null;
