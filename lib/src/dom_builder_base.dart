@@ -468,11 +468,19 @@ class DOMNode implements AsDOMNode {
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
   T? buildDOM<T extends Object>(
-      {DOMGenerator<T>? generator, T? parent, DOMContext<T>? context}) {
+      {DOMGenerator<T>? generator,
+      DOMTreeMap<T>? treeMap,
+      T? parent,
+      DOMContext<T>? context,
+      bool setTreeMapRoot = true}) {
     if (isCommented) return null;
 
     generator ??= defaultDomGenerator as DOMGenerator<T>;
-    return generator.generate(this, parent: parent, context: context);
+    return generator.generate(this,
+        parent: parent,
+        context: context,
+        treeMap: treeMap,
+        setTreeMapRoot: setTreeMapRoot);
   }
 
   EventStream<Object>? _onGenerate;
@@ -762,8 +770,11 @@ class DOMNode implements AsDOMNode {
   bool get isWhiteSpaceContent => false;
 
   /// Returns a copy [List] of children nodes.
-  List<DOMNode> get nodes =>
-      isNotEmptyContent ? List.from(_content!).cast() : [];
+  List<DOMNode> get nodes => isNotEmptyContent ? List.from(_content!) : [];
+
+  /// Same as [nodes] but returns an unmodifiable [List].
+  List<DOMNode> get nodesView =>
+      UnmodifiableListView(isNotEmptyContent ? _content! : []);
 
   /// Returns the total number of children nodes.
   int get length {
