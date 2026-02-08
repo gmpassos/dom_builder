@@ -1311,6 +1311,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   DOMGeneratorDelegate(this.domGenerator);
 
   @override
+  DOMTreeMapDummy<T> get _genericDOMTreeMapDummy =>
+      domGenerator._genericDOMTreeMapDummy;
+
+  @override
   void reset() => domGenerator.reset();
 
   @override
@@ -1804,6 +1808,9 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
 /// A dummy [DOMGenerator] implementation.
 class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   DOMGeneratorDummy();
+
+  @override
+  DOMTreeMapDummy<T> get _genericDOMTreeMapDummy => throw UnimplementedError();
 
   @override
   void reset() {}

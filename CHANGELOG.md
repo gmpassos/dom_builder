@@ -7,10 +7,45 @@
   - `getElementNodes`: added named parameter `asView`.
   - Added caching of a generic `DOMTreeMapDummy` instance.
   - Added `treeMap` and `setTreeMapRoot` parameters to `generate`, `resolveElements`, `toElements`, `addExternalElementToElement`, and related methods.
+  - Added caching of a generic `DOMTreeMapDummy` instance.
+  - Updated `attachFutureElement` to pass `treeMap` and `context` to `resolveElements`.
+  - Added `cancelEventSubscriptions` method with default implementation returning `false`.
+  - Updated `resolveActionAttribute` to fix event stream assignment for non-form elements.
+  - Updated `DOMGeneratorDelegate` to forward new parameters and `cancelEventSubscriptions`.
+  - Updated `DOMGeneratorDummy` to implement new method signatures and add `cancelEventSubscriptions` returning `false`.
+  - Updated `DOMGeneratorDartHTMLImpl` and `DOMGeneratorWebImpl`:
+    - Added `treeMap` and `context` parameters to `addExternalElementToElement`.
+    - Refactored `registerEventListeners` to collect subscriptions and map them in `treeMap`.
+    - Added `cancelEventSubscriptions` implementation to cancel all mapped subscriptions asynchronously.
+    - Fixed type checks and casts in `addExternalElementToElement`.
+    - Added missing event listeners for `onError`.
+  
+- `DOMTreeMap`:
+  - Replaced internal maps with `DualWeakMap` for element-to-DOMNode mapping.
+  - Added subscription management with `DualWeakMap` and automatic purge handling.
+  - Added methods `mapSubscriptions`, `getSubscriptions`, `cancelSubscriptions`, and `elementsWithSubscriptions`.
+  - Updated mapping methods to use new map structure.
+  - Added `purge` method to clear internal maps.
+  - Updated `getMappedElement` and `matchesMapping` to use new map.
+  - Updated `isMappedDOMNode` to use new map.
+  - Updated `mapTree` to maintain mapping consistency.
   
 - `DOMNodeRuntime`:
   - Updated `replaceBy` to pass `treeMap` and `setTreeMapRoot` to `toElements`.
 
+- `DSX`:
+  - Replaced `Expando` with `DualWeakMap` for internal mappings.
+  - Added static `purge` method to clean unused entries.
+  - Updated `check` method to remove mappings properly.
+  - Updated generic type constraints to `T extends Object`.
+  - Updated `dsx` extension on `FutureOr<T?>` to handle null safety and typing.
+  - Updated `DSXResolver` generic constraint to `T extends Object`.
+  - Updated `$dsxCall` to assert non-null return.
+  - Updated `DSXType` generic constraint to `T extends Object`.
+
+- `pubspec.yaml`:
+  - Updated `swiss_knife` dependency from `^3.3.3` to `^3.3.4`.
+  - web_utils: ^1.0.20
 
 ## 3.0.0-beta.8
 
