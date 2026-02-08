@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
+import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
@@ -30,11 +31,27 @@ class _DSXKey {
 ///
 /// Can be a [Function]/lambda that will be inserted into DOM definitions
 /// passed to [$dsx].
-class DSX<T> {
-  static final Expando<List<DSX>> _objectsToDSX = Expando<List<DSX>>();
-  static final Expando<Object> _dsxToObjectSource = Expando<Object>();
-  static final Expando<Object> _dsxToObject = Expando<Object>();
+class DSX<T extends Object> {
+  static final DualWeakMap<Object, List<DSX>> _objectsToDSX = DualWeakMap();
+  static final DualWeakMap<DSX, Object> _dsxToObjectSource = DualWeakMap();
+  static final DualWeakMap<DSX, Object> _dsxToObject = DualWeakMap();
+
   static final Map<_DSXKey, DSX> _keyToDSK = <_DSXKey, DSX>{};
+
+  static void purge() {
+    _keyToDSK.removeWhere((key, dsx) {
+      var objSrc = _dsxToObjectSource[dsx];
+      var obj = _dsxToObject[dsx];
+      if (objSrc == null && obj == null) {
+        return true;
+      }
+      return false;
+    });
+
+    _objectsToDSX.purge();
+    _dsxToObjectSource.purge();
+    _dsxToObject.purge();
+  }
 
   static Object? objectFromDSX(DSX dsx) {
     var o = _dsxToObject[dsx];
@@ -255,8 +272,8 @@ class DSX<T> {
     var obj = _dsxToObject[this];
 
     if (objSrc == null && obj == null) {
-      _dsxToObjectSource[this] = null;
-      _dsxToObject[this] = null;
+      _dsxToObjectSource.remove(this);
+      _dsxToObject.remove(this);
       _keyToDSK.remove(_key);
     }
 
@@ -354,7 +371,7 @@ class DSX<T> {
   }
 }
 
-class DSXResolver<T> {
+class DSXResolver<T extends Object> {
   final DSX<T> dsx;
 
   DSXResolver(this.dsx) {
@@ -517,7 +534,7 @@ DSX $dsxCall(
   dynamic a9,
   dynamic a10,
 ]) {
-  return f.dsx(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+  return f.dsx(a1, a2, a3, a4, a5, a6, a7, a8, a9, a10)!;
 }
 
 List<DOMNode> _dsxNodes(dynamic o) {
@@ -569,13 +586,13 @@ void _dsxJoinStrings(List list) {
   }
 }
 
-abstract class DSXType<T> {
+abstract class DSXType<T extends Object> {
   DSX<T> toDSX();
 }
 
 /// DSX extensions for [FutureOr].
-extension DSXFutureOrExtension<T> on FutureOr<T> {
-  dynamic dsx([
+extension DSXFutureOrExtension<T extends Object> on FutureOr<T?> {
+  DSX? dsx([
     dynamic a1,
     dynamic a2,
     dynamic a3,
@@ -587,23 +604,26 @@ extension DSXFutureOrExtension<T> on FutureOr<T> {
     dynamic a9,
     dynamic a10,
   ]) {
-    if (this == null) return null;
+    final self = this;
+    if (self == null) return null;
 
-    var dsx = _toDSX(this, this, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+    var dsx = _toDSX(self as Object, self as Object, a1, a2, a3, a4, a5, a6, a7,
+        a8, a9, a10);
     if (dsx != null) return dsx;
 
-    var dsxValue = _toDSXValue(this);
+    var dsxValue = _toDSXValue(self);
     if (dsxValue != null) {
-      dsx = _toDSX(this, dsxValue, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+      dsx = _toDSX(
+          self as Object, dsxValue, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
     }
 
-    dsx ??= DSX(this as Object, this);
+    dsx ??= DSX<T>(self as Object, self as T);
 
     return dsx;
   }
 
-  static dynamic _toDSX<T>(
-      dynamic oSrc, dynamic o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+  static DSX? _toDSX<T extends Object>(
+      Object oSrc, Object o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
     if (o is DSX) {
       return o;
     } else if (o is Future<T>) {
