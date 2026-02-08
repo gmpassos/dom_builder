@@ -1,3 +1,4 @@
+## 3.0.0-beta.9
 
 - `DOMNode`:
   - `buildDOM`: added parameters `treeMap` and `setTreeMapRoot`, passed to `DOMGenerator.generate`.
@@ -7,7 +8,6 @@
   - `getElementNodes`: added named parameter `asView`.
   - Added caching of a generic `DOMTreeMapDummy` instance.
   - Added `treeMap` and `setTreeMapRoot` parameters to `generate`, `resolveElements`, `toElements`, `addExternalElementToElement`, and related methods.
-  - Added caching of a generic `DOMTreeMapDummy` instance.
   - Updated `attachFutureElement` to pass `treeMap` and `context` to `resolveElements`.
   - Added `cancelEventSubscriptions` method with default implementation returning `false`.
   - Updated `resolveActionAttribute` to fix event stream assignment for non-form elements.
