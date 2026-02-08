@@ -1,3 +1,4 @@
+/// DOM Builder library.
 library;
 
 export 'src/dom_builder_actions.dart';

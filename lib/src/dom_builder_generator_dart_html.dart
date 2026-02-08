@@ -1,3 +1,6 @@
+import 'dart:async';
+import 'dart:collection';
+// ignore: deprecated_member_use
 import 'dart:html';
 
 import 'package:swiss_knife/swiss_knife.dart';
@@ -11,15 +14,18 @@ import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
 /// [DOMGenerator] based in `dart:html`.
+@Deprecated("Use package `web`. Package `dart:html` is deprecated.")
 class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   DOMGeneratorDartHTMLImpl() {
     domActionExecutor = DOMActionExecutorDartHTML();
   }
 
   @override
-  List<Node> getElementNodes(Node? element) {
+  List<Node> getElementNodes(Node? element, {bool asView = false}) {
     if (element is Element) {
-      return List.from(element.nodes);
+      return asView
+          ? UnmodifiableListView(element.nodes)
+          : List.from(element.nodes);
     }
     return <Node>[];
   }
@@ -165,7 +171,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   bool _isChildOfElementImpl(Element parent, Node child) {
-    return identical(child.parentNode, parent);
+    return child.parentNode == parent;
   }
 
   @override
@@ -217,10 +223,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  List<Node>? addExternalElementToElement(
-      Node element, Object? externalElement) {
-    if (element is Element && externalElement is Node) {
-      element.children.add(externalElement as Element);
+  List<Node>? addExternalElementToElement(Node element, Object? externalElement,
+      {DOMTreeMap<Node>? treeMap, DOMContext<Node>? context}) {
+    if (element is Element && externalElement is Element) {
+      element.children.add(externalElement);
       return [externalElement];
     }
     return null;
@@ -321,6 +327,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
+  Element? createSVGElement(DOMElement domElement) =>
+      createElement('svg', domElement);
+
+  @override
   String? buildElementHTML(Node element) {
     if (element is Element) {
       var html = element.outerHtml;
@@ -334,70 +344,100 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   @override
   void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
       Node element, DOMContext<Node>? context) {
-    if (element is Element) {
-      if (domElement.hasOnClickListener) {
-        element.onClick.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onClick.add(domEvent);
-        });
-      }
+    if (element is! Element) return;
 
-      if (domElement.hasOnChangeListener) {
-        element.onChange.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onChange.add(domEvent);
-        });
-      }
+    var subscriptions = <Object>[];
 
-      if (domElement.hasOnKeyPressListener) {
-        element.onKeyPress.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyPress.add(domEvent);
-        });
-      }
+    if (domElement.hasOnClickListener) {
+      var subscription = element.onClick.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onClick.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnKeyUpListener) {
-        element.onKeyUp.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyUp.add(domEvent);
-        });
-      }
+    if (domElement.hasOnChangeListener) {
+      var subscription = element.onChange.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onChange.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnKeyDownListener) {
-        element.onKeyDown.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyDown.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyPressListener) {
+      var subscription = element.onKeyPress.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyPress.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnMouseOverListener) {
-        element.onMouseOver.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOver.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyUpListener) {
+      var subscription = element.onKeyUp.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyUp.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnMouseOutListener) {
-        element.onMouseOut.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOut.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyDownListener) {
+      var subscription = element.onKeyDown.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyDown.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnLoadListener) {
-        element.onLoad.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onLoad.add(domEvent);
-        });
-      }
+    if (domElement.hasOnMouseOverListener) {
+      var subscription = element.onMouseOver.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onMouseOver.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnErrorListener) {
-        element.onError.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onError.add(domEvent);
-        });
+    if (domElement.hasOnMouseOutListener) {
+      var subscription = element.onMouseOut.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onMouseOut.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    if (domElement.hasOnLoadListener) {
+      var subscription = element.onLoad.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onLoad.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    if (domElement.hasOnErrorListener) {
+      var subscription = element.onError.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onError.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    treeMap.mapSubscriptions(element, subscriptions);
+  }
+
+  @override
+  FutureOr<bool> cancelEventSubscriptions(
+      Node? element, List<Object> subscriptions) {
+    if (subscriptions.isEmpty) return false;
+
+    var cancelFutures = <Future>[];
+
+    for (var subscription in subscriptions) {
+      if (subscription is StreamSubscription<MouseEvent>) {
+        var f = subscription.cancel();
+        cancelFutures.add(f);
       }
     }
+
+    return Future.wait(cancelFutures).then((_) => true);
   }
 
   @override
@@ -481,8 +521,8 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   void addClass(String? className) {
-    if (isEmptyObject(className)) return;
-    className = className!.trim();
+    if (className == null || className.isEmpty) return;
+    className = className.trim();
     if (className.isEmpty) return;
 
     if (node is Element) {
@@ -504,7 +544,7 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
 
   @override
   bool removeClass(String? className) {
-    if (isEmptyObject(className)) return false;
+    if (className == null || className.isEmpty) return false;
     if (isNodeElement) {
       return nodeAsElement!.classes.remove(className);
     }
@@ -702,7 +742,7 @@ String? _getElementValue(Element? element, [String? def]) {
     value = element.text;
   }
 
-  return def != null && isEmptyObject(value) ? def : value;
+  return def != null && (value == null || value.isEmpty) ? def : value;
 }
 
 bool _setElementValue(Element? element, String? value) {
@@ -952,6 +992,11 @@ class DOMActionExecutorDartHTML extends DOMActionExecutor<Node> {
   }
 }
 
-DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
+@Deprecated("Use package `web`. Package `dart:html` is deprecated.")
+DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T extends Object>() {
   return DOMGeneratorDartHTMLImpl() as DOMGeneratorDartHTML<T>;
+}
+
+DOMGeneratorWeb<T> createDOMGeneratorWeb<T extends Object>() {
+  throw StateError("`DOMGeneratorWeb` not loaded!");
 }

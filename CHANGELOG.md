@@ -1,3 +1,149 @@
+## 3.0.0-beta.9
+
+- `DOMNode`:
+  - `buildDOM`: added parameters `treeMap` and `setTreeMapRoot`, passed to `DOMGenerator.generate`.
+  - Added `nodesView` getter returning an unmodifiable list of children nodes.
+  
+- `DOMGenerator`:
+  - `getElementNodes`: added named parameter `asView`.
+  - Added caching of a generic `DOMTreeMapDummy` instance.
+  - Added `treeMap` and `setTreeMapRoot` parameters to `generate`, `resolveElements`, `toElements`, `addExternalElementToElement`, and related methods.
+  - Updated `attachFutureElement` to pass `treeMap` and `context` to `resolveElements`.
+  - Added `cancelEventSubscriptions` method with default implementation returning `false`.
+  - Updated `resolveActionAttribute` to fix event stream assignment for non-form elements.
+  - Updated `DOMGeneratorDelegate` to forward new parameters and `cancelEventSubscriptions`.
+  - Updated `DOMGeneratorDummy` to implement new method signatures and add `cancelEventSubscriptions` returning `false`.
+  - Updated `DOMGeneratorDartHTMLImpl` and `DOMGeneratorWebImpl`:
+    - Added `treeMap` and `context` parameters to `addExternalElementToElement`.
+    - Refactored `registerEventListeners` to collect subscriptions and map them in `treeMap`.
+    - Added `cancelEventSubscriptions` implementation to cancel all mapped subscriptions asynchronously.
+    - Fixed type checks and casts in `addExternalElementToElement`.
+    - Added missing event listeners for `onError`.
+  
+- `DOMTreeMap`:
+  - Replaced internal maps with `DualWeakMap` for element-to-DOMNode mapping.
+  - Added subscription management with `WeakKeyMap` and automatic purge handling.
+  - Added methods `mapSubscriptions`, `getSubscriptions`, `cancelSubscriptions`, and `elementsWithSubscriptions`.
+  - Updated mapping methods to use new map structure.
+  - Added `purge` method to clear internal maps.
+  - Updated `getMappedElement` and `matchesMapping` to use new map.
+  - Updated `isMappedDOMNode` to use new map.
+  - Updated `mapTree` to maintain mapping consistency.
+  
+- `DOMNodeRuntime`:
+  - Updated `replaceBy` to pass `treeMap` and `setTreeMapRoot` to `toElements`.
+
+- `DSX`:
+  - Replaced `Expando` with `DualWeakMap` for internal mappings.
+  - Added static `purge` method to clean unused entries.
+  - Updated `check` method to remove mappings properly.
+  - Updated generic type constraints to `T extends Object`.
+  - Updated `dsx` extension on `FutureOr<T?>` to handle null safety and typing.
+  - Updated `DSXResolver` generic constraint to `T extends Object`.
+  - Updated `$dsxCall` to assert non-null return.
+  - Updated `DSXType` generic constraint to `T extends Object`.
+
+- `pubspec.yaml`:
+  - Updated `swiss_knife` dependency from `^3.3.3` to `^3.3.4`.
+  - web_utils: ^1.0.20
+
+## 3.0.0-beta.8
+
+- `DOMAttribute`:
+  - Added `appendTo`.
+  - Optimize string building/concatenation.
+
+- `DOMElement`
+  - `buildHTML`: Optimize string building/concatenation.
+
+- `DOMGenerator`:
+  - Added `createSVGElement`.
+
+- `DOMGeneratorWebImpl`: implement `createSVGElement`.
+
+## 3.0.0-beta.7
+
+- `DOMNodeRuntime`:
+  - `getAttribute`: fix, use `getAttributeValue`.
+
+- web_utils: ^1.0.19
+
+## 3.0.0-beta.6
+
+- web_utils: ^1.0.18
+
+## 3.0.0-beta.5
+
+- `DOMGenerator`:
+  - `_parseExternalElement`:
+    - Improve element resolution.
+    - Allow unresolved Object as `toString`.
+  - `toElements`: optimize and allow unresolved Object as `toString`.
+  - Added `resolveElements`.
+  - Added `wrapElements`.
+
+- web_utils: ^1.0.16
+- js_interop_utils: ^1.0.9
+- html: ^0.15.6
+- swiss_knife: ^3.3.3
+
+- test: ^1.26.3
+- dependency_validator: ^4.1.3
+- coverage: ^1.15.0
+
+## 3.0.0-beta.4
+
+- `DOMGeneratorWebImpl`:
+  - Optimize `setAttribute` for common attributes (avoid call to `Element.setAttribute`).
+
+## 3.0.0-beta.3
+
+- `DOMGenerator`:
+  - Added `equalsNodes` (avoids using identical with JSObject and inconsistencies in Wasm).
+
+- `DOMTreeMap`:
+  - Fix `matchesMapping`: use `_domNodeToElementMap` instead of `_elementToDOMNodeMap`.
+
+- web_utils: ^1.0.9
+- js_interop_utils: ^1.0.6
+- swiss_knife: ^3.3.0
+- web: ^1.1.1
+
+## 3.0.0-beta.2
+
+- web_utils: ^1.0.6
+
+## 3.0.0-beta.1
+
+- `DOMGenerator`:
+  - `T` now extends `Object` (non-nullable): `DOMGenerator<T extends Object>`
+
+- `DOMNode`:
+  - `defaultDomGenerator`: change to `DOMGenerator.web()`.
+
+- `DOMGeneratorDartHTMLUnsupported` renamed to `DOMGeneratorUnsupported` as a generic `DOMGenerator` unsupported class.
+
+- New library `dom_builder_web.dart`.
+  - New `DOMGeneratorWeb` and `DOMHtmlBrowserWeb`.
+  - Added `DOMGenerator.web` and `DOMGenerator.setDefaultDomGeneratorToWeb`.
+  - Change from `dart:html` to `package:web/web.dart`.
+  - Change to `dart:js_interop`.
+
+- Deprecate `DOMGenerator.dartHTML`, `DOMGeneratorDartHTML` and `DOMGeneratorDartHTMLImpl`.
+- Deprecate library `dom_builder_dart_html.dart`.
+
+- CI: test with `dart2js` and `dart2wasm` (on Chrome).
+
+- sdk: '>=3.6.0 <4.0.0'
+
+- web: ^1.1.0
+- web_utils: ^1.0.5
+- js_interop_utils: ^1.0.5
+- collection: ^1.19.0
+
+- lints: ^5.1.1
+- test: ^1.25.15
+
 ## 2.2.9
 
 - `DOMGeneratorDartHTMLImpl`:

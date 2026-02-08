@@ -12,6 +12,11 @@
 
 Generate and manipulate DOM elements (virtual or real), DSX (like JSX) and HTML declarations (Web and Native support).
 
+### Package `web`
+
+Starting with version `3.0.0`, the `dom_builder` package relies on the [web](https://pub.dev/packages/web) package,
+replacing the deprecated `dart:html` library (deprecated as of Dart `3.7.0+`).
+
 ## Usage
 
 You can generate a DOM tree using HTML, Object Orientation or manipulating an already instantiated DOM tree.
@@ -55,17 +60,17 @@ void main() {
 
 ```
 
-## Generating a real DOM Element (`dart:html`):
+## Generating a real DOM Element (package `web`):
 
 As example, let's create a Bootstrap `navbar-toggler`:
 
 ```dart
-import 'dart:html' ;
+import 'package:web/web.dart';
 import 'package:dom_builder/dom_builder.dart';
 
 class BootstrapNavbarToggler {
 
-  static DOMGenerator domGenerator = DOMGenerator.dartHTML() ;
+  static DOMGenerator domGenerator = DOMGenerator.web() ;
 
   Element render() {
     var button = $button( type: 'button', classes: 'navbar-toggler', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
@@ -79,10 +84,12 @@ class BootstrapNavbarToggler {
 
 ```
 
-## Mixing real DOM Element (`dart:html`) with virtual `DOMElement`:
+- NOTE: package `dart:html` is deprecated.
+
+## Mixing real DOM Element (package `web`) with virtual `DOMElement`:
 
 ```dart
-import 'dart:html' ;
+import 'package:web/web.dart';
 import 'package:dom_builder/dom_builder_html.dart';
 
 class TitleComponent {
@@ -107,7 +114,7 @@ Similar to [JSX][jsx], DSX (Dart Syntax Extension) allows the declaration and co
 a `DOM` tree using plain `HTML` with an extended syntax:
 
 ```dart
-import 'dart:html' ;
+import 'package:web/web.dart';
 import 'package:dom_builder/dom_builder_html.dart';
 
 void main() {
@@ -128,7 +135,7 @@ void _btnClick() {
 ## Example of Bootstrap Cards and Table:
 
 ```dart
-import 'dart:html' ;
+import 'package:web/web.dart';
 import 'package:dom_builder/dom_builder_html.dart';
 
 Element generateBSCards() {
@@ -182,10 +189,12 @@ See some related projects:
 - [Bones_UI][bones_ui]: A simple and easy Web User Interface framework for Dart.
 - [Bones_UI_Bootstrap][bones_ui_bootstrap]: Adds Bootstrap [Bones_UI][bones_ui].
 - [Bootstrap][bootstrap]: Build fast and responsive sites. 
+- [web][pack_web]: Lightweight browser API bindings built around `js_interop`.
 
 [bones_ui]: https://github.com/Colossus-Services/bones_ui
 [bones_ui_bootstrap]: https://github.com/Colossus-Services/bones_ui_bootstrap
 [bootstrap]: https://getbootstrap.com/
+[pack_web]: http://pub.dev/packages/web
 
 ## Features and bugs
 

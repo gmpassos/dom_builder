@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:dom_builder/dom_builder.dart';
 
 class TestNodeGenerator extends ElementGenerator<TestElem> {
@@ -220,9 +222,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  List<TestNode> getElementNodes(TestNode? element) {
+  List<TestNode> getElementNodes(TestNode? element, {bool asView = false}) {
     if (element is TestElem) {
-      return List.from(element.nodes);
+      return asView
+          ? UnmodifiableListView(element.nodes)
+          : List.from(element.nodes);
     }
     return [];
   }
@@ -304,7 +308,8 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   List<TestNode>? addExternalElementToElement(
-      TestNode element, Object? externalElement) {
+      TestNode element, Object? externalElement,
+      {DOMTreeMap<TestNode>? treeMap, DOMContext<TestNode>? context}) {
     if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);
@@ -354,6 +359,10 @@ class TestGenerator extends DOMGenerator<TestNode> {
   TestElem createElement(String? tag, [DOMElement? domElement]) {
     return TestElem(tag);
   }
+
+  @override
+  TestElem createSVGElement(DOMElement domElement) =>
+      createElement('svg', domElement);
 
   @override
   String getNodeText(TestNode? node) {

@@ -536,7 +536,7 @@ class DOMTemplateVariable {
   }
 
   Object? _get(Object? context, String key) {
-    if (context == null || isEmptyObject(context) || isEmptyString(key)) {
+    if (context == null || isEmptyObject(context) || key.isEmpty) {
       return null;
     }
 
@@ -784,7 +784,10 @@ class DOMTemplateContent extends DOMTemplate {
   }
 
   @override
-  bool get isEmpty => isEmptyString(content);
+  bool get isEmpty {
+    var content = this.content;
+    return content == null || content.isEmpty;
+  }
 
   @override
   dynamic build(Object? context,

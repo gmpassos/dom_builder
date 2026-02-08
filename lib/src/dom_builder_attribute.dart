@@ -58,6 +58,18 @@ class DOMAttribute with WithValue {
     return s + delimiter + append;
   }
 
+  static StringBuffer appendTo(
+      StringBuffer s, String delimiter, DOMAttribute? attribute,
+      {DOMContext? domContext, bool resolveDSX = false}) {
+    if (attribute == null) return s;
+    var append =
+        attribute.buildHTML(domContext: domContext, resolveDSX: resolveDSX);
+    if (append.isEmpty) return s;
+    s.write(delimiter);
+    s.write(append);
+    return s;
+  }
+
   final String name;
 
   final DOMAttributeValue valueHandler;
@@ -176,9 +188,19 @@ class DOMAttribute with WithValue {
     }
 
     if (htmlValue != null) {
-      var html = '$name=';
-      html += htmlValue.contains('"') ? "'$htmlValue'" : '"$htmlValue"';
-      return html;
+      var html = StringBuffer('$name=');
+
+      if (htmlValue.contains('"')) {
+        html.write("'");
+        html.write(htmlValue);
+        html.write("'");
+      } else {
+        html.write('"');
+        html.write(htmlValue);
+        html.write('"');
+      }
+
+      return html.toString();
     } else {
       return '';
     }
@@ -263,13 +285,19 @@ class DOMAttributeValueString extends DOMAttributeValue {
   DOMAttributeValueString(Object? value) : _value = parseString(value, '');
 
   @override
-  bool get hasAttributeValue => _value != null && _value!.isNotEmpty;
+  bool get hasAttributeValue {
+    final value = _value;
+    return value != null && value.isNotEmpty;
+  }
 
   @override
-  int get length => _value != null ? _value!.length : 0;
+  int get length {
+    final value = _value;
+    return value != null ? value.length : 0;
+  }
 
   @override
-  String? get asAttributeValue => hasAttributeValue ? _value.toString() : null;
+  String? get asAttributeValue => hasAttributeValue ? _value! : null;
 
   @override
   List<String>? get asAttributeValues =>

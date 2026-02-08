@@ -1,6 +1,5 @@
 import 'package:html/dom.dart' as html_dom;
 import 'package:html/parser.dart' as html_parse;
-import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_html.dart';
@@ -97,7 +96,7 @@ class DOMHtmlGeneric extends DOMHtml {
       var attributes = node.attributes.map((k, v) => MapEntry(k.toString(), v));
 
       var nodes = node.nodes;
-      var content = isNotEmptyObject(nodes) ? List.from(nodes) : null;
+      var content = nodes.isNotEmpty ? List.from(nodes) : null;
 
       return DOMElement(name, attributes: attributes, content: content);
     } else {

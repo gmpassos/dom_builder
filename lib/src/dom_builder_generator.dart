@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:swiss_knife/swiss_knife.dart';
 
@@ -6,6 +8,7 @@ import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator_none.dart'
+    if (dart.library.js_interop) 'dom_builder_generator_web.dart'
     if (dart.library.html) 'dom_builder_generator_dart_html.dart';
 import 'dom_builder_helpers.dart';
 import 'dom_builder_runtime.dart';
@@ -16,12 +19,22 @@ typedef DOMElementGenerator<T> = T Function(Object? parent);
 typedef DOMElementGeneratorFunction<T> = T Function();
 
 /// Basic class for DOM elements generators.
-abstract class DOMGenerator<T> {
+abstract class DOMGenerator<T extends Object> {
+  @Deprecated("Use `_web`")
   static DOMGeneratorDartHTML? _dartHTML;
 
-  static DOMGeneratorDartHTML<T> dartHTML<T>() {
-    _dartHTML ??= createDOMGeneratorDartHTML();
+  @Deprecated(
+      "Use `DOMGenerator.web` with package `web`. Package `dart:html` is deprecated.")
+  static DOMGeneratorDartHTML<T> dartHTML<T extends Object>() {
+    _dartHTML ??= createDOMGeneratorDartHTML<T>();
     return _dartHTML as DOMGeneratorDartHTML<T>;
+  }
+
+  static DOMGeneratorWeb? _web;
+
+  static DOMGeneratorWeb<T> web<T extends Object>() {
+    _web ??= createDOMGeneratorWeb<T>();
+    return _web as DOMGeneratorWeb<T>;
   }
 
   DOMActionExecutor<T>? _domActionExecutor;
@@ -47,6 +60,15 @@ abstract class DOMGenerator<T> {
   }
 
   Viewport? get viewport => _domContext?.viewport;
+
+  /// Returns `true` if [node1] and [node2] are the same instance.
+  bool equalsNodes(T? node1, T? node2) {
+    if (node1 == null || node2 == null) return false;
+
+    if (identical(node1, node2)) return true;
+
+    return node1 == node2;
+  }
 
   bool isEquivalentNode(DOMNode domNode, T node) {
     if (!isEquivalentNodeType(domNode, node)) {
@@ -121,7 +143,7 @@ abstract class DOMGenerator<T> {
     return rootTag == 'html' || rootTag == 'body' || rootTag == 'head';
   }
 
-  List<T> getElementNodes(T? element) {
+  List<T> getElementNodes(T? element, {bool asView = false}) {
     throw UnsupportedError("Can't get element nodes: $element");
   }
 
@@ -252,7 +274,14 @@ abstract class DOMGenerator<T> {
 
   DOMTreeMap<T> createDOMTreeMap() => DOMTreeMap<T>(this);
 
-  DOMTreeMap<T> createGenericDOMTreeMap() => DOMTreeMapDummy<T>(this);
+  late final _genericDOMTreeMapDummy = DOMTreeMapDummy<T>(this);
+
+  /// Returns a generic [DOMTreeMap]. Called when a [DOMTreeMap] is not passed
+  /// while building/generating elements.
+  ///
+  /// Default implementation returns
+  /// a cached [DOMTreeMapDummy] instance.
+  DOMTreeMap<T> createGenericDOMTreeMap() => _genericDOMTreeMapDummy;
 
   /// Same as [generate], but returns a [DOMTreeMap], that contains all
   /// mapping table fo generated elements.
@@ -443,30 +472,45 @@ abstract class DOMGenerator<T> {
       if (domContext != null) {
         element = domContext.resolveNamedElement(
             domParent, parent, domElement, treeMap);
-        element ??= createElement(domElement.tag, domElement);
+      }
+
+      final domTag = domElement.tag;
+      if (domTag == 'svg') {
+        element ??= createSVGElement(domElement);
+        if (element == null) {
+          throw StateError("Can't create SVG element!");
+        }
+
+        if (parent != null) {
+          addChildToElement(parent, element);
+        }
+
+        treeMap.map(domElement, element);
+        _callOnElementCreated(treeMap, domElement, element, context);
       } else {
-        element = createElement(domElement.tag, domElement);
-      }
+        element ??= createElement(domTag, domElement);
+        if (element == null) {
+          throw StateError("Can't create element for tag: $domTag");
+        }
 
-      if (element == null) {
-        throw StateError("Can't create element for tag: ${domElement.tag}");
-      }
+        setAttributes(domElement, element, treeMap,
+            preserveClass: true, preserveStyle: true);
 
-      setAttributes(domElement, element, treeMap,
-          preserveClass: true, preserveStyle: true);
+        if (parent != null) {
+          addChildToElement(parent, element);
+        }
 
-      if (parent != null) {
-        addChildToElement(parent, element);
-      }
+        treeMap.map(domElement, element);
+        _callOnElementCreated(treeMap, domElement, element, context);
 
-      treeMap.map(domElement, element);
-      _callOnElementCreated(treeMap, domElement, element, context);
-
-      var length = domElement.length;
-
-      for (var i = 0; i < length; i++) {
-        var node = domElement.nodeByIndex(i)!;
-        build(domElement, element, node, treeMap, context);
+        final length = domElement.length;
+        if (length > 0) {
+          final domContent = domElement.content!;
+          for (var i = 0; i < length; ++i) {
+            var node = domContent[i];
+            build(domElement, element, node, treeMap, context);
+          }
+        }
       }
     } else if (parent != null) {
       addChildToElement(parent, element);
@@ -498,11 +542,13 @@ abstract class DOMGenerator<T> {
     var parsedElement = _parseExternalElement(
         domParent, parent, domElement, domElement, treeMap, context);
 
-    if (parent != null && !containsNode(parent, parsedElement)) {
-      addChildToElement(parent, parsedElement);
-    }
+    if (parsedElement != null) {
+      if (parent != null && !containsNode(parent, parsedElement)) {
+        addChildToElement(parent, parsedElement);
+      }
 
-    domElement.notifyElementGenerated(parsedElement);
+      domElement.notifyElementGenerated(parsedElement);
+    }
 
     return parsedElement;
   }
@@ -534,9 +580,10 @@ abstract class DOMGenerator<T> {
     }
 
     if (parent != null) {
-      var children = addExternalElementToElement(parent, externalElement);
-      if (isEmptyObject(children)) return null;
-      var node = children!.first;
+      var children = addExternalElementToElement(parent, externalElement,
+          treeMap: treeMap, context: context);
+      if (children == null || children.isEmpty) return null;
+      var node = children.first;
       treeMap.map(domElement, node);
 
       domElement.notifyElementGenerated(node);
@@ -558,13 +605,10 @@ abstract class DOMGenerator<T> {
       Object? externalElement, DOMTreeMap<T> treeMap, DOMContext<T>? context) {
     if (externalElement == null) return null;
 
-    if (externalElement is T) {
-      treeMap.map(domElement, externalElement as T);
-      addChildToElement(parent, externalElement as T?);
-      return externalElement as T?;
-    } else if (externalElement is List &&
-        listMatchesAll(externalElement, (dynamic e) => e is DOMNode)) {
-      var listNodes = externalElement as List<DOMNode>;
+    if (externalElement is List) {
+      var listNodes = _resolveListOfDOMNode(externalElement).toList();
+      if (listNodes.isEmpty) return null;
+
       var elements = <T>[];
       for (var node in listNodes) {
         var elem = build(domParent, parent, node, treeMap, context);
@@ -572,11 +616,17 @@ abstract class DOMGenerator<T> {
           throw StateError(
               "Can't build element for `DOMNode` in `externalElement` List: $node");
         }
-        T element = elem;
-        elements.add(element);
-        treeMap.map(node, element);
+        elements.add(elem);
+        treeMap.map(node, elem);
       }
-      return elements.isEmpty ? null : elements.first;
+
+      if (elements.isEmpty) {
+        return null;
+      } else if (elements.length == 1) {
+        return elements.first;
+      } else {
+        return wrapElements(elements);
+      }
     } else if (externalElement is DOMAsync) {
       return generateDOMAsyncElement(
           domParent, parent, externalElement, treeMap, context);
@@ -594,6 +644,9 @@ abstract class DOMGenerator<T> {
       return generateFutureElement(domParent, parent,
           domElement as ExternalElementNode, externalElement, treeMap, context);
     } else if (externalElement is String) {
+      externalElement = externalElement.trim();
+      if (externalElement.isEmpty) return null;
+
       var list = DOMNode.parseNodes(externalElement);
 
       var elements = <T>[];
@@ -607,10 +660,26 @@ abstract class DOMGenerator<T> {
         elements.add(element);
         treeMap.map(node, element);
       }
-      return elements.isEmpty ? null : elements.first;
-    }
 
-    return null;
+      return elements.isEmpty ? null : elements.first;
+    } else if (externalElement is T) {
+      treeMap.map(domElement, externalElement);
+      addChildToElement(parent, externalElement as T?);
+      return externalElement as T?;
+    } else {
+      var s = externalElement.toString();
+      if (s.trim().isEmpty) return null;
+      var e = generateFromHTML(s);
+      return e;
+    }
+  }
+
+  static Iterable<DOMNode> _resolveListOfDOMNode(List<Object?> list) {
+    return list.nonNulls.expand(
+      (e) => e is List
+          ? _resolveListOfDOMNode(e)
+          : (e is DOMNode ? <DOMNode>[e] : <DOMNode>[]),
+    );
   }
 
   T? generateDOMAsyncElement(DOMElement? domParent, T? parent,
@@ -683,6 +752,36 @@ abstract class DOMGenerator<T> {
     return futureResult;
   }
 
+  Object? resolveElements(Object? elements,
+      {DOMTreeMap<T>? treeMap,
+      DOMContext<T>? context,
+      bool setTreeMapRoot = true}) {
+    var elementsList = toElements(elements,
+        treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
+    if (elementsList == null || elementsList.isEmpty) return null;
+
+    if (elementsList.length == 1) {
+      return elementsList.first;
+    }
+
+    return elementsList;
+  }
+
+  T? wrapElements(List<T>? elements) {
+    if (elements == null || elements.isEmpty) return null;
+
+    var div = createElement('div');
+    if (div == null) return null;
+
+    setAttribute(div, 'style', 'display: contents');
+
+    for (var child in elements) {
+      addChildToElement(div, child);
+    }
+
+    return div;
+  }
+
   void attachFutureElement(
       DOMElement? domParent,
       T? parent,
@@ -691,21 +790,48 @@ abstract class DOMGenerator<T> {
       Object? futureElementResolved,
       DOMTreeMap<T> treeMap,
       DOMContext<T>? context) {
-    if (futureElementResolved == null) {
-      return;
+    futureElementResolved = resolveElements(futureElementResolved,
+        treeMap: treeMap, context: context, setTreeMapRoot: false);
+    if (futureElementResolved == null) return;
+
+    if (futureElementResolved is List<Object?>) {
+      var futureElementResolvedListTyped = futureElementResolved
+          .expand((e) => e.expandNonNullable())
+          .whereType<T>()
+          .toList();
+
+      if (futureElementResolvedListTyped.isEmpty) return;
+
+      if (futureElementResolvedListTyped.length == 1) {
+        var futureElementResolved = futureElementResolvedListTyped.first;
+        treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
+        if (parent != null) {
+          replaceChildElement(parent, templateElement, [futureElementResolved]);
+        }
+      } else {
+        var wrap = wrapElements(futureElementResolvedListTyped);
+        if (wrap != null) {
+          treeMap.map(domElement, wrap, allowOverwrite: true);
+        }
+
+        if (parent != null) {
+          replaceChildElement(
+              parent, templateElement, futureElementResolvedListTyped);
+        }
+      }
     } else if (futureElementResolved is T) {
-      treeMap.map(domElement, futureElementResolved as T, allowOverwrite: true);
+      treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
       if (parent != null) {
-        replaceChildElement(
-            parent, templateElement, [futureElementResolved as T]);
+        replaceChildElement(parent, templateElement, [futureElementResolved]);
       }
     } else if (parent != null) {
-      var children = addExternalElementToElement(parent, futureElementResolved);
+      var children = addExternalElementToElement(parent, futureElementResolved,
+          treeMap: treeMap, context: context);
 
-      if (isEmptyObject(children)) {
+      if (children == null || children.isEmpty) {
         removeChildFromElement(parent, templateElement);
       } else {
-        var node = children!.first;
+        var node = children.first;
         treeMap.map(domElement, node);
 
         for (var child in children) {
@@ -731,41 +857,57 @@ abstract class DOMGenerator<T> {
     return replaceChildElement(parent, child1, child2);
   }
 
-  List<T>? toElements(Object? elements) {
+  List<T>? toElements(Object? elements,
+      {DOMTreeMap<T>? treeMap,
+      DOMContext<T>? context,
+      bool setTreeMapRoot = true}) {
     if (elements == null) {
       return null;
-    } else if (elements is T) {
-      return [elements as T];
     } else if (elements is DOMNode) {
-      var e = generate(elements);
+      var e = generate(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
       if (e == null) {
         throw StateError("Can't generate element for `DOMNode`: $elements");
       }
       return [e];
     } else if (elements is String) {
-      var e = generateFromHTML(elements);
+      var e = generateFromHTML(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
       if (e == null) {
         throw StateError("Can't generate element from `HTML`: $elements");
       }
       return [e];
     } else if (elements is Function) {
       var e = elements();
-      return toElements(e);
+      return toElements(e,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
     } else if (elements is Iterable) {
       return elements
-          .expand((e) => toElements(e)!)
-          .where((e) => e != null)
+          .expand((e) =>
+              toElements(e,
+                  treeMap: treeMap, context: context, setTreeMapRoot: false) ??
+              <T>[])
           .toList();
+    } else if (elements is T) {
+      return [elements];
     } else {
-      return null;
+      var s = elements.toString();
+      if (s.trim().isEmpty) return null;
+      var e = generateFromHTML(s,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
+      if (e == null) return null;
+      return [e];
     }
   }
 
   bool canHandleExternalElement(Object? externalElement);
 
-  List<T>? addExternalElementToElement(T element, Object? externalElement);
+  List<T>? addExternalElementToElement(T element, Object? externalElement,
+      {DOMTreeMap<T>? treeMap, DOMContext<T>? context});
 
   T? createElement(String? tag, [DOMElement? domElement]);
+
+  T? createSVGElement(DOMElement domElement);
 
   T? createTextNode(Object? text);
 
@@ -782,6 +924,8 @@ abstract class DOMGenerator<T> {
       var attrVal = attr.getValue(_domContext, treeMap);
 
       if (preserveClass && attrName == 'class') {
+        // print('[WASM ISSUE: not entering method] getAttribute: $attrName ... ($this)[${this.runtimeType}]');
+        // print(StackTrace.current);
         var prev = getAttribute(element, attrName);
         if (prev != null && prev.isNotEmpty) {
           attrVal =
@@ -912,16 +1056,18 @@ abstract class DOMGenerator<T> {
     if (_domActionExecutor == null || domElement.tag == 'form') return;
 
     var actionValue = domElement.getAttributeValue('action', domContext);
-    if (isEmptyString(actionValue)) return;
+    if (actionValue == null || actionValue.isEmpty) return;
 
     var domAction = _domActionExecutor!.parse(actionValue);
 
     if (domAction != null) {
-      EventStream<DOMEvent> eventStream = domElement.onClick;
+      EventStream<DOMEvent> eventStream;
 
       var tag = domElement.tag;
       if (tag == 'select' || tag == 'input' || tag == 'textarea') {
         eventStream = domElement.onChange;
+      } else {
+        eventStream = domElement.onClick;
       }
 
       eventStream.listen(
@@ -951,6 +1097,10 @@ abstract class DOMGenerator<T> {
 
   void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
       T element, DOMContext<T>? context) {}
+
+  FutureOr<bool> cancelEventSubscriptions(
+          T? element, List<Object> subscriptions) =>
+      false;
 
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
       null;
@@ -1022,13 +1172,10 @@ abstract class DOMGenerator<T> {
     }
 
     if (hasChildrenElements) {
-      var children = getElementNodes(node);
-
+      var children = getElementNodes(node, asView: true);
       if (children.isNotEmpty) {
         for (var child in children) {
-          if (child != null) {
-            _revertImp(treeMap, domNode, node, child);
-          }
+          _revertImp(treeMap, domNode, node, child);
         }
       }
     }
@@ -1068,7 +1215,7 @@ abstract class DOMGenerator<T> {
   void finalizeGeneratedTree(DOMTreeMap<T> treeMap) {}
 }
 
-abstract class ElementGenerator<T> {
+abstract class ElementGenerator<T extends Object> {
   String get tag;
 
   /// If [true] indicated that this generated element has children nodes.
@@ -1096,7 +1243,7 @@ abstract class ElementGenerator<T> {
   bool isGeneratedElement(T element) => false;
 }
 
-typedef ElementGeneratorFunction<T> = T Function(
+typedef ElementGeneratorFunction<T extends Object> = T Function(
     DOMGenerator<T> domGenerator,
     String? tag,
     T? parent,
@@ -1105,16 +1252,17 @@ typedef ElementGeneratorFunction<T> = T Function(
     List<DOMNode>? contentNodes,
     DOMContext<T>? context);
 
-typedef ElementRevertFunction<T> = DOMElement Function(
+typedef ElementRevertFunction<T extends Object> = DOMElement Function(
     DOMGenerator<T> domGenerator,
     DOMTreeMap<T>? treeMap,
     DOMElement? domParent,
     T? parent,
     T? node);
 
-typedef ElementGeneratedMatchingFunction<T> = bool Function(T element);
+typedef ElementGeneratedMatchingFunction<T extends Object> = bool Function(
+    T element);
 
-class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
+class ElementGeneratorFunctions<T extends Object> extends ElementGenerator<T> {
   @override
   final String tag;
   final ElementGeneratorFunction<T> generator;
@@ -1156,16 +1304,28 @@ class ElementGeneratorFunctions<T> extends ElementGenerator<T> {
   }
 }
 
-abstract class DOMGeneratorDartHTML<T> extends DOMGenerator<T> {}
+@Deprecated(
+    "Use `DOMGeneratorWeb` with package `web`. Package `dart:html` is deprecated.")
+abstract class DOMGeneratorDartHTML<T extends Object> extends DOMGenerator<T> {}
+
+abstract class DOMGeneratorWeb<T extends Object> extends DOMGenerator<T> {}
 
 /// Delegates operations to another [DOMGenerator].
-class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
+class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
   final DOMGenerator<T> domGenerator;
 
   DOMGeneratorDelegate(this.domGenerator);
 
   @override
+  DOMTreeMapDummy<T> get _genericDOMTreeMapDummy =>
+      domGenerator._genericDOMTreeMapDummy;
+
+  @override
   void reset() => domGenerator.reset();
+
+  @override
+  bool equalsNodes(T? node1, T? node2) =>
+      domGenerator.equalsNodes(node1, node2);
 
   @override
   bool isChildOfElement(T? parent, T? child) =>
@@ -1176,8 +1336,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.addChildToElement(parent, child);
 
   @override
-  List<T>? addExternalElementToElement(T element, externalElement) =>
-      domGenerator.addExternalElementToElement(element, externalElement);
+  List<T>? addExternalElementToElement(T element, externalElement,
+          {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) =>
+      domGenerator.addExternalElementToElement(element, externalElement,
+          treeMap: treeMap, context: context);
 
   @override
   T? appendElementText(T element, String? text) =>
@@ -1209,6 +1371,10 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
   @override
   T? createElement(String? tag, [DOMElement? domElement]) =>
       domGenerator.createElement(tag, domElement);
+
+  @override
+  T? createSVGElement(DOMElement domElement) =>
+      domGenerator.createSVGElement(domElement);
 
   @override
   T? createTextNode(Object? text) => domGenerator.createTextNode(text);
@@ -1250,6 +1416,17 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           templateElement, futureResult, treeMap, context);
 
   @override
+  Object? resolveElements(Object? elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.resolveElements(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
+
+  @override
+  T? wrapElements(List<T>? elements) => domGenerator.wrapElements(elements);
+
+  @override
   void attachFutureElement(
           DOMElement? domParent,
           T? parent,
@@ -1284,7 +1461,12 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.replaceElement(child1, child2);
 
   @override
-  List<T>? toElements(elements) => domGenerator.toElements(elements);
+  List<T>? toElements(elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.toElements(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) =>
@@ -1306,6 +1488,11 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
           T element, DOMContext<T>? context) =>
       domGenerator.registerEventListeners(
           treeMap, domElement, element, context);
+
+  @override
+  FutureOr<bool> cancelEventSubscriptions(
+          T? element, List<Object> subscriptions) =>
+      domGenerator.cancelEventSubscriptions(element, subscriptions);
 
   @override
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
@@ -1509,7 +1696,8 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
       domGenerator.revertElementAttributes(element, attributes);
 
   @override
-  List<T> getElementNodes(T? element) => domGenerator.getElementNodes(element);
+  List<T> getElementNodes(T? element, {bool asView = false}) =>
+      domGenerator.getElementNodes(element, asView: asView);
 
   @override
   String? getElementTag(T? element) => domGenerator.getElementTag(element);
@@ -1629,11 +1817,17 @@ class DOMGeneratorDelegate<T> implements DOMGenerator<T> {
 }
 
 /// A dummy [DOMGenerator] implementation.
-class DOMGeneratorDummy<T> implements DOMGenerator<T> {
+class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   DOMGeneratorDummy();
 
   @override
+  DOMTreeMapDummy<T> get _genericDOMTreeMapDummy => throw UnimplementedError();
+
+  @override
   void reset() {}
+
+  @override
+  bool equalsNodes(T? node1, T? node2) => false;
 
   @override
   bool isChildOfElement(T? parent, T? child) => false;
@@ -1642,7 +1836,9 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   bool addChildToElement(T? parent, T? child) => false;
 
   @override
-  List<T>? addExternalElementToElement(T element, externalElement) => null;
+  List<T>? addExternalElementToElement(T element, externalElement,
+          {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) =>
+      null;
 
   @override
   T? appendElementText(T element, String? text) => null;
@@ -1669,6 +1865,9 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   T? createElement(String? tag, [DOMElement? domElement]) => null;
+
+  @override
+  T? createSVGElement(DOMElement domElement) => null;
 
   @override
   T? createTextNode(Object? text) => null;
@@ -1706,6 +1905,16 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
       null;
 
   @override
+  Object? resolveElements(Object? elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      null;
+
+  @override
+  T? wrapElements(List<T>? elements) => null;
+
+  @override
   void attachFutureElement(
       DOMElement? domParent,
       T? parent,
@@ -1734,7 +1943,11 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   bool replaceElement(T? child1, List<T>? child2) => false;
 
   @override
-  List<T>? toElements(elements) => null;
+  List<T>? toElements(elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      null;
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) {}
@@ -1750,6 +1963,10 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   @override
   void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
       T element, DOMContext<T>? context) {}
+
+  @override
+  bool cancelEventSubscriptions(T? element, List<Object> subscriptions) =>
+      false;
 
   @override
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
@@ -1857,11 +2074,13 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
   @override
   void clearIgnoredAttributesEquivalence() {}
 
-  @override
-  DOMTreeMap<T> createDOMTreeMap() => DOMTreeMapDummy(this);
+  late final _domTreeMapDummy = DOMTreeMapDummy(this);
 
   @override
-  DOMTreeMap<T> createGenericDOMTreeMap() => DOMTreeMapDummy(this);
+  DOMTreeMap<T> createDOMTreeMap() => _domTreeMapDummy;
+
+  @override
+  DOMTreeMap<T> createGenericDOMTreeMap() => _domTreeMapDummy;
 
   @override
   T? createWithRegisteredElementGenerator(
@@ -1920,7 +2139,7 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
       null;
 
   @override
-  List<T> getElementNodes(T? element) => <T>[];
+  List<T> getElementNodes(T? element, {bool asView = false}) => <T>[];
 
   @override
   String? getElementTag(T? element) => null;
@@ -2015,4 +2234,15 @@ class DOMGeneratorDummy<T> implements DOMGenerator<T> {
 
   @override
   set _domActionExecutor(DOMActionExecutor<T>? value) {}
+}
+
+extension on Object? {
+  List<Object> expandNonNullable() {
+    var self = this;
+    if (self == null) return [];
+    if (self is List<Object?>) {
+      return self.expand((e) => e.expandNonNullable()).toList();
+    }
+    return [self];
+  }
 }

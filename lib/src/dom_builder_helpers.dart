@@ -393,7 +393,7 @@ CAPTIONElement $caption(
   return CAPTIONElement(
       id: id,
       classes: classes,
-      style: isNotEmptyString(captionSide)
+      style: captionSide != null && captionSide.isNotEmpty
           ? (style != null
               ? 'caption-side: $captionSide; ${CSS(style).style}'
               : 'caption-side: $captionSide;')
@@ -570,18 +570,18 @@ DIVElement $divCenteredContent({
   Object? content,
 }) {
   var cssDimension = '';
-  if (isNotEmptyString(width)) cssDimension += 'width: $width;';
-  if (isNotEmptyString(height)) cssDimension += 'height: $height;';
+  if (width.isNotEmpty) cssDimension += 'width: $width;';
+  if (height.isNotEmpty) cssDimension += 'height: $height;';
 
   var divStyle = 'display: table;$cssDimension';
 
-  if (isNotEmptyString(style, trim: true)) {
-    style = style!.trim();
+  if (style != null && style.trim().isNotEmpty) {
+    style = style.trim();
     if (!style.endsWith(';')) style += ';';
     divStyle += ' ; $style';
   }
 
-  if (isNotEmptyString(cellSpacing, trim: true)) {
+  if (cellSpacing != null && cellSpacing.trim().isNotEmpty) {
     divStyle += ' ; border-spacing: $cellSpacing ;';
   }
 
@@ -690,7 +690,7 @@ DOMElement $button(
         classes: classes,
         style: style,
         attributes: {
-          'type': isNotEmptyString(type) ? type! : 'button',
+          'type': type != null && type.isNotEmpty ? type : 'button',
           if (name != null) 'name': name,
           if (disabled) 'disabled': disabled,
           ...?attributes

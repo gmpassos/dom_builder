@@ -1,4 +1,4 @@
-import 'package:swiss_knife/swiss_knife.dart';
+import 'dart:math' as math;
 
 import 'dom_builder_base.dart';
 import 'dom_builder_css.dart';
@@ -6,7 +6,7 @@ import 'dom_builder_generator.dart';
 import 'dom_builder_treemap.dart';
 
 /// Wraps the actual generated node [T] and allows some operations over it.
-abstract class DOMNodeRuntime<T> {
+abstract class DOMNodeRuntime<T extends Object> {
   final DOMTreeMap<T>? treeMap;
 
   /// The [DOMGenerator] used to generate this [treeMap].
@@ -236,10 +236,11 @@ abstract class DOMNodeRuntime<T> {
   /// - [remap] If `true` will remap the new element at [treeMap] (only if [elements] represents 1 element).
   bool replaceBy(List? elements, {bool remap = false}) {
     if (elements == null) return false;
-    var e = domGenerator.toElements(elements);
-    var ok = domGenerator.replaceElement(node, e);
-
     var treeMap = this.treeMap;
+
+    var e = domGenerator.toElements(elements,
+        treeMap: treeMap, setTreeMapRoot: false);
+    var ok = domGenerator.replaceElement(node, e);
 
     if (ok && treeMap != null && domNode != null) {
       treeMap.removeByDOMNode(domNode);
@@ -258,7 +259,7 @@ abstract class DOMNodeRuntime<T> {
 
   int _contentFromIndexBackwardWhere(
       int idx, int steps, bool Function(T? node) test) {
-    for (var i = Math.min(idx, nodesLength - 1); i >= 0; i--) {
+    for (var i = math.min(idx, nodesLength - 1); i >= 0; i--) {
       var node = getNodeAt(i);
       if (test(node)) {
         if (steps <= 0) {
@@ -364,8 +365,8 @@ abstract class DOMNodeRuntime<T> {
   }
 }
 
-class DOMNodeRuntimeDummy<T> extends DOMNodeRuntime<T> {
-  DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T node)
+class DOMNodeRuntimeDummy<T extends Object> extends DOMNodeRuntime<T> {
+  DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T? node)
       : super(treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()), domNode, node);
 
   @override

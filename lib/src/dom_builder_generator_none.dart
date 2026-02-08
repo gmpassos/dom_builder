@@ -5,48 +5,55 @@ import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
 import 'dom_builder_treemap.dart';
 
-/// Dummy [DOMGeneratorDartHTML] for platforms that doesn't supports `dart:html`.
+/// Dummy [DOMGeneratorUnsupported] for platforms that doesn't support a [DOMGenerator].
 ///
-/// Useful when [DOMGenerator.dartHTML] is called in the wrong platform.
-class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
-  void _noDartHTML() {
-    throw UnsupportedError('DOMGeneratorDartHTML: dart:html not loaded');
+/// Useful when a [DOMGenerator] is used in the wrong platform.
+class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
+  final String unsupportedDOMGenerator;
+
+  final String unsupportedPackage;
+
+  DOMGeneratorUnsupported(
+      this.unsupportedDOMGenerator, this.unsupportedPackage);
+
+  Never _notSupported() {
+    throw UnsupportedError(
+        "Unsupported `$unsupportedDOMGenerator`: can't load package `$unsupportedPackage`!");
   }
 
   @override
   bool isChildOfElement(T? parent, T? child) {
-    _noDartHTML();
-    return false;
+    _notSupported();
   }
 
   @override
   bool addChildToElement(T? parent, T? child) {
-    _noDartHTML();
-    return false;
+    _notSupported();
   }
 
   @override
   bool removeChildFromElement(T parent, T? child) {
-    _noDartHTML();
-    return false;
+    _notSupported();
   }
 
   @override
   bool replaceChildElement(T parent, T? child1, List<T>? child2) {
-    _noDartHTML();
-    return false;
+    _notSupported();
   }
 
   @override
   T? createElement(String? tag, [DOMElement? domElement]) {
-    _noDartHTML();
-    return null;
+    _notSupported();
+  }
+
+  @override
+  T? createSVGElement(DOMElement domElement) {
+    _notSupported();
   }
 
   @override
   bool isTextNode(T? node) {
-    _noDartHTML();
-    return false;
+    _notSupported();
   }
 
   @override
@@ -55,36 +62,33 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
   @override
   void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
       {bool preserveClass = false, bool preserveStyle = false}) {
-    _noDartHTML();
+    _notSupported();
   }
 
   @override
   String? getNodeText(T? node) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 
   @override
   T? appendElementText(T element, String? text) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) {
-    _noDartHTML();
+    _notSupported();
   }
 
   @override
   String? getAttribute(T element, String attrName) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 
   @override
-  List<T>? addExternalElementToElement(T element, Object? externalElement) {
-    _noDartHTML();
-    return null;
+  List<T>? addExternalElementToElement(T element, Object? externalElement,
+      {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) {
+    _notSupported();
   }
 
   @override
@@ -94,25 +98,23 @@ class DOMGeneratorDartHTMLUnsupported<T> extends DOMGeneratorDartHTML<T> {
 
   @override
   String? buildElementHTML(T element) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 
   @override
   DOMNodeRuntime<T>? createDOMNodeRuntime(
       DOMTreeMap<T> treeMap, DOMNode? domNode, T node) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 
   @override
   T? createTextNode(Object? text) {
-    _noDartHTML();
-    return null;
+    _notSupported();
   }
 }
 
-class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
+class DOMActionExecutorDartHTMLUnsupported<T extends Object>
+    extends DOMActionExecutor<T> {
   void _noDartHTML() {
     throw UnsupportedError('DOMActionExecutorDartHTML: dart:html not loaded');
   }
@@ -139,6 +141,23 @@ class DOMActionExecutorDartHTMLUnsupported<T> extends DOMActionExecutor<T> {
   }
 }
 
-DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T>() {
-  return DOMGeneratorDartHTMLUnsupported<T>();
+@Deprecated("Use `_DOMGeneratorWebUnsupported`")
+class _DOMGeneratorDartHTMLUnsupported<T extends Object>
+    extends DOMGeneratorUnsupported<T> implements DOMGeneratorDartHTML<T> {
+  _DOMGeneratorDartHTMLUnsupported()
+      : super('DOMGeneratorDartHTML', 'dart:html');
+}
+
+class _DOMGeneratorWebUnsupported<T extends Object>
+    extends DOMGeneratorUnsupported<T> implements DOMGeneratorWeb<T> {
+  _DOMGeneratorWebUnsupported() : super('DOMGeneratorWeb', 'web');
+}
+
+@Deprecated("Use `createDOMGeneratorWeb`")
+DOMGeneratorDartHTML<T> createDOMGeneratorDartHTML<T extends Object>() {
+  return _DOMGeneratorDartHTMLUnsupported<T>();
+}
+
+DOMGeneratorWeb<T> createDOMGeneratorWeb<T extends Object>() {
+  return _DOMGeneratorWebUnsupported<T>();
 }
