@@ -175,8 +175,8 @@ class DOMTreeMap<T extends Object> {
 
     if (domRoot is TextNode) return false;
 
-    var domNodes = domRoot.nodes.toList();
-    var nodes = domGenerator.getElementNodes(root);
+    var domNodes = domRoot.nodesView;
+    var nodes = domGenerator.getElementNodes(root, asView: true);
 
     var limit = math.min(domNodes.length, nodes.length);
 

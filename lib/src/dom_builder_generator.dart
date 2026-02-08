@@ -141,7 +141,7 @@ abstract class DOMGenerator<T extends Object> {
     return rootTag == 'html' || rootTag == 'body' || rootTag == 'head';
   }
 
-  List<T> getElementNodes(T? element) {
+  List<T> getElementNodes(T? element, {bool asView = false}) {
     throw UnsupportedError("Can't get element nodes: $element");
   }
 
@@ -1137,8 +1137,7 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     if (hasChildrenElements) {
-      var children = getElementNodes(node);
-
+      var children = getElementNodes(node, asView: true);
       if (children.isNotEmpty) {
         for (var child in children) {
           _revertImp(treeMap, domNode, node, child);
@@ -1642,7 +1641,8 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.revertElementAttributes(element, attributes);
 
   @override
-  List<T> getElementNodes(T? element) => domGenerator.getElementNodes(element);
+  List<T> getElementNodes(T? element, {bool asView = false}) =>
+      domGenerator.getElementNodes(element, asView: asView);
 
   @override
   String? getElementTag(T? element) => domGenerator.getElementTag(element);
@@ -2065,7 +2065,7 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
       null;
 
   @override
-  List<T> getElementNodes(T? element) => <T>[];
+  List<T> getElementNodes(T? element, {bool asView = false}) => <T>[];
 
   @override
   String? getElementTag(T? element) => null;

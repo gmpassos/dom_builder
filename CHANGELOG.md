@@ -2,6 +2,9 @@
 - `DOMNode`:
   - `buildDOM`: added parameters `treeMap` and `setTreeMapRoot`, passed to `DOMGenerator.generate`.
   - Added `nodesView` getter returning an unmodifiable list of children nodes.
+  
+- `DOMGenerator`:
+  - `getElementNodes`: added named parameter `asView`.
 
 ## 3.0.0-beta.8
 

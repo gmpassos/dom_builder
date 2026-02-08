@@ -19,9 +19,11 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  List<Node> getElementNodes(Node? element) {
+  List<Node> getElementNodes(Node? element, {bool asView = false}) {
     if (element is Element) {
-      return List.from(element.nodes);
+      return asView
+          ? UnmodifiableListView(element.nodes)
+          : List.from(element.nodes);
     }
     return <Node>[];
   }

@@ -220,9 +220,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
-  List<TestNode> getElementNodes(TestNode? element) {
+  List<TestNode> getElementNodes(TestNode? element, {bool asView = false}) {
     if (element is TestElem) {
-      return List.from(element.nodes);
+      return asView
+          ? UnmodifiableListView(element.nodes)
+          : List.from(element.nodes);
     }
     return [];
   }

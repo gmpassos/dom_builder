@@ -17,9 +17,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  List<Node> getElementNodes(Node? element) {
+  List<Node> getElementNodes(Node? element, {bool asView = false}) {
     final element2 = element.asElementChecked;
-    return element2?.asElement.childNodes.toList() ?? [];
+    if (element2 == null) return [];
+
+    var childNodes = element2.asElement.childNodes;
+    return asView ? childNodes.asListViewFixed : childNodes.toList();
   }
 
   @override
