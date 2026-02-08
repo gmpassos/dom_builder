@@ -221,10 +221,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  List<Node>? addExternalElementToElement(
-      Node element, Object? externalElement) {
-    if (element is Element && externalElement is Node) {
-      element.children.add(externalElement as Element);
+  List<Node>? addExternalElementToElement(Node element, Object? externalElement,
+      {DOMTreeMap<Node>? treeMap, DOMContext<Node>? context}) {
+    if (element is Element && externalElement is Element) {
+      element.children.add(externalElement);
       return [externalElement];
     }
     return null;

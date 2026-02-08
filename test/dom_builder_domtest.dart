@@ -1,3 +1,5 @@
+import 'dart:collection';
+
 import 'package:dom_builder/dom_builder.dart';
 
 class TestNodeGenerator extends ElementGenerator<TestElem> {
@@ -306,7 +308,8 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   List<TestNode>? addExternalElementToElement(
-      TestNode element, Object? externalElement) {
+      TestNode element, Object? externalElement,
+      {DOMTreeMap<TestNode>? treeMap, DOMContext<TestNode>? context}) {
     if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);

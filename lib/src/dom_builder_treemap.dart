@@ -18,9 +18,12 @@ class DOMTreeMap<T extends Object> {
 
   /// Alias to [DOMGenerator.generate].
   T? generate(DOMGenerator<T> domGenerator, DOMNode root,
-          {T? parent, DOMContext<T>? context}) =>
+          {T? parent, DOMContext<T>? context, bool setTreeMapRoot = true}) =>
       domGenerator.generate(root,
-          parent: parent, treeMap: this, context: context);
+          parent: parent,
+          treeMap: this,
+          context: context,
+          setTreeMapRoot: setTreeMapRoot);
 
   DOMNode? _rootDOMNode;
 

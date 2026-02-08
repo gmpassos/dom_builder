@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:collection/collection.dart' show IterableExtension;
 import 'package:swiss_knife/swiss_knife.dart';
 
@@ -578,7 +580,8 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     if (parent != null) {
-      var children = addExternalElementToElement(parent, externalElement);
+      var children = addExternalElementToElement(parent, externalElement,
+          treeMap: treeMap, context: context);
       if (children == null || children.isEmpty) return null;
       var node = children.first;
       treeMap.map(domElement, node);
@@ -749,8 +752,12 @@ abstract class DOMGenerator<T extends Object> {
     return futureResult;
   }
 
-  Object? resolveElements(Object? elements) {
-    var elementsList = toElements(elements);
+  Object? resolveElements(Object? elements,
+      {DOMTreeMap<T>? treeMap,
+      DOMContext<T>? context,
+      bool setTreeMapRoot = true}) {
+    var elementsList = toElements(elements,
+        treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
     if (elementsList == null || elementsList.isEmpty) return null;
 
     if (elementsList.length == 1) {
@@ -783,7 +790,8 @@ abstract class DOMGenerator<T extends Object> {
       Object? futureElementResolved,
       DOMTreeMap<T> treeMap,
       DOMContext<T>? context) {
-    futureElementResolved = resolveElements(futureElementResolved);
+    futureElementResolved = resolveElements(futureElementResolved,
+        treeMap: treeMap, context: context, setTreeMapRoot: false);
     if (futureElementResolved == null) return;
 
     if (futureElementResolved is List<Object?>) {
@@ -817,7 +825,8 @@ abstract class DOMGenerator<T extends Object> {
         replaceChildElement(parent, templateElement, [futureElementResolved]);
       }
     } else if (parent != null) {
-      var children = addExternalElementToElement(parent, futureElementResolved);
+      var children = addExternalElementToElement(parent, futureElementResolved,
+          treeMap: treeMap, context: context);
 
       if (children == null || children.isEmpty) {
         removeChildFromElement(parent, templateElement);
@@ -848,32 +857,44 @@ abstract class DOMGenerator<T extends Object> {
     return replaceChildElement(parent, child1, child2);
   }
 
-  List<T>? toElements(Object? elements) {
+  List<T>? toElements(Object? elements,
+      {DOMTreeMap<T>? treeMap,
+      DOMContext<T>? context,
+      bool setTreeMapRoot = true}) {
     if (elements == null) {
       return null;
     } else if (elements is DOMNode) {
-      var e = generate(elements);
+      var e = generate(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
       if (e == null) {
         throw StateError("Can't generate element for `DOMNode`: $elements");
       }
       return [e];
     } else if (elements is String) {
-      var e = generateFromHTML(elements);
+      var e = generateFromHTML(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
       if (e == null) {
         throw StateError("Can't generate element from `HTML`: $elements");
       }
       return [e];
     } else if (elements is Function) {
       var e = elements();
-      return toElements(e);
+      return toElements(e,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
     } else if (elements is Iterable) {
-      return elements.expand((e) => toElements(e) ?? <T>[]).toList();
+      return elements
+          .expand((e) =>
+              toElements(e,
+                  treeMap: treeMap, context: context, setTreeMapRoot: false) ??
+              <T>[])
+          .toList();
     } else if (elements is T) {
       return [elements];
     } else {
       var s = elements.toString();
       if (s.trim().isEmpty) return null;
-      var e = generateFromHTML(s);
+      var e = generateFromHTML(s,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
       if (e == null) return null;
       return [e];
     }
@@ -881,7 +902,8 @@ abstract class DOMGenerator<T extends Object> {
 
   bool canHandleExternalElement(Object? externalElement);
 
-  List<T>? addExternalElementToElement(T element, Object? externalElement);
+  List<T>? addExternalElementToElement(T element, Object? externalElement,
+      {DOMTreeMap<T>? treeMap, DOMContext<T>? context});
 
   T? createElement(String? tag, [DOMElement? domElement]);
 
@@ -1304,8 +1326,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.addChildToElement(parent, child);
 
   @override
-  List<T>? addExternalElementToElement(T element, externalElement) =>
-      domGenerator.addExternalElementToElement(element, externalElement);
+  List<T>? addExternalElementToElement(T element, externalElement,
+          {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) =>
+      domGenerator.addExternalElementToElement(element, externalElement,
+          treeMap: treeMap, context: context);
 
   @override
   T? appendElementText(T element, String? text) =>
@@ -1382,8 +1406,12 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
           templateElement, futureResult, treeMap, context);
 
   @override
-  Object? resolveElements(Object? elements) =>
-      domGenerator.resolveElements(elements);
+  Object? resolveElements(Object? elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.resolveElements(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
 
   @override
   T? wrapElements(List<T>? elements) => domGenerator.wrapElements(elements);
@@ -1423,7 +1451,12 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.replaceElement(child1, child2);
 
   @override
-  List<T>? toElements(elements) => domGenerator.toElements(elements);
+  List<T>? toElements(elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      domGenerator.toElements(elements,
+          treeMap: treeMap, context: context, setTreeMapRoot: setTreeMapRoot);
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) =>
@@ -1785,7 +1818,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   bool addChildToElement(T? parent, T? child) => false;
 
   @override
-  List<T>? addExternalElementToElement(T element, externalElement) => null;
+  List<T>? addExternalElementToElement(T element, externalElement,
+          {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) =>
+      null;
 
   @override
   T? appendElementText(T element, String? text) => null;
@@ -1852,7 +1887,11 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
       null;
 
   @override
-  Object? resolveElements(Object? elements) => null;
+  Object? resolveElements(Object? elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      null;
 
   @override
   T? wrapElements(List<T>? elements) => null;
@@ -1886,7 +1925,11 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   bool replaceElement(T? child1, List<T>? child2) => false;
 
   @override
-  List<T>? toElements(elements) => null;
+  List<T>? toElements(elements,
+          {DOMTreeMap<T>? treeMap,
+          DOMContext<T>? context,
+          bool setTreeMapRoot = true}) =>
+      null;
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) {}

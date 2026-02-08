@@ -6,6 +6,11 @@
 - `DOMGenerator`:
   - `getElementNodes`: added named parameter `asView`.
   - Added caching of a generic `DOMTreeMapDummy` instance.
+  - Added `treeMap` and `setTreeMapRoot` parameters to `generate`, `resolveElements`, `toElements`, `addExternalElementToElement`, and related methods.
+  
+- `DOMNodeRuntime`:
+  - Updated `replaceBy` to pass `treeMap` and `setTreeMapRoot` to `toElements`.
+
 
 ## 3.0.0-beta.8
 

@@ -86,7 +86,8 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   }
 
   @override
-  List<T>? addExternalElementToElement(T element, Object? externalElement) {
+  List<T>? addExternalElementToElement(T element, Object? externalElement,
+      {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) {
     _notSupported();
   }
 

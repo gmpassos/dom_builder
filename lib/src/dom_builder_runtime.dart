@@ -236,10 +236,11 @@ abstract class DOMNodeRuntime<T extends Object> {
   /// - [remap] If `true` will remap the new element at [treeMap] (only if [elements] represents 1 element).
   bool replaceBy(List? elements, {bool remap = false}) {
     if (elements == null) return false;
-    var e = domGenerator.toElements(elements);
-    var ok = domGenerator.replaceElement(node, e);
-
     var treeMap = this.treeMap;
+
+    var e = domGenerator.toElements(elements,
+        treeMap: treeMap, setTreeMapRoot: false);
+    var ok = domGenerator.replaceElement(node, e);
 
     if (ok && treeMap != null && domNode != null) {
       treeMap.removeByDOMNode(domNode);

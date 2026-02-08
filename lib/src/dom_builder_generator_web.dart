@@ -257,12 +257,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  List<Node>? addExternalElementToElement(
-      Node element, Object? externalElement) {
+  List<Node>? addExternalElementToElement(Node element, Object? externalElement,
+      {DOMTreeMap<Node>? treeMap, DOMContext<Node>? context}) {
     if (externalElement == null) return null;
     if (!element.isA<Element>()) return null;
 
-    externalElement = resolveElements(externalElement);
+    externalElement = resolveElements(externalElement,
+        treeMap: treeMap, context: context, setTreeMapRoot: false);
 
     if (externalElement is List) {
       var added = <Node>[];
@@ -270,7 +271,8 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         if (e == null) continue;
 
         if (e is List) {
-          var l = addExternalElementToElement(element, e);
+          var l = addExternalElementToElement(element, e,
+              treeMap: treeMap, context: context);
           if (l != null) {
             added.addAll(l);
           }
