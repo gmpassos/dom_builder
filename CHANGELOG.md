@@ -5,6 +5,7 @@
   
 - `DOMGenerator`:
   - `getElementNodes`: added named parameter `asView`.
+  - Added caching of a generic `DOMTreeMapDummy` instance.
 
 ## 3.0.0-beta.8
 

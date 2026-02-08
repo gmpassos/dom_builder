@@ -272,7 +272,14 @@ abstract class DOMGenerator<T extends Object> {
 
   DOMTreeMap<T> createDOMTreeMap() => DOMTreeMap<T>(this);
 
-  DOMTreeMap<T> createGenericDOMTreeMap() => DOMTreeMapDummy<T>(this);
+  late final _genericDOMTreeMapDummy = DOMTreeMapDummy<T>(this);
+
+  /// Returns a generic [DOMTreeMap]. Called when a [DOMTreeMap] is not passed
+  /// while building/generating elements.
+  ///
+  /// Default implementation returns
+  /// a cached [DOMTreeMapDummy] instance.
+  DOMTreeMap<T> createGenericDOMTreeMap() => _genericDOMTreeMapDummy;
 
   /// Same as [generate], but returns a [DOMTreeMap], that contains all
   /// mapping table fo generated elements.
@@ -2002,11 +2009,13 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   @override
   void clearIgnoredAttributesEquivalence() {}
 
-  @override
-  DOMTreeMap<T> createDOMTreeMap() => DOMTreeMapDummy(this);
+  late final _domTreeMapDummy = DOMTreeMapDummy(this);
 
   @override
-  DOMTreeMap<T> createGenericDOMTreeMap() => DOMTreeMapDummy(this);
+  DOMTreeMap<T> createDOMTreeMap() => _domTreeMapDummy;
+
+  @override
+  DOMTreeMap<T> createGenericDOMTreeMap() => _domTreeMapDummy;
 
   @override
   T? createWithRegisteredElementGenerator(
