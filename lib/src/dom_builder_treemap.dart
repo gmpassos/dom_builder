@@ -44,13 +44,7 @@ class DOMTreeMap<T extends Object> {
   /// The root element [T] of this tree.
   T? get rootElement => _rootElement;
 
-  final Map<DOMNode, T> _domNodeToElementMap = {};
-
-  final Map<T, DOMNode> _elementToDOMNodeMap = {};
-
-  Iterable<T> get mappedElements => _domNodeToElementMap.values;
-
-  Iterable<DOMNode> get mappedDOMNodes => _elementToDOMNodeMap.values;
+  DualWeakMap<T, DOMNode>? _elementToDOMNodeMap;
 
   static final Expando _elementsDOMTreeMap =
       Expando<DOMTreeMap>('Elements->DOMTreeMap');
@@ -65,12 +59,17 @@ class DOMTreeMap<T extends Object> {
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element,
       {DOMContext<T>? context, bool allowOverwrite = false}) {
-    var prevElement = _domNodeToElementMap[domNode];
-    var prevDomNode = _elementToDOMNodeMap[element];
+    final elementToDOMNodeMap =
+        _elementToDOMNodeMap ??= DualWeakMap(autoPurge: false);
 
-    if (prevElement != null || prevDomNode != null) {
+    var prevEntry = elementToDOMNodeMap.getEntry(element);
+    if (prevEntry != null) {
+      var prevElement = prevEntry.key;
+      var prevDomNode = prevEntry.value;
+
       var samePrevElement = equalsNodes(prevElement, element);
       var samePrevDomNode = identical(prevDomNode, domNode);
+
       if (samePrevElement && samePrevDomNode) {
         return;
       } else {
@@ -81,8 +80,7 @@ class DOMTreeMap<T extends Object> {
       }
     }
 
-    _domNodeToElementMap[domNode] = element;
-    _elementToDOMNodeMap[element] = domNode;
+    elementToDOMNodeMap[element] = domNode;
 
     domNode.treeMap = this;
     _elementsDOMTreeMap[element] = this;
@@ -95,11 +93,12 @@ class DOMTreeMap<T extends Object> {
 
   /// Unmap from this instance the pair [domNode] and [element].
   bool unmap(DOMNode domNode, T element) {
-    var prev = _domNodeToElementMap[domNode];
+    final elementToDOMNodeMap = _elementToDOMNodeMap;
+    if (elementToDOMNodeMap == null) return false;
 
+    var prev = elementToDOMNodeMap.getKeyFromValue(domNode);
     if (prev == element) {
-      _domNodeToElementMap.remove(domNode);
-      _elementToDOMNodeMap.remove(prev);
+      elementToDOMNodeMap.remove(prev);
       return true;
     }
 
@@ -111,13 +110,24 @@ class DOMTreeMap<T extends Object> {
   /// [checkParents] If true, also checks for mapped [domNode.parent].
   T? getMappedElement(DOMNode? domNode, {bool checkParents = false}) {
     if (domNode == null) return null;
-    var element = _domNodeToElementMap[domNode];
-    if (element != null) return element;
 
-    if (!checkParents) return null;
+    final elementToDOMNodeMap = _elementToDOMNodeMap;
+    if (elementToDOMNodeMap == null) return null;
 
-    var parent = domNode.parent;
-    return getMappedElement(parent, checkParents: true);
+    if (!checkParents) {
+      return elementToDOMNodeMap.getKeyFromValue(domNode);
+    }
+
+    DOMNode? current = domNode;
+
+    while (current != null) {
+      final element = elementToDOMNodeMap.getKeyFromValue(current);
+      if (element != null) return element;
+
+      current = current.parent;
+    }
+
+    return null;
   }
 
   /// Returns the mapped [DOMNode] associated with [element].
@@ -125,7 +135,7 @@ class DOMTreeMap<T extends Object> {
   /// [checkParents] If true, also checks for mapped [element.parent].
   DOMNode? getMappedDOMNode(T? element, {bool checkParents = false}) {
     if (element == null) return null;
-    var domNode = _elementToDOMNodeMap[element];
+    var domNode = _elementToDOMNodeMap?[element];
     if (domNode != null) return domNode;
 
     if (!checkParents) return null;
@@ -137,13 +147,14 @@ class DOMTreeMap<T extends Object> {
   /// Returns [true] if [domNode] is mapped by this instance.
   bool isMappedDOMNode(DOMNode? domNode) {
     if (domNode == null) return false;
-    return _domNodeToElementMap.containsKey(domNode);
+    var element = _elementToDOMNodeMap?.getKeyFromValue(domNode);
+    return element != null;
   }
 
   /// Returns [true] if [element] is mapped by this instance.
   bool isMappedElement(T? element) {
     if (element == null) return false;
-    return _elementToDOMNodeMap.containsKey(element);
+    return _elementToDOMNodeMap?.containsKey(element) ?? false;
   }
 
   /// Returns [domNode] or recursively a [domNode.parent] that is mapped.
@@ -174,7 +185,8 @@ class DOMTreeMap<T extends Object> {
 
   /// Returns [true] if the mapping for [domNode] matches [node].
   bool matchesMapping(DOMNode domNode, T node) {
-    return equalsNodes(_domNodeToElementMap[domNode], node);
+    var element = _elementToDOMNodeMap?.getKeyFromValue(domNode);
+    return equalsNodes(element, node);
   }
 
   bool mapTree(DOMNode domRoot, T root) {
@@ -199,8 +211,7 @@ class DOMTreeMap<T extends Object> {
     return true;
   }
 
-  late final WeakKeyMap<T, List<Object>> _elementsSubscriptions = DualWeakMap(
-      autoPurgeThreshold: 100, onPurgedValues: _onPurgedSubscriptions);
+  WeakKeyMap<T, List<Object>>? _elementsSubscriptions;
 
   void _onPurgedSubscriptions(List<Object> subscriptions) {
     domGenerator.cancelEventSubscriptions(null, subscriptions);
@@ -208,21 +219,28 @@ class DOMTreeMap<T extends Object> {
 
   void mapSubscriptions(T node, List<Object> subscriptions) {
     if (subscriptions.isEmpty) return;
-    var l = _elementsSubscriptions[node] ??= [];
+
+    final elementsSubscriptions = _elementsSubscriptions ??=
+        DualWeakMap(autoPurge: false, onPurgedValues: _onPurgedSubscriptions);
+
+    var l = elementsSubscriptions[node] ??= [];
     l.addAll(subscriptions);
   }
 
-  List<T> elementsWithSubscriptions() => _elementsSubscriptions.entries
-      .where((e) => e.value.isNotEmpty)
-      .map((e) => e.key)
-      .toList();
+  List<T> elementsWithSubscriptions() =>
+      _elementsSubscriptions?.entries
+          .where((e) => e.value.isNotEmpty)
+          .map((e) => e.key)
+          .toList() ??
+      [];
 
   List<Object> getSubscriptions(T node) =>
-      UnmodifiableListView(_elementsSubscriptions[node] ?? []);
+      UnmodifiableListView(_elementsSubscriptions?[node] ?? []);
 
   FutureOr<List<Object>> cancelSubscriptions(T node) {
-    var l = _elementsSubscriptions.remove(node);
+    var l = _elementsSubscriptions?.remove(node);
     if (l == null || l.isEmpty) return [];
+
     var f = domGenerator.cancelEventSubscriptions(node, l);
 
     if (f is Future<bool>) {
@@ -389,6 +407,14 @@ class DOMTreeMap<T extends Object> {
     html = html.replaceFirst(regexpTagClose, '');
 
     return html;
+  }
+
+  void purge() {
+    _elementToDOMNodeMap?.purge();
+    _elementsSubscriptions?.purge();
+
+    _elementToDOMNodeMap = null;
+    _elementsSubscriptions = null;
   }
 }
 
