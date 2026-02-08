@@ -221,7 +221,7 @@ class DOMTreeMap<T extends Object> {
     if (subscriptions.isEmpty) return;
 
     final elementsSubscriptions = _elementsSubscriptions ??=
-        DualWeakMap(autoPurge: false, onPurgedValues: _onPurgedSubscriptions);
+        WeakKeyMap(autoPurge: false, onPurgedValues: _onPurgedSubscriptions);
 
     var l = elementsSubscriptions[node] ??= [];
     l.addAll(subscriptions);

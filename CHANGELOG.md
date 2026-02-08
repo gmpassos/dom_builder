@@ -22,7 +22,7 @@
   
 - `DOMTreeMap`:
   - Replaced internal maps with `DualWeakMap` for element-to-DOMNode mapping.
-  - Added subscription management with `DualWeakMap` and automatic purge handling.
+  - Added subscription management with `WeakKeyMap` and automatic purge handling.
   - Added methods `mapSubscriptions`, `getSubscriptions`, `cancelSubscriptions`, and `elementsWithSubscriptions`.
   - Updated mapping methods to use new map structure.
   - Added `purge` method to clear internal maps.
