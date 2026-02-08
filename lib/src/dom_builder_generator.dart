@@ -1061,11 +1061,13 @@ abstract class DOMGenerator<T extends Object> {
     var domAction = _domActionExecutor!.parse(actionValue);
 
     if (domAction != null) {
-      EventStream<DOMEvent> eventStream = domElement.onClick;
+      EventStream<DOMEvent> eventStream;
 
       var tag = domElement.tag;
       if (tag == 'select' || tag == 'input' || tag == 'textarea') {
         eventStream = domElement.onChange;
+      } else {
+        eventStream = domElement.onClick;
       }
 
       eventStream.listen(
