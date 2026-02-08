@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:swiss_knife/swiss_knife.dart';
 import 'package:web_utils/web_utils.dart';
 
@@ -437,70 +439,102 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
       Node element, DOMContext<Node>? context) {
     final element2 = element.asElementChecked;
-    if (element2 != null) {
-      if (domElement.hasOnClickListener) {
-        element2.onClick.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onClick.add(domEvent);
-        });
-      }
+    if (element2 == null) return;
 
-      if (domElement.hasOnChangeListener) {
-        element2.onChange.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onChange.add(domEvent);
-        });
-      }
+    var subscriptions = <Object>[];
 
-      if (domElement.hasOnKeyPressListener) {
-        element2.onKeyPress.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyPress.add(domEvent);
-        });
-      }
+    if (domElement.hasOnClickListener) {
+      var subscription = element2.onClick.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onClick.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnKeyUpListener) {
-        element2.onKeyUp.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyUp.add(domEvent);
-        });
-      }
+    if (domElement.hasOnChangeListener) {
+      var subscription = element2.onChange.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onChange.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnKeyDownListener) {
-        element2.onKeyDown.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onKeyDown.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyPressListener) {
+      var subscription = element2.onKeyPress.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyPress.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnMouseOverListener) {
-        element2.onMouseOver.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOver.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyUpListener) {
+      var subscription = element2.onKeyUp.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyUp.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnMouseOutListener) {
-        element2.onMouseOut.listen((event) {
-          var domEvent = createDOMMouseEvent(treeMap, event)!;
-          domElement.onMouseOut.add(domEvent);
-        });
-      }
+    if (domElement.hasOnKeyDownListener) {
+      var subscription = element2.onKeyDown.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onKeyDown.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnLoadListener) {
-        element2.onLoad.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onLoad.add(domEvent);
-        });
-      }
+    if (domElement.hasOnMouseOverListener) {
+      var subscription = element2.onMouseOver.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onMouseOver.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
 
-      if (domElement.hasOnErrorListener) {
-        element2.onError.listen((event) {
-          var domEvent = createDOMEvent(treeMap, event)!;
-          domElement.onError.add(domEvent);
-        });
+    if (domElement.hasOnMouseOutListener) {
+      var subscription = element2.onMouseOut.listen((event) {
+        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        domElement.onMouseOut.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    if (domElement.hasOnLoadListener) {
+      var subscription = element2.onLoad.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onLoad.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    if (domElement.hasOnErrorListener) {
+      var subscription = element2.onError.listen((event) {
+        var domEvent = createDOMEvent(treeMap, event)!;
+        domElement.onError.add(domEvent);
+      });
+      subscriptions.add(subscription);
+    }
+
+    treeMap.mapSubscriptions(element, subscriptions);
+  }
+
+  @override
+  FutureOr<bool> cancelEventSubscriptions(
+      Node? element, List<Object> subscriptions) {
+    if (subscriptions.isEmpty) return false;
+
+    var cancelFutures = <Future>[];
+
+    for (var subscription in subscriptions) {
+      if (subscription is StreamSubscription<MouseEvent>) {
+        var f = subscription.cancel();
+        cancelFutures.add(f);
       }
     }
+
+    if (cancelFutures.isEmpty) return false;
+
+    return Future.wait(cancelFutures).then((_) => true);
   }
 
   @override

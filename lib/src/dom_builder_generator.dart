@@ -1098,6 +1098,10 @@ abstract class DOMGenerator<T extends Object> {
   void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
       T element, DOMContext<T>? context) {}
 
+  FutureOr<bool> cancelEventSubscriptions(
+          T? element, List<Object> subscriptions) =>
+      false;
+
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
       null;
 
@@ -1484,6 +1488,11 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
           T element, DOMContext<T>? context) =>
       domGenerator.registerEventListeners(
           treeMap, domElement, element, context);
+
+  @override
+  FutureOr<bool> cancelEventSubscriptions(
+          T? element, List<Object> subscriptions) =>
+      domGenerator.cancelEventSubscriptions(element, subscriptions);
 
   @override
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
@@ -1954,6 +1963,10 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   @override
   void registerEventListeners(DOMTreeMap<T> treeMap, DOMElement domElement,
       T element, DOMContext<T>? context) {}
+
+  @override
+  bool cancelEventSubscriptions(T? element, List<Object> subscriptions) =>
+      false;
 
   @override
   DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>

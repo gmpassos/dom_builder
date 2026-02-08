@@ -1,4 +1,8 @@
+import 'dart:async';
+import 'dart:collection';
 import 'dart:math' as math;
+
+import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
@@ -193,6 +197,39 @@ class DOMTreeMap<T extends Object> {
     }
 
     return true;
+  }
+
+  late final WeakKeyMap<T, List<Object>> _elementsSubscriptions = DualWeakMap(
+      autoPurgeThreshold: 100, onPurgedValues: _onPurgedSubscriptions);
+
+  void _onPurgedSubscriptions(List<Object> subscriptions) {
+    domGenerator.cancelEventSubscriptions(null, subscriptions);
+  }
+
+  void mapSubscriptions(T node, List<Object> subscriptions) {
+    if (subscriptions.isEmpty) return;
+    var l = _elementsSubscriptions[node] ??= [];
+    l.addAll(subscriptions);
+  }
+
+  List<T> elementsWithSubscriptions() => _elementsSubscriptions.entries
+      .where((e) => e.value.isNotEmpty)
+      .map((e) => e.key)
+      .toList();
+
+  List<Object> getSubscriptions(T node) =>
+      UnmodifiableListView(_elementsSubscriptions[node] ?? []);
+
+  FutureOr<List<Object>> cancelSubscriptions(T node) {
+    var l = _elementsSubscriptions.remove(node);
+    if (l == null || l.isEmpty) return [];
+    var f = domGenerator.cancelEventSubscriptions(node, l);
+
+    if (f is Future<bool>) {
+      return f.then((value) => l);
+    } else {
+      return l;
+    }
   }
 
   /// Returns a [DOMNodeRuntime] of [domNode].
