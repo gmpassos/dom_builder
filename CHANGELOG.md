@@ -1,3 +1,11 @@
+## 3.0.0-beta.10
+
+- `DOMTreeMap`:
+  - Added private field `_purgeCount` and public getter `purgeCount`.
+  - `purge()`:
+    - Updated `purge` method to increment `_purgeCount`
+    - Fix: removed null assignments to `_elementToDOMNodeMap` and `_elementsSubscriptions` (breaks `DOMNode.runtimeNode`).
+
 ## 3.0.0-beta.9
 
 - `DOMNode`:

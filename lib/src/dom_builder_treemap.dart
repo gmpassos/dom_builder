@@ -409,12 +409,15 @@ class DOMTreeMap<T extends Object> {
     return html;
   }
 
+  int _purgeCount = 0;
+
+  int get purgeCount => _purgeCount;
+
   void purge() {
+    ++_purgeCount;
+
     _elementToDOMNodeMap?.purge();
     _elementsSubscriptions?.purge();
-
-    _elementToDOMNodeMap = null;
-    _elementsSubscriptions = null;
   }
 }
 
