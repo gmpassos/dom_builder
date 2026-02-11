@@ -63,7 +63,7 @@ abstract class DOMTemplate {
   bool get hasDSX => false;
 
   /// Returns a copy if this instance.
-  DOMTemplate copy({bool resolveDSX = false});
+  DOMTemplate copy({DSXResolution dsxResolution = DSXResolution.skipDSX});
 
   /// Returns [true] if [s] can be a template code, has `{{` and `}}`.
   static bool possiblyATemplate(String s) {
@@ -349,7 +349,7 @@ abstract class DOMTemplate {
 
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver});
 
@@ -414,12 +414,12 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   String buildAsString(Object? context,
-      {bool resolveDSX = true,
+      {DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var built = build(context,
         asElement: false,
-        resolveDSX: resolveDSX,
+        dsxResolution: dsxResolution,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
 
@@ -430,7 +430,7 @@ class DOMTemplateNode extends DOMTemplate {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (nodes.isEmpty) return null;
@@ -439,7 +439,7 @@ class DOMTemplateNode extends DOMTemplate {
         .map((n) {
           var built = n.build(context,
               asElement: asElement,
-              resolveDSX: resolveDSX,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver);
           return built;
@@ -476,22 +476,25 @@ class DOMTemplateNode extends DOMTemplate {
   }
 
   @override
-  DOMTemplate copy({bool resolveDSX = false}) {
-    if (resolveDSX) {
+  DOMTemplate copy({DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+    if (dsxResolution.resolve) {
       var dsx = asDSX;
       if (dsx != null) {
-        var s = dsx.createResolver().resolveValueAsString();
+        var s = dsx
+            .createResolver(lifecycleManager: dsxResolution.lifecycleManager)
+            .resolveValueAsString();
         return DOMTemplateContent(s);
       }
     }
 
     var copy = DOMTemplateNode();
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
-  List<DOMTemplate> copyNodes({bool resolveDSX = false}) {
-    return nodes.map((e) => e.copy(resolveDSX: resolveDSX)).toList();
+  List<DOMTemplate> copyNodes(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+    return nodes.map((e) => e.copy(dsxResolution: dsxResolution)).toList();
   }
 }
 
@@ -587,24 +590,24 @@ class DOMTemplateVariable {
 
   Object? getResolved(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = get(context);
     return evaluateObject(context, value,
         asElement: asElement,
-        resolveDSX: resolveDSX,
+        dsxResolution: dsxResolution,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
   }
 
   String getResolvedAsString(Object? context,
-      {bool resolveDSX = true,
+      {DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     var value = getResolved(context,
         asElement: false,
-        resolveDSX: resolveDSX,
+        dsxResolution: dsxResolution,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
     return DOMTemplateVariable.valueToString(value);
@@ -630,7 +633,7 @@ class DOMTemplateVariable {
 
   static Object? evaluateObject(Object? context, Object? value,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (value == null) return null;
@@ -645,6 +648,7 @@ class DOMTemplateVariable {
       return value
           .map((e) => evaluateObject(context, e,
               asElement: asElement,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver))
           .toList();
@@ -652,15 +656,18 @@ class DOMTemplateVariable {
       return Map.from(value.map((k, v) => MapEntry(
           evaluateObject(context, k,
               asElement: asElement,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver),
           evaluateObject(context, v,
               asElement: asElement,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider,
               intlMessageResolver: intlMessageResolver))));
     } else if (value is DSX) {
-      if (resolveDSX) {
-        var resolver = value.createResolver();
+      if (dsxResolution.resolve) {
+        var resolver = value.createResolver(
+            lifecycleManager: dsxResolution.lifecycleManager);
         var res = asElement
             ? resolver.resolveElement(
                 elementProvider: elementProvider,
@@ -670,7 +677,7 @@ class DOMTemplateVariable {
                 intlMessageResolver: intlMessageResolver);
         return evaluateObject(context, res,
             asElement: asElement,
-            resolveDSX: resolveDSX,
+            dsxResolution: dsxResolution,
             elementProvider: elementProvider,
             intlMessageResolver: intlMessageResolver);
       } else {
@@ -680,18 +687,21 @@ class DOMTemplateVariable {
       var res = value(context as Map<dynamic, dynamic>?);
       return evaluateObject(context, res,
           asElement: asElement,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider,
           intlMessageResolver: intlMessageResolver);
     } else if (value is Function(Object? a)) {
       var res = value(context);
       return evaluateObject(context, res,
           asElement: asElement,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider,
           intlMessageResolver: intlMessageResolver);
     } else if (value is Function()) {
       var res = value();
       return evaluateObject(context, res,
           asElement: asElement,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider,
           intlMessageResolver: intlMessageResolver);
     } else {
@@ -699,12 +709,15 @@ class DOMTemplateVariable {
     }
   }
 
-  bool evaluate(Object? context) {
-    var value = getResolved(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    var value = getResolved(context, dsxResolution: dsxResolution);
     return evaluateValue(value);
   }
 
-  bool evaluateValue(value) {
+  bool evaluateValue(Object? value) {
     if (value == null) return false;
 
     if (value is String) {
@@ -735,7 +748,8 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   }
 
   @override
-  DOMTemplateIntlMessage copy({bool resolveDSX = false}) {
+  DOMTemplateIntlMessage copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateIntlMessage(key);
     return copy;
   }
@@ -746,7 +760,7 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   @override
   String? build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (intlMessageResolver == null) return '';
@@ -767,9 +781,7 @@ class DOMTemplateIntlMessage extends DOMTemplateNode {
   }
 
   @override
-  String toString() {
-    return '{{intl:$key}}';
-  }
+  String toString() => '{{intl:$key}}';
 }
 
 class DOMTemplateContent extends DOMTemplate {
@@ -778,7 +790,8 @@ class DOMTemplateContent extends DOMTemplate {
   DOMTemplateContent(this.content);
 
   @override
-  DOMTemplateContent copy({bool resolveDSX = false}) {
+  DOMTemplateContent copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateContent(content);
     return copy;
   }
@@ -792,7 +805,7 @@ class DOMTemplateContent extends DOMTemplate {
   @override
   dynamic build(Object? context,
           {bool asElement = true,
-          bool resolveDSX = true,
+          DSXResolution dsxResolution = DSXResolution.resolveDSX,
           QueryElementProvider? elementProvider,
           IntlMessageResolver? intlMessageResolver}) =>
       content;
@@ -818,11 +831,13 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   DSX? get asDSX => variable?.asDSX;
 
   @override
-  DOMTemplate copy({bool resolveDSX = false}) {
-    if (resolveDSX) {
+  DOMTemplate copy({DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+    if (dsxResolution.resolve) {
       var dsx = asDSX;
       if (dsx != null) {
-        var s = dsx.createResolver().resolveValueAsString();
+        var s = dsx
+            .createResolver(lifecycleManager: dsxResolution.lifecycleManager)
+            .resolveValueAsString();
         return DOMTemplateContent(s);
       }
     }
@@ -841,12 +856,12 @@ class DOMTemplateBlockVar extends DOMTemplateNode {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     return variable!.getResolved(context,
         asElement: asElement,
-        resolveDSX: resolveDSX,
+        dsxResolution: dsxResolution,
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver);
   }
@@ -863,9 +878,10 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   DOMTemplateBlockQuery(this.query);
 
   @override
-  DOMTemplateBlockQuery copy({bool resolveDSX = false}) {
+  DOMTemplateBlockQuery copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockQuery(query);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
@@ -875,7 +891,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   @override
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
     if (elementProvider == null) return '';
@@ -892,7 +908,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
       if (!template.hasOnlyContent) {
         return template.build(context,
             asElement: true,
-            resolveDSX: resolveDSX,
+            dsxResolution: dsxResolution,
             elementProvider: elementProvider,
             intlMessageResolver: intlMessageResolver);
       } else {
@@ -904,9 +920,7 @@ class DOMTemplateBlockQuery extends DOMTemplateNode {
   }
 
   @override
-  String toString() {
-    return '{{$query}}';
-  }
+  String toString() => '{{$query}}';
 }
 
 abstract class DOMTemplateBlock extends DOMTemplateNode {
@@ -925,27 +939,30 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 
   DOMTemplateBlockCondition? elseCondition;
 
-  bool evaluate(Object? context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  });
 
   @override
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
-    if (evaluate(context)) {
+    if (evaluate(context, dsxResolution: dsxResolution)) {
       return buildContent(context,
           asElement: asElement,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider);
     } else {
       var elseCondition = this.elseCondition;
 
       while (elseCondition != null) {
-        if (elseCondition.evaluate(context)) {
+        if (elseCondition.evaluate(context, dsxResolution: dsxResolution)) {
           return elseCondition.build(context,
               asElement: asElement,
-              resolveDSX: resolveDSX,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider);
         }
         elseCondition = elseCondition.elseCondition;
@@ -957,7 +974,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
 
   dynamic buildContent(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider}) {
     if (nodes.isEmpty) return null;
 
@@ -965,7 +982,7 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
         .map((n) {
           var built = n.build(context,
               asElement: asElement,
-              resolveDSX: resolveDSX,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider);
           return built;
         })
@@ -989,15 +1006,19 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
   DOMTemplateBlockIf(super.variable, [super.content]);
 
   @override
-  DOMTemplateBlockIf copy({bool resolveDSX = false}) {
+  DOMTemplateBlockIf copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockIf(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
-    return variable!.evaluate(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    return variable!.evaluate(context, dsxResolution: dsxResolution);
   }
 
   @override
@@ -1055,37 +1076,49 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
         super(variable, content);
 
   @override
-  DOMTemplateBlockIfCmp copy({bool resolveDSX = false}) {
+  DOMTemplateBlockIfCmp copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockIfCmp(elseIf, variable, cmp, value);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
     switch (cmp) {
       case DOMTemplateCmp.eq:
-        return matchesEq(context);
+        return matchesEq(context, dsxResolution: dsxResolution);
       case DOMTemplateCmp.notEq:
-        return !matchesEq(context);
+        return !matchesEq(context, dsxResolution: dsxResolution);
       default:
         throw StateError("Can't handle: $cmp");
     }
   }
 
-  bool matchesEq(Object? context) {
-    var varValueStr = variable!.getResolvedAsString(context);
-    var valueStr = getValueAsString(context);
+  bool matchesEq(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    var varValueStr =
+        variable!.getResolvedAsString(context, dsxResolution: dsxResolution);
+    var valueStr = getValueAsString(context, dsxResolution: dsxResolution);
     return varValueStr == valueStr;
   }
 
-  String? getValueAsString(Object? context) {
+  String? getValueAsString(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
     if (value is DOMTemplateContent) {
       var valueContent = value as DOMTemplateContent;
       return valueContent.content;
     } else if (value is DOMTemplateVariable) {
       var valueVar = value as DOMTemplateVariable;
-      return valueVar.getResolvedAsString(context);
+      return valueVar.getResolvedAsString(context,
+          dsxResolution: dsxResolution);
     } else {
       return value.toString();
     }
@@ -1114,15 +1147,19 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
   DOMTemplateBlockNot(super.variable, [super.content]);
 
   @override
-  DOMTemplateBlockNot copy({bool resolveDSX = false}) {
+  DOMTemplateBlockNot copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockNot(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
-    return !variable!.evaluate(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    return !variable!.evaluate(context, dsxResolution: dsxResolution);
   }
 
   @override
@@ -1139,14 +1176,18 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElse([DOMTemplateNode? content]) : super(null, content);
 
   @override
-  DOMTemplateBlockElse copy({bool resolveDSX = false}) {
+  DOMTemplateBlockElse copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockElse();
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
     return true;
   }
 
@@ -1160,15 +1201,19 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElseIf(super.variable, [super.content]);
 
   @override
-  DOMTemplateBlockElseIf copy({bool resolveDSX = false}) {
+  DOMTemplateBlockElseIf copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockElseIf(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
-    return variable!.evaluate(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    return variable!.evaluate(context, dsxResolution: dsxResolution);
   }
 
   @override
@@ -1181,15 +1226,19 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
   DOMTemplateBlockElseNot(super.variable, [super.content]);
 
   @override
-  DOMTemplateBlockElseNot copy({bool resolveDSX = false}) {
+  DOMTemplateBlockElseNot copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockElseNot(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
-    return !variable!.evaluate(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    return !variable!.evaluate(context, dsxResolution: dsxResolution);
   }
 
   @override
@@ -1202,25 +1251,26 @@ class DOMTemplateBlockVarElse extends DOMTemplateBlock {
   DOMTemplateBlockVarElse(super.variable, [super.contentElse]);
 
   @override
-  DOMTemplateBlockVarElse copy({bool resolveDSX = false}) {
+  DOMTemplateBlockVarElse copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockVarElse(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
   dynamic build(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider,
       IntlMessageResolver? intlMessageResolver}) {
-    var value = variable!.getResolved(context);
+    var value = variable!.getResolved(context, dsxResolution: dsxResolution);
     if (variable!.evaluateValue(value)) {
       return asElement ? value : DOMTemplateVariable.valueToString(value);
     } else {
       return super.build(context,
           asElement: asElement,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider);
     }
   }
@@ -1235,29 +1285,33 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
   DOMTemplateBlockIfCollection(super.variable, [super.content]);
 
   @override
-  DOMTemplateBlockIfCollection copy({bool resolveDSX = false}) {
+  DOMTemplateBlockIfCollection copy(
+      {DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     var copy = DOMTemplateBlockIfCollection(variable);
-    copy.nodes.addAll(copyNodes(resolveDSX: resolveDSX));
+    copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
     return copy;
   }
 
   @override
-  bool evaluate(Object? context) {
-    return variable!.evaluate(context);
+  bool evaluate(
+    Object? context, {
+    DSXResolution dsxResolution = DSXResolution.resolveDSX,
+  }) {
+    return variable!.evaluate(context, dsxResolution: dsxResolution);
   }
 
   @override
   dynamic buildContent(Object? context,
       {bool asElement = true,
-      bool resolveDSX = true,
+      DSXResolution dsxResolution = DSXResolution.resolveDSX,
       QueryElementProvider? elementProvider}) {
-    var value = variable!.getResolved(context);
+    var value = variable!.getResolved(context, dsxResolution: dsxResolution);
 
     if (value is Iterable) {
       var built = value
           .map((val) => super.buildContent(val,
               asElement: asElement,
-              resolveDSX: resolveDSX,
+              dsxResolution: dsxResolution,
               elementProvider: elementProvider))
           .expand((e) => e is List ? e : [e])
           .toList();
@@ -1265,7 +1319,7 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
     } else {
       return super.buildContent(value,
           asElement: asElement,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           elementProvider: elementProvider);
     }
   }

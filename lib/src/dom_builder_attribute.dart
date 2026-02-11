@@ -5,6 +5,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_css.dart';
+import 'dom_builder_dsx.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_helpers.dart';
 import 'dom_builder_template.dart';
@@ -50,20 +51,22 @@ class DOMAttribute with WithValue {
   }
 
   static String append(String s, String delimiter, DOMAttribute? attribute,
-      {DOMContext? domContext, bool resolveDSX = false}) {
+      {DOMContext? domContext,
+      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     if (attribute == null) return s;
-    var append =
-        attribute.buildHTML(domContext: domContext, resolveDSX: resolveDSX);
+    var append = attribute.buildHTML(
+        domContext: domContext, dsxResolution: dsxResolution);
     if (append.isEmpty) return s;
     return s + delimiter + append;
   }
 
   static StringBuffer appendTo(
       StringBuffer s, String delimiter, DOMAttribute? attribute,
-      {DOMContext? domContext, bool resolveDSX = false}) {
+      {DOMContext? domContext,
+      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
     if (attribute == null) return s;
-    var append =
-        attribute.buildHTML(domContext: domContext, resolveDSX: resolveDSX);
+    var append = attribute.buildHTML(
+        domContext: domContext, dsxResolution: dsxResolution);
     if (append.isEmpty) return s;
     s.write(delimiter);
     s.write(append);
@@ -163,7 +166,10 @@ class DOMAttribute with WithValue {
     }
   }
 
-  String buildHTML({DOMContext? domContext, bool resolveDSX = false}) {
+  String buildHTML({
+    DOMContext? domContext,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+  }) {
     var valueHandler = this.valueHandler;
 
     if (isBoolean) {
@@ -171,10 +177,10 @@ class DOMAttribute with WithValue {
     }
 
     String? htmlValue;
-    if (resolveDSX && valueHandler is DOMAttributeValueTemplate) {
+    if (dsxResolution.resolve && valueHandler is DOMAttributeValueTemplate) {
       var templateBuilt = valueHandler.template.build(domContext,
           asElement: false,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           intlMessageResolver: domContext?.intlMessageResolver);
 
       if (templateBuilt is String && !possiblyWithHTML(templateBuilt)) {
@@ -341,13 +347,17 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
     if (domContext == null) {
       return super.getAttributeValue(domContext);
     } else {
+      var dsxResolution = DSXResolution.lifecycleManager(treeMap);
       var build = template.build(domContext,
-          elementProvider: (q) => treeMap?.queryElement(q,
-              domContext: domContext, buildTemplates: true),
+          dsxResolution: dsxResolution,
+          elementProvider: (q) => treeMap?.queryElementAsHTML(q,
+              domContext: domContext,
+              buildTemplates: true,
+              dsxResolution: dsxResolution),
           intlMessageResolver: domContext.intlMessageResolver);
 
       if (build == null) {
-        return super.getAttributeValue(domContext);
+        return super.getAttributeValue(domContext, treeMap);
       } else if (build is String) {
         return build;
       } else if (build is Iterable) {

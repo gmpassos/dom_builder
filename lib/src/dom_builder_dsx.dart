@@ -22,8 +22,27 @@ class _DSXKey {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() {
-    return '_DSXKey{id: $id}';
+  String toString() => '_DSXKey{id: $id}';
+}
+
+enum DSXObjectType {
+  function('function', 'function_'),
+  future('future', 'future_'),
+  generic('', '');
+
+  final String placeholder;
+
+  final String placeholderPrefix;
+
+  const DSXObjectType(this.placeholder, this.placeholderPrefix);
+
+  static forObject(Object? obj) {
+    if (obj is Function) {
+      return DSXObjectType.function;
+    } else if (obj is Future) {
+      return DSXObjectType.future;
+    }
+    return DSXObjectType.generic;
   }
 }
 
@@ -32,17 +51,47 @@ class _DSXKey {
 /// Can be a [Function]/lambda that will be inserted into DOM definitions
 /// passed to [$dsx].
 class DSX<T extends Object> {
-  static final DualWeakMap<Object, List<DSX>> _objectsToDSX = DualWeakMap();
-  static final DualWeakMap<DSX, Object> _dsxToObjectSource = DualWeakMap();
-  static final DualWeakMap<DSX, Object> _dsxToObject = DualWeakMap();
+  static final WeakKeyMap<Object, List<DSX>> _objectsToDSX = WeakKeyMap();
+  static final WeakKeyMap<DSX, Object> _dsxToObjectSource = WeakKeyMap();
+  static final WeakKeyMap<DSX, Object> _dsxToObject = WeakKeyMap();
 
-  static final Map<_DSXKey, DSX> _keyToDSK = <_DSXKey, DSX>{};
+  static final Set<DSX> _notManagedDSXs = {};
+  static final Map<_DSXKey, WeakReference<DSX>> _keyToDSK = {};
+
+  static bool applyLifeCycleManager(
+      DSX dsx, DSXLifecycleManager? lifecycleManager) {
+    if (lifecycleManager == null) return false;
+
+    if (!_notManagedDSXs.contains(dsx)) return false;
+
+    if (!_validateDSKKey(dsx._key)) return false;
+
+    var ok = lifecycleManager.manageDSX(dsx);
+    if (ok) {
+      _notManagedDSXs.remove(dsx);
+    }
+
+    return ok;
+  }
+
+  static bool _validateDSKKey(_DSXKey key) {
+    var prev = _keyToDSK[key];
+    if (prev == null) return false;
+    if (prev.target == null) {
+      _keyToDSK.remove(key);
+      return false;
+    }
+    return true;
+  }
 
   static void purge() {
-    _keyToDSK.removeWhere((key, dsx) {
+    _keyToDSK.removeWhere((key, dsxRef) {
+      var dsx = dsxRef.target;
+      if (dsx == null) return true;
       var objSrc = _dsxToObjectSource[dsx];
       var obj = _dsxToObject[dsx];
       if (objSrc == null && obj == null) {
+        _notManagedDSXs.remove(dsx);
         return true;
       }
       return false;
@@ -56,7 +105,7 @@ class DSX<T extends Object> {
   static Object? objectFromDSX(DSX dsx) {
     var o = _dsxToObject[dsx];
     if (o == null) {
-      dsx.check();
+      if (!dsx.check()) return null;
     }
     return o;
   }
@@ -64,7 +113,7 @@ class DSX<T extends Object> {
   static Object? objectSourceFromDSX(DSX dsx) {
     var o = _dsxToObjectSource[dsx];
     if (o == null) {
-      dsx.check();
+      if (!dsx.check()) return null;
     }
     return o;
   }
@@ -75,8 +124,17 @@ class DSX<T extends Object> {
   }
 
   static DSX? _fromKey(_DSXKey key) {
-    var dsx = _keyToDSK[key];
-    dsx?.check();
+    var dsxRef = _keyToDSK[key];
+    if (dsxRef == null) return null;
+
+    var dsx = dsxRef.target;
+    if (dsx == null) {
+      _keyToDSK.remove(key);
+      return null;
+    }
+
+    if (!dsx.check()) return null;
+
     return dsx;
   }
 
@@ -199,11 +257,15 @@ class DSX<T extends Object> {
   /// Creates a DSX object that makes a reference to [object] with [parameters].
   factory DSX(Object objSource, T obj, {List? parameters}) {
     if (_isPrimitive(objSource) || _isPrimitive(obj)) {
-      var dsx = DSX<T>._(parameters);
+      var type = DSXObjectType.forObject(obj);
+      var dsx = DSX<T>._(type, parameters);
 
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx._key] ??= dsx;
+
+      _validateDSKKey(dsx._key);
+      _keyToDSK[dsx._key] ??= WeakReference(dsx);
+      _notManagedDSXs.add(dsx);
 
       print('primitive> $dsx > $objSource ; $obj');
 
@@ -223,24 +285,32 @@ class DSX<T extends Object> {
         }
       }
 
-      var dsx = DSX<T>._(parameters);
+      var type = DSXObjectType.forObject(obj);
+      var dsx = DSX<T>._(type, parameters);
       prevDSX.add(dsx);
 
       _objectsToDSX[objSource] = prevDSX;
       _objectsToDSX[obj as Object] = prevDSX;
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx._key] ??= dsx;
+
+      _validateDSKKey(dsx._key);
+      _keyToDSK[dsx._key] ??= WeakReference(dsx);
+      _notManagedDSXs.add(dsx);
 
       return dsx;
     } else {
-      var dsx = DSX<T>._(parameters);
+      var type = DSXObjectType.forObject(obj);
+      var dsx = DSX<T>._(type, parameters);
 
       _objectsToDSX[objSource] = [dsx];
       _objectsToDSX[obj as Object] = [dsx];
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
-      _keyToDSK[dsx._key] ??= dsx;
+
+      _validateDSKKey(dsx._key);
+      _keyToDSK[dsx._key] ??= WeakReference(dsx);
+      _notManagedDSXs.add(dsx);
 
       return dsx;
     }
@@ -250,34 +320,47 @@ class DSX<T extends Object> {
 
   final int id = ++_idCount;
 
-  final List? parameters;
+  final DSXObjectType type;
+
+  List? _parameters;
+
+  List? get parameters => _parameters;
 
   late final _DSXKey _key;
 
-  DSX._([this.parameters]) {
+  DSX._(this.type, [List? parameters]) : _parameters = parameters {
     _key = _DSXKey(id);
   }
 
   int get keyID => _key.id;
 
-  DSXResolver createResolver() => DSXResolver(this);
+  DSXResolver createResolver({DSXLifecycleManager? lifecycleManager}) =>
+      DSXResolver(this, lifecycleManager: lifecycleManager);
 
   Object? get objectSource => _dsxToObjectSource[this];
 
   Object? get object => _dsxToObject[this];
 
   /// Check the referenced [object] that this [DSX] instance still exists.
-  DSX<T> check() {
+  bool check() {
     var objSrc = _dsxToObjectSource[this];
     var obj = _dsxToObject[this];
 
     if (objSrc == null && obj == null) {
-      _dsxToObjectSource.remove(this);
-      _dsxToObject.remove(this);
-      _keyToDSK.remove(_key);
+      dispose();
+      return false;
     }
 
-    return this;
+    return true;
+  }
+
+  void dispose() {
+    _parameters = null;
+
+    _dsxToObjectSource.remove(this);
+    _dsxToObject.remove(this);
+    _keyToDSK.remove(_key);
+    _notManagedDSXs.remove(this);
   }
 
   static final DeepCollectionEquality _deepCollectionEquality =
@@ -314,20 +397,9 @@ class DSX<T extends Object> {
     return true;
   }
 
-  bool get isFunction => object is Function;
+  bool get isFunction => type == DSXObjectType.function;
 
-  bool get isFuture => object is Future;
-
-  /// Returns the type of this DSX object as [String].
-  String get type {
-    var obj = object;
-    if (obj is Function) {
-      return 'function';
-    } else if (obj is Future) {
-      return 'future';
-    }
-    return '';
-  }
+  bool get isFuture => type == DSXObjectType.future;
 
   dynamic call() {
     var f = object as Function;
@@ -363,19 +435,62 @@ class DSX<T extends Object> {
   /// This DSX object referend mark as [String].
   @override
   String toString() {
-    var type = this.type;
-    if (type.isNotEmpty) {
-      type += '_';
-    }
-    return '{{__DSX__$type$id}}';
+    var placeholderPrefix = type.placeholderPrefix;
+    return '{{__DSX__$placeholderPrefix$id}}';
   }
+}
+
+class DSXResolution {
+  static const resolveDSX = DSXResolution.resolve(true);
+  static const skipDSX = DSXResolution.resolve(false);
+
+  final bool resolve;
+
+  final DSXLifecycleManager? lifecycleManager;
+
+  const DSXResolution.resolve(this.resolve) : lifecycleManager = null;
+
+  DSXResolution._(this.resolve, this.lifecycleManager);
+
+  DSXResolution.lifecycleManager(this.lifecycleManager, {this.resolve = true});
+
+  DSXResolution copyWith(
+      {bool? resolve,
+      DSXLifecycleManager? lifecycleManager,
+      bool nullLifecycleManager = false}) {
+    lifecycleManager ??= this.lifecycleManager;
+
+    if (nullLifecycleManager) {
+      lifecycleManager = null;
+    }
+
+    return DSXResolution._(resolve ?? this.resolve, lifecycleManager);
+  }
+
+  DSXResolution noLifecycleManager() => DSXResolution._(resolve, null);
+
+  @override
+  String toString() =>
+      'DSXResolution{resolve: $resolve, lifecycleManager: $lifecycleManager}';
+}
+
+abstract class DSXLifecycleManager {
+  bool isManagedDSX(DSX<Object> dsx);
+
+  bool manageDSX(DSX<Object> dsx);
+
+  bool disposeDSX(DSX<Object> dsx);
+
+  int disposeManagedDSXs();
 }
 
 class DSXResolver<T extends Object> {
   final DSX<T> dsx;
 
-  DSXResolver(this.dsx) {
-    print('DSXResolver> $dsx > $type');
+  final DSXLifecycleManager? lifecycleManager;
+
+  DSXResolver(this.dsx, {this.lifecycleManager}) {
+    DSX.applyLifeCycleManager(dsx, lifecycleManager);
   }
 
   Object? get objectSource => dsx.objectSource;
@@ -416,20 +531,30 @@ class DSXResolver<T extends Object> {
       return _resolvedValue;
     }
 
+    final object = this.object;
+
     if (isFunction) {
       var value = call();
       setResolvedValue(value);
       return value;
     } else if (isFuture) {
       assert(_future == null);
+
       var future = object as Future;
       future.then(setResolvedValue);
       _future = future;
+
+      future.whenComplete(() {
+        if (identical(future, _future)) {
+          _future = null;
+        }
+      });
+
       setResolvedValue('...');
       return _resolvedValue;
     } else {
       var value = object;
-      setResolvedValue(value);
+      setResolvedValue(object);
       return value;
     }
   }
@@ -439,14 +564,16 @@ class DSXResolver<T extends Object> {
 
     var element = _valueAsElement(value);
 
-    if (_resolvedValueListenerSubscription == null) {
-      var listenerSubscription = _listenDSXValue(objectSource, (objSrc) {
+    // Call `listenDSXValue` if type defines method:
+    _resolvedValueListenerSubscription ??= _listenDSXValue(
+      objectSource,
+      (objSrc) {
         var value = _toDSXValue(objSrc, objSrc);
         setResolvedValue(value);
-      });
-      _resolvedValueListenerSubscription = listenerSubscription;
-    }
+      },
+    );
 
+    // Remove previous `_resolvedElement`:
     if (_resolvedElement != null) {
       var runtime = _resolvedElement!.getRuntime();
 
@@ -512,7 +639,11 @@ class DSXResolver<T extends Object> {
   dynamic call() => dsx.call();
 
   /// Returns the type of this DSX object as [String].
-  String get type => dsx.type;
+  DSXObjectType get type => dsx.type;
+
+  @override
+  String toString() =>
+      'DSXResolver[$dsx]{lifecycleManager: $lifecycleManager, resolvedElement: $_resolvedElement, resolvedValue: $_resolvedValue}';
 }
 
 /// Parses [o] to a [List<DOMNode>], resolving [DSX] objects.

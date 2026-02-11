@@ -402,7 +402,7 @@ class DOMNode implements AsDOMNode {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
@@ -422,7 +422,7 @@ class DOMNode implements AsDOMNode {
           indent: indent,
           disableIndent: disableIndent,
           xhtml: xhtml,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           buildTemplates: buildTemplates,
           parentNode: parentNode,
           previousNode: prev,
@@ -1411,7 +1411,7 @@ class TextNode extends DOMNode with WithValue {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
@@ -1549,25 +1549,25 @@ class TemplateNode extends DOMNode with WithValue {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
     String? html;
 
-    if (resolveDSX) {
+    if (dsxResolution.resolve) {
       if (template.isDSX) {
         html = template.buildAsString(domContext,
-            resolveDSX: true,
+            dsxResolution: dsxResolution,
             intlMessageResolver: domContext?.intlMessageResolver);
       } else if (template.hasDSX) {
-        var template2 = template.copy(resolveDSX: true);
+        var template2 = template.copy(dsxResolution: dsxResolution);
 
         if (buildTemplates) {
           var built = template2.build(domContext,
               asElement: false,
-              resolveDSX: true,
+              dsxResolution: dsxResolution,
               intlMessageResolver: domContext?.intlMessageResolver);
           html = DOMTemplate.objectToString(built);
         } else {
@@ -1579,7 +1579,7 @@ class TemplateNode extends DOMNode with WithValue {
     if (html == null) {
       if (buildTemplates) {
         html = template.buildAsString(domContext,
-            resolveDSX: resolveDSX,
+            dsxResolution: dsxResolution,
             intlMessageResolver: domContext?.intlMessageResolver);
       } else {
         html = text;
@@ -1881,6 +1881,8 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   Map<String, DSX>? _resolvedDSXEventAttributes;
+
+  Iterable<DSX> resolvedDSXs() => _resolvedDSXEventAttributes?.values ?? [];
 
   void resolveDSX() {
     var attributes = _attributes;
@@ -2500,7 +2502,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
   String buildOpenTagHTML(
       {bool openCloseTag = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       DOMContext? domContext}) {
     var html = StringBuffer('<$tag');
 
@@ -2511,18 +2513,18 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       var attributeStyle = attributes['style'];
 
       DOMAttribute.appendTo(html, ' ', attributeId,
-          domContext: domContext, resolveDSX: resolveDSX);
+          domContext: domContext, dsxResolution: dsxResolution);
       DOMAttribute.appendTo(html, ' ', attributeClass,
-          domContext: domContext, resolveDSX: resolveDSX);
+          domContext: domContext, dsxResolution: dsxResolution);
       DOMAttribute.appendTo(html, ' ', attributeStyle,
-          domContext: domContext, resolveDSX: resolveDSX);
+          domContext: domContext, dsxResolution: dsxResolution);
 
       var attributesNormal = attributes.values
           .where((v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
 
       for (var attr in attributesNormal) {
         DOMAttribute.appendTo(html, ' ', attr,
-            domContext: domContext, resolveDSX: resolveDSX);
+            domContext: domContext, dsxResolution: dsxResolution);
       }
 
       var attributesBoolean = attributes.values
@@ -2530,7 +2532,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
       for (var attr in attributesBoolean) {
         DOMAttribute.appendTo(html, ' ', attr,
-            domContext: domContext, resolveDSX: resolveDSX);
+            domContext: domContext, dsxResolution: dsxResolution);
       }
     }
 
@@ -2580,14 +2582,17 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
       DOMContext? domContext}) {
     if (buildTemplates && hasUnresolvedTemplate) {
-      var htmlUnresolvedTemplate =
-          buildHTML(withIndent: true, buildTemplates: false, resolveDSX: false);
+      var htmlUnresolvedTemplate = buildHTML(
+        withIndent: true,
+        buildTemplates: false,
+        dsxResolution: DSXResolution.skipDSX,
+      );
 
       var template = DOMTemplate.tryParse(htmlUnresolvedTemplate);
 
@@ -2600,7 +2605,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
             indent: indent,
             disableIndent: disableIndent,
             xhtml: xhtml,
-            resolveDSX: resolveDSX,
+            dsxResolution: dsxResolution,
             buildTemplates: true,
             parentNode: parentNode,
             previousNode: previousNode,
@@ -2636,7 +2641,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       var html = parentIndent +
           buildOpenTagHTML(
               openCloseTag: xhtml,
-              resolveDSX: resolveDSX,
+              dsxResolution: dsxResolution,
               domContext: domContext);
       return html;
     }
@@ -2645,7 +2650,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
     html.write(parentIndent);
     html.write(
-        buildOpenTagHTML(resolveDSX: resolveDSX, domContext: domContext));
+        buildOpenTagHTML(dsxResolution: dsxResolution, domContext: domContext));
     html.write(innerBreakLine);
 
     if (!emptyContent) {
@@ -2657,7 +2662,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         indent: indent,
         disableIndent: disableIndent,
         xhtml: xhtml,
-        resolveDSX: resolveDSX,
+        dsxResolution: dsxResolution,
         buildTemplates: buildTemplates,
         domContext: domContext,
       );
@@ -2677,7 +2682,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       String innerIndent = '',
       String innerBreakLine = '',
@@ -2700,7 +2705,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           indent: indent,
           disableIndent: disableIndent,
           xhtml: xhtml,
-          resolveDSX: resolveDSX,
+          dsxResolution: dsxResolution,
           buildTemplates: buildTemplates,
           parentNode: this,
           previousNode: prev,
@@ -3004,7 +3009,7 @@ class ExternalElementNode extends DOMNode {
       String indent = '  ',
       bool disableIndent = false,
       bool xhtml = false,
-      bool resolveDSX = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX,
       bool buildTemplates = false,
       DOMNode? parentNode,
       DOMNode? previousNode,
@@ -3029,6 +3034,9 @@ class ExternalElementNode extends DOMNode {
   ExternalElementNode copy() {
     return ExternalElementNode(externalElement, allowContent);
   }
+
+  @override
+  String toString() => 'ExternalElementNode@$externalElement';
 }
 
 //
