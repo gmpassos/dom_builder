@@ -491,10 +491,16 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   bool get isDisposed => _disposed;
 
-  void dispose() {
+  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {
     _disposed = true;
 
-    disposeManagedDSXs();
+    if (cancelSubscriptions) {
+      cancelAllSubscriptions();
+    }
+
+    if (disposeDSXs) {
+      disposeManagedDSXs();
+    }
 
     _rootDOMNode = null;
     _rootElement = null;
@@ -659,7 +665,7 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   void purge() {}
 
   @override
-  void dispose() {}
+  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {}
 
   @override
   String toString() => 'DOMTreeMapDummy{}@$domGenerator';

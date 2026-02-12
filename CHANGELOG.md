@@ -46,6 +46,7 @@
   - Updated mapping to store weak references and manage DSX lifecycle.
   - Added `cancelAllSubscriptions` method.
   - Added `dispose` method to clean up mappings and managed DSXs.
+    - added optional parameters `cancelSubscriptions` and `disposeDSXs` to control whether subscriptions are canceled and DSXs are disposed during disposal.
   - Updated `purge` to remove disposed DSXs.
   - Added `toString` override for debugging.
 
