@@ -6,12 +6,13 @@ import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
+import 'dom_builder_dsx.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
 
 /// Represents a mapping tree. Can be used to map a [DOMNode] to a generated
 /// node [T], or a node [T] to a [DOMNode].
-class DOMTreeMap<T extends Object> {
+class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   final DOMGenerator<T> domGenerator;
 
   DOMTreeMap(this.domGenerator);
@@ -47,13 +48,14 @@ class DOMTreeMap<T extends Object> {
   DualWeakMap<T, DOMNode>? _elementToDOMNodeMap;
 
   static final Expando _elementsDOMTreeMap =
-      Expando<DOMTreeMap>('Elements->DOMTreeMap');
+      Expando<WeakReference<DOMTreeMap>>('Elements->DOMTreeMap');
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
   static DOMTreeMap<T>? getElementDOMTreeMap<T extends Object>(T? element) {
     if (element == null) return null;
-    return _elementsDOMTreeMap[element] as DOMTreeMap<T>?;
+    var ref = _elementsDOMTreeMap[element] as WeakReference<DOMTreeMap>?;
+    return ref?.target as DOMTreeMap<T>?;
   }
 
   /// Maps in this instance the pair [domNode] and [element].
@@ -83,11 +85,12 @@ class DOMTreeMap<T extends Object> {
     elementToDOMNodeMap[element] = domNode;
 
     domNode.treeMap = this;
-    _elementsDOMTreeMap[element] = this;
+    _elementsDOMTreeMap[element] = WeakReference(this);
 
     if (domNode is DOMElement) {
       domGenerator.resolveActionAttribute(this, domNode, element, context);
       domGenerator.registerEventListeners(this, domNode, element, context);
+      manageDOMElementDSXs(domNode);
     }
   }
 
@@ -250,6 +253,15 @@ class DOMTreeMap<T extends Object> {
     }
   }
 
+  void cancelAllSubscriptions() {
+    var elementsWithSubscriptions = this.elementsWithSubscriptions();
+    if (elementsWithSubscriptions.isNotEmpty) {
+      for (var element in elementsWithSubscriptions) {
+        cancelSubscriptions(element);
+      }
+    }
+  }
+
   /// Returns a [DOMNodeRuntime] of [domNode].
   DOMNodeRuntime<T>? getRuntimeNode(DOMNode? domNode) {
     var node = getMappedElement(domNode);
@@ -386,27 +398,80 @@ class DOMTreeMap<T extends Object> {
     return null;
   }
 
+  DOMNode? queryElement(String query) {
+    if (query.isEmpty) return null;
+
+    final rootDOMNode = this.rootDOMNode;
+    if (rootDOMNode is! DOMElement) return null;
+
+    var node = rootDOMNode.select(query);
+    return node;
+  }
+
   static final RegExp regexpTagRef =
       RegExp(r'\{\{\s*([\w-]+|\*)#([\w-]+)\s*\}\}');
   static final RegExp regexpTagOpen =
       RegExp(r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''');
   static final RegExp regexpTagClose = RegExp(r'''<\/[\w-]+\s*>\s*$''');
 
-  String? queryElement(String query,
-      {DOMContext? domContext, bool buildTemplates = false}) {
-    if (query.isEmpty) return null;
+  String? queryElementAsHTML(String query,
+      {DOMContext? domContext,
+      bool buildTemplates = false,
+      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+    var node = queryElement(query);
+    if (node == null) return null;
 
-    var rootDOMNode = this.rootDOMNode as DOMElement;
-
-    var node = rootDOMNode.select(query)!;
-
-    var html =
-        node.buildHTML(domContext: domContext, buildTemplates: buildTemplates);
+    var html = node.buildHTML(
+        domContext: domContext,
+        buildTemplates: buildTemplates,
+        dsxResolution: dsxResolution);
 
     html = html.replaceFirst(regexpTagOpen, '');
     html = html.replaceFirst(regexpTagClose, '');
 
     return html;
+  }
+
+  Set<DSX>? _managedDSXs;
+
+  @override
+  bool isManagedDSX(DSX<Object> dsx) => _managedDSXs?.contains(dsx) ?? false;
+
+  @override
+  bool manageDSX(DSX<Object> dsx) {
+    var managedDSXs = _managedDSXs ??= {};
+    managedDSXs.add(dsx);
+    return true;
+  }
+
+  @override
+  bool disposeDSX(DSX<Object> dsx) {
+    var rm = _managedDSXs?.remove(dsx) ?? false;
+    if (rm) {
+      dsx.dispose();
+    }
+    return rm;
+  }
+
+  void manageDOMElementDSXs(DOMElement domNode) {
+    for (var dsx in domNode.resolvedDSXs()) {
+      if (!isManagedDSX(dsx)) {
+        DSX.applyLifeCycleManager(dsx, this);
+      }
+    }
+  }
+
+  @override
+  int disposeManagedDSXs() {
+    var managedDSXs = _managedDSXs;
+    if (managedDSXs == null) return 0;
+    _managedDSXs = null;
+
+    for (var dsx in managedDSXs) {
+      dsx.dispose();
+    }
+
+    return managedDSXs.length;
   }
 
   int _purgeCount = 0;
@@ -418,7 +483,43 @@ class DOMTreeMap<T extends Object> {
 
     _elementToDOMNodeMap?.purge();
     _elementsSubscriptions?.purge();
+
+    _managedDSXs?.removeWhere((dsx) => !dsx.check());
   }
+
+  bool _disposed = false;
+
+  bool get isDisposed => _disposed;
+
+  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {
+    _disposed = true;
+
+    if (cancelSubscriptions) {
+      cancelAllSubscriptions();
+    }
+
+    if (disposeDSXs) {
+      disposeManagedDSXs();
+    }
+
+    _rootDOMNode = null;
+    _rootElement = null;
+
+    _elementToDOMNodeMap = null;
+    _elementsSubscriptions = null;
+    _managedDSXs = null;
+  }
+
+  @override
+  String toString() => 'DOMTreeMap{'
+      'rootDOMNode: $_rootDOMNode, '
+      'rootElement: $_rootElement, '
+      'elementToDOMNodeMap: ${_elementToDOMNodeMap?.length ?? 'null'}, '
+      'elementsSubscriptions: ${_elementsSubscriptions?.length ?? 'null'}, '
+      'managedDSXs: ${_managedDSXs?.length ?? 'null'}, '
+      'purgeCount: $_purgeCount, '
+      'disposed: $_disposed'
+      '}@$domGenerator';
 }
 
 /// A wrapper for a mapped pair of a [DOMTreeMap].
@@ -501,4 +602,71 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
 
   @override
   void setRoot(DOMNode rootDOMNode, T? rootElement) {}
+
+  @override
+  bool mapTree(DOMNode domRoot, T root) => false;
+
+  @override
+  DOMNode? asMappedDOMNode(DOMNode? domNode) => null;
+
+  @override
+  T? asMappedElement(T? element) => null;
+
+  @override
+  DOMNode? getMappedDOMNode(T? element, {bool checkParents = false}) => null;
+
+  @override
+  T? getMappedElement(DOMNode? domNode, {bool checkParents = false}) => null;
+
+  @override
+  DOMNodeRuntime<T>? getRuntimeNode(DOMNode? domNode) => null;
+
+  @override
+  DOMNode? queryElement(String query) => null;
+
+  @override
+  String? queryElementAsHTML(String query,
+          {DOMContext<Object>? domContext,
+          bool buildTemplates = false,
+          DSXResolution dsxResolution = DSXResolution.skipDSX}) =>
+      null;
+
+  @override
+  bool manageDSX(DSX<Object> dsx) => false;
+
+  @override
+  bool disposeDSX(DSX<Object> dsx) => false;
+
+  @override
+  int disposeManagedDSXs() => 0;
+
+  @override
+  bool isManagedDSX(DSX<Object> dsx) => false;
+
+  @override
+  void manageDOMElementDSXs(DOMElement domNode) {}
+
+  @override
+  void mapSubscriptions(T node, List<Object> subscriptions);
+
+  @override
+  List<T> elementsWithSubscriptions() => [];
+
+  @override
+  List<Object> getSubscriptions(T node) => [];
+
+  @override
+  List<Object> cancelSubscriptions(T node) => [];
+
+  @override
+  void cancelAllSubscriptions();
+
+  @override
+  void purge() {}
+
+  @override
+  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {}
+
+  @override
+  String toString() => 'DOMTreeMapDummy{}@$domGenerator';
 }

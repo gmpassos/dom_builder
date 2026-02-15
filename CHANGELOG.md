@@ -1,3 +1,62 @@
+## 3.0.0-beta.11
+
+- `DSX`:
+  - Added `DSXObjectType` enum to classify DSX objects (function, future, generic).
+  - Changed internal DSX storage to use `WeakKeyMap` and `WeakReference` for better memory management.
+  - Added lifecycle management support with `DSXLifecycleManager` interface and integration in `DSX` and `DSXResolver`.
+  - Added `DSXResolution` class to control DSX resolution behavior and lifecycle manager usage.
+  - Updated `DSXResolver` to support lifecycle management and improved resolved value handling.
+  - Improved `DSX` equality and disposal logic.
+
+- `DOMAttribute`:
+  - Updated `buildHTML` and related methods to use `DSXResolution` instead of a boolean `resolveDSX`.
+  - Added support for DSX lifecycle management in attribute value resolution.
+
+- `DOMNode` and subclasses (`TextNode`, `TemplateNode`, `DOMElement`, `ExternalElementNode`):
+  - Updated `buildHTML` methods to accept `DSXResolution` parameter instead of boolean `resolveDSX`.
+  - `DOMElement`:
+    - Added `_resolvedDSXEventAttributes` field and methods to resolve DSX event attributes.
+    - Added `resolvedDSXs()` method to iterate resolved DSX objects.
+    - Updated HTML building methods to use `DSXResolution`.
+    - Added `resolveDSX()` method to resolve DSX attributes.
+    - Integrated DSX lifecycle management for resolved DSX event attributes.
+  - `ExternalElementNode`:
+    - Updated `buildHTML` to accept `DSXResolution`.
+
+- `DOMTemplate` and subclasses:
+  - Replaced boolean `resolveDSX` parameters with `DSXResolution` for DSX resolution control.
+  - Updated `copy` methods to accept `DSXResolution`.
+  - Updated `build` methods to propagate `DSXResolution`.
+  - Updated `DOMTemplateVariable` to evaluate and resolve values with `DSXResolution`.
+  - Updated conditional blocks (`DOMTemplateBlockIf`, `DOMTemplateBlockIfCmp`, `DOMTemplateBlockNot`, etc.) to evaluate with `DSXResolution`.
+  - Updated string conversion and copy logic to respect DSX resolution.
+
+- `DOMGenerator`:
+  - Updated `buildTemplate` to use `DSXResolution.lifecycleManager` when building templates.
+
+- `DOMGeneratorWebImpl`:
+  - Replaced event listener subscriptions with `addEventListenerTyped` calls.
+  - Removed unused subscription list and mapping.
+
+- `DOMTreeMap`:
+  - Implemented `DSXLifecycleManager` interface.
+  - Added DSX lifecycle management methods: `manageDSX`, `disposeDSX`, `disposeManagedDSXs`, `isManagedDSX`.
+  - Added `manageDOMElementDSXs` to manage DSX objects in `DOMElement`.
+  - Added `queryElement` and `queryElementAsHTML` methods for querying and rendering elements.
+  - Updated mapping to store weak references and manage DSX lifecycle.
+  - Added `cancelAllSubscriptions` method.
+  - Added `dispose` method to clean up mappings and managed DSXs.
+    - added optional parameters `cancelSubscriptions` and `disposeDSXs` to control whether subscriptions are canceled and DSXs are disposed during disposal.
+  - Updated `purge` to remove disposed DSXs.
+  - Added `toString` override for debugging.
+
+- `DOMTreeMapDummy`:
+  - Implemented `DSXLifecycleManager` interface with no-op methods.
+
+- `pubspec.yaml`:
+  - Updated `web_utils` dependency from `^1.0.20` to `^1.0.21`.
+  - swiss_knife: ^3.3.4 -> ^3.3.5
+
 ## 3.0.0-beta.10
 
 - `DOMTreeMap`:

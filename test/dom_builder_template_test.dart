@@ -616,25 +616,29 @@ void main() {
 
       expect(clicks, isEmpty);
 
-      var s1 = template.buildAsString({'period': 'am'}, resolveDSX: false);
+      var s1 = template.buildAsString({'period': 'am'},
+          dsxResolution: DSXResolution.skipDSX);
       expectFilteredDSXFunction(s1,
           '<div title="HI" onclick="{{__DSX__function_D}}"><b>morning</b></div>');
 
       expect(clicks, isEmpty);
 
-      var s2 = template.buildAsString({'period': 'pm'}, resolveDSX: false);
+      var s2 = template.buildAsString({'period': 'pm'},
+          dsxResolution: DSXResolution.skipDSX);
       expectFilteredDSXFunction(s2,
           '<div title="HI" onclick="{{__DSX__function_D}}">afternoon</div>');
 
       expect(clicks, isEmpty);
 
-      var s3 = template.buildAsString({'period': '?'}, resolveDSX: false);
+      var s3 = template
+          .buildAsString({'period': '?'}, dsxResolution: DSXResolution.skipDSX);
       expectFilteredDSXFunction(
           s3, '<div title="HI" onclick="{{__DSX__function_D}}">day</div>');
 
       expect(clicks, isEmpty);
 
-      var s4 = template.buildAsString({'period': 'am'}, resolveDSX: true);
+      var s4 = template.buildAsString({'period': 'am'},
+          dsxResolution: DSXResolution.resolveDSX);
       expect(
           s4, equals('<div title="HI" onclick="!RET!"><b>morning</b></div>'));
 

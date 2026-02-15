@@ -7,6 +7,7 @@ import 'dom_builder_actions.dart';
 import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
+import 'dom_builder_dsx.dart';
 import 'dom_builder_generator_none.dart'
     if (dart.library.js_interop) 'dom_builder_generator_web.dart'
     if (dart.library.html) 'dom_builder_generator_dart_html.dart';
@@ -369,8 +370,9 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     var variables = context?.variables ?? <String, dynamic>{};
-    var templateResolved = domNode.template
-        .build(variables, intlMessageResolver: context?.intlMessageResolver);
+    var templateResolved = domNode.template.build(variables,
+        intlMessageResolver: context?.intlMessageResolver,
+        dsxResolution: DSXResolution.lifecycleManager(treeMap));
 
     if (templateResolved is List) {
       if (templateResolved.isEmpty) {

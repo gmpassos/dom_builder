@@ -438,81 +438,68 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     final element2 = element.asElementChecked;
     if (element2 == null) return;
 
-    var subscriptions = <Object>[];
-
     if (domElement.hasOnClickListener) {
-      var subscription = element2.onClick.listen((event) {
+      element2.addEventListenerTyped(EventType.click, (event) {
         var domEvent = createDOMMouseEvent(treeMap, event)!;
         domElement.onClick.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnChangeListener) {
-      var subscription = element2.onChange.listen((event) {
+      element2.addEventListenerTyped(EventType.change, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onChange.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnKeyPressListener) {
-      var subscription = element2.onKeyPress.listen((event) {
+      element2.addEventListenerTyped(EventType.keyPress, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onKeyPress.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnKeyUpListener) {
-      var subscription = element2.onKeyUp.listen((event) {
+      element2.addEventListenerTyped(EventType.keyUp, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onKeyUp.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnKeyDownListener) {
-      var subscription = element2.onKeyDown.listen((event) {
+      element2.addEventListenerTyped(EventType.keyDown, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onKeyDown.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnMouseOverListener) {
-      var subscription = element2.onMouseOver.listen((event) {
+      element2.addEventListenerTyped(EventType.mouseOver, (event) {
         var domEvent = createDOMMouseEvent(treeMap, event)!;
         domElement.onMouseOver.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnMouseOutListener) {
-      var subscription = element2.onMouseOut.listen((event) {
+      element2.addEventListenerTyped(EventType.mouseOut, (event) {
         var domEvent = createDOMMouseEvent(treeMap, event)!;
         domElement.onMouseOut.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnLoadListener) {
-      var subscription = element2.onLoad.listen((event) {
+      element2.addEventListenerTyped(EventType.load, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onLoad.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
 
     if (domElement.hasOnErrorListener) {
-      var subscription = element2.onError.listen((event) {
+      element2.addEventListenerTyped(EventType.error, (event) {
         var domEvent = createDOMEvent(treeMap, event)!;
         domElement.onError.add(domEvent);
       });
-      subscriptions.add(subscription);
     }
-
-    treeMap.mapSubscriptions(element, subscriptions);
   }
 
   @override
