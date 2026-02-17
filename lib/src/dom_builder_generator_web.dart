@@ -440,63 +440,72 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
     if (domElement.hasOnClickListener) {
       element2.addEventListenerTyped(EventType.click, (event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onClick.add(domEvent);
       });
     }
 
     if (domElement.hasOnChangeListener) {
       element2.addEventListenerTyped(EventType.change, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onChange.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyPressListener) {
       element2.addEventListenerTyped(EventType.keyPress, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onKeyPress.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyUpListener) {
       element2.addEventListenerTyped(EventType.keyUp, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onKeyUp.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyDownListener) {
       element2.addEventListenerTyped(EventType.keyDown, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onKeyDown.add(domEvent);
       });
     }
 
     if (domElement.hasOnMouseOverListener) {
       element2.addEventListenerTyped(EventType.mouseOver, (event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onMouseOver.add(domEvent);
       });
     }
 
     if (domElement.hasOnMouseOutListener) {
       element2.addEventListenerTyped(EventType.mouseOut, (event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onMouseOut.add(domEvent);
       });
     }
 
     if (domElement.hasOnLoadListener) {
       element2.addEventListenerTyped(EventType.load, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onLoad.add(domEvent);
       });
     }
 
     if (domElement.hasOnErrorListener) {
       element2.addEventListenerTyped(EventType.error, (event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element2)!;
         domElement.onError.add(domEvent);
       });
     }
@@ -522,38 +531,42 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, Object? event) {
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, Object? event,
+      {DOMNode? domTarget, Node? target}) {
     if (event.asJSAny.isA<MouseEvent>()) {
-      var eventTarget = (event as MouseEvent).target as Node?;
-      var domTarget = treeMap.getMappedDOMNode(eventTarget);
+      final mouseEvent = event as MouseEvent;
+      var eventTarget = target ?? mouseEvent.target as Node?;
+      domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
       return DOMMouseEvent(
           treeMap,
-          event,
+          mouseEvent,
           eventTarget,
           domTarget,
-          event.clientPoint,
-          event.offsetPoint,
-          event.pagePoint,
-          event.screenPoint,
-          event.button,
-          event.buttons,
-          event.altKey,
-          event.ctrlKey,
-          event.shiftKey,
-          event.metaKey);
+          mouseEvent.clientPoint,
+          mouseEvent.offsetPoint,
+          mouseEvent.pagePoint,
+          mouseEvent.screenPoint,
+          mouseEvent.button,
+          mouseEvent.buttons,
+          mouseEvent.altKey,
+          mouseEvent.ctrlKey,
+          mouseEvent.shiftKey,
+          mouseEvent.metaKey);
     }
 
     return null;
   }
 
   @override
-  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, Object? event) {
+  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, Object? event,
+      {DOMNode? domTarget, Node? target}) {
     if (event.asJSAny.isA<Event>()) {
-      var eventTarget = (event as Event).target as Node?;
-      var domTarget = treeMap.getMappedDOMNode(eventTarget);
+      final webEvent = event as Event;
+      var eventTarget = target ?? webEvent.target as Node?;
+      domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
-      return DOMEvent(treeMap, event, eventTarget, domTarget as DOMElement?);
+      return DOMEvent(treeMap, eventTarget, eventTarget, domTarget);
     }
 
     return null;

@@ -1,3 +1,26 @@
+## 3.0.0
+
+- `DOMGenerator`:
+  - `createDOMMouseEvent` and `createDOMEvent` methods:
+    - Added optional parameters `domTarget` and `target`.
+  - `DOMGeneratorDelegate`:
+    - Updated `createDOMMouseEvent` and `createDOMEvent` to forward new parameters `domTarget` and `target`.
+  - `DOMGeneratorDummy`:
+    - Updated `createDOMMouseEvent` and `createDOMEvent` signatures to include optional `domTarget` and `target` parameters.
+- `DOMGeneratorDartHTMLImpl`:
+  - `registerEventListeners`:
+    - Pass `domTarget` and `target` when calling `createDOMMouseEvent` and `createDOMEvent`.
+  - `createDOMMouseEvent` and `createDOMEvent`:
+    - Use `target` parameter if provided; otherwise, use event's target.
+    - Use `domTarget` parameter if provided; otherwise, map event target to DOM node.
+- `DOMGeneratorWebImpl`:
+  - `registerEventListeners`:
+    - Pass `domTarget` and `target` when calling `createDOMMouseEvent` and `createDOMEvent`.
+  - `createDOMMouseEvent` and `createDOMEvent`:
+    - Use `target` parameter if provided; otherwise, use event's target.
+    - Use `domTarget` parameter if provided; otherwise, map event target to DOM node.
+    - Adjusted parameter order and usage for `DOMMouseEvent` and `DOMEvent` constructors.
+
 ## 3.0.0-beta.11
 
 - `DSX`:

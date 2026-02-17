@@ -350,7 +350,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnClickListener) {
       var subscription = element.onClick.listen((event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onClick.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -358,7 +359,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnChangeListener) {
       var subscription = element.onChange.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onChange.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -366,7 +368,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnKeyPressListener) {
       var subscription = element.onKeyPress.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onKeyPress.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -374,7 +377,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnKeyUpListener) {
       var subscription = element.onKeyUp.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onKeyUp.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -382,7 +386,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnKeyDownListener) {
       var subscription = element.onKeyDown.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onKeyDown.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -390,7 +395,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnMouseOverListener) {
       var subscription = element.onMouseOver.listen((event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onMouseOver.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -398,7 +404,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnMouseOutListener) {
       var subscription = element.onMouseOut.listen((event) {
-        var domEvent = createDOMMouseEvent(treeMap, event)!;
+        var domEvent = createDOMMouseEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onMouseOut.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -406,7 +413,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnLoadListener) {
       var subscription = element.onLoad.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onLoad.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -414,7 +422,8 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
 
     if (domElement.hasOnErrorListener) {
       var subscription = element.onError.listen((event) {
-        var domEvent = createDOMEvent(treeMap, event)!;
+        var domEvent = createDOMEvent(treeMap, event,
+            domTarget: domElement, target: element)!;
         domElement.onError.add(domEvent);
       });
       subscriptions.add(subscription);
@@ -441,10 +450,11 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, event) {
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, event,
+      {DOMNode? domTarget, Node? target}) {
     if (event is MouseEvent) {
-      var eventTarget = event.target as Node?;
-      var domTarget = treeMap.getMappedDOMNode(eventTarget);
+      var eventTarget = target ?? event.target as Node?;
+      domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
       return DOMMouseEvent(
           treeMap,
@@ -467,10 +477,11 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }
 
   @override
-  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, event) {
+  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, event,
+      {DOMNode? domTarget, Node? target}) {
     if (event is Event) {
-      var eventTarget = event.target as Node?;
-      var domTarget = treeMap.getMappedDOMNode(eventTarget);
+      var eventTarget = target ?? event.target as Node?;
+      domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
       return DOMEvent(treeMap, event, eventTarget, domTarget as DOMElement?);
     }

@@ -1104,10 +1104,13 @@ abstract class DOMGenerator<T extends Object> {
           T? element, List<Object> subscriptions) =>
       false;
 
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event,
+          {DOMNode? domTarget, T? target}) =>
       null;
 
-  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, Object? event) => null;
+  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, Object? event,
+          {DOMNode? domTarget, T? target}) =>
+      null;
 
   bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) =>
       false;
@@ -1497,12 +1500,16 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.cancelEventSubscriptions(element, subscriptions);
 
   @override
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
-      domGenerator.createDOMMouseEvent(treeMap, event);
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event,
+          {DOMNode? domTarget, T? target}) =>
+      domGenerator.createDOMMouseEvent(treeMap, event,
+          domTarget: domTarget, target: target);
 
   @override
-  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, event) =>
-      domGenerator.createDOMEvent(treeMap, event);
+  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, event,
+          {DOMNode? domTarget, T? target}) =>
+      domGenerator.createDOMEvent(treeMap, event,
+          domTarget: domTarget, target: target);
 
   @override
   bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) =>
@@ -1971,11 +1978,14 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
       false;
 
   @override
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event) =>
+  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<T> treeMap, Object? event,
+          {DOMNode? domTarget, T? target}) =>
       null;
 
   @override
-  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, event) => null;
+  DOMEvent? createDOMEvent(DOMTreeMap<T> treeMap, event,
+          {DOMNode? domTarget, T? target}) =>
+      null;
 
   @override
   bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) =>
