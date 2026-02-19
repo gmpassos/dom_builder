@@ -2751,6 +2751,92 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         attributes: attributes, commented: isCommented, content: copyContent());
   }
 
+  /// True when at least one event callback is attached.
+  ///
+  /// See [onClick], [onChange], [onKeyPress], [onKeyUp], [onKeyDown],
+  /// [onMouseOver], [onMouseOut], [onLoad], [onError], [onGenerate].
+  bool get hasAnyEventListener =>
+      _onClick != null ||
+      _onChange != null ||
+      _onKeyPress != null ||
+      _onKeyUp != null ||
+      _onKeyDown != null ||
+      _onMouseOver != null ||
+      _onMouseOut != null ||
+      _onLoad != null ||
+      _onError != null ||
+      _onGenerate != null;
+
+  /// Closes and removes all attached event listeners.
+  ///
+  /// Awaits each listener disposal to ensure no pending callbacks
+  /// remain after the component is torn down.
+  Future<int> closeAllEventListeners() async {
+    var closeCount = 0;
+
+    if (_onClick != null) {
+      await _onClick!.close();
+      _onClick = null;
+      ++closeCount;
+    }
+
+    if (_onChange != null) {
+      await _onChange!.close();
+      _onChange = null;
+      ++closeCount;
+    }
+
+    if (_onKeyPress != null) {
+      await _onKeyPress!.close();
+      _onKeyPress = null;
+      ++closeCount;
+    }
+
+    if (_onKeyUp != null) {
+      await _onKeyUp!.close();
+      _onKeyUp = null;
+      ++closeCount;
+    }
+
+    if (_onKeyDown != null) {
+      await _onKeyDown!.close();
+      _onKeyDown = null;
+      ++closeCount;
+    }
+
+    if (_onMouseOver != null) {
+      await _onMouseOver!.close();
+      _onMouseOver = null;
+      ++closeCount;
+    }
+
+    if (_onMouseOut != null) {
+      await _onMouseOut!.close();
+      _onMouseOut = null;
+      ++closeCount;
+    }
+
+    if (_onLoad != null) {
+      await _onLoad!.close();
+      _onLoad = null;
+      ++closeCount;
+    }
+
+    if (_onError != null) {
+      await _onError!.close();
+      _onError = null;
+      ++closeCount;
+    }
+
+    if (_onGenerate != null) {
+      await _onGenerate!.close();
+      _onGenerate = null;
+      ++closeCount;
+    }
+
+    return closeCount;
+  }
+
   EventStream<DOMMouseEvent>? _onClick;
 
   /// Returns [true] if has any [onClick] listener registered.
