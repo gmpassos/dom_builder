@@ -192,6 +192,8 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     return equalsNodes(element, node);
   }
 
+  /// Maps a DOM subtree starting at [domRoot] to the component tree rooted at [root].
+  /// Returns `true` if the mapping was created or updated.
   bool mapTree(DOMNode domRoot, T root) {
     map(domRoot, root);
 
@@ -220,6 +222,16 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     domGenerator.cancelEventSubscriptions(null, subscriptions);
   }
 
+  /// Returns all mapped [DOMElement] that currently have event listeners.
+  List<DOMElement> domElementsWithEventListener() =>
+      _elementToDOMNodeMap?.values
+          .whereType<DOMElement>()
+          .where((e) => e.hasAnyEventListener)
+          .toList() ??
+      [];
+
+  /// Registers subscriptions associated with [node] for later cancellation.
+  /// See [cancelSubscriptions].
   void mapSubscriptions(T node, List<Object> subscriptions) {
     if (subscriptions.isEmpty) return;
 
@@ -230,6 +242,8 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     l.addAll(subscriptions);
   }
 
+  /// Returns elements from the subscriptions map that still have active subscriptions.
+  /// See [mapSubscriptions].
   List<T> elementsWithSubscriptions() =>
       _elementsSubscriptions?.entries
           .where((e) => e.value.isNotEmpty)
@@ -237,9 +251,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
           .toList() ??
       [];
 
+  /// Returns the subscriptions registered for [node], or an empty list if none exist.
   List<Object> getSubscriptions(T node) =>
       UnmodifiableListView(_elementsSubscriptions?[node] ?? []);
 
+  /// Cancels and removes all subscriptions registered for [node].
   FutureOr<List<Object>> cancelSubscriptions(T node) {
     var l = _elementsSubscriptions?.remove(node);
     if (l == null || l.isEmpty) return [];
@@ -253,11 +269,31 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     }
   }
 
-  void cancelAllSubscriptions() {
-    var elementsWithSubscriptions = this.elementsWithSubscriptions();
-    if (elementsWithSubscriptions.isNotEmpty) {
-      for (var element in elementsWithSubscriptions) {
-        cancelSubscriptions(element);
+  /// Cancels all active subscriptions related to this component tree.
+  ///
+  /// If [elementsSubscriptions] is true, cancels stream/listener
+  /// subscriptions stored in elements.
+  ///
+  /// If [domElementsEventListeners] is true, closes DOM event listeners
+  /// attached to DOM elements.
+  void cancelAllSubscriptions(
+      {bool elementsSubscriptions = true,
+      bool domElementsEventListeners = true}) {
+    if (elementsSubscriptions) {
+      var elementsWithSubscriptions = this.elementsWithSubscriptions();
+      if (elementsWithSubscriptions.isNotEmpty) {
+        for (var element in elementsWithSubscriptions) {
+          cancelSubscriptions(element);
+        }
+      }
+    }
+
+    if (domElementsEventListeners) {
+      var domElementsWithEventListener = this.domElementsWithEventListener();
+      if (domElementsWithEventListener.isNotEmpty) {
+        for (var domElement in domElementsWithEventListener) {
+          domElement.closeAllEventListeners();
+        }
       }
     }
   }
@@ -659,7 +695,9 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   List<Object> cancelSubscriptions(T node) => [];
 
   @override
-  void cancelAllSubscriptions();
+  void cancelAllSubscriptions(
+      {bool elementsSubscriptions = true,
+      bool domElementsEventListeners = true}) {}
 
   @override
   void purge() {}

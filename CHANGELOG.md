@@ -1,3 +1,18 @@
+## 3.0.1
+
+- `DOMElement`:
+  - Added getter `hasAnyEventListener` to check if any event callback is attached.
+  - Added method `closeAllEventListeners` to asynchronously close and remove all attached event listeners.
+
+- `DOMTreeMap`:
+  - Added method documentation:
+    - `mapTree`, `mapSubscriptions`, `elementsWithSubscriptions`, `getSubscriptions`, `cancelSubscriptions`, `cancelAllSubscriptions`.
+  - Added method `domElementsWithEventListener` to return all mapped `DOMElement`s with event listeners.
+  - Updated cancelAllSubscriptions to optionally cancel element subscriptions and/or close DOM event listeners attached to elements.
+
+- `DOMTreeMapDummy`:
+  - Updated `cancelAllSubscriptions` signature to match `DOMTreeMap` with optional parameters for subscription and event listener cancellation.
+
 ## 3.0.0
 
 - `DOMGenerator`:
