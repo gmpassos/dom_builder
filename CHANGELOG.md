@@ -19,7 +19,7 @@
   - Updated `DOMTreeMapDummy` to implement new methods and parameters accordingly.
 
 - Dependencies:
-  - Updated `swiss_knife` dependency from `^3.3.5` to `^3.3.6`.
+  - Updated `swiss_knife` dependency from `^3.3.5` to `^3.3.7`.
 
 ## 3.0.2
 

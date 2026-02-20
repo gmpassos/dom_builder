@@ -10,7 +10,7 @@ dependencies:
   web_utils: ^1.0.21
   js_interop_utils: ^1.0.9
   html: ^0.15.6
-  swiss_knife: ^3.3.6
+  swiss_knife: ^3.3.7
   collection: ^1.19.1
 
 dev_dependencies:
