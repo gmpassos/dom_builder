@@ -1,3 +1,21 @@
+## 3.0.2
+
+- `DOMGenerator`:
+  - Refactored `setAttributes` to use new helper method `resolveAttributeValue` for attribute value resolution.
+  - Added `resolveAttributeValue` method to handle attribute value computation with support for `preserveClass`, `preserveStyle`, boolean attributes, and source resolution.
+- `DOMGeneratorDelegate`:
+  - Added override for `resolveAttributeValue` delegating to internal `domGenerator`.
+- `DOMGeneratorDummy`:
+  - Added stub override for `resolveAttributeValue` returning `null`.
+- `DOMGeneratorWebImpl`:
+  - Changed `setAttribute` method to `setAttributes` accepting `DOMElement`, `Node`, and `DOMTreeMap` with optional `preserveClass` and `preserveStyle` flags.
+  - Added `setAttribute` override accepting single attribute name and value.
+  - Introduced private helper `setElementAttribute` to set attributes on `Element` with special handling for boolean and common attributes (`selected`, `multiple`, `hidden`, `inert`, `id`, `class`, `style`).
+  - Replaced deprecated `append` calls with `appendChild` for DOM node insertion.
+- `DOMNodeRuntimeWebImpl`:
+  - Replaced `element?.attributes.put(name, value)` with `element?.setAttribute(name, value)`.
+  - Replaced `element?.append(child)` with `element?.appendChild(child)`.
+
 ## 3.0.1
 
 - `DOMElement`:

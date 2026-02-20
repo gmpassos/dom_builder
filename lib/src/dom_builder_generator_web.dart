@@ -191,7 +191,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
     if (parent.isA<Element>()) {
       if (!_isChildOfElementImpl(parent as Element, child)) {
-        parent.append(child);
+        parent.appendChild(child);
         return true;
       }
     }
@@ -298,79 +298,95 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  void setAttribute(Node element, String attrName, String? attrVal) {
+  void setAttributes(
+      DOMElement domElement, Node element, DOMTreeMap<Node> treeMap,
+      {bool preserveClass = false, bool preserveStyle = false}) {
     if (!element.isA<Element>()) return;
 
     var element2 = element as Element;
 
+    for (var attrName in domElement.attributesNames) {
+      var attrVal = resolveAttributeValue(
+          domElement, element, attrName, treeMap,
+          preserveClass: preserveClass, preserveStyle: preserveStyle);
+
+      setElementAttribute(element2, attrName, attrVal);
+    }
+  }
+
+  @override
+  void setAttribute(Node element, String attrName, String? attrVal) {
+    if (!element.isA<Element>()) return;
+    setElementAttribute(element as Element, attrName, attrVal);
+  }
+
+  void setElementAttribute(Element element, String attrName, String? attrVal) {
     switch (attrName) {
       case 'selected':
         {
-          if (element2.isA<HTMLOptionElement>()) {
-            (element2 as HTMLOptionElement).selected =
+          if (element.isA<HTMLOptionElement>()) {
+            (element as HTMLOptionElement).selected =
                 _parseAttributeBoolValue(attrVal);
           } else {
-            element2.setAttribute(attrName, attrVal!);
+            element.setAttribute(attrName, attrVal!);
           }
-          break;
         }
       case 'multiple':
         {
-          if (element2.isA<HTMLSelectElement>()) {
-            (element2 as HTMLSelectElement).multiple =
+          if (element.isA<HTMLSelectElement>()) {
+            (element as HTMLSelectElement).multiple =
                 _parseAttributeBoolValue(attrVal);
-          } else if (element2.isA<HTMLInputElement>()) {
-            (element2 as HTMLInputElement).multiple =
+          } else if (element.isA<HTMLInputElement>()) {
+            (element as HTMLInputElement).multiple =
                 _parseAttributeBoolValue(attrVal);
           } else {
-            element2.setAttribute(attrName, attrVal!);
+            element.setAttribute(attrName, attrVal!);
           }
-          break;
         }
       case 'hidden':
         {
-          if (element2.isA<HTMLElement>()) {
-            (element2 as HTMLElement).hidden =
+          if (element.isA<HTMLElement>()) {
+            (element as HTMLElement).hidden =
                 _parseAttributeBoolValue(attrVal).toJS;
           }
-          break;
         }
       case 'inert':
         {
-          if (element2.isA<HTMLElement>()) {
-            (element2 as HTMLElement).inert = _parseAttributeBoolValue(attrVal);
+          if (element.isA<HTMLElement>()) {
+            (element as HTMLElement).inert = _parseAttributeBoolValue(attrVal);
           }
-          break;
+        }
+      case 'id':
+        {
+          if (attrVal == null) {
+            element.removeAttribute(attrName);
+          } else {
+            element.id = attrVal;
+          }
+        }
+      case 'class':
+        {
+          if (attrVal == null) {
+            element.removeAttribute(attrName);
+          } else {
+            element.className = attrVal;
+          }
+        }
+      case 'style':
+        {
+          if (attrVal == null) {
+            element.removeAttribute(attrName);
+          } else {
+            element.style?.cssText = attrVal;
+          }
         }
       default:
         {
           if (attrVal == null) {
-            element2.removeAttribute(attrName);
+            element.removeAttribute(attrName);
           } else {
-            switch (attrName) {
-              case 'id':
-                {
-                  element2.id = attrVal;
-                  break;
-                }
-              case 'class':
-                {
-                  element2.className = attrVal;
-                  break;
-                }
-              case 'style':
-                {
-                  element2.style?.cssText = attrVal;
-                  break;
-                }
-              default:
-                {
-                  element2.setAttribute(attrName, attrVal);
-                  break;
-                }
-            }
+            element.setAttribute(attrName, attrVal);
           }
-          break;
         }
     }
   }
@@ -707,7 +723,7 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
   @override
   void setAttribute(String name, String value) {
     final element = nodeAsElement;
-    element?.attributes.put(name, value);
+    element?.setAttribute(name, value);
   }
 
   @override
@@ -734,7 +750,7 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
   @override
   void add(Node child) {
     final element = nodeAsElement;
-    element?.append(child);
+    element?.appendChild(child);
   }
 
   @override

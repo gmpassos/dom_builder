@@ -922,44 +922,51 @@ abstract class DOMGenerator<T extends Object> {
   void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
       {bool preserveClass = false, bool preserveStyle = false}) {
     for (var attrName in domElement.attributesNames) {
-      var attr = domElement.getAttribute(attrName)!;
-      var attrVal = attr.getValue(_domContext, treeMap);
-
-      if (preserveClass && attrName == 'class') {
-        // print('[WASM ISSUE: not entering method] getAttribute: $attrName ... ($this)[${this.runtimeType}]');
-        // print(StackTrace.current);
-        var prev = getAttribute(element, attrName);
-        if (prev != null && prev.isNotEmpty) {
-          attrVal =
-              attrVal != null && attrVal.isNotEmpty ? '$prev $attrVal' : prev;
-        }
-      } else if (preserveStyle && attrName == 'style') {
-        var prev = getAttribute(element, attrName);
-        if (prev != null && prev.isNotEmpty) {
-          if (attrVal != null && attrVal.isNotEmpty) {
-            attrVal =
-                !prev.endsWith(';') ? '$prev; $attrVal' : '$prev $attrVal';
-          } else {
-            attrVal = prev;
-          }
-        }
-      } else if ((attrName == 'src' || attrName == 'href') &&
-          attrVal != null &&
-          attrVal.isNotEmpty) {
-        var attrVal2 = resolveSource(attrVal);
-
-        if (attrVal != attrVal2) {
-          setAttribute(element, '$attrName-original', attrVal);
-          attrVal = attrVal2;
-        }
-      } else if (attr.isBoolean && DOMAttribute.isBooleanAttribute(attrName)) {
-        if (attrVal != 'true') {
-          continue;
-        }
-      }
+      var attrVal = resolveAttributeValue(
+          domElement, element, attrName, treeMap,
+          preserveClass: preserveClass, preserveStyle: preserveStyle);
 
       setAttribute(element, attrName, attrVal);
     }
+  }
+
+  String? resolveAttributeValue(
+      DOMElement domElement, T element, String attrName, DOMTreeMap<T> treeMap,
+      {bool preserveClass = false, bool preserveStyle = false}) {
+    var attr = domElement.getAttribute(attrName)!;
+    var attrVal = attr.getValue(_domContext, treeMap);
+
+    if (preserveClass && attrName == 'class') {
+      var prev = getAttribute(element, attrName);
+      if (prev != null && prev.isNotEmpty) {
+        attrVal =
+            attrVal != null && attrVal.isNotEmpty ? '$prev $attrVal' : prev;
+      }
+    } else if (preserveStyle && attrName == 'style') {
+      var prev = getAttribute(element, attrName);
+      if (prev != null && prev.isNotEmpty) {
+        if (attrVal != null && attrVal.isNotEmpty) {
+          attrVal = !prev.endsWith(';') ? '$prev; $attrVal' : '$prev $attrVal';
+        } else {
+          attrVal = prev;
+        }
+      }
+    } else if ((attrName == 'src' || attrName == 'href') &&
+        attrVal != null &&
+        attrVal.isNotEmpty) {
+      var attrVal2 = resolveSource(attrVal);
+
+      if (attrVal != attrVal2) {
+        setAttribute(element, '$attrName-original', attrVal);
+        attrVal = attrVal2;
+      }
+    } else if (attr.isBoolean && DOMAttribute.isBooleanAttribute(attrName)) {
+      if (attrVal != 'true') {
+        return null;
+      }
+    }
+
+    return attrVal;
   }
 
   /// [Function] used by [resolveSource].
@@ -1478,6 +1485,13 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.setAttribute(element, attrName, attrVal);
 
   @override
+  String? resolveAttributeValue(DOMElement domElement, T element,
+          String attrName, DOMTreeMap<T> treeMap,
+          {bool preserveClass = false, bool preserveStyle = false}) =>
+      domGenerator.resolveAttributeValue(domElement, element, attrName, treeMap,
+          preserveClass: preserveClass, preserveStyle: preserveStyle);
+
+  @override
   void onElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
           DOMContext<T>? context) =>
       domGenerator.onElementCreated(treeMap, domElement, element, context);
@@ -1960,6 +1974,12 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) {}
+
+  @override
+  String? resolveAttributeValue(DOMElement domElement, T element,
+          String attrName, DOMTreeMap<T> treeMap,
+          {bool preserveClass = false, bool preserveStyle = false}) =>
+      null;
 
   @override
   void onElementCreated(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
