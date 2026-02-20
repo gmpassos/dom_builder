@@ -80,9 +80,9 @@ void main() {
       var bDiv = b.buildDOM(generator: generator)!;
       var cDiv = c.buildDOM(generator: generator)!;
 
-      tree.map(a, aDiv);
-      tree.map(b, bDiv);
-      tree.map(c, cDiv);
+      tree.map(a, aDiv, generator: generator);
+      tree.map(b, bDiv, generator: generator);
+      tree.map(c, cDiv, generator: generator);
 
       final list = tree.domElementsWithEventListener();
 
@@ -101,7 +101,7 @@ void main() {
       el.onClick.listen((_) {});
 
       var elDiv = el.buildDOM(generator: generator)!;
-      tree.map(el, elDiv);
+      tree.map(el, elDiv, generator: generator);
 
       tree.cancelAllSubscriptions(
         elementsSubscriptions: true,
@@ -119,7 +119,7 @@ void main() {
       el.onClick.listen((_) {});
 
       var elDiv = el.buildDOM(generator: generator)!;
-      tree.map(el, elDiv);
+      tree.map(el, elDiv, generator: generator);
 
       tree.closeDOMElementsEventHandlers();
 

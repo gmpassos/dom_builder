@@ -62,7 +62,17 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element,
-      {DOMContext<T>? context, bool allowOverwrite = false}) {
+      {DOMGenerator<T>? generator,
+      DOMContext<T>? context,
+      bool allowOverwrite = false}) {
+    if (generator != null) {
+      var mappable = generator.isMappable(domNode, context: context);
+      // Skip mapping:
+      if (!mappable) {
+        return;
+      }
+    }
+
     final elementToDOMNodeMap =
         _elementToDOMNodeMap ??= DualWeakMap(autoPurge: false);
 
@@ -195,8 +205,9 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   /// Maps a DOM subtree starting at [domRoot] to the component tree rooted at [root].
   /// Returns `true` if the mapping was created or updated.
-  bool mapTree(DOMNode domRoot, T root) {
-    map(domRoot, root);
+  bool mapTree(DOMNode domRoot, T root,
+      {DOMGenerator<T>? generator, DOMContext<T>? context}) {
+    map(domRoot, root, generator: generator, context: context);
 
     if (domRoot is TextNode) return false;
 
@@ -210,7 +221,7 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
       var node = nodes[i];
 
       if (domGenerator.isEquivalentNode(domNode, node)) {
-        mapTree(domNode, node);
+        mapTree(domNode, node, generator: generator, context: context);
       }
     }
 
@@ -620,7 +631,9 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
 
   @override
   void map(DOMNode domNode, T element,
-      {DOMContext<T>? context, bool allowOverwrite = false}) {}
+      {DOMGenerator<T>? generator,
+      DOMContext<T>? context,
+      bool allowOverwrite = false}) {}
 
   @override
   bool unmap(DOMNode domNode, T element) => false;
@@ -678,7 +691,9 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   void setRoot(DOMNode rootDOMNode, T? rootElement) {}
 
   @override
-  bool mapTree(DOMNode domRoot, T root) => false;
+  bool mapTree(DOMNode domRoot, T root,
+          {DOMGenerator<T>? generator, DOMContext<T>? context}) =>
+      false;
 
   @override
   DOMNode? asMappedDOMNode(DOMNode? domNode) => null;

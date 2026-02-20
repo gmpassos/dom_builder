@@ -1,3 +1,17 @@
+## 3.0.4
+
+- `DOMGenerator`:
+  - Added method `isMappable` to check if a `DOMNode` can be mapped by a `DOMTreeMap` with a given context.
+  - Updated all calls to `DOMTreeMap.map` and `mapTree` to pass `generator: this` and `context` parameters.
+  - Updated `build` and related methods to pass `generator` and `context` when mapping nodes.
+- `DOMGeneratorDelegate` and `DOMGeneratorDummy`:
+  - Implemented `isMappable`.
+- `DOMTreeMap`:
+  - Updated `map` and `mapTree` methods to accept optional `generator` and `context` parameters.
+  - `map` method now calls `generator.isMappable` to decide whether to perform mapping; skips mapping if not mappable.
+- `DOMTreeMapDummy`:
+  - Updated overridden `map` and `mapTree` methods to accept new parameters.
+
 ## 3.0.3
 
 - `DOMElement`:

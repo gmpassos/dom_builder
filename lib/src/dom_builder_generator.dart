@@ -222,7 +222,7 @@ abstract class DOMGenerator<T extends Object> {
       addChildToElement(rootParent, rootElement);
     }
 
-    treeMap.map(domRoot!, rootElement);
+    treeMap.map(domRoot!, rootElement, generator: this, context: context);
 
     for (var node in nodes) {
       if (!domRoot.containsNode(node)) {
@@ -283,6 +283,15 @@ abstract class DOMGenerator<T extends Object> {
   /// Default implementation returns
   /// a cached [DOMTreeMapDummy] instance.
   DOMTreeMap<T> createGenericDOMTreeMap() => _genericDOMTreeMapDummy;
+
+  /// Returns whether [domNode] can be mapped by a [DOMTreeMap]
+  /// using the given [context].
+  ///
+  /// - Called by [DOMTreeMap.map]
+  ///
+  /// - This is a lightweight capability check and must not mutate state
+  ///   or perform any mapping work.
+  bool isMappable(DOMNode domNode, {DOMContext<T>? context}) => true;
 
   /// Same as [generate], but returns a [DOMTreeMap], that contains all
   /// mapping table fo generated elements.
@@ -355,7 +364,7 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     if (textNode != null) {
-      treeMap.map(domNode, textNode);
+      treeMap.map(domNode, textNode, generator: this);
     }
 
     return textNode;
@@ -422,7 +431,7 @@ abstract class DOMGenerator<T extends Object> {
           }
 
           if (textNode != null) {
-            treeMap.map(domNode, textNode);
+            treeMap.map(domNode, textNode, generator: this, context: context);
           }
 
           return textNode;
@@ -443,7 +452,7 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     if (textNode != null) {
-      treeMap.map(domNode, textNode);
+      treeMap.map(domNode, textNode, generator: this, context: context);
     }
 
     return textNode;
@@ -487,7 +496,7 @@ abstract class DOMGenerator<T extends Object> {
           addChildToElement(parent, element);
         }
 
-        treeMap.map(domElement, element);
+        treeMap.map(domElement, element, generator: this, context: context);
         _callOnElementCreated(treeMap, domElement, element, context);
       } else {
         element ??= createElement(domTag, domElement);
@@ -502,7 +511,7 @@ abstract class DOMGenerator<T extends Object> {
           addChildToElement(parent, element);
         }
 
-        treeMap.map(domElement, element);
+        treeMap.map(domElement, element, generator: this, context: context);
         _callOnElementCreated(treeMap, domElement, element, context);
 
         final length = domElement.length;
@@ -586,13 +595,14 @@ abstract class DOMGenerator<T extends Object> {
           treeMap: treeMap, context: context);
       if (children == null || children.isEmpty) return null;
       var node = children.first;
-      treeMap.map(domElement, node);
+      treeMap.map(domElement, node, generator: this, context: context);
 
       domElement.notifyElementGenerated(node);
 
       return node;
     } else if (externalElement is T) {
-      treeMap.map(domElement, externalElement);
+      treeMap.map(domElement, externalElement,
+          generator: this, context: context);
       addChildToElement(parent, externalElement);
 
       domElement.notifyElementGenerated(externalElement);
@@ -619,7 +629,7 @@ abstract class DOMGenerator<T extends Object> {
               "Can't build element for `DOMNode` in `externalElement` List: $node");
         }
         elements.add(elem);
-        treeMap.map(node, elem);
+        treeMap.map(node, elem, generator: this, context: context);
       }
 
       if (elements.isEmpty) {
@@ -660,12 +670,13 @@ abstract class DOMGenerator<T extends Object> {
         }
         T element = elem;
         elements.add(element);
-        treeMap.map(node, element);
+        treeMap.map(node, element, generator: this, context: context);
       }
 
       return elements.isEmpty ? null : elements.first;
     } else if (externalElement is T) {
-      treeMap.map(domElement, externalElement);
+      treeMap.map(domElement, externalElement,
+          generator: this, context: context);
       addChildToElement(parent, externalElement as T?);
       return externalElement as T?;
     } else {
@@ -806,14 +817,16 @@ abstract class DOMGenerator<T extends Object> {
 
       if (futureElementResolvedListTyped.length == 1) {
         var futureElementResolved = futureElementResolvedListTyped.first;
-        treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
+        treeMap.map(domElement, futureElementResolved,
+            generator: this, context: context, allowOverwrite: true);
         if (parent != null) {
           replaceChildElement(parent, templateElement, [futureElementResolved]);
         }
       } else {
         var wrap = wrapElements(futureElementResolvedListTyped);
         if (wrap != null) {
-          treeMap.map(domElement, wrap, allowOverwrite: true);
+          treeMap.map(domElement, wrap,
+              generator: this, context: context, allowOverwrite: true);
         }
 
         if (parent != null) {
@@ -822,7 +835,8 @@ abstract class DOMGenerator<T extends Object> {
         }
       }
     } else if (futureElementResolved is T) {
-      treeMap.map(domElement, futureElementResolved, allowOverwrite: true);
+      treeMap.map(domElement, futureElementResolved,
+          generator: this, context: context, allowOverwrite: true);
       if (parent != null) {
         replaceChildElement(parent, templateElement, [futureElementResolved]);
       }
@@ -834,7 +848,7 @@ abstract class DOMGenerator<T extends Object> {
         removeChildFromElement(parent, templateElement);
       } else {
         var node = children.first;
-        treeMap.map(domElement, node);
+        treeMap.map(domElement, node, generator: this, context: context);
 
         for (var child in children) {
           removeChildFromElement(parent, child);
@@ -1032,7 +1046,7 @@ abstract class DOMGenerator<T extends Object> {
         domElement.content,
         context);
 
-    treeMap.mapTree(domElement, element);
+    treeMap.mapTree(domElement, element, generator: this, context: context);
 
     _callOnElementCreated(treeMap, domElement, element, context);
 
@@ -1334,6 +1348,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
 
   @override
   void reset() => domGenerator.reset();
+
+  @override
+  bool isMappable(DOMNode domNode, {DOMContext<T>? context}) =>
+      domGenerator.isMappable(domNode, context: context);
 
   @override
   bool equalsNodes(T? node1, T? node2) =>
@@ -1848,6 +1866,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   void reset() {}
+
+  @override
+  bool isMappable(DOMNode domNode, {DOMContext<T>? context}) => false;
 
   @override
   bool equalsNodes(T? node1, T? node2) => false;
