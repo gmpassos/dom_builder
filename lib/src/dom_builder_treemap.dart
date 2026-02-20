@@ -45,7 +45,7 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   /// The root element [T] of this tree.
   T? get rootElement => _rootElement;
 
-  DualWeakMap<T, DOMNode>? _elementToDOMNodeMap;
+  DualMap<T, DOMNode>? _elementToDOMNodeMap;
 
   static final Expando<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
       Expando<WeakReference<DOMTreeMap>>('Elements->DOMTreeMap');
@@ -73,12 +73,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
       }
     }
 
-    final elementToDOMNodeMap =
-        _elementToDOMNodeMap ??= DualWeakMap(autoPurge: false);
+    final elementToDOMNodeMap = _elementToDOMNodeMap ??= DualMap();
 
     var put = elementToDOMNodeMap.putValueIfAbsent(element, domNode);
     if (!put) {
-      var prevDomNode = elementToDOMNodeMap.getNoPurge(element);
+      var prevDomNode = elementToDOMNodeMap.get(element);
 
       var samePrevDomNode = identical(prevDomNode, domNode);
       if (samePrevDomNode) {
@@ -168,7 +167,7 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   /// Returns [true] if [element] is mapped by this instance.
   bool isMappedElement(T? element) {
     if (element == null) return false;
-    return _elementToDOMNodeMap?.containsKeyNoPurge(element) ?? false;
+    return _elementToDOMNodeMap?.containsKey(element) ?? false;
   }
 
   /// Returns [domNode] or recursively a [domNode.parent] that is mapped.
@@ -518,7 +517,6 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   void purge() {
     ++_purgeCount;
 
-    _elementToDOMNodeMap?.purge();
     _elementsSubscriptions?.purge();
 
     _managedDSXs?.removeWhere((dsx) => !dsx.check());

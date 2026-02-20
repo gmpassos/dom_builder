@@ -1,3 +1,14 @@
+## 3.0.5
+
+- `DOMTreeMap`:
+  - Rollback:
+    - Replaced `_elementToDOMNodeMap` type from `DualWeakMap` to `DualMap`.
+    - Updated usage of `_elementToDOMNodeMap` methods to non-weak variants (`get`, `containsKey`).
+    - Removed call to `_elementToDOMNodeMap?.purge()` in `purge()` method.
+
+- Dependencies:
+  - Updated `swiss_knife` dependency from `^3.3.7` to `^3.3.9`.
+
 ## 3.0.4
 
 - `DOMGenerator`:
