@@ -47,16 +47,18 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   DualWeakMap<T, DOMNode>? _elementToDOMNodeMap;
 
-  static final Expando _elementsDOMTreeMap =
+  static final Expando<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
       Expando<WeakReference<DOMTreeMap>>('Elements->DOMTreeMap');
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
   static DOMTreeMap<T>? getElementDOMTreeMap<T extends Object>(T? element) {
     if (element == null) return null;
-    var ref = _elementsDOMTreeMap[element] as WeakReference<DOMTreeMap>?;
+    var ref = _elementsDOMTreeMap[element];
     return ref?.target as DOMTreeMap<T>?;
   }
+
+  late final _selfWeakReference = WeakReference(this);
 
   /// Maps in this instance the pair [domNode] and [element].
   void map(DOMNode domNode, T element,
@@ -64,28 +66,27 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     final elementToDOMNodeMap =
         _elementToDOMNodeMap ??= DualWeakMap(autoPurge: false);
 
-    var prevEntry = elementToDOMNodeMap.getEntry(element);
-    if (prevEntry != null) {
-      var prevElement = prevEntry.key;
-      var prevDomNode = prevEntry.value;
+    var put = elementToDOMNodeMap.putValueIfAbsent(element, domNode);
+    if (!put) {
+      var prevDomNode = elementToDOMNodeMap.getNoPurge(element);
 
-      var samePrevElement = equalsNodes(prevElement, element);
       var samePrevDomNode = identical(prevDomNode, domNode);
-
-      if (samePrevElement && samePrevDomNode) {
+      if (samePrevDomNode) {
+        if (!identical(domNode.treeMap, this)) {
+          domNode.treeMap = this;
+          _elementsDOMTreeMap[element] = _selfWeakReference;
+        }
         return;
       } else {
         if (!allowOverwrite) {
           print(
-              'WARNING> Mapping to different instances: $prevElement ; $prevDomNode');
+              'WARNING> Mapping to different instances: $element ; $prevDomNode');
         }
       }
     }
 
-    elementToDOMNodeMap[element] = domNode;
-
     domNode.treeMap = this;
-    _elementsDOMTreeMap[element] = WeakReference(this);
+    _elementsDOMTreeMap[element] = _selfWeakReference;
 
     if (domNode is DOMElement) {
       domGenerator.resolveActionAttribute(this, domNode, element, context);
@@ -157,7 +158,7 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   /// Returns [true] if [element] is mapped by this instance.
   bool isMappedElement(T? element) {
     if (element == null) return false;
-    return _elementToDOMNodeMap?.containsKey(element) ?? false;
+    return _elementToDOMNodeMap?.containsKeyNoPurge(element) ?? false;
   }
 
   /// Returns [domNode] or recursively a [domNode.parent] that is mapped.
@@ -276,23 +277,12 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   ///
   /// If [domElementsEventListeners] is true, closes DOM event listeners
   /// attached to DOM elements.
-  void cancelAllSubscriptions(
-      {bool elementsSubscriptions = true,
-      bool domElementsEventListeners = true}) {
+  void cancelAllSubscriptions({bool elementsSubscriptions = true}) {
     if (elementsSubscriptions) {
       var elementsWithSubscriptions = this.elementsWithSubscriptions();
       if (elementsWithSubscriptions.isNotEmpty) {
         for (var element in elementsWithSubscriptions) {
           cancelSubscriptions(element);
-        }
-      }
-    }
-
-    if (domElementsEventListeners) {
-      var domElementsWithEventListener = this.domElementsWithEventListener();
-      if (domElementsWithEventListener.isNotEmpty) {
-        for (var domElement in domElementsWithEventListener) {
-          domElement.closeAllEventListeners();
         }
       }
     }
@@ -523,15 +513,63 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     _managedDSXs?.removeWhere((dsx) => !dsx.check());
   }
 
+  void closeDOMElementsEventHandlers() {
+    var domElementsWithEventListener = this.domElementsWithEventListener();
+
+    if (domElementsWithEventListener.isNotEmpty) {
+      for (var e in domElementsWithEventListener) {
+        e.closeAllEventHandlers();
+      }
+    }
+  }
+
+  static ExpandoWithFinalizer<DOMElement, List<EventStream<dynamic>>>?
+      _disposedElementsWithEventListener;
+
+  static void _disposeEventHandlers(List<EventStream<dynamic>> eventHandlers) {
+    // Schedule closing of event handlers to avoid UI freeze:
+    Future.delayed(Duration(milliseconds: 1),
+        () => _disposeEventHandlersImpl(eventHandlers));
+  }
+
+  static void _disposeEventHandlersImpl(
+      List<EventStream<dynamic>> eventHandlers) {
+    for (var e in eventHandlers) {
+      e.close();
+    }
+  }
+
+  void _disposeDOMElementsEventHandlers() {
+    var domElementsWithEventListener = this.domElementsWithEventListener();
+    if (domElementsWithEventListener.isEmpty) return;
+
+    final disposedElementsWithEventListener =
+        _disposedElementsWithEventListener ??=
+            ExpandoWithFinalizer(_disposeEventHandlers);
+
+    for (var domElement in domElementsWithEventListener) {
+      var eventHandlers = domElement.allEventHandlers();
+
+      disposedElementsWithEventListener.put(domElement, eventHandlers);
+    }
+  }
+
   bool _disposed = false;
 
   bool get isDisposed => _disposed;
 
-  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {
+  void dispose(
+      {bool cancelSubscriptions = true,
+      bool disposeEventHandlers = true,
+      bool disposeDSXs = true}) {
     _disposed = true;
 
     if (cancelSubscriptions) {
       cancelAllSubscriptions();
+    }
+
+    if (disposeEventHandlers) {
+      _disposeDOMElementsEventHandlers();
     }
 
     if (disposeDSXs) {
@@ -695,15 +733,22 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   List<Object> cancelSubscriptions(T node) => [];
 
   @override
-  void cancelAllSubscriptions(
-      {bool elementsSubscriptions = true,
-      bool domElementsEventListeners = true}) {}
+  void cancelAllSubscriptions({bool elementsSubscriptions = true}) {}
+
+  @override
+  List<DOMElement> domElementsWithEventListener() => [];
+
+  @override
+  void closeDOMElementsEventHandlers() {}
 
   @override
   void purge() {}
 
   @override
-  void dispose({bool cancelSubscriptions = true, bool disposeDSXs = true}) {}
+  void dispose(
+      {bool cancelSubscriptions = true,
+      bool disposeEventHandlers = true,
+      bool disposeDSXs = true}) {}
 
   @override
   String toString() => 'DOMTreeMapDummy{}@$domGenerator';

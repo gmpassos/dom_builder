@@ -1,3 +1,26 @@
+## 3.0.3
+
+- `DOMElement`:
+  - Added method `allEventHandlers` to return a snapshot list of all initialized event handlers.
+  - Renamed `closeAllEventListeners` to `closeAllEventHandlers` and updated documentation accordingly.
+
+- `DSX`:
+  - Replaced `WeakKeyMap` with `Expando` for internal mappings to improve memory management.
+  - Fixed key lookups by removing unnecessary casts and using direct keys.
+
+- `DOMTreeMap`:
+  - Changed `_elementsDOMTreeMap` to use `Expando<WeakReference<DOMTreeMap>>` for better lifecycle handling.
+  - Improved `map` method to avoid redundant mappings and update treeMap references correctly.
+  - Updated `isMappedElement` to use `containsKeyNoPurge` for accurate presence checks.
+  - Removed `domElementsEventListeners` parameter from `cancelAllSubscriptions`.
+  - Added `closeDOMElementsEventHandlers` method to close all event handlers on DOM elements.
+  - Added private `_disposeDOMElementsEventHandlers` method using `ExpandoWithFinalizer` to schedule closing event handlers asynchronously.
+  - Updated `dispose` method to optionally dispose event handlers with a new `disposeEventHandlers` parameter.
+  - Updated `DOMTreeMapDummy` to implement new methods and parameters accordingly.
+
+- Dependencies:
+  - Updated `swiss_knife` dependency from `^3.3.5` to `^3.3.6`.
+
 ## 3.0.2
 
 - `DOMGenerator`:

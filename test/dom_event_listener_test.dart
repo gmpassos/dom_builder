@@ -29,7 +29,7 @@ void main() {
   group('DOMElement.closeAllEventListeners', () {
     test('returns 0 when none', () async {
       final el = $div();
-      final closed = await el.closeAllEventListeners();
+      final closed = await el.closeAllEventHandlers();
       expect(closed, 0);
       expect(el.hasAnyEventListener, isFalse);
     });
@@ -39,7 +39,7 @@ void main() {
       el.onClick.listen((_) {});
       expect(el.hasAnyEventListener, isTrue);
 
-      final closed = await el.closeAllEventListeners();
+      final closed = await el.closeAllEventHandlers();
 
       expect(closed, 1);
       expect(el.hasAnyEventListener, isFalse);
@@ -57,7 +57,7 @@ void main() {
 
       expect(el.hasAnyEventListener, isTrue);
 
-      final closed = await el.closeAllEventListeners();
+      final closed = await el.closeAllEventHandlers();
 
       expect(closed, greaterThanOrEqualTo(7));
       expect(el.hasAnyEventListener, isFalse);
@@ -105,7 +105,6 @@ void main() {
 
       tree.cancelAllSubscriptions(
         elementsSubscriptions: true,
-        domElementsEventListeners: false,
       );
 
       expect(el.hasAnyEventListener, isTrue);
@@ -122,7 +121,7 @@ void main() {
       var elDiv = el.buildDOM(generator: generator)!;
       tree.map(el, elDiv);
 
-      tree.cancelAllSubscriptions();
+      tree.closeDOMElementsEventHandlers();
 
       // allow async close
       await Future.delayed(Duration(milliseconds: 1));
@@ -140,7 +139,7 @@ void main() {
       final sub = StreamController().stream.listen((_) {});
       tree.mapSubscriptions(node, [sub]);
 
-      tree.cancelAllSubscriptions(domElementsEventListeners: false);
+      tree.cancelAllSubscriptions(elementsSubscriptions: true);
 
       expect(tree.getSubscriptions(node), isEmpty);
     });

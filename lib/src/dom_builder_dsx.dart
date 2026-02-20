@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:collection/collection.dart';
-import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
@@ -51,9 +50,9 @@ enum DSXObjectType {
 /// Can be a [Function]/lambda that will be inserted into DOM definitions
 /// passed to [$dsx].
 class DSX<T extends Object> {
-  static final WeakKeyMap<Object, List<DSX>> _objectsToDSX = WeakKeyMap();
-  static final WeakKeyMap<DSX, Object> _dsxToObjectSource = WeakKeyMap();
-  static final WeakKeyMap<DSX, Object> _dsxToObject = WeakKeyMap();
+  static final Expando<List<DSX>> _objectsToDSX = Expando();
+  static final Expando<Object> _dsxToObjectSource = Expando();
+  static final Expando<Object> _dsxToObject = Expando();
 
   static final Set<DSX> _notManagedDSXs = {};
   static final Map<_DSXKey, WeakReference<DSX>> _keyToDSK = {};
@@ -96,10 +95,6 @@ class DSX<T extends Object> {
       }
       return false;
     });
-
-    _objectsToDSX.purge();
-    _dsxToObjectSource.purge();
-    _dsxToObject.purge();
   }
 
   static Object? objectFromDSX(DSX dsx) {
@@ -273,7 +268,7 @@ class DSX<T extends Object> {
     }
 
     var prevDSX = _objectsToDSX[objSource];
-    prevDSX ??= _objectsToDSX[obj as Object];
+    prevDSX ??= _objectsToDSX[obj];
 
     if (prevDSX != null) {
       for (var e in prevDSX) {
@@ -290,7 +285,7 @@ class DSX<T extends Object> {
       prevDSX.add(dsx);
 
       _objectsToDSX[objSource] = prevDSX;
-      _objectsToDSX[obj as Object] = prevDSX;
+      _objectsToDSX[obj] = prevDSX;
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
 
@@ -304,7 +299,7 @@ class DSX<T extends Object> {
       var dsx = DSX<T>._(type, parameters);
 
       _objectsToDSX[objSource] = [dsx];
-      _objectsToDSX[obj as Object] = [dsx];
+      _objectsToDSX[obj] = [dsx];
       _dsxToObjectSource[dsx] = objSource;
       _dsxToObject[dsx] = obj;
 
@@ -836,4 +831,10 @@ StreamSubscription? _listenDSXValue(
 /// DSX extensions for [Future].
 extension DSXFutureExtension<T> on Future<T> {
   DSX<Future<T>> dsx() => DSX(this, this);
+}
+
+extension _ExpandoExtension<T extends Object> on Expando<T> {
+  void remove(Object key) {
+    this[key] = null;
+  }
 }

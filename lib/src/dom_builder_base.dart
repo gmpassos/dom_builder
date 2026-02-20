@@ -2767,11 +2767,36 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       _onError != null ||
       _onGenerate != null;
 
-  /// Closes and removes all attached event listeners.
+  /// Returns all currently initialized event handlers.
   ///
-  /// Awaits each listener disposal to ensure no pending callbacks
+  /// Only handlers that were already created are included — `null` ones
+  /// are skipped. The returned list is a snapshot and modifying it does
+  /// not affect the component.
+  ///
+  /// Useful for bulk operations such as closing, pausing, or debugging
+  /// active listeners.
+  List<EventStream> allEventHandlers() {
+    return [
+      if (_onClick != null) _onClick!,
+      if (_onChange != null) _onChange!,
+      if (_onKeyPress != null) _onKeyPress!,
+      if (_onKeyUp != null) _onKeyUp!,
+      if (_onKeyDown != null) _onKeyDown!,
+      if (_onMouseOver != null) _onMouseOver!,
+      if (_onMouseOut != null) _onMouseOut!,
+      if (_onLoad != null) _onLoad!,
+      if (_onError != null) _onError!,
+      if (_onGenerate != null) _onGenerate!,
+    ];
+  }
+
+  /// Closes and removes all attached event handlers.
+  ///
+  /// Awaits each handler disposal to ensure no pending callbacks
   /// remain after the component is torn down.
-  Future<int> closeAllEventListeners() async {
+  ///
+  /// See [allEventHandlers].
+  Future<int> closeAllEventHandlers() async {
     var closeCount = 0;
 
     if (_onClick != null) {
