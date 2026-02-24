@@ -2987,9 +2987,7 @@ class DOMEvent<T extends Object> {
       .cancelEvent(event, stopImmediatePropagation: stopImmediatePropagation);
 
   @override
-  String toString() {
-    return '$event';
-  }
+  String toString() => 'DOMEvent@$event';
 }
 
 /// Represents a mouse event.
