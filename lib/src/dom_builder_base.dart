@@ -2089,6 +2089,9 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
   LinkedHashMap<String, DOMAttribute>? _attributes;
 
+  bool containsAttribute(String attributeName) =>
+      _attributes?.containsKey(attributeName) ?? false;
+
   Map<String, DOMAttribute> get domAttributes {
     final attributes = _attributes;
     return attributes != null ? Map.from(attributes) : <String, DOMAttribute>{};

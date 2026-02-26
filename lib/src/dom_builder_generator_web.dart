@@ -305,12 +305,37 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
     var element2 = element as Element;
 
+    List<String>? attrsKeys;
+    List<String?>? attrsValues;
+
     for (var attrName in domElement.attributesNames) {
       var attrVal = resolveAttributeValue(
           domElement, element, attrName, treeMap,
           preserveClass: preserveClass, preserveStyle: preserveStyle);
 
-      setElementAttribute(element2, attrName, attrVal);
+      var set = _setElementAttributeSpecial(element2, attrName, attrVal);
+      if (!set) {
+        List<String> keys;
+        List<String?> values;
+        if (attrsKeys == null) {
+          keys = attrsKeys = [];
+          values = attrsValues = [];
+        } else {
+          keys = attrsKeys;
+          values = attrsValues!;
+        }
+
+        keys.add(attrName);
+        values.add(attrVal);
+      }
+    }
+
+    if (attrsKeys != null) {
+      if (attrsKeys.length == 1) {
+        _setElementAttribute(element, attrsKeys[0], attrsValues![0]);
+      } else {
+        setAttributesFromKeyValueLists(element2, attrsKeys, attrsValues!);
+      }
     }
   }
 
@@ -321,6 +346,22 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   void setElementAttribute(Element element, String attrName, String? attrVal) {
+    var set = _setElementAttributeSpecial(element, attrName, attrVal);
+    if (!set) {
+      _setElementAttribute(element, attrName, attrVal);
+    }
+  }
+
+  void _setElementAttribute(Element element, String attrName, String? attrVal) {
+    if (attrVal == null) {
+      element.removeAttribute(attrName);
+    } else {
+      element.setAttribute(attrName, attrVal);
+    }
+  }
+
+  bool _setElementAttributeSpecial(
+      Element element, String attrName, String? attrVal) {
     switch (attrName) {
       case 'selected':
         {
@@ -330,6 +371,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           } else {
             element.setAttribute(attrName, attrVal!);
           }
+          return true;
         }
       case 'multiple':
         {
@@ -342,6 +384,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           } else {
             element.setAttribute(attrName, attrVal!);
           }
+          return true;
         }
       case 'hidden':
         {
@@ -349,12 +392,14 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
             (element as HTMLElement).hidden =
                 _parseAttributeBoolValue(attrVal).toJS;
           }
+          return true;
         }
       case 'inert':
         {
           if (element.isA<HTMLElement>()) {
             (element as HTMLElement).inert = _parseAttributeBoolValue(attrVal);
           }
+          return true;
         }
       case 'id':
         {
@@ -363,6 +408,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           } else {
             element.id = attrVal;
           }
+          return true;
         }
       case 'class':
         {
@@ -371,6 +417,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           } else {
             element.className = attrVal;
           }
+          return true;
         }
       case 'style':
         {
@@ -379,15 +426,10 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
           } else {
             element.style?.cssText = attrVal;
           }
+          return true;
         }
       default:
-        {
-          if (attrVal == null) {
-            element.removeAttribute(attrName);
-          } else {
-            element.setAttribute(attrName, attrVal);
-          }
-        }
+        return false;
     }
   }
 
@@ -448,81 +490,105 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     return null;
   }
 
+  final _lazyWeakReferenceManagerDOMElement =
+      LazyWeakReferenceManagerByType.global.get<DOMElement>();
+
   @override
   void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
       Node element, DOMContext<Node>? context) {
     final element2 = element.asElementChecked;
     if (element2 == null) return;
 
+    final refDomElement =
+        _lazyWeakReferenceManagerDOMElement.strong(domElement);
+
     if (domElement.hasOnClickListener) {
       element2.addEventListenerTyped(EventType.click, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onClick.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onClick.add(domEvent);
       });
     }
 
     if (domElement.hasOnChangeListener) {
       element2.addEventListenerTyped(EventType.change, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onChange.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onChange.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyPressListener) {
       element2.addEventListenerTyped(EventType.keyPress, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onKeyPress.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onKeyPress.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyUpListener) {
       element2.addEventListenerTyped(EventType.keyUp, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onKeyUp.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onKeyUp.add(domEvent);
       });
     }
 
     if (domElement.hasOnKeyDownListener) {
       element2.addEventListenerTyped(EventType.keyDown, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onKeyDown.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onKeyDown.add(domEvent);
       });
     }
 
     if (domElement.hasOnMouseOverListener) {
       element2.addEventListenerTyped(EventType.mouseOver, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onMouseOver.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onMouseOver.add(domEvent);
       });
     }
 
     if (domElement.hasOnMouseOutListener) {
       element2.addEventListenerTyped(EventType.mouseOut, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onMouseOut.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onMouseOut.add(domEvent);
       });
     }
 
     if (domElement.hasOnLoadListener) {
       element2.addEventListenerTyped(EventType.load, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onLoad.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onLoad.add(domEvent);
       });
     }
 
     if (domElement.hasOnErrorListener) {
       element2.addEventListenerTyped(EventType.error, (event) {
+        var domElement = refDomElement.target;
+        var target = event.target as Node?;
         var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: element2)!;
-        domElement.onError.add(domEvent);
+            domTarget: domElement, target: target)!;
+        domElement?.onError.add(domEvent);
       });
     }
   }

@@ -1,3 +1,27 @@
+## 3.0.6
+
+- `DOMElement`:
+  - Added method `containsAttribute` to check for attribute existence.
+
+- `DOMGeneratorWebImpl`:
+  - Optimized `setAttributes` to batch attribute setting for non-special attributes.
+  - Added `_setElementAttributeSpecial` to handle special attributes (`selected`, `multiple`, `hidden`, `inert`, `id`, `class`, `style`) with direct property manipulation.
+  - Updated event listener registration to use weak references to `DOMElement` to avoid retaining stale references.
+  - Improved event listener callbacks to retrieve the actual event target node.
+  - Added helper methods `_setElementAttribute`.
+
+- `DOMTreeMap`:
+  - Replaced `WeakKeyMap` with `LazyWeakKeyMap` for `_elementsSubscriptions` to improve subscription management.
+  - Used `LazyWeakReferenceManagerByType` for weak reference management.
+  - Simplified disposal of event handlers by directly closing streams instead of using finalizers.
+  - Removed `ExpandoWithFinalizer` usage for event handler disposal.
+  - Improved internal weak reference handling and subscription cleanup.
+
+- Dependencies:
+  - Updated `web_utils` from ^1.0.21 to ^1.0.23.
+  - Updated `js_interop_utils` from ^1.0.9 to ^1.0.11.
+  - Updated `swiss_knife` from ^3.3.9 to ^3.3.14.
+
 ## 3.0.5
 
 - `DOMTreeMap`:

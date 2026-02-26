@@ -47,8 +47,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   DualMap<T, DOMNode>? _elementToDOMNodeMap;
 
+  static final _lazyWeakReferenceManagerByType =
+      LazyWeakReferenceManagerByType.global;
+
   static final Expando<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
-      Expando<WeakReference<DOMTreeMap>>('Elements->DOMTreeMap');
+      Expando('Elements->DOMTreeMap');
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
@@ -227,7 +230,7 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     return true;
   }
 
-  WeakKeyMap<T, List<Object>>? _elementsSubscriptions;
+  LazyWeakKeyMap<T, List<Object>>? _elementsSubscriptions;
 
   void _onPurgedSubscriptions(List<Object> subscriptions) {
     domGenerator.cancelEventSubscriptions(null, subscriptions);
@@ -246,8 +249,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   void mapSubscriptions(T node, List<Object> subscriptions) {
     if (subscriptions.isEmpty) return;
 
-    final elementsSubscriptions = _elementsSubscriptions ??=
-        WeakKeyMap(autoPurge: false, onPurgedValues: _onPurgedSubscriptions);
+    final elementsSubscriptions = _elementsSubscriptions ??= LazyWeakKeyMap(
+      _lazyWeakReferenceManagerByType.get<T>(),
+      autoPurge: false,
+      onPurgedValues: _onPurgedSubscriptions,
+    );
 
     var l = elementsSubscriptions[node] ??= [];
     l.addAll(subscriptions);
@@ -532,34 +538,16 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     }
   }
 
-  static ExpandoWithFinalizer<DOMElement, List<EventStream<dynamic>>>?
-      _disposedElementsWithEventListener;
-
-  static void _disposeEventHandlers(List<EventStream<dynamic>> eventHandlers) {
-    // Schedule closing of event handlers to avoid UI freeze:
-    Future.delayed(Duration(milliseconds: 1),
-        () => _disposeEventHandlersImpl(eventHandlers));
-  }
-
-  static void _disposeEventHandlersImpl(
-      List<EventStream<dynamic>> eventHandlers) {
-    for (var e in eventHandlers) {
-      e.close();
-    }
-  }
-
   void _disposeDOMElementsEventHandlers() {
     var domElementsWithEventListener = this.domElementsWithEventListener();
     if (domElementsWithEventListener.isEmpty) return;
 
-    final disposedElementsWithEventListener =
-        _disposedElementsWithEventListener ??=
-            ExpandoWithFinalizer(_disposeEventHandlers);
-
     for (var domElement in domElementsWithEventListener) {
       var eventHandlers = domElement.allEventHandlers();
 
-      disposedElementsWithEventListener.put(domElement, eventHandlers);
+      for (var e in eventHandlers) {
+        e.close();
+      }
     }
   }
 
