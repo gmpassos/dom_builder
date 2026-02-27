@@ -1,3 +1,22 @@
+## 3.0.7
+
+- `DOMContext`:
+  - `copy`: fixed copying of `_domGenerator` field by assigning `_domGenerator` instead of `domGenerator`.
+  - `resolveViewportCSSLength`: added local variable `viewport` to avoid repeated null checks.
+  - `_computeViewportCSSLength`: changed parameter `viewport` from nullable to non-nullable and removed redundant null assertions.
+
+- `DOMGeneratorWebImpl`:
+  - Fixed incorrect variable usage in `addExternalElementToElement` loop by replacing `externalElement.asJSAny` with `e.asJSAny`.
+
+- `dom_builder_dsx.dart`:
+  - `_dsxJoinStrings`:
+    - updated parameter type to `List<Object?>`.
+    - fixed `list.remove(i)` to `list.removeAt(i)` to correctly remove element by index.
+
+- `dom_builder_template.dart`:
+  - `DOMTemplateVariable`:
+    - Improved index bounds check to ensure `idx` is non-negative before accessing `context` list elements.
+
 ## 3.0.6
 
 - `DOMElement`:

@@ -134,7 +134,7 @@ class DOMContext<T extends Object> {
         parent: parent,
         viewport: viewport,
         resolveCSSViewportUnit: resolveCSSViewportUnit);
-    context.domGenerator = domGenerator;
+    context._domGenerator = _domGenerator;
     context.namedElementAttribute = namedElementAttribute;
     context.namedElementProvider = namedElementProvider;
     context.variables = Map.from(deepCopy(variables)!);
@@ -199,27 +199,29 @@ class DOMContext<T extends Object> {
   }
 
   CSSLength resolveViewportCSSLength(num value, CSSUnit unit) {
+    final viewport = this.viewport;
     if (viewport == null) {
       return CSSLength(value, unit);
     }
+
     var resolvedViewportValue =
         _computeViewportCSSLength(value, unit, viewport);
     return resolvedViewportValue ?? CSSLength(value, unit);
   }
 
   CSSLength? _computeViewportCSSLength(
-      num value, CSSUnit unit, Viewport? viewport) {
+      num value, CSSUnit unit, Viewport viewport) {
     var ratio = value / 100;
 
     switch (unit) {
       case CSSUnit.vw:
-        return CSSLength(ratio * viewport!.width);
+        return CSSLength(ratio * viewport.width);
       case CSSUnit.vh:
-        return CSSLength(ratio * viewport!.height);
+        return CSSLength(ratio * viewport.height);
       case CSSUnit.vmin:
-        return CSSLength(ratio * viewport!.vmin);
+        return CSSLength(ratio * viewport.vmin);
       case CSSUnit.vmax:
-        return CSSLength(ratio * viewport!.vmax);
+        return CSSLength(ratio * viewport.vmax);
       default:
         return null;
     }
@@ -282,7 +284,8 @@ class DOMContext<T extends Object> {
   Map<String, dynamic>? _variables;
 
   Map<String, dynamic> get variables {
-    var vars = parent != null ? parent!.variables : <String, dynamic>{};
+    final parent = this.parent;
+    var vars = parent != null ? parent.variables : <String, dynamic>{};
 
     if (_variables != null) {
       vars.addAll(_variables!);

@@ -697,7 +697,7 @@ List _dsxToList(dynamic o) {
   }
 }
 
-void _dsxJoinStrings(List list) {
+void _dsxJoinStrings(List<Object?> list) {
   for (var i = 1; i < list.length;) {
     var prev = list[i - 1];
     var elem = list[i];
@@ -705,7 +705,7 @@ void _dsxJoinStrings(List list) {
     if (elem is String && prev is String) {
       var s = prev + elem;
       list[i - 1] = s;
-      list.remove(i);
+      list.removeAt(i);
     } else {
       ++i;
     }
