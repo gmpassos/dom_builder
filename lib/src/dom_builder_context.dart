@@ -134,7 +134,7 @@ class DOMContext<T extends Object> {
         parent: parent,
         viewport: viewport,
         resolveCSSViewportUnit: resolveCSSViewportUnit);
-    context.domGenerator = domGenerator;
+    context._domGenerator = _domGenerator;
     context.namedElementAttribute = namedElementAttribute;
     context.namedElementProvider = namedElementProvider;
     context.variables = Map.from(deepCopy(variables)!);
@@ -282,7 +282,8 @@ class DOMContext<T extends Object> {
   Map<String, dynamic>? _variables;
 
   Map<String, dynamic> get variables {
-    var vars = parent != null ? parent!.variables : <String, dynamic>{};
+    final parent = this.parent;
+    var vars = parent != null ? parent.variables : <String, dynamic>{};
 
     if (_variables != null) {
       vars.addAll(_variables!);

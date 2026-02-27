@@ -1,3 +1,8 @@
+## 3.0.7
+
+- `DOMContext`:
+  - `copy`: fixed copying of `_domGenerator` field by assigning `_domGenerator` instead of `domGenerator`.
+
 ## 3.0.6
 
 - `DOMElement`:
