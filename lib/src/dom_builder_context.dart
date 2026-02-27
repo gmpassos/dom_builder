@@ -199,27 +199,29 @@ class DOMContext<T extends Object> {
   }
 
   CSSLength resolveViewportCSSLength(num value, CSSUnit unit) {
+    final viewport = this.viewport;
     if (viewport == null) {
       return CSSLength(value, unit);
     }
+
     var resolvedViewportValue =
         _computeViewportCSSLength(value, unit, viewport);
     return resolvedViewportValue ?? CSSLength(value, unit);
   }
 
   CSSLength? _computeViewportCSSLength(
-      num value, CSSUnit unit, Viewport? viewport) {
+      num value, CSSUnit unit, Viewport viewport) {
     var ratio = value / 100;
 
     switch (unit) {
       case CSSUnit.vw:
-        return CSSLength(ratio * viewport!.width);
+        return CSSLength(ratio * viewport.width);
       case CSSUnit.vh:
-        return CSSLength(ratio * viewport!.height);
+        return CSSLength(ratio * viewport.height);
       case CSSUnit.vmin:
-        return CSSLength(ratio * viewport!.vmin);
+        return CSSLength(ratio * viewport.vmin);
       case CSSUnit.vmax:
-        return CSSLength(ratio * viewport!.vmax);
+        return CSSLength(ratio * viewport.vmax);
       default:
         return null;
     }

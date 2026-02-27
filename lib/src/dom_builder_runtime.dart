@@ -299,7 +299,11 @@ abstract class DOMNodeRuntime<T extends Object> {
     remove();
 
     var idxUp = parentRuntime!._contentFromIndexBackwardWhere(
-        idx - 1, 0, (node) => domGenerator.isElementNode(node));
+      idx - 1,
+      0,
+      (node) => domGenerator.isElementNode(node),
+    );
+
     if (idxUp < 0) {
       idxUp = 0;
     }

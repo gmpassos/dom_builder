@@ -2,6 +2,11 @@
 
 - `DOMContext`:
   - `copy`: fixed copying of `_domGenerator` field by assigning `_domGenerator` instead of `domGenerator`.
+  - `resolveViewportCSSLength`: added local variable `viewport` to avoid repeated null checks.
+  - `_computeViewportCSSLength`: changed parameter `viewport` from nullable to non-nullable and removed redundant null assertions.
+
+- `DOMGeneratorWebImpl`:
+  - Fixed incorrect variable usage in `addExternalElementToElement` loop by replacing `externalElement.asJSAny` with `e.asJSAny`.
 
 - `dom_builder_dsx.dart`:
   - `_dsxJoinStrings`:

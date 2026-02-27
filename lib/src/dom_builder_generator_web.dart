@@ -276,7 +276,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
             added.addAll(l);
           }
         } else {
-          var jsAny = externalElement.asJSAny;
+          var jsAny = e.asJSAny;
           if (jsAny.isA<Node>()) {
             var node = jsAny as Node;
             element.appendChild(node);
