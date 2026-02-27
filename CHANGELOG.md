@@ -3,6 +3,15 @@
 - `DOMContext`:
   - `copy`: fixed copying of `_domGenerator` field by assigning `_domGenerator` instead of `domGenerator`.
 
+- `dom_builder_dsx.dart`:
+  - `_dsxJoinStrings`:
+    - updated parameter type to `List<Object?>`.
+    - fixed `list.remove(i)` to `list.removeAt(i)` to correctly remove element by index.
+
+- `dom_builder_template.dart`:
+  - `DOMTemplateVariable`:
+    - Improved index bounds check to ensure `idx` is non-negative before accessing `context` list elements.
+
 ## 3.0.6
 
 - `DOMElement`:

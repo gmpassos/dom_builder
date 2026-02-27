@@ -565,7 +565,7 @@ class DOMTemplateVariable {
         }
       }
       if (idx != null) {
-        return idx < context.length ? context[idx] : null;
+        return idx >= 0 && idx < context.length ? context[idx] : null;
       }
     } else if (context is Set) {
       if (context.contains(key)) {
