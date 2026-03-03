@@ -4,6 +4,154 @@ import 'package:test/test.dart';
 import 'dom_builder_domtest.dart';
 
 void main() {
+  group('DOMNode', () {
+    test('create text node and verify HTML output', () {
+      var textNode = TextNode('hello world');
+      expect(textNode.buildHTML(), 'hello world');
+    });
+
+    test('wrap text in element', () {
+      var div = $div(content: 'abc');
+      var html = div.buildHTML();
+      expect(html.contains('<div'), isTrue);
+      expect(html.contains('abc'), isTrue);
+      expect(html.contains('</div>'), isTrue);
+    });
+
+    test('parse string into nodes', () {
+      var nodes = DOMNode.parseStringNodes('<span>x</span><b>y</b>');
+      expect(nodes?.length, 2);
+      expect(nodes?.first.buildHTML(), '<span>x</span>');
+      expect(nodes?.last.buildHTML(), '<b>y</b>');
+    });
+
+    test('append child node', () {
+      var parent = $div(content: []);
+      parent.add($p(content: 'p1'));
+      expect(parent.buildHTML().contains('<p>p1</p>'), isTrue);
+    });
+  });
+
+  group('DOMElement basics', () {
+    test('set attributes and classes', () {
+      var el = $span(id: 's1', classes: 'cls1 cls2', content: 'text');
+      var html = el.buildHTML();
+
+      expect(html.contains('id="s1"'), isTrue);
+      expect(html.contains('class="cls1 cls2"'), isTrue);
+      expect(html.contains('text'), isTrue);
+    });
+
+    test('nested elements', () {
+      var parent = $div(
+        content: [
+          $span(content: 'foo'),
+          $tag('b', content: 'bar'),
+        ],
+      );
+
+      var html = parent.buildHTML();
+      expect(html.contains('<span>foo</span>'), isTrue);
+      expect(html.contains('<b>bar</b>'), isTrue);
+    });
+
+    test('modify attributes after creation', () {
+      var el = $div(content: 'x');
+      el.setAttribute('data-test', 'hello');
+      expect(el.buildHTML().contains('data-test="hello"'), isTrue);
+    });
+
+    test('remove attribute', () {
+      var el = $div(id: 'xx', content: 'x');
+      el.removeAttribute('id');
+      expect(el.buildHTML().contains('id='), isFalse);
+    });
+  });
+
+  group('DOMNode.hasFutureElement', () {
+    test('returns false when there are no future elements', () {
+      final node = DOMNode();
+      node.add($div(content: 'text'));
+
+      expect(node.hasFutureElement(), isFalse);
+    });
+
+    test('detects a direct Future as ExternalElementNode', () {
+      final future = Future.value('ok');
+      final external = ExternalElementNode(future);
+
+      final node = DOMNode();
+      node.add(external);
+
+      expect(external.isFutureElement, isTrue);
+      expect(node.hasFutureElement(recursive: true), isTrue);
+      expect(node.hasFutureElement(recursive: false), isFalse);
+    });
+
+    test('recursive detection finds nested future element', () async {
+      final future = Future.value('hello');
+
+      final child =
+          DIVElement(content: DIVElement(content: ExternalElementNode(future)));
+
+      final parent = DIVElement();
+      parent.add(child);
+
+      // direct children has no future -> false
+      expect(parent.hasFutureElement(recursive: false), isFalse);
+
+      // recursive -> true
+      expect(parent.hasFutureElement(recursive: true), isTrue);
+    });
+
+    test('returns false when all futures are consumed/not present', () {
+      final future = Future.value('done');
+
+      final node = DOMNode();
+      node.add(ExternalElementNode(future));
+      node.clearNodes();
+
+      expect(node.hasFutureElement(), isFalse);
+    });
+  });
+
+  group('ExternalElementNode.isFutureElement', () {
+    test('is false for non-future element', () {
+      final element = ExternalElementNode('string');
+
+      expect(element.isFutureElement, isFalse);
+      expect(element.hasFutureElement(), isFalse);
+    });
+
+    test('is true only if the externalElement is a Future', () {
+      final future = Future.delayed(Duration(milliseconds: 1), () => 42);
+      final element = ExternalElementNode(future);
+
+      expect(element.isFutureElement, isTrue);
+      expect(element.hasFutureElement(), isTrue);
+    });
+  });
+
+  group(r'$b helper', () {
+    test('creates <b> with text content', () {
+      final el = $b(content: 'bold');
+      expect(el.buildHTML(), '<b>bold</b>');
+    });
+
+    test('creates <b> with hidden=true', () {
+      final el = $b(content: 'x', hidden: true);
+      final html = el.buildHTML();
+
+      expect(html.contains('<b'), isTrue);
+      expect(html.contains('hidden'), isTrue);
+    });
+
+    test('supports nested content', () {
+      final el = $b(content: [$span(content: 'x')]);
+      expect(el.buildHTML(), '<b><span>x</span></b>');
+    });
+  });
+
   group('dom_builder', () {
     setUp(() {});
 
