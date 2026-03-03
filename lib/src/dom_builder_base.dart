@@ -958,15 +958,14 @@ class DOMNode implements AsDOMNode {
   /// If [recursive] is `true`, the entire subtree is traversed
   /// using an explicit stack (no recursion), preserving
   /// left-to-right DFS order.
+  ///
+  /// See [ExternalElementNode].
   bool hasFutureElement({bool recursive = false}) {
     final content = _content;
     if (content == null || content.isEmpty) return false;
 
     if (!recursive) {
-      for (var i = 0; i < content.length; ++i) {
-        var e = content[i];
-        if (e.hasFutureElement()) return true;
-      }
+      // [ExternalElementNode] overwrites `hasFutureElement`.
       return false;
     }
 
