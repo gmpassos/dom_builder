@@ -994,6 +994,10 @@ DOMElement $a(
         hidden: hidden,
         commented: commented);
 
+/// Creates a `b` node.
+$b({Object? content, bool? hidden, bool commented = false}) =>
+    $tag('b', content: content, hidden: hidden, commented: commented);
+
 /// Creates a `p` node.
 DOMElement $p(
         {Object? id,
@@ -1004,6 +1008,24 @@ DOMElement $p(
         bool? hidden,
         bool commented = false}) =>
     $tag('p',
+        id: id,
+        classes: classes,
+        style: style,
+        attributes: attributes,
+        content: content,
+        hidden: hidden,
+        commented: commented);
+
+/// Creates a `h$N` node (h1, h2, h3...).
+DOMElement $h(int n,
+        {Object? id,
+        Object? classes,
+        Object? style,
+        Map<String, String>? attributes,
+        Object? content,
+        bool? hidden,
+        bool commented = false}) =>
+    $tag('h$n',
         id: id,
         classes: classes,
         style: style,
@@ -1154,6 +1176,8 @@ bool isDOMBuilderDirectHelper(Object? f) {
   return identical(f, $br) ||
       identical(f, $p) ||
       identical(f, $a) ||
+      identical(f, $b) ||
+      identical(f, $h) ||
       identical(f, $nbsp) ||
       identical(f, $div) ||
       identical(f, $divInline) ||
