@@ -10,6 +10,10 @@
   - Overridden `hasFutureElement` to return `isFutureElement`.
   - Added getter `isFutureElement` to indicate if `externalElement` is a `Future`.
 
+- `dom_builder_helpers.dart`:
+  - Added `$b` function to create a `b` node.
+  - Added `$h` function to create heading nodes (`h1`, `h2`, `h3`, etc.) dynamically.
+
 ## 3.0.7
 
 - `DOMContext`:
