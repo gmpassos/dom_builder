@@ -1,3 +1,15 @@
+## 3.0.8
+
+- `DOMNode`:
+  - Added method `hasFutureElement({bool recursive = false})` to check if the node contains any `Future` element.
+    - If `recursive` is `false`, only direct children are checked.
+    - If `recursive` is `true`, the entire subtree is traversed using an explicit stack in left-to-right DFS order.
+
+- `ExternalElementNode`:
+  - Added private field `_isFutureElement` to track if `externalElement` is a `Future`.
+  - Overridden `hasFutureElement` to return `isFutureElement`.
+  - Added getter `isFutureElement` to indicate if `externalElement` is a `Future`.
+
 ## 3.0.7
 
 - `DOMContext`:

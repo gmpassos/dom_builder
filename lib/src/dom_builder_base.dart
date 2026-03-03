@@ -952,6 +952,44 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
+  /// Returns `true` if this node contains any [Future] element.
+  ///
+  /// If [recursive] is `false`, only direct children are checked.
+  /// If [recursive] is `true`, the entire subtree is traversed
+  /// using an explicit stack (no recursion), preserving
+  /// left-to-right DFS order.
+  bool hasFutureElement({bool recursive = false}) {
+    final content = _content;
+    if (content == null || content.isEmpty) return false;
+
+    if (!recursive) {
+      for (var i = 0; i < content.length; ++i) {
+        var e = content[i];
+        if (e.hasFutureElement()) return true;
+      }
+      return false;
+    }
+
+    final stack = <DOMNode>[...content];
+
+    while (stack.isNotEmpty) {
+      final node = stack.removeLast();
+
+      if (node.hasFutureElement()) {
+        return true;
+      }
+
+      final children = node._content;
+      if (children != null && children.isNotEmpty) {
+        for (var i = children.length - 1; i >= 0; i--) {
+          stack.add(children[i]);
+        }
+      }
+    }
+
+    return false;
+  }
+
   /// Returns a child node by [index].
   T? nodeByIndex<T extends DOMNode>(int? index) {
     if (index == null || isEmptyContent) return null;
@@ -3080,9 +3118,18 @@ class DOMMouseEvent<T extends Object> extends DOMEvent<T> {
 /// Class wrapper for a external element as a [DOMNode].
 class ExternalElementNode extends DOMNode {
   final Object? externalElement;
+  final bool _isFutureElement;
 
   ExternalElementNode(this.externalElement, [bool? allowContent])
-      : super._(allowContent, false);
+      : _isFutureElement = externalElement != null && externalElement is Future,
+        super._(allowContent, false);
+
+  /// Alias to [isFutureElement].
+  @override
+  bool hasFutureElement({bool recursive = false}) => isFutureElement;
+
+  /// Returns `true` if [externalElement] is a [Future].
+  bool get isFutureElement => _isFutureElement;
 
   @override
   String buildHTML(
