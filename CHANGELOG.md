@@ -1,3 +1,8 @@
+## 3.0.9
+
+- `DOMGeneratorWebImpl`:
+  - `createDOMEvent`: fixed argument passed to `DOMEvent` constructor from `eventTarget` to `webEvent`.
+
 ## 3.0.8
 
 - `DOMNode`:

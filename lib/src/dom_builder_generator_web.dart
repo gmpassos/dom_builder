@@ -648,7 +648,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       var eventTarget = target ?? webEvent.target as Node?;
       domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
-      return DOMEvent(treeMap, eventTarget, eventTarget, domTarget);
+      return DOMEvent(treeMap, webEvent, eventTarget, domTarget);
     }
 
     return null;
