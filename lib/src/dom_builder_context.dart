@@ -23,8 +23,8 @@ class Viewport {
   int height;
 
   Viewport(this.width, this.height, [int? deviceWidth, int? deviceHeight])
-      : deviceWidth = deviceWidth ?? width,
-        deviceHeight = deviceHeight ?? height {
+    : deviceWidth = deviceWidth ?? width,
+      deviceHeight = deviceHeight ?? height {
     _check();
   }
 
@@ -91,16 +91,19 @@ class Viewport {
 }
 
 typedef NamedElementGenerator<T extends Object> = T? Function(
-    String name,
-    DOMGenerator<T>? domGenerator,
-    DOMTreeMap<T> treeMap,
-    DOMElement? domParent,
-    Object? parent,
-    String? tag,
-    Map<String, DOMAttribute> attributes);
+  String name,
+  DOMGenerator<T>? domGenerator,
+  DOMTreeMap<T> treeMap,
+  DOMElement? domParent,
+  Object? parent,
+  String? tag,
+  Map<String, DOMAttribute> attributes,
+);
 
-typedef IntlMessageResolver = String? Function(String key,
-    [Map<String, dynamic>? parameters]);
+typedef IntlMessageResolver = String? Function(
+  String key, [
+  Map<String, dynamic>? parameters,
+]);
 
 /// Converts [resolver] to [IntlMessageResolver].
 IntlMessageResolver? toIntlMessageResolver(Object? resolver) {
@@ -131,9 +134,10 @@ class DOMContext<T extends Object> {
   /// Creates a copy of this instance.
   DOMContext<T> copy() {
     var context = DOMContext(
-        parent: parent,
-        viewport: viewport,
-        resolveCSSViewportUnit: resolveCSSViewportUnit);
+      parent: parent,
+      viewport: viewport,
+      resolveCSSViewportUnit: resolveCSSViewportUnit,
+    );
     context._domGenerator = _domGenerator;
     context.namedElementAttribute = namedElementAttribute;
     context.namedElementProvider = namedElementProvider;
@@ -171,13 +175,14 @@ class DOMContext<T extends Object> {
   /// generating a DOM tree.
   bool resolveCSSURL;
 
-  DOMContext(
-      {this.parent,
-      this.viewport,
-      this.resolveCSSViewportUnit = false,
-      this.resolveCSSURL = false,
-      Map<String, dynamic>? variables,
-      this.intlMessageResolver}) {
+  DOMContext({
+    this.parent,
+    this.viewport,
+    this.resolveCSSViewportUnit = false,
+    this.resolveCSSURL = false,
+    Map<String, dynamic>? variables,
+    this.intlMessageResolver,
+  }) {
     if (variables != null) {
       this.variables = variables;
     }
@@ -185,8 +190,11 @@ class DOMContext<T extends Object> {
 
   /// Resolves a Viewport [CSSUnit] (`vw`, `vh`, `vmin`, `vmax`) [value]
   /// to a `px` value as [String].
-  String resolveCSSViewportUnitValue(num value, CSSUnit unit,
-      {bool originalValueAsComment = true}) {
+  String resolveCSSViewportUnitValue(
+    num value,
+    CSSUnit unit, {
+    bool originalValueAsComment = true,
+  }) {
     var resolved = resolveViewportCSSLength(value, unit);
     var resolvedStr = resolved.toString(this);
 
@@ -204,13 +212,19 @@ class DOMContext<T extends Object> {
       return CSSLength(value, unit);
     }
 
-    var resolvedViewportValue =
-        _computeViewportCSSLength(value, unit, viewport);
+    var resolvedViewportValue = _computeViewportCSSLength(
+      value,
+      unit,
+      viewport,
+    );
     return resolvedViewportValue ?? CSSLength(value, unit);
   }
 
   CSSLength? _computeViewportCSSLength(
-      num value, CSSUnit unit, Viewport viewport) {
+    num value,
+    CSSUnit unit,
+    Viewport viewport,
+  ) {
     var ratio = value / 100;
 
     switch (unit) {
@@ -265,16 +279,27 @@ class DOMContext<T extends Object> {
     }
   }
 
-  T? resolveNamedElement(DOMElement? domParent, T? parent,
-      DOMElement domElement, DOMTreeMap<T> treeMap) {
+  T? resolveNamedElement(
+    DOMElement? domParent,
+    T? parent,
+    DOMElement domElement,
+    DOMTreeMap<T> treeMap,
+  ) {
     final namedElementProvider = this.namedElementProvider;
     if (namedElementProvider == null) return null;
 
     var elementName = domElement.getAttributeValue(namedElementAttribute);
 
     if (elementName != null && elementName.isNotEmpty) {
-      var element = namedElementProvider(elementName, _domGenerator, treeMap,
-          domParent, parent, domElement.tag, domElement.domAttributes);
+      var element = namedElementProvider(
+        elementName,
+        _domGenerator,
+        treeMap,
+        domParent,
+        parent,
+        domElement.tag,
+        domElement.domAttributes,
+      );
       return element;
     } else {
       return null;
@@ -304,8 +329,13 @@ class DOMContext<T extends Object> {
   dynamic getVariable(String key, Object? value) =>
       _variables != null ? _variables![key] : null;
 
-  void Function(DOMTreeMap<T> treeMap, DOMNode domElement, T element,
-      DOMContext<T> context)? onPreElementCreated;
+  void Function(
+    DOMTreeMap<T> treeMap,
+    DOMNode domElement,
+    T element,
+    DOMContext<T> context,
+  )?
+  onPreElementCreated;
 
   void Function(DOMTreeMap<T> treeMap)? preFinalizeGeneratedTree;
 

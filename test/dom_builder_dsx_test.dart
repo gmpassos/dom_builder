@@ -127,15 +127,20 @@ void main() {
       var html = btn.buildHTML();
       print(html);
       expect(
-          html,
-          equals(
-              '<button name="{{__DSX__function_4}}">{{__DSX__function_5}}  {{foo}}</button>'));
+        html,
+        equals(
+          '<button name="{{__DSX__function_4}}">{{__DSX__function_5}}  {{foo}}</button>',
+        ),
+      );
 
-      var htmlResolvedDSX =
-          btn.buildHTML(dsxResolution: DSXResolution.resolveDSX);
+      var htmlResolvedDSX = btn.buildHTML(
+        dsxResolution: DSXResolution.resolveDSX,
+      );
       print(htmlResolvedDSX);
-      expect(htmlResolvedDSX,
-          equals('<button name="abc10">123456  {{foo}}</button>'));
+      expect(
+        htmlResolvedDSX,
+        equals('<button name="abc10">123456  {{foo}}</button>'),
+      );
     });
   });
 }

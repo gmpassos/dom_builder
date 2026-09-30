@@ -111,8 +111,9 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     if (domNode is TextNode) {
       return domNode.text == node.toString();
     } else if (domNode is DOMElement && node.isA<Element>()) {
-      var domAttributesSign =
-          _toAttributesSignature(domNode.attributesAsString);
+      var domAttributesSign = _toAttributesSignature(
+        domNode.attributesAsString,
+      );
       var attributesSign = _toAttributesSignature(getElementAttributes(node)!);
       return domAttributesSign == attributesSign;
     }
@@ -127,8 +128,9 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         .where((e) => !isIgnoreAttributeEquivalence(e.key))
         .toList();
     entries.sort((a, b) => a.key.compareTo(b.key));
-    var attributesSignature =
-        entries.map((e) => '${e.key}=${e.value}').toList();
+    var attributesSignature = entries
+        .map((e) => '${e.key}=${e.value}')
+        .toList();
     return attributesSignature.join('\n');
   }
 
@@ -256,13 +258,21 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  List<Node>? addExternalElementToElement(Node element, Object? externalElement,
-      {DOMTreeMap<Node>? treeMap, DOMContext<Node>? context}) {
+  List<Node>? addExternalElementToElement(
+    Node element,
+    Object? externalElement, {
+    DOMTreeMap<Node>? treeMap,
+    DOMContext<Node>? context,
+  }) {
     if (externalElement == null) return null;
     if (!element.isA<Element>()) return null;
 
-    externalElement = resolveElements(externalElement,
-        treeMap: treeMap, context: context, setTreeMapRoot: false);
+    externalElement = resolveElements(
+      externalElement,
+      treeMap: treeMap,
+      context: context,
+      setTreeMapRoot: false,
+    );
 
     if (externalElement is List) {
       var added = <Node>[];
@@ -270,8 +280,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         if (e == null) continue;
 
         if (e is List) {
-          var l = addExternalElementToElement(element, e,
-              treeMap: treeMap, context: context);
+          var l = addExternalElementToElement(
+            element,
+            e,
+            treeMap: treeMap,
+            context: context,
+          );
           if (l != null) {
             added.addAll(l);
           }
@@ -299,8 +313,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
   @override
   void setAttributes(
-      DOMElement domElement, Node element, DOMTreeMap<Node> treeMap,
-      {bool preserveClass = false, bool preserveStyle = false}) {
+    DOMElement domElement,
+    Node element,
+    DOMTreeMap<Node> treeMap, {
+    bool preserveClass = false,
+    bool preserveStyle = false,
+  }) {
     if (!element.isA<Element>()) return;
 
     var element2 = element as Element;
@@ -310,8 +328,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
     for (var attrName in domElement.attributesNames) {
       var attrVal = resolveAttributeValue(
-          domElement, element, attrName, treeMap,
-          preserveClass: preserveClass, preserveStyle: preserveStyle);
+        domElement,
+        element,
+        attrName,
+        treeMap,
+        preserveClass: preserveClass,
+        preserveStyle: preserveStyle,
+      );
 
       var set = _setElementAttributeSpecial(element2, attrName, attrVal);
       if (!set) {
@@ -361,13 +384,17 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   bool _setElementAttributeSpecial(
-      Element element, String attrName, String? attrVal) {
+    Element element,
+    String attrName,
+    String? attrVal,
+  ) {
     switch (attrName) {
       case 'selected':
         {
           if (element.isA<HTMLOptionElement>()) {
-            (element as HTMLOptionElement).selected =
-                _parseAttributeBoolValue(attrVal);
+            (element as HTMLOptionElement).selected = _parseAttributeBoolValue(
+              attrVal,
+            );
           } else {
             element.setAttribute(attrName, attrVal!);
           }
@@ -376,11 +403,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       case 'multiple':
         {
           if (element.isA<HTMLSelectElement>()) {
-            (element as HTMLSelectElement).multiple =
-                _parseAttributeBoolValue(attrVal);
+            (element as HTMLSelectElement).multiple = _parseAttributeBoolValue(
+              attrVal,
+            );
           } else if (element.isA<HTMLInputElement>()) {
-            (element as HTMLInputElement).multiple =
-                _parseAttributeBoolValue(attrVal);
+            (element as HTMLInputElement).multiple = _parseAttributeBoolValue(
+              attrVal,
+            );
           } else {
             element.setAttribute(attrName, attrVal!);
           }
@@ -389,8 +418,8 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       case 'hidden':
         {
           if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).hidden =
-                _parseAttributeBoolValue(attrVal).toJS;
+            (element as HTMLElement).hidden = _parseAttributeBoolValue(attrVal)
+                .toJS;
           }
           return true;
         }
@@ -490,24 +519,34 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     return null;
   }
 
-  final _lazyWeakReferenceManagerDOMElement =
-      LazyWeakReferenceManagerByType.global.get<DOMElement>();
+  final _lazyWeakReferenceManagerDOMElement = LazyWeakReferenceManagerByType
+      .global
+      .get<DOMElement>();
 
   @override
-  void registerEventListeners(DOMTreeMap<Node> treeMap, DOMElement domElement,
-      Node element, DOMContext<Node>? context) {
+  void registerEventListeners(
+    DOMTreeMap<Node> treeMap,
+    DOMElement domElement,
+    Node element,
+    DOMContext<Node>? context,
+  ) {
     final element2 = element.asElementChecked;
     if (element2 == null) return;
 
-    final refDomElement =
-        _lazyWeakReferenceManagerDOMElement.strong(domElement);
+    final refDomElement = _lazyWeakReferenceManagerDOMElement.strong(
+      domElement,
+    );
 
     if (domElement.hasOnClickListener) {
       element2.addEventListenerTyped(EventType.click, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMMouseEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onClick.add(domEvent);
       });
     }
@@ -516,8 +555,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.change, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onChange.add(domEvent);
       });
     }
@@ -526,8 +569,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.keyPress, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onKeyPress.add(domEvent);
       });
     }
@@ -536,8 +583,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.keyUp, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onKeyUp.add(domEvent);
       });
     }
@@ -546,8 +597,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.keyDown, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onKeyDown.add(domEvent);
       });
     }
@@ -556,8 +611,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.mouseOver, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMMouseEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onMouseOver.add(domEvent);
       });
     }
@@ -566,8 +625,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.mouseOut, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMMouseEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMMouseEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onMouseOut.add(domEvent);
       });
     }
@@ -576,8 +639,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.load, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onLoad.add(domEvent);
       });
     }
@@ -586,8 +653,12 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       element2.addEventListenerTyped(EventType.error, (event) {
         var domElement = refDomElement.target;
         var target = event.target as Node?;
-        var domEvent = createDOMEvent(treeMap, event,
-            domTarget: domElement, target: target)!;
+        var domEvent = createDOMEvent(
+          treeMap,
+          event,
+          domTarget: domElement,
+          target: target,
+        )!;
         domElement?.onError.add(domEvent);
       });
     }
@@ -595,7 +666,9 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
   @override
   FutureOr<bool> cancelEventSubscriptions(
-      Node? element, List<Object> subscriptions) {
+    Node? element,
+    List<Object> subscriptions,
+  ) {
     if (subscriptions.isEmpty) return false;
 
     var cancelFutures = <Future>[];
@@ -613,36 +686,45 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   @override
-  DOMMouseEvent? createDOMMouseEvent(DOMTreeMap<Node> treeMap, Object? event,
-      {DOMNode? domTarget, Node? target}) {
+  DOMMouseEvent? createDOMMouseEvent(
+    DOMTreeMap<Node> treeMap,
+    Object? event, {
+    DOMNode? domTarget,
+    Node? target,
+  }) {
     if (event.asJSAny.isA<MouseEvent>()) {
       final mouseEvent = event as MouseEvent;
       var eventTarget = target ?? mouseEvent.target as Node?;
       domTarget ??= treeMap.getMappedDOMNode(eventTarget);
 
       return DOMMouseEvent(
-          treeMap,
-          mouseEvent,
-          eventTarget,
-          domTarget,
-          mouseEvent.clientPoint,
-          mouseEvent.offsetPoint,
-          mouseEvent.pagePoint,
-          mouseEvent.screenPoint,
-          mouseEvent.button,
-          mouseEvent.buttons,
-          mouseEvent.altKey,
-          mouseEvent.ctrlKey,
-          mouseEvent.shiftKey,
-          mouseEvent.metaKey);
+        treeMap,
+        mouseEvent,
+        eventTarget,
+        domTarget,
+        mouseEvent.clientPoint,
+        mouseEvent.offsetPoint,
+        mouseEvent.pagePoint,
+        mouseEvent.screenPoint,
+        mouseEvent.button,
+        mouseEvent.buttons,
+        mouseEvent.altKey,
+        mouseEvent.ctrlKey,
+        mouseEvent.shiftKey,
+        mouseEvent.metaKey,
+      );
     }
 
     return null;
   }
 
   @override
-  DOMEvent? createDOMEvent(DOMTreeMap<Node> treeMap, Object? event,
-      {DOMNode? domTarget, Node? target}) {
+  DOMEvent? createDOMEvent(
+    DOMTreeMap<Node> treeMap,
+    Object? event, {
+    DOMNode? domTarget,
+    Node? target,
+  }) {
     if (event.asJSAny.isA<Event>()) {
       final webEvent = event as Event;
       var eventTarget = target ?? webEvent.target as Node?;
@@ -674,7 +756,10 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
   @override
   DOMNodeRuntime<Node> createDOMNodeRuntime(
-      DOMTreeMap<Node> treeMap, DOMNode? domNode, Node node) {
+    DOMTreeMap<Node> treeMap,
+    DOMNode? domNode,
+    Node node,
+  ) {
     return DOMNodeRuntimeWebImpl(treeMap, domNode, node);
   }
 }
@@ -902,7 +987,8 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
         other.textContent = '';
         return true;
       } else if (other.isA<Element>()) {
-        node.textContent = ((node as Text).textContent ?? '') +
+        node.textContent =
+            ((node as Text).textContent ?? '') +
             ((other as Element).textContent ?? '');
         other.clear();
         return true;
@@ -1102,8 +1188,13 @@ bool _isElementWithSRC(Element element) {
 
 class DOMActionExecutorWebHTML extends DOMActionExecutor<Node> {
   @override
-  Node selectByID(String id, Node? target, Node? self, DOMTreeMap? treeMap,
-      DOMContext? context) {
+  Node selectByID(
+    String id,
+    Node? target,
+    Node? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     final selfElement = self?.asElementChecked;
 
     if (selfElement != null) {
@@ -1221,7 +1312,8 @@ class DOMActionExecutorWebHTML extends DOMActionExecutor<Node> {
     var locale = event['value'] ?? '';
 
     print(
-        '>>>>>>>>>>>>>>>>>> LOCALE: $locale >> $parameters > $context > vars: $variables');
+      '>>>>>>>>>>>>>>>>>> LOCALE: $locale >> $parameters > $context > vars: $variables',
+    );
 
     return target;
   }

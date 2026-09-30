@@ -270,8 +270,8 @@ void main() {
       var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
-          {'name': 'About'}
-        ]
+          {'name': 'About'},
+        ],
       });
       expect(s1, equals('Routes: [Home] [About]!'));
 
@@ -292,8 +292,8 @@ void main() {
       var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
-          {'name': 'About'}
-        ]
+          {'name': 'About'},
+        ],
       });
       expect(s1, equals('Route 1: About!'));
 
@@ -305,8 +305,8 @@ void main() {
 
       var s4 = template.buildAsString({
         'routes': [
-          {'name': 'Home'}
-        ]
+          {'name': 'Home'},
+        ],
       });
       expect(s4, equals('Route 1: !'));
     });
@@ -321,8 +321,8 @@ void main() {
       var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
-          {'name': 'About'}
-        ]
+          {'name': 'About'},
+        ],
       });
       expect(s1, equals('Routes: [name: Home] [name: About]!'));
 
@@ -333,7 +333,7 @@ void main() {
       expect(s3, equals('Routes:!'));
 
       var s4 = template.buildAsString({
-        'routes': ['Home', 'About']
+        'routes': ['Home', 'About'],
       });
       expect(s4, equals('Routes: [Home] [About]!'));
     });
@@ -348,8 +348,8 @@ void main() {
       var s1 = template.buildAsString({
         'routes': [
           {'name': 'Home'},
-          {'name': 'About'}
-        ]
+          {'name': 'About'},
+        ],
       });
       expect(s1, equals('Routes: [Home] [About]!'));
 
@@ -371,8 +371,8 @@ void main() {
         'no_routes': 'Empty routes',
         'routes': [
           {'name': 'Home'},
-          {'name': 'About'}
-        ]
+          {'name': 'About'},
+        ],
       });
       expect(s1, equals('Routes:!'));
 
@@ -391,12 +391,14 @@ void main() {
         return q == '#element_x' ? 'XXX' : null;
       }
 
-      var s1 = template
-          .buildAsString({'ok': true}, elementProvider: elementProvider);
+      var s1 = template.buildAsString({
+        'ok': true,
+      }, elementProvider: elementProvider);
       expect(s1, equals('Element: XXX!'));
 
-      var s2 = template
-          .buildAsString({'ok': false}, elementProvider: elementProvider);
+      var s2 = template.buildAsString({
+        'ok': false,
+      }, elementProvider: elementProvider);
       expect(s2, equals('Element: !'));
     });
 
@@ -448,7 +450,8 @@ void main() {
     });
 
     test('parse: ifList (menu)', () {
-      var source = 'Menu:\n'
+      var source =
+          'Menu:\n'
           '{{*:menu}}'
           '- #{{route}}: {{name}}{{:current}} (active){{/}}\n'
           '{{/}}';
@@ -461,13 +464,16 @@ void main() {
         'menu': [
           {'route': 'home', 'name': 'Welcome', 'current': true},
           {'route': 'help', 'name': 'Help-me'},
-        ]
+        ],
       });
       expect(
-          s1,
-          equals('Menu:\n'
-              '- #home: Welcome (active)\n'
-              '- #help: Help-me\n'));
+        s1,
+        equals(
+          'Menu:\n'
+          '- #home: Welcome (active)\n'
+          '- #help: Help-me\n',
+        ),
+      );
     });
 
     test('tryParse', () {
@@ -521,14 +527,20 @@ void main() {
       expect(template1.toString(), equals(source1));
 
       expect(
-          template1.buildAsString({},
-              intlMessageResolver: toIntlMessageResolver({'hi': 'Hi'})),
-          equals('Hi Joe!'));
+        template1.buildAsString(
+          {},
+          intlMessageResolver: toIntlMessageResolver({'hi': 'Hi'}),
+        ),
+        equals('Hi Joe!'),
+      );
 
       expect(
-          template1.buildAsString({},
-              intlMessageResolver: toIntlMessageResolver({'hi': 'Olá'})),
-          equals('Olá Joe!'));
+        template1.buildAsString(
+          {},
+          intlMessageResolver: toIntlMessageResolver({'hi': 'Olá'}),
+        ),
+        equals('Olá Joe!'),
+      );
     });
 
     test('intl:parameters', () {
@@ -550,12 +562,14 @@ void main() {
       }
 
       expect(
-          template1.buildAsString({'n': 1}, intlMessageResolver: msgResolver),
-          equals('Hello child!'));
+        template1.buildAsString({'n': 1}, intlMessageResolver: msgResolver),
+        equals('Hello child!'),
+      );
 
       expect(
-          template1.buildAsString({'n': 2}, intlMessageResolver: msgResolver),
-          equals('Hello children!'));
+        template1.buildAsString({'n': 2}, intlMessageResolver: msgResolver),
+        equals('Hello children!'),
+      );
     });
 
     test('DOMNode with template', () {
@@ -566,7 +580,8 @@ void main() {
         return '!RET!';
       }
 
-      var source1 = '<div title="{{intl:hi}}" onclick="${clickFunction.dsx()}">'
+      var source1 =
+          '<div title="{{intl:hi}}" onclick="${clickFunction.dsx()}">'
           '{{:period=="am"}}<b>morning</b>{{?:period=="pm"}}afternoon{{?}}day{{/}}'
           '</div>';
 
@@ -578,12 +593,14 @@ void main() {
       expect(clicks, isEmpty);
 
       var contextAM = DOMContext(
-          intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
-          variables: {'period': 'am'});
+        intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
+        variables: {'period': 'am'},
+      );
 
       var contextPM = DOMContext(
-          intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
-          variables: {'period': 'pm'});
+        intlMessageResolver: (k, [p]) => k.trim().toUpperCase(),
+        variables: {'period': 'pm'},
+      );
 
       var source2 = div.buildHTML(domContext: contextAM);
 
@@ -616,31 +633,43 @@ void main() {
 
       expect(clicks, isEmpty);
 
-      var s1 = template.buildAsString({'period': 'am'},
-          dsxResolution: DSXResolution.skipDSX);
-      expectFilteredDSXFunction(s1,
-          '<div title="HI" onclick="{{__DSX__function_D}}"><b>morning</b></div>');
-
-      expect(clicks, isEmpty);
-
-      var s2 = template.buildAsString({'period': 'pm'},
-          dsxResolution: DSXResolution.skipDSX);
-      expectFilteredDSXFunction(s2,
-          '<div title="HI" onclick="{{__DSX__function_D}}">afternoon</div>');
-
-      expect(clicks, isEmpty);
-
-      var s3 = template
-          .buildAsString({'period': '?'}, dsxResolution: DSXResolution.skipDSX);
+      var s1 = template.buildAsString({
+        'period': 'am',
+      }, dsxResolution: DSXResolution.skipDSX);
       expectFilteredDSXFunction(
-          s3, '<div title="HI" onclick="{{__DSX__function_D}}">day</div>');
+        s1,
+        '<div title="HI" onclick="{{__DSX__function_D}}"><b>morning</b></div>',
+      );
 
       expect(clicks, isEmpty);
 
-      var s4 = template.buildAsString({'period': 'am'},
-          dsxResolution: DSXResolution.resolveDSX);
+      var s2 = template.buildAsString({
+        'period': 'pm',
+      }, dsxResolution: DSXResolution.skipDSX);
+      expectFilteredDSXFunction(
+        s2,
+        '<div title="HI" onclick="{{__DSX__function_D}}">afternoon</div>',
+      );
+
+      expect(clicks, isEmpty);
+
+      var s3 = template.buildAsString({
+        'period': '?',
+      }, dsxResolution: DSXResolution.skipDSX);
+      expectFilteredDSXFunction(
+        s3,
+        '<div title="HI" onclick="{{__DSX__function_D}}">day</div>',
+      );
+
+      expect(clicks, isEmpty);
+
+      var s4 = template.buildAsString({
+        'period': 'am',
+      }, dsxResolution: DSXResolution.resolveDSX);
       expect(
-          s4, equals('<div title="HI" onclick="!RET!"><b>morning</b></div>'));
+        s4,
+        equals('<div title="HI" onclick="!RET!"><b>morning</b></div>'),
+      );
 
       expect(clicks, isNotEmpty);
     });
@@ -649,7 +678,11 @@ void main() {
 
 void expectFilteredDSXFunction(String s, String expected) {
   expectFiltered(
-      s, RegExp(r'__DSX__function_\d+'), '__DSX__function_D', expected);
+    s,
+    RegExp(r'__DSX__function_\d+'),
+    '__DSX__function_D',
+    expected,
+  );
 }
 
 void expectFiltered(String s, RegExp filter, String replace, String expected) {

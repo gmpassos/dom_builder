@@ -102,12 +102,13 @@ class DOMHtmlBrowserWeb extends DOMHtml {
     } else if (jsAny.isA<web.Text>()) {
       return (jsAny as web.Text).textContent ?? '';
     } else if (jsAny.isA<web.Document>()) {
-      var html =
-          (jsAny as web.Document).childNodes.toIterable().map(toHTML).join();
+      var html = (jsAny as web.Document).childNodes
+          .toIterable()
+          .map(toHTML)
+          .join();
       return html;
     } else if (jsAny.isA<web.DocumentFragment>()) {
-      var html = (jsAny as web.DocumentFragment)
-          .childNodes
+      var html = (jsAny as web.DocumentFragment).childNodes
           .toIterable()
           .map(toHTML)
           .join();
@@ -228,10 +229,7 @@ class DOMHtmlBrowserWeb extends DOMHtml {
         }
       case '<br><br>':
         {
-          return <DOMNode>[
-            DOMElement('br'),
-            DOMElement('br'),
-          ];
+          return <DOMNode>[DOMElement('br'), DOMElement('br')];
         }
       case '<br><br><br>':
         {

@@ -58,7 +58,9 @@ class DSX<T extends Object> {
   static final Map<_DSXKey, WeakReference<DSX>> _keyToDSK = {};
 
   static bool applyLifeCycleManager(
-      DSX dsx, DSXLifecycleManager? lifecycleManager) {
+    DSX dsx,
+    DSXLifecycleManager? lifecycleManager,
+  ) {
     if (lifecycleManager == null) return false;
 
     if (!_notManagedDSXs.contains(dsx)) return false;
@@ -219,11 +221,17 @@ class DSX<T extends Object> {
     dynamic a10,
   ]) {
     if (a10 != null) {
-      return DSX(objSource, obj,
-          parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9, 10]);
+      return DSX(
+        objSource,
+        obj,
+        parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9, 10],
+      );
     } else if (a9 != null) {
-      return DSX(objSource, obj,
-          parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9]);
+      return DSX(
+        objSource,
+        obj,
+        parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9],
+      );
     } else if (a8 != null) {
       return DSX(objSource, obj, parameters: [a1, a2, a3, a4, a5, a6, a7, a8]);
     } else if (a7 != null) {
@@ -449,10 +457,11 @@ class DSXResolution {
 
   DSXResolution.lifecycleManager(this.lifecycleManager, {this.resolve = true});
 
-  DSXResolution copyWith(
-      {bool? resolve,
-      DSXLifecycleManager? lifecycleManager,
-      bool nullLifecycleManager = false}) {
+  DSXResolution copyWith({
+    bool? resolve,
+    DSXLifecycleManager? lifecycleManager,
+    bool nullLifecycleManager = false,
+  }) {
     lifecycleManager ??= this.lifecycleManager;
 
     if (nullLifecycleManager) {
@@ -518,9 +527,10 @@ class DSXResolver<T extends Object> {
   /// Resolve this [DSX] object value.
   ///
   /// - If [isFunction], calls it with [parameters].
-  Object? resolveValue(
-      {QueryElementProvider? elementProvider,
-      IntlMessageResolver? intlMessageResolver}) {
+  Object? resolveValue({
+    QueryElementProvider? elementProvider,
+    IntlMessageResolver? intlMessageResolver,
+  }) {
     if (_resolvedValue != null) {
       assert(_resolvedElement != null);
       return _resolvedValue;
@@ -560,13 +570,12 @@ class DSXResolver<T extends Object> {
     var element = _valueAsElement(value);
 
     // Call `listenDSXValue` if type defines method:
-    _resolvedValueListenerSubscription ??= _listenDSXValue(
-      objectSource,
-      (objSrc) {
-        var value = _toDSXValue(objSrc, objSrc);
-        setResolvedValue(value);
-      },
-    );
+    _resolvedValueListenerSubscription ??= _listenDSXValue(objectSource, (
+      objSrc,
+    ) {
+      var value = _toDSXValue(objSrc, objSrc);
+      setResolvedValue(value);
+    });
 
     // Remove previous `_resolvedElement`:
     if (_resolvedElement != null) {
@@ -611,23 +620,26 @@ class DSXResolver<T extends Object> {
   }
 
   /// Calls [resolveValue] and returns the corresponding [DOMElement] for the value.
-  Object? resolveElement(
-      {QueryElementProvider? elementProvider,
-      IntlMessageResolver? intlMessageResolver}) {
+  Object? resolveElement({
+    QueryElementProvider? elementProvider,
+    IntlMessageResolver? intlMessageResolver,
+  }) {
     resolveValue(
-        elementProvider: elementProvider,
-        intlMessageResolver: intlMessageResolver);
+      elementProvider: elementProvider,
+      intlMessageResolver: intlMessageResolver,
+    );
     return _resolvedElement!;
   }
 
   /// Calls [resolveValue] to a [String].
-  String? resolveValueAsString(
-      {QueryElementProvider? elementProvider,
-      IntlMessageResolver? intlMessageResolver}) {
+  String? resolveValueAsString({
+    QueryElementProvider? elementProvider,
+    IntlMessageResolver? intlMessageResolver,
+  }) {
     return resolveValue(
-            elementProvider: elementProvider,
-            intlMessageResolver: intlMessageResolver)
-        ?.toString();
+      elementProvider: elementProvider,
+      intlMessageResolver: intlMessageResolver,
+    )?.toString();
   }
 
   /// Call this DSX object as a [Function], passing [parameters] if present.
@@ -733,14 +745,38 @@ extension DSXFutureOrExtension<T extends Object> on FutureOr<T?> {
     final self = this;
     if (self == null) return null;
 
-    var dsx = _toDSX(self as Object, self as Object, a1, a2, a3, a4, a5, a6, a7,
-        a8, a9, a10);
+    var dsx = _toDSX(
+      self as Object,
+      self as Object,
+      a1,
+      a2,
+      a3,
+      a4,
+      a5,
+      a6,
+      a7,
+      a8,
+      a9,
+      a10,
+    );
     if (dsx != null) return dsx;
 
     var dsxValue = _toDSXValue(self);
     if (dsxValue != null) {
       dsx = _toDSX(
-          self as Object, dsxValue, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+        self as Object,
+        dsxValue,
+        a1,
+        a2,
+        a3,
+        a4,
+        a5,
+        a6,
+        a7,
+        a8,
+        a9,
+        a10,
+      );
     }
 
     dsx ??= DSX<T>(self as Object, self as T);
@@ -749,14 +785,38 @@ extension DSXFutureOrExtension<T extends Object> on FutureOr<T?> {
   }
 
   static DSX? _toDSX<T extends Object>(
-      Object oSrc, Object o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10) {
+    Object oSrc,
+    Object o,
+    a1,
+    a2,
+    a3,
+    a4,
+    a5,
+    a6,
+    a7,
+    a8,
+    a9,
+    a10,
+  ) {
     if (o is DSX) {
       return o;
     } else if (o is Future<T>) {
       return DSX<Future<T>>(oSrc, o);
     } else if (o is Function) {
       return DSX<Function>.varArgs(
-          oSrc, o, a1, a2, a3, a4, a5, a6, a7, a8, a9, a10);
+        oSrc,
+        o,
+        a1,
+        a2,
+        a3,
+        a4,
+        a5,
+        a6,
+        a7,
+        a8,
+        a9,
+        a10,
+      );
     } else if (o is String) {
       return DSX<String>(oSrc, o);
     } else if (o is int) {
@@ -803,7 +863,9 @@ Object? _toDSXValue(dynamic o, [dynamic def]) {
 final Set<Type> _typesWithoutListenDSXValue = <Type>{};
 
 StreamSubscription? _listenDSXValue(
-    dynamic o, void Function(dynamic event) listener) {
+  dynamic o,
+  void Function(dynamic event) listener,
+) {
   if (o == null ||
       o is String ||
       o is num ||

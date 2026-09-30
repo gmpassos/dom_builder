@@ -28,7 +28,7 @@ class DOMAttribute with WithValue {
 
   static final Map<String, String> _attributesValueAsListDelimiters = {
     'class': ' ',
-    'style': '; '
+    'style': '; ',
   };
 
   static bool isBooleanAttribute(String attrName) =>
@@ -39,7 +39,7 @@ class DOMAttribute with WithValue {
 
   static final Map<String, RegExp> _attributesValueAsListDelimitersPatterns = {
     'class': RegExp(r'\s+'),
-    'style': RegExp(r'\s*;\s*')
+    'style': RegExp(r'\s*;\s*'),
   };
 
   static RegExp? getAttributeDelimiterPattern(String name) =>
@@ -50,23 +50,34 @@ class DOMAttribute with WithValue {
     return name.trim().toLowerCase();
   }
 
-  static String append(String s, String delimiter, DOMAttribute? attribute,
-      {DOMContext? domContext,
-      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+  static String append(
+    String s,
+    String delimiter,
+    DOMAttribute? attribute, {
+    DOMContext? domContext,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+  }) {
     if (attribute == null) return s;
     var append = attribute.buildHTML(
-        domContext: domContext, dsxResolution: dsxResolution);
+      domContext: domContext,
+      dsxResolution: dsxResolution,
+    );
     if (append.isEmpty) return s;
     return s + delimiter + append;
   }
 
   static StringBuffer appendTo(
-      StringBuffer s, String delimiter, DOMAttribute? attribute,
-      {DOMContext? domContext,
-      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+    StringBuffer s,
+    String delimiter,
+    DOMAttribute? attribute, {
+    DOMContext? domContext,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+  }) {
     if (attribute == null) return s;
     var append = attribute.buildHTML(
-        domContext: domContext, dsxResolution: dsxResolution);
+      domContext: domContext,
+      dsxResolution: dsxResolution,
+    );
     if (append.isEmpty) return s;
     s.write(delimiter);
     s.write(append);
@@ -103,10 +114,14 @@ class DOMAttribute with WithValue {
 
       if (attrSet) {
         return DOMAttribute(
-            name, DOMAttributeValueSet(value, delimiter, delimiterPattern));
+          name,
+          DOMAttributeValueSet(value, delimiter, delimiterPattern),
+        );
       } else {
         return DOMAttribute(
-            name, DOMAttributeValueList(value, delimiter, delimiterPattern));
+          name,
+          DOMAttributeValueList(value, delimiter, delimiterPattern),
+        );
       }
     } else {
       var attrBoolean = _attributesValueAsBoolean.contains(name);
@@ -178,10 +193,12 @@ class DOMAttribute with WithValue {
 
     String? htmlValue;
     if (dsxResolution.resolve && valueHandler is DOMAttributeValueTemplate) {
-      var templateBuilt = valueHandler.template.build(domContext,
-          asElement: false,
-          dsxResolution: dsxResolution,
-          intlMessageResolver: domContext?.intlMessageResolver);
+      var templateBuilt = valueHandler.template.build(
+        domContext,
+        asElement: false,
+        dsxResolution: dsxResolution,
+        intlMessageResolver: domContext?.intlMessageResolver,
+      );
 
       if (templateBuilt is String && !possiblyWithHTML(templateBuilt)) {
         htmlValue = templateBuilt;
@@ -348,13 +365,17 @@ class DOMAttributeValueTemplate extends DOMAttributeValueString {
       return super.getAttributeValue(domContext);
     } else {
       var dsxResolution = DSXResolution.lifecycleManager(treeMap);
-      var build = template.build(domContext,
+      var build = template.build(
+        domContext,
+        dsxResolution: dsxResolution,
+        elementProvider: (q) => treeMap?.queryElementAsHTML(
+          q,
+          domContext: domContext,
+          buildTemplates: true,
           dsxResolution: dsxResolution,
-          elementProvider: (q) => treeMap?.queryElementAsHTML(q,
-              domContext: domContext,
-              buildTemplates: true,
-              dsxResolution: dsxResolution),
-          intlMessageResolver: domContext.intlMessageResolver);
+        ),
+        intlMessageResolver: domContext.intlMessageResolver,
+      );
 
       if (build == null) {
         return super.getAttributeValue(domContext, treeMap);
@@ -407,7 +428,7 @@ class DOMAttributeValueList extends DOMAttributeValueCollection {
   final Pattern delimiterPattern;
 
   DOMAttributeValueList(Object? values, this.delimiter, this.delimiterPattern)
-      : _values = parseListOfStrings(values, delimiterPattern);
+    : _values = parseListOfStrings(values, delimiterPattern);
 
   @override
   bool get hasAttributeValue {
@@ -516,8 +537,9 @@ class DOMAttributeValueSet extends DOMAttributeValueCollection {
   final Pattern delimiterPattern;
 
   DOMAttributeValueSet(Object? values, this.delimiter, this.delimiterPattern)
-      : _values = LinkedHashSet<String>.from(
-            parseListOfStrings(values, delimiterPattern));
+    : _values = LinkedHashSet<String>.from(
+        parseListOfStrings(values, delimiterPattern),
+      );
 
   @override
   bool get hasAttributeValue {
