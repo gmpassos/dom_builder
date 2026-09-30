@@ -146,7 +146,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   Text? createTextNode(Object? text) {
     if (text == null) return null;
 
-    if (text.asJSAny.isA<Text>()) {
+    if (text.isA<Text>()) {
       return text as Text;
     } else if (text is TextNode) {
       return Text(text.text);
@@ -692,7 +692,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     DOMNode? domTarget,
     Node? target,
   }) {
-    if (event.asJSAny.isA<MouseEvent>()) {
+    if (event.isA<MouseEvent>()) {
       final mouseEvent = event as MouseEvent;
       var eventTarget = target ?? mouseEvent.target as Node?;
       domTarget ??= treeMap.getMappedDOMNode(eventTarget);
@@ -725,7 +725,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     DOMNode? domTarget,
     Node? target,
   }) {
-    if (event.asJSAny.isA<Event>()) {
+    if (event.isA<Event>()) {
       final webEvent = event as Event;
       var eventTarget = target ?? webEvent.target as Node?;
       domTarget ??= treeMap.getMappedDOMNode(eventTarget);
@@ -738,7 +738,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
 
   @override
   bool cancelEvent(Object? event, {bool stopImmediatePropagation = false}) {
-    if (event.asJSAny.isA<UIEvent>()) {
+    if (event.isA<UIEvent>()) {
       final uiEvent = event as UIEvent;
       if (uiEvent.cancelable) {
         uiEvent.preventDefault();
@@ -1211,7 +1211,7 @@ class DOMActionExecutorWebHTML extends DOMActionExecutor<Node> {
 
     if (treeMap != null) {
       Object? rootElement = treeMap.rootElement;
-      if (rootElement.asJSAny.isA<Element>()) {
+      if (rootElement.isA<Element>()) {
         var element = rootElement as Element;
         var sel = _selectByID(element, id);
         if (sel != null) return sel;
