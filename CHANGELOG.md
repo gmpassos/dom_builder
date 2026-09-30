@@ -17,6 +17,11 @@
 - `DOMHtmlBrowserWeb` / `DOMGeneratorWebImpl`:
   - Use `Object?.isA<T>()` (Dart 3.12) instead of `asJSAny.isA<T>()`.
 
+- `DOMTreeMap`:
+  - Fix (`dart2wasm`): `getElementDOMTreeMap` (and so `DOMHtml.toDOMElement`) missed generated nodes reached
+    through a different JS wrapper (e.g. `element.firstChild`). The element association was an `Expando` keyed by
+    the Dart wrapper; it's now a `DOMWeakStore`, keyed by JS identity (a JS `WeakMap`) on the web.
+
 - Now based on `web_utils` 1.1.0 and `js_interop_utils` 1.1.0, which bring:
   - `Node.clear()`/`clearNodes()` fixed for non-`Element` nodes (used by the web runtime `clear`).
   - `isA`-based `asJSAny`/`asJSObject` and typed lists `.toJS` producing JS typed arrays.
@@ -29,6 +34,23 @@
   - test: ^1.32.0
   - dependency_validator: ^5.1.0
   - coverage: ^1.15.1
+
+## 3.0.10
+
+- `DOMGeneratorWebImpl`:
+  - `addExternalElementToElement`: fixed `NoSuchMethodError` with a `List` of nodes (the `asJSAny` extension was
+    called on a `dynamic` element).
+
+- `DOMNodeRuntimeWebImpl` / `DOMNodeRuntimeDartHTMLImpl`:
+  - `clearClasses`: fixed removing the element's children instead of its classes.
+
+- `DOMActionExecutor`:
+  - `call`: fixed `removeclass`/`removeclasses` being dispatched to `callAddClass` instead of `callRemoveClass`.
+
+- Element constructors (`DIVElement`, `INPUTElement`, `SELECTElement`, `OPTIONElement`, `TEXTAREAElement` and the
+  table elements): use super parameters (`use_super_parameters` lint).
+
+- Added `test/dom_builder_web_regression_test.dart`.
 
 ## 3.0.9
 
