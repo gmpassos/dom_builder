@@ -648,9 +648,9 @@ DIVElement $divCenteredContent({
 
 /// Creates a `div` node with `display: inline-block`.
 DOMAsync $asyncContent({
-  final Object? loading,
+  Object? loading,
   Future? future,
-  final Future Function()? function,
+  Future Function()? function,
 }) {
   return DOMAsync(loading: loading, future: future, function: function);
 }
