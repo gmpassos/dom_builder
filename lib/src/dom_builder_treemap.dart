@@ -9,6 +9,7 @@ import 'dom_builder_context.dart';
 import 'dom_builder_dsx.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
+import 'dom_builder_weak_store.dart';
 
 /// Represents a mapping tree. Can be used to map a [DOMNode] to a generated
 /// node [T], or a node [T] to a [DOMNode].
@@ -56,9 +57,10 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   static final _lazyWeakReferenceManagerByType =
       LazyWeakReferenceManagerByType.global;
 
-  static final Expando<WeakReference<DOMTreeMap>> _elementsDOMTreeMap = Expando(
-    'Elements->DOMTreeMap',
-  );
+  // Not an `Expando`: with `dart2wasm` a DOM node can have distinct Dart
+  // wrappers, so it must be keyed by JS identity (see [DOMWeakStore]).
+  static final DOMWeakStore<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
+      DOMWeakStore('Elements->DOMTreeMap');
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
