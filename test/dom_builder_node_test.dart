@@ -5,6 +5,8 @@
 // for skipped tests. Standalone repro (with dom_builder 3.0.10 from pub.dev):
 // `DOMNode(content: 'a')` plus `TextNode.merge`, `DOMElement.merge` and
 // `DOMElement.absorbNode` calls in one program.
+// Reported upstream: https://github.com/dart-lang/sdk/issues/64428
+// (remove `@TestOn` once fixed).
 @TestOn('!dart2wasm')
 library;
 
