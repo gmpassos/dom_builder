@@ -537,8 +537,7 @@ class CSSEntry<V extends CSSValue> {
         comment: comment,
       );
 
-  CSSEntry._(this.name, this.value, {this.sampleValue, String? comment})
-    : _comment = comment;
+  CSSEntry._(this.name, this.value, {this.sampleValue, this._comment});
 
   static CSSEntry<V>? from<V extends CSSValue>(
     String name,

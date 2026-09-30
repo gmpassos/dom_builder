@@ -522,7 +522,7 @@ TDElement $td({
   attributes: {
     if (colspan != null) 'colspan': '$colspan',
     if (rowspan != null) 'rowspan': '$rowspan',
-    if (headers != null) 'headers': headers,
+    'headers': ?headers,
     ...?attributes,
   },
   content: content,
@@ -550,8 +550,8 @@ THElement $th({
   attributes: {
     if (colspan != null) 'colspan': '$colspan',
     if (rowspan != null) 'rowspan': '$rowspan',
-    if (abbr != null) 'abbr': abbr,
-    if (scope != null) 'scope': scope,
+    'abbr': ?abbr,
+    'scope': ?scope,
     ...?attributes,
   },
   content: content,
@@ -743,7 +743,7 @@ DOMElement $button({
   style: style,
   attributes: {
     'type': type != null && type.isNotEmpty ? type : 'button',
-    if (name != null) 'name': name,
+    'name': ?name,
     if (disabled) 'disabled': disabled,
     ...?attributes,
   },
@@ -767,7 +767,7 @@ DOMElement $label({
   id: id,
   classes: classes,
   style: style,
-  attributes: {if (forID != null) 'for': forID, ...?attributes},
+  attributes: {'for': ?forID, ...?attributes},
   content: content,
   hidden: hidden,
   commented: commented,
@@ -1023,11 +1023,7 @@ DOMElement $img({
     id: id,
     classes: classes,
     style: style,
-    attributes: {
-      if (src != null) 'src': src,
-      if (title != null) 'title': title,
-      ...?attributes,
-    },
+    attributes: {'src': ?src, 'title': ?title, ...?attributes},
     content: content,
     hidden: hidden,
     commented: commented,
@@ -1062,18 +1058,14 @@ DOMElement $a({
   id: id,
   classes: classes,
   style: style,
-  attributes: {
-    if (href != null) 'href': href,
-    if (target != null) 'target': target,
-    ...?attributes,
-  },
+  attributes: {'href': ?href, 'target': ?target, ...?attributes},
   content: content,
   hidden: hidden,
   commented: commented,
 );
 
 /// Creates a `b` node.
-$b({Object? content, bool? hidden, bool commented = false}) =>
+DOMElement $b({Object? content, bool? hidden, bool commented = false}) =>
     $tag('b', content: content, hidden: hidden, commented: commented);
 
 /// Creates a `p` node.

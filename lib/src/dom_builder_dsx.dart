@@ -35,7 +35,7 @@ enum DSXObjectType {
 
   const DSXObjectType(this.placeholder, this.placeholderPrefix);
 
-  static forObject(Object? obj) {
+  static DSXObjectType forObject(Object? obj) {
     if (obj is Function) {
       return DSXObjectType.function;
     } else if (obj is Future) {
