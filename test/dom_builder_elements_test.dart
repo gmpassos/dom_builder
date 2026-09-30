@@ -1571,8 +1571,8 @@ void main() {
     });
 
     // The `DOMNode()` constructor is tested in `dom_builder_node_test.dart`:
-    // instantiating `DOMNode` here makes dart2wasm 3.13.3 crash compiling this
-    // file (see that file).
+    // instantiating `DOMNode` here makes dart2wasm (3.13.3–3.13.5) crash
+    // compiling this file (see that file).
 
     // Regression: `DOMElement.buildHTML` ignored `isCommented` ("commented
     // (ignored)"), unlike `DOMNode.buildHTML` and the DOM generators.

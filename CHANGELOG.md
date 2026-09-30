@@ -82,8 +82,8 @@
   - Added `test/dom_builder_web_integration_test.dart`: real browser DOM through the `package:web` generator (events,
     runtime, tree map, actions, `DOMAsync`, templates, DSX).
   - Added `test/dom_builder_elements_test.dart` and `test/dom_builder_node_test.dart`: elements, helpers, attributes,
-    tables. (`dom_builder_node_test.dart` isn't compiled with `dart2wasm`: it triggers a dart2wasm 3.13.3 compiler
-    crash.)
+    tables. (`dom_builder_node_test.dart` isn't compiled with `dart2wasm`: it triggers a dart2wasm compiler crash,
+    still present in 3.13.5: https://github.com/dart-lang/sdk/issues/64428.)
   - Added `test/dom_builder_dsx_css_generator_test.dart`: DSX, CSS, generators, templates, context and actions.
 
 ## 3.0.10

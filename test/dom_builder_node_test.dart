@@ -1,6 +1,6 @@
 // Not compiled with dart2wasm: instantiating `DOMNode` together with the
-// `merge`/`absorbNode` calls of other tests crashes the dart2wasm 3.13.3
-// compiler ("Null check operator used on a null value" in
+// `merge`/`absorbNode` calls of other tests crashes the dart2wasm compiler
+// (3.13.3–3.13.5; "Null check operator used on a null value" in
 // `AstCodeGenerator._setupLocalParameters`), which fails the whole file even
 // for skipped tests. Standalone repro (with dom_builder 3.0.10 from pub.dev):
 // `DOMNode(content: 'a')` plus `TextNode.merge`, `DOMElement.merge` and
