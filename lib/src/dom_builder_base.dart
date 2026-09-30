@@ -3193,21 +3193,14 @@ class DIVElement extends DOMElement {
   }
 
   DIVElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false})
-      : super._('div',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
+      super.content,
+      super.hidden,
+      super.commented = false})
+      : super._('div');
 
   @override
   DIVElement copy() {
@@ -3242,30 +3235,24 @@ class INPUTElement extends DOMElement with WithValue {
 
   INPUTElement(
       {Map<String, dynamic>? attributes,
-      Object? id,
+      super.id,
       Object? name,
       Object? type,
       Object? placeholder,
-      Object? classes,
-      Object? style,
+      super.classes,
+      super.style,
       Object? value,
-      bool? hidden,
+      super.hidden,
       bool disabled = false,
-      bool commented = false})
-      : super._('input',
-            id: id,
-            classes: classes,
-            style: style,
-            attributes: {
-              if (name != null) 'name': name,
-              if (type != null) 'type': type,
-              if (placeholder != null) 'placeholder': placeholder,
-              if (value != null) 'value': value,
-              if (disabled) 'disabled': disabled,
-              ...?attributes
-            },
-            hidden: hidden,
-            commented: commented);
+      super.commented = false})
+      : super._('input', attributes: {
+          if (name != null) 'name': name,
+          if (type != null) 'type': type,
+          if (placeholder != null) 'placeholder': placeholder,
+          if (value != null) 'value': value,
+          if (disabled) 'disabled': disabled,
+          ...?attributes
+        });
 
   @override
   INPUTElement copy() {
@@ -3373,20 +3360,17 @@ class SELECTElement extends DOMElement {
 
   SELECTElement(
       {Map<String, dynamic>? attributes,
-      Object? id,
+      super.id,
       Object? name,
       Object? type,
-      Object? classes,
-      Object? style,
+      super.classes,
+      super.style,
       Object? options,
       bool? multiple,
-      bool? hidden,
+      super.hidden,
       bool disabled = false,
-      bool commented = false})
+      super.commented = false})
       : super._('select',
-            id: id,
-            classes: classes,
-            style: style,
             attributes: {
               ...?attributes,
               if (name != null) 'name': name,
@@ -3394,9 +3378,7 @@ class SELECTElement extends DOMElement {
               if (multiple != null && multiple) 'multiple': true,
               if (disabled) 'disabled': disabled,
             },
-            content: OPTIONElement.toOptions(options),
-            hidden: hidden,
-            commented: commented);
+            content: OPTIONElement.toOptions(options));
 
   @override
   SELECTElement copy() {
@@ -3545,8 +3527,8 @@ class OPTIONElement extends DOMElement with WithValue {
 
   OPTIONElement(
       {Map<String, dynamic>? attributes,
-      Object? classes,
-      Object? style,
+      super.classes,
+      super.style,
       Object? value,
       String? label,
       bool? selected,
@@ -3554,8 +3536,6 @@ class OPTIONElement extends DOMElement with WithValue {
       String? text})
       : super._(
           'option',
-          classes: classes,
-          style: style,
           attributes: {
             ...?attributes,
             if (value != null) 'value': parseString(value),
@@ -3626,30 +3606,23 @@ class TEXTAREAElement extends DOMElement with WithValue {
 
   TEXTAREAElement(
       {Map<String, dynamic>? attributes,
-      Object? id,
+      super.id,
       Object? name,
-      Object? classes,
-      Object? style,
+      super.classes,
+      super.style,
       Object? cols,
       Object? rows,
-      Object? content,
-      bool? hidden,
+      super.content,
+      super.hidden,
       bool disabled = false,
-      bool commented = false})
-      : super._('textarea',
-            id: id,
-            classes: classes,
-            style: style,
-            attributes: {
-              if (name != null) 'name': name,
-              if (cols != null) 'cols': cols,
-              if (rows != null) 'rows': rows,
-              if (disabled) 'disabled': disabled,
-              ...?attributes
-            },
-            content: content,
-            hidden: hidden,
-            commented: commented);
+      super.commented = false})
+      : super._('textarea', attributes: {
+          if (name != null) 'name': name,
+          if (cols != null) 'cols': cols,
+          if (rows != null) 'rows': rows,
+          if (disabled) 'disabled': disabled,
+          ...?attributes
+        });
 
   @override
   TEXTAREAElement copy() {
@@ -3915,25 +3888,19 @@ class TABLEElement extends DOMElement {
   }
 
   TABLEElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
       Object? caption,
       Object? head,
       Object? body,
       Object? foot,
       Object? content,
-      bool? hidden,
-      bool commented = false})
+      super.hidden,
+      super.commented = false})
       : super._('table',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: createTableContent(content, caption, head, body, foot),
-            hidden: hidden,
-            commented: commented);
+            content: createTableContent(content, caption, head, body, foot));
 
   @override
   TABLEElement copy() {
@@ -3963,21 +3930,14 @@ class THEADElement extends TABLENode {
   }
 
   THEADElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
       Object? rows,
-      bool? hidden,
-      bool commented = false})
-      : super._('thead',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: createTableRows(rows, true),
-            hidden: hidden,
-            commented: commented);
+      super.hidden,
+      super.commented = false})
+      : super._('thead', content: createTableRows(rows, true));
 
   @override
   THEADElement copy() {
@@ -4007,21 +3967,14 @@ class CAPTIONElement extends TABLENode {
   }
 
   CAPTIONElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false})
-      : super._('caption',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
+      super.content,
+      super.hidden,
+      super.commented = false})
+      : super._('caption');
 
   @override
   CAPTIONElement copy() {
@@ -4051,21 +4004,14 @@ class TBODYElement extends TABLENode {
   }
 
   TBODYElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
       Object? rows,
-      bool? hidden,
-      bool commented = false})
-      : super._('tbody',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: createTableRows(rows, false),
-            hidden: hidden,
-            commented: commented);
+      super.hidden,
+      super.commented = false})
+      : super._('tbody', content: createTableRows(rows, false));
 
   @override
   TBODYElement copy() {
@@ -4095,21 +4041,14 @@ class TFOOTElement extends TABLENode {
   }
 
   TFOOTElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
       Object? rows,
-      bool? hidden,
-      bool commented = false})
-      : super._('tfoot',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: createTableRows(rows, false),
-            hidden: hidden,
-            commented: commented);
+      super.hidden,
+      super.commented = false})
+      : super._('tfoot', content: createTableRows(rows, false));
 
   @override
   TFOOTElement copy() {
@@ -4139,22 +4078,15 @@ class TRowElement extends TABLENode {
   }
 
   TRowElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
       Object? cells,
       bool headerRow = false,
-      bool? hidden,
-      bool commented = false})
-      : super._('tr',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: createTableCells(cells, headerRow),
-            hidden: hidden,
-            commented: commented);
+      super.hidden,
+      super.commented = false})
+      : super._('tr', content: createTableCells(cells, headerRow));
 
   bool get isHeaderRow => parent != null ? parent is THEADElement : false;
 
@@ -4191,21 +4123,14 @@ class THElement extends TABLENode {
   }
 
   THElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false})
-      : super._('th',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
+      super.content,
+      super.hidden,
+      super.commented = false})
+      : super._('th');
 
   @override
   THElement copy() {
@@ -4240,21 +4165,14 @@ class TDElement extends TABLENode {
   }
 
   TDElement(
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false})
-      : super._('td',
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+      {super.attributes,
+      super.id,
+      super.classes,
+      super.style,
+      super.content,
+      super.hidden,
+      super.commented = false})
+      : super._('td');
 
   @override
   TDElement copy() {

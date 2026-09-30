@@ -1,3 +1,20 @@
+## 3.0.10
+
+- `DOMGeneratorWebImpl`:
+  - `addExternalElementToElement`: fixed `NoSuchMethodError` with a `List` of nodes (the `asJSAny` extension was
+    called on a `dynamic` element).
+
+- `DOMNodeRuntimeWebImpl` / `DOMNodeRuntimeDartHTMLImpl`:
+  - `clearClasses`: fixed removing the element's children instead of its classes.
+
+- `DOMActionExecutor`:
+  - `call`: fixed `removeclass`/`removeclasses` being dispatched to `callAddClass` instead of `callRemoveClass`.
+
+- Element constructors (`DIVElement`, `INPUTElement`, `SELECTElement`, `OPTIONElement`, `TEXTAREAElement` and the
+  table elements): use super parameters (`use_super_parameters` lint).
+
+- Added `test/dom_builder_web_regression_test.dart`.
+
 ## 3.0.9
 
 - `DOMGeneratorWebImpl`:

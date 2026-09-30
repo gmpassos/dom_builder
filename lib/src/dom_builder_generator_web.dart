@@ -276,7 +276,10 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
             added.addAll(l);
           }
         } else {
-          var jsAny = e.asJSAny;
+          // `e` is `dynamic`: extension members (like `asJSAny`) can't be
+          // resolved on it, so give it a static type first.
+          final Object o = e;
+          var jsAny = o.asJSAny;
           if (jsAny.isA<Node>()) {
             var node = jsAny as Node;
             element.appendChild(node);
@@ -714,7 +717,7 @@ class DOMNodeRuntimeWebImpl extends DOMNodeRuntime<Node> {
   @override
   void clearClasses() {
     final element = nodeAsElement;
-    element?.clear();
+    element?.classList.clear();
   }
 
   @override
