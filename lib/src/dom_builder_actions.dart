@@ -74,7 +74,7 @@ abstract class DOMActionExecutor<T extends Object> {
         return callAddClass(self, parameters);
       case 'removeclass':
       case 'removeclasses':
-        return callAddClass(self, parameters);
+        return self == null ? null : callRemoveClass(self, parameters);
       case 'setclass':
       case 'setclasses':
         return callSetClass(self, parameters);
