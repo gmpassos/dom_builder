@@ -246,7 +246,9 @@ class DOMNode implements AsDOMNode {
   static List<DOMNode> _parseListNodes(Iterable l) {
     if (l is List) {
       if (l is List<DOMNode>) {
-        return l;
+        // A copy: the caller's list must not be shared (and may have a
+        // narrower element type, like `List<DOMElement>`).
+        return List<DOMNode>.of(l);
       } else if (l is List<DOMNode?>) {
         return l.nonNulls.toList();
       }
@@ -380,7 +382,7 @@ class DOMNode implements AsDOMNode {
     : allowContent = allowContent ?? true,
       _commented = commented ?? false;
 
-  DOMNode({Object? content}) : allowContent = true {
+  DOMNode({Object? content}) : allowContent = true, _commented = false {
     if (content != null) {
       _content = DOMNode.parseNodes(content);
       _setChildrenParent();
@@ -432,7 +434,8 @@ class DOMNode implements AsDOMNode {
     for (var node in content) {
       var subHtml = node.buildHTML(
         withIndent: withIndent,
-        parentIndent: parentIndent + indent,
+        // A `DOMNode` has no tag: its content is at its own indentation.
+        parentIndent: parentIndent,
         indent: indent,
         disableIndent: disableIndent,
         xhtml: xhtml,
@@ -902,6 +905,7 @@ class DOMNode implements AsDOMNode {
         _addNodeToContent(elem);
       } else {
         _content!.insert(index, elem);
+        elem.parent = this;
       }
       return;
     }
@@ -2445,7 +2449,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     }
 
     if (classes != null) {
-      appendToAttribute('classes', classes);
+      appendToAttribute('class', classes);
     }
 
     if (style != null) {
@@ -2456,7 +2460,12 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   /// Applies [id], [classes] and [style] to children nodes that matches [selector].
-  T applyWhere<T extends DOMElement>(Object? selector, {id, classes, style}) {
+  T applyWhere<T extends DOMElement>(
+    Object? selector, {
+    Object? id,
+    Object? classes,
+    Object? style,
+  }) {
     var all = selectAllWhere(selector);
 
     for (var elem in all) {
@@ -2731,6 +2740,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     DOMNode? previousNode,
     DOMContext? domContext,
   }) {
+    // Commented nodes are ignored, like in `DOMNode.buildHTML` and
+    // `DOMGenerator.build`:
+    if (isCommented) return '';
+
     if (buildTemplates && hasUnresolvedTemplate) {
       var htmlUnresolvedTemplate = buildHTML(
         withIndent: true,
@@ -2849,6 +2862,9 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
     DOMNode? prev;
     for (var node in content) {
+      // Skip commented nodes entirely (no indentation/line break for them):
+      if (node.isCommented) continue;
+
       var subElement = node.buildHTML(
         withIndent: withIndent,
         parentIndent: innerIndent,
@@ -2877,12 +2893,60 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           tag == other.tag &&
           equalsAttributes(other) &&
           ((isEmptyContent && other.isEmptyContent) ||
-              isEqualsDeep(_content, other._content));
+              _equalsNodes(_content, other._content));
 
   /// Returns true if [other] have the same attributes.
-  bool equalsAttributes(DOMElement other) =>
-      ((hasEmptyAttributes && other.hasEmptyAttributes) ||
-      isEqualsDeep(_attributes, other._attributes));
+  bool equalsAttributes(DOMElement other) {
+    if (hasEmptyAttributes && other.hasEmptyAttributes) return true;
+
+    final attributes = _attributes;
+    final otherAttributes = other._attributes;
+    if (attributes == null ||
+        otherAttributes == null ||
+        attributes.length != otherAttributes.length) {
+      return false;
+    }
+
+    for (var e in attributes.entries) {
+      var otherAttribute = otherAttributes[e.key];
+      if (otherAttribute == null ||
+          !_equalsAttribute(e.value, otherAttribute)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // `DOMAttribute` and `DOMNode` keep identity equality (they are mutable
+  // and used as map keys, e.g. by `DOMTreeMap`), so compare by value here:
+
+  static bool _equalsAttribute(DOMAttribute a, DOMAttribute b) =>
+      identical(a, b) ||
+      (a.name == b.name &&
+          a.valueHandler.runtimeType == b.valueHandler.runtimeType &&
+          a.value == b.value);
+
+  static bool _equalsNodes(List<DOMNode>? a, List<DOMNode>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+
+    for (var i = 0; i < a.length; ++i) {
+      if (!_equalsNode(a[i], b[i])) return false;
+    }
+
+    return true;
+  }
+
+  static bool _equalsNode(DOMNode a, DOMNode b) {
+    if (identical(a, b)) return true;
+
+    if (a is DOMElement) return a.equals(b);
+    if (a is TextNode) return a.equals(b);
+    if (a is TemplateNode) return a.equals(b);
+
+    return a == b;
+  }
 
   static int objectHashcode(Object? o) {
     if (isEmptyObject(o)) return 0;
@@ -3888,6 +3952,9 @@ TABLENode? createTableEntry(Object? entry, {bool? header, bool? footer}) {
 }
 
 List<TRowElement> createTableRows(Object? rows, bool header) {
+  // No rows (not a row with an empty cell):
+  if (rows == null) return <TRowElement>[];
+
   List<TRowElement> tableRows;
 
   if (rows is Iterable) {
@@ -3994,22 +4061,23 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
           .toList();
       return list;
     }
-  } else if (rowCells is TDElement || rowCells is THElement) {
-    return [rowCells as TABLENode];
   }
 
   if (rowCells != null && rowCells is! Iterable) {
     rowCells = [rowCells];
   }
 
-  List list;
-  if (header) {
-    list = $tags('th', rowCells as Iterable?);
-  } else {
-    list = $tags('td', rowCells as Iterable?);
-  }
+  final cells = rowCells as Iterable?;
+  if (cells == null) return <TABLENode>[];
 
-  return list.cast<TABLENode>().toList();
+  // Existing cells are never nested into another cell: a `td` in a header
+  // row is converted to a `th`, and a `th` in a body row is kept (a row
+  // header):
+  return cells.map<TABLENode>((e) {
+    if (e is TDElement) return header ? e.asTHElement() : e;
+    if (e is THElement) return e;
+    return $tag(header ? 'th' : 'td', content: e) as TABLENode;
+  }).toList();
 }
 
 abstract class TABLENode extends DOMElement {

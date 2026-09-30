@@ -22,6 +22,49 @@
     through a different JS wrapper (e.g. `element.firstChild`). The element association was an `Expando` keyed by
     the Dart wrapper; it's now a `DOMWeakStore`, keyed by JS identity (a JS `WeakMap`) on the web.
 
+- `DOMNode` / `DOMElement` fixes:
+  - `apply`/`applyWhere(classes:)`: add to the `class` attribute (used to create a `classes` attribute).
+  - `equals`: compares attributes and content by value (equal elements used to never match).
+  - Content given as a `List<DOMNode>` subtype is copied: the caller's list is no longer mutated, and adding text to
+    a `List<DOMElement>` content no longer throws.
+  - `insertAt` of a single parsed node now sets its `parent`.
+  - `DOMNode({content})`: fixed `LateInitializationError` (`_commented` wasn't initialized); a bare `DOMNode` no longer
+    indents its content.
+  - `DOMElement.buildHTML`: commented elements are omitted, as documented and as `DOMNode.buildHTML` and the
+    generators already did (e.g. `$br(amount: 0)` renders `''`).
+
+- Tables:
+  - Empty `TBODYElement`/`THEADElement`/`TFOOTElement` no longer render a phantom `<tr><td></td></tr>`.
+  - A `TDElement` in a header row is converted to `th` (it was nested as `<th><td>`), and a `THElement` in a body row
+    is kept (it was nested as `<td><th>`).
+
+- `DOMAction.parseParameters`: fixed `ArgumentError` for actions with 2+ parameters (e.g. `addClass(a, b)`).
+
+- DSX:
+  - `DSX.varArgs`: fixed the 10th argument being replaced by the literal `10`.
+  - `DSXResolver.setResolvedValue`: fixed the resolved value (e.g. of a future DSX) being cleared when the previous
+    element wasn't in the DOM.
+
+- `toIntlMessageResolver`: a `dynamic Function()` resolver converts its result with `parseString` (it threw a
+  `TypeError` for non-`String` results).
+
+- `DOMGenerator`:
+  - `buildElement`: named elements use the `context` passed to `generate()`, falling back to `domContext`.
+  - `generateWithRoot`/`generateFromHTML`: fixed a null-check crash when generating into an unmapped `parent` without
+    a `domParent`.
+
+- CSS:
+  - Comments of `color`, `width`, `height`, `border`, `opacity`, `display`, `background` and `background-color`
+    entries are no longer dropped.
+  - `CSSMax`/`CSSMin.compute()`: work when all arguments are plain numbers (e.g. `max(1, 3, 2)` → `3`).
+  - `CSSColorName`: keeps its alpha (`hasAlpha` is `false` for opaque names, `true` for `transparent`).
+  - Background `repeat-x`/`repeat-y` are no longer parsed as `repeat`.
+
+- `DOMTemplate`:
+  - `copy()` of condition blocks keeps their `{{?:x}}`/`{{?!x}}`/`{{?}}` else branches.
+  - A `{{?!x}}` block no longer renders inside the preceding if-block's content.
+  - `DOMTemplateBlockElseNot.toString()` emits a valid `{{?!x}}…` block (templates with else-not blocks round-trip).
+
 - Now based on `web_utils` 1.1.0 and `js_interop_utils` 1.1.0, which bring:
   - `Node.clear()`/`clearNodes()` fixed for non-`Element` nodes (used by the web runtime `clear`).
   - `isA`-based `asJSAny`/`asJSObject` and typed lists `.toJS` producing JS typed arrays.
@@ -34,6 +77,14 @@
   - test: ^1.32.0
   - dependency_validator: ^5.1.0
   - coverage: ^1.15.1
+
+- Tests:
+  - Added `test/dom_builder_web_integration_test.dart`: real browser DOM through the `package:web` generator (events,
+    runtime, tree map, actions, `DOMAsync`, templates, DSX).
+  - Added `test/dom_builder_elements_test.dart` and `test/dom_builder_node_test.dart`: elements, helpers, attributes,
+    tables. (`dom_builder_node_test.dart` isn't compiled with `dart2wasm`: it triggers a dart2wasm 3.13.3 compiler
+    crash.)
+  - Added `test/dom_builder_dsx_css_generator_test.dart`: DSX, CSS, generators, templates, context and actions.
 
 ## 3.0.10
 

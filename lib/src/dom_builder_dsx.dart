@@ -224,7 +224,7 @@ class DSX<T extends Object> {
       return DSX(
         objSource,
         obj,
-        parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9, 10],
+        parameters: [a1, a2, a3, a4, a5, a6, a7, a8, a9, a10],
       );
     } else if (a9 != null) {
       return DSX(
@@ -565,8 +565,6 @@ class DSXResolver<T extends Object> {
   }
 
   DOMElement setResolvedValue(dynamic value) {
-    _resolvedValue = value;
-
     var element = _valueAsElement(value);
 
     // Call `listenDSXValue` if type defines method:
@@ -590,6 +588,8 @@ class DSXResolver<T extends Object> {
       }
     }
 
+    // Set after the previous element cleanup, since `reset()` clears it:
+    _resolvedValue = value;
     _resolvedElement = element;
 
     return element;

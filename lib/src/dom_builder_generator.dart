@@ -229,11 +229,16 @@ abstract class DOMGenerator<T extends Object> {
 
     domRoot ??= treeMap.getMappedDOMNode(rootElement) as DOMElement?;
 
+    // An unmapped `rootElement` without a `domRoot` (e.g.
+    // `generateFromHTML(html, parent: p)`): represent it with a new
+    // `DOMElement` of the same tag.
+    domRoot ??= DOMElement(normalizeTag(getElementTag(rootElement)) ?? 'div');
+
     if (rootParent != null) {
       addChildToElement(rootParent, rootElement);
     }
 
-    treeMap.map(domRoot!, rootElement, generator: this, context: context);
+    treeMap.map(domRoot, rootElement, generator: this, context: context);
 
     for (var node in nodes) {
       if (!domRoot.containsNode(node)) {
@@ -535,7 +540,7 @@ abstract class DOMGenerator<T extends Object> {
     );
 
     if (element == null) {
-      final domContext = _domContext;
+      final domContext = context ?? _domContext;
       if (domContext != null) {
         element = domContext.resolveNamedElement(
           domParent,

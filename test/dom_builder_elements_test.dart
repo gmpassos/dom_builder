@@ -1081,21 +1081,16 @@ void main() {
       expect(el.styleText, equals('color: red; width: 1px'));
     });
 
-    test(
-      'apply classes',
-      () {
-        var el = $div(classes: 'a');
-        el.apply<DOMElement>(classes: 'b');
-        expect(el.buildHTML(), equals('<div class="a b"></div>'));
+    // Regression: `apply(classes:)` appended to a `classes` attribute.
+    test('apply classes', () {
+      var el = $div(classes: 'a');
+      el.apply<DOMElement>(classes: 'b');
+      expect(el.buildHTML(), equals('<div class="a b"></div>'));
 
-        var tree = $div(content: [$span(content: 'a')]);
-        tree.applyWhere<DOMElement>('span', classes: 'c');
-        expect(tree.buildHTML(), equals('<div><span class="c">a</span></div>'));
-      },
-      skip:
-          'BUG: DOMElement.apply appends to a `classes` attribute instead of '
-          '`class` (dom_builder_base.dart:2448)',
-    );
+      var tree = $div(content: [$span(content: 'a')]);
+      tree.applyWhere<DOMElement>('span', classes: 'c');
+      expect(tree.buildHTML(), equals('<div><span class="c">a</span></div>'));
+    });
 
     test('attributes signature / tag helpers', () {
       var el = $div(id: 'x', attributes: {'b': '2', 'a': '1'});
@@ -1129,17 +1124,39 @@ void main() {
       expect(el.equals(el), isTrue);
     });
 
-    test(
-      'equals with attributes/content',
-      () {
-        expect($div(id: 'x').equals($div(id: 'x')), isTrue);
-        expect($div(content: 'a').equals($div(content: 'a')), isTrue);
-      },
-      skip:
-          'BUG: DOMElement.equals is false for equal attributes/content: '
-          'DOMAttribute and TextNode have no operator == '
-          '(dom_builder_base.dart:2873-2885)',
-    );
+    // Regression: `equals` compared attributes and content nodes by identity.
+    test('equals with attributes/content', () {
+      expect($div(id: 'x').equals($div(id: 'x')), isTrue);
+      expect($div(content: 'a').equals($div(content: 'a')), isTrue);
+      expect(
+        $div(
+          id: 'x',
+          classes: 'a b',
+          content: [
+            $span(content: 'a'),
+            'b',
+          ],
+        ).equals(
+          $div(
+            id: 'x',
+            classes: 'a b',
+            content: [
+              $span(content: 'a'),
+              'b',
+            ],
+          ),
+        ),
+        isTrue,
+      );
+
+      expect($div(id: 'x').equals($div(id: 'y')), isFalse);
+      expect($div(id: 'x').equals($div(attributes: {'title': 'x'})), isFalse);
+      expect($div(content: 'a').equals($div(content: 'b')), isFalse);
+      expect($div(content: 'a').equals($div(content: ['a', 'b'])), isFalse);
+      expect($div(content: [$span()]).equals($div(content: [$b()])), isFalse);
+      // Nodes keep identity equality (they are used as map keys):
+      expect(TextNode('a') == TextNode('a'), isFalse);
+    });
   });
 
   group('events', () {
@@ -1436,33 +1453,25 @@ void main() {
       expect(($div()..insertAfter(0, 'x')).buildHTML(), equals('<div>x</div>'));
     });
 
-    test(
-      'insertAt a single parsed node sets its parent',
-      () {
-        var d = $div(content: <Object>[$span(content: 'a')]);
-        d.insertAt(0, '<b>x</b>');
-        expect(d.content!.first.parent, isNotNull);
-        expect(() => d.checkNodes(), returnsNormally);
-      },
-      skip:
-          'BUG: _insertListToContent single-element path inserts without '
-          'setting `parent` (dom_builder_base.dart:904)',
-    );
+    // Regression: inserting a single parsed node left its `parent` null.
+    test('insertAt a single parsed node sets its parent', () {
+      var d = $div(content: <Object>[$span(content: 'a')]);
+      d.insertAt(0, '<b>x</b>');
+      expect(d.content!.first.parent, same(d));
+      expect(() => d.checkNodes(), returnsNormally);
+      expect(d.buildHTML(), equals('<div><b>x</b><span>a</span></div>'));
+    });
 
-    test(
-      'content list is copied from typed Dart lists',
-      () {
-        var list = [$span(content: 'a')]; // List<DOMElement>
-        var d = $div(content: list);
-        d.add('txt');
-        expect(d.buildHTML(), equals('<div><span>a</span>txt</div>'));
-        expect(list.length, equals(1));
-      },
-      skip:
-          'BUG: DOMNode._parseListNodes returns the caller\'s List<DOMNode> '
-          'subtype as-is: it is shared and adding a TextNode to a '
-          'List<DOMElement> throws a TypeError (dom_builder_base.dart:249)',
-    );
+    // Regression: a `List<DOMNode>` subtype was used as the content list
+    // itself (shared with the caller, and with a narrow element type).
+    test('content list is copied from typed Dart lists', () {
+      var list = [$span(content: 'a')]; // List<DOMElement>
+      var d = $div(content: list);
+      d.add('txt');
+      expect(d.buildHTML(), equals('<div><span>a</span>txt</div>'));
+      expect(list.length, equals(1));
+      expect(d.content!.first.parent, same(d));
+    });
 
     test('hasFutureElement', () {
       var ext = ExternalElementNode(Future.value(1));
@@ -1561,81 +1570,76 @@ void main() {
       );
     });
 
-    // BUG (not tested here): `DOMNode(content: ...)` leaves
-    // `late bool _commented` uninitialized, so `isCommented`/`buildHTML`
-    // throw a `LateInitializationError` (dom_builder_base.dart:383).
-    // A test calling it, even skipped, makes dart2wasm 3.13.3 crash while
-    // compiling this file (`Null check operator used on a null value` in
-    // `AstCodeGenerator._setupLocalParameters`).
+    // The `DOMNode()` constructor is tested in `dom_builder_node_test.dart`:
+    // instantiating `DOMNode` here makes dart2wasm 3.13.3 crash compiling this
+    // file (see that file).
 
-    test(
-      'commented elements are omitted from HTML',
-      () {
-        expect(
-          $div(
-            content: <Object>[
-              $b(content: 'x', commented: true),
-              'y',
-            ],
-          ).buildHTML(),
-          equals('<div>y</div>'),
-        );
-        expect($br(amount: 0).buildHTML(), isEmpty);
-      },
-      skip:
-          'BUG?: DOMElement.buildHTML ignores `isCommented` (only '
-          'DOMNode.buildHTML and the DOM generator honor it; '
-          'dom_builder_base.dart:2722)',
-    );
+    // Regression: `DOMElement.buildHTML` ignored `isCommented` ("commented
+    // (ignored)"), unlike `DOMNode.buildHTML` and the DOM generators.
+    test('commented elements are omitted from HTML', () {
+      expect(
+        $div(
+          content: <Object>[
+            $b(content: 'x', commented: true),
+            'y',
+          ],
+        ).buildHTML(),
+        equals('<div>y</div>'),
+      );
+      expect(
+        $div(
+          content: <Object>[
+            $p(content: 'a'),
+            $p(content: 'x', commented: true),
+            $p(content: 'b'),
+          ],
+        ).buildHTML(withIndent: true),
+        equals('<div>\n  <p>a</p>\n  <p>b</p>\n</div>'),
+      );
+      expect($br(amount: 0).buildHTML(), isEmpty);
+      expect($div(content: 'x', commented: true).buildHTML(), isEmpty);
+    });
   });
 
-  group('table content bugs', () {
-    test(
-      'empty sections have no rows',
-      () {
-        expect(TBODYElement().buildHTML(), equals('<tbody></tbody>'));
-        expect(THEADElement().buildHTML(), equals('<thead></thead>'));
-      },
-      skip:
-          'BUG: createTableRows(null) creates a row with an empty cell '
-          '(dom_builder_base.dart:3923)',
-    );
+  group('table content', () {
+    // Regression: `createTableRows(null)` created a row with an empty cell.
+    test('empty sections have no rows', () {
+      expect(TBODYElement().buildHTML(), equals('<tbody></tbody>'));
+      expect(THEADElement().buildHTML(), equals('<thead></thead>'));
+      expect(TFOOTElement().buildHTML(), equals('<tfoot></tfoot>'));
+    });
 
-    test(
-      'mismatched TD/TH cells are converted, not nested',
-      () {
-        expect(
-          TRowElement(
-            cells: [TDElement(content: 'x')],
-            headerRow: true,
-          ).buildHTML(),
-          equals('<tr><th>x</th></tr>'),
-        );
-        expect(
-          TRowElement(
-            cells: [
-              THElement(content: 'x'),
-              'y',
+    // Regression: `createTableCells` wrapped a `td` in a `th` (and vice
+    // versa) instead of converting it.
+    test('mismatched TD/TH cells are converted, not nested', () {
+      expect(
+        TRowElement(
+          cells: [TDElement(content: 'x')],
+          headerRow: true,
+        ).buildHTML(),
+        equals('<tr><th>x</th></tr>'),
+      );
+      expect(
+        TRowElement(
+          cells: [
+            THElement(content: 'x'),
+            'y',
+          ],
+        ).buildHTML(),
+        equals('<tr><th>x</th><td>y</td></tr>'),
+      );
+      expect(
+        THEADElement.from(
+          DOMElement(
+            'thead',
+            content: [
+              DOMElement('tr', content: [DOMElement('th', content: 'h')]),
             ],
-          ).buildHTML(),
-          equals('<tr><th>x</th><td>y</td></tr>'),
-        );
-        expect(
-          THEADElement.from(
-            DOMElement(
-              'thead',
-              content: [
-                DOMElement('tr', content: [DOMElement('th', content: 'h')]),
-              ],
-            ),
-          )?.buildHTML(),
-          equals('<thead><tr><th>h</th></tr></thead>'),
-        );
-      },
-      skip:
-          'BUG: createTableCells wraps a TDElement in <th> (and a THElement '
-          'in <td>) instead of converting it (dom_builder_base.dart:3971)',
-    );
+          ),
+        )?.buildHTML(),
+        equals('<thead><tr><th>h</th></tr></thead>'),
+      );
+    });
   });
 
   group('TextNode / TemplateNode / ExternalElementNode / DOMAsync', () {

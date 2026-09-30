@@ -547,7 +547,12 @@ class CSSEntry<V extends CSSValue> {
     if (value == null) return null;
 
     if (value is CSSEntry) {
-      return CSSEntry<V>(name, value.value as V?, comment: comment);
+      // Keep the comment of the source entry:
+      return CSSEntry<V>(
+        name,
+        value.value as V?,
+        comment: comment ?? value._comment,
+      );
     } else if (value is CSSValue) {
       return CSSEntry<V>(name, value as V, comment: comment);
     } else if (value is String) {
@@ -1086,7 +1091,7 @@ class CSSMax extends CSSFunction {
     var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
 
     if (computedCSSNumber.length == computedNotNull.length) {
-      var maxVal = computedCSSLength.map((a) => a.value).max;
+      var maxVal = computedCSSNumber.map((a) => a.value ?? 0).max;
       return CSSNumber(maxVal);
     }
 
@@ -1216,7 +1221,7 @@ class CSSMin extends CSSFunction {
     var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
 
     if (computedCSSNumber.length == computedNotNull.length) {
-      var minVal = computedCSSLength.map((a) => a.value).min;
+      var minVal = computedCSSNumber.map((a) => a.value ?? 0).min;
       return CSSNumber(minVal);
     }
 
@@ -2189,7 +2194,9 @@ class CSSColorName extends CSSColorRGB {
   factory CSSColorName(String hexColor) => CSSColorName.parse(hexColor)!;
 
   CSSColorName._(this.name, int red, int green, int blue, double alpha)
-    : super(red, green, blue);
+    : super(red, green, blue) {
+    this.alpha = alpha;
+  }
 
   static CSSColorName? from(Object? color) {
     if (color == null) return null;
@@ -2485,7 +2492,8 @@ RegExpDialect _regexpBackgroundDialect = RegExpDialect(
         r'''(?:($gradient_type)\(\s*((?:$color|[^\(\)]+?)+)\s*\))''',
     'attachment': r'(?:scroll|fixed|local)',
     'box': r'(?:border-box|padding-box|content-box)',
-    'repeat': r'(?:repeat|repeat-x|repeat-y|no-repeat|space|round)',
+    // Longest first: `repeat` would otherwise match the start of `repeat-x`.
+    'repeat': r'(?:repeat-x|repeat-y|no-repeat|repeat|space|round)',
     'position':
         r'(?:(?:left|right|center)(?:\s+(?:top|center|bottom))?|$pos_pair)',
     'size': r'(?:auto|cover|contain|$pos_pair)',

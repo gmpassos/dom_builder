@@ -1037,6 +1037,37 @@ void main() {
       );
     });
 
+    // Regression: actions with 2+ parameters threw in `parseParameters`.
+    test('action attribute with several parameters', () async {
+      final target = $div(id: 'act-multi', classes: 'x y z');
+      final btnAdd = $button(
+        attributes: {'action': '#act-multi.addClass(a, b)'},
+        content: 'add',
+      );
+      final btnRemove = $button(
+        attributes: {'action': '#act-multi.removeClass(x, z)'},
+        content: 'remove',
+      );
+      final (:element, treeMap: _) = _generate(
+        $div(content: [target, btnAdd, btnRemove]),
+      );
+      final t = element.querySelector('#act-multi')!;
+
+      Future<void> click(DOMElement b) async {
+        b.getRuntimeNode<Element>()!.dispatchEvent(MouseEvent('click'));
+        await Future<void>.delayed(Duration.zero);
+      }
+
+      await click(btnAdd);
+      expect(t.classList.contains('a'), isTrue);
+      expect(t.classList.contains('b'), isTrue);
+
+      await click(btnRemove);
+      expect(t.classList.contains('x'), isFalse);
+      expect(t.classList.contains('z'), isFalse);
+      expect(t.classList.contains('y'), isTrue);
+    });
+
     test('action locale() is dispatched to the executor', () {
       final executor = _gen.domActionExecutor!;
       final div = HTMLDivElement();

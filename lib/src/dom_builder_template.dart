@@ -279,9 +279,9 @@ abstract class DOMTemplate {
               var variable = DOMTemplateVariable.parse(key);
               var o = DOMTemplateBlockElseNot(variable);
 
+              // Like the other else blocks, only chained (not a child):
               condition.elseCondition = o;
 
-              cursor.add(o);
               stack.add(cursor);
               cursor = o;
               break;
@@ -1085,6 +1085,17 @@ abstract class DOMTemplateBlockCondition extends DOMTemplateBlock {
     return built;
   }
 
+  /// Sets in [copy] a copy of this [elseCondition] chain, and returns [copy].
+  T _copyElseCondition<T extends DOMTemplateBlockCondition>(
+    T copy,
+    DSXResolution dsxResolution,
+  ) {
+    copy.elseCondition = elseCondition?.copy(
+      dsxResolution: dsxResolution,
+    ) as DOMTemplateBlockCondition?;
+    return copy;
+  }
+
   String _toStringRest() {
     if (elseCondition != null) {
       return elseCondition.toString();
@@ -1103,7 +1114,7 @@ class DOMTemplateBlockIf extends DOMTemplateBlockCondition {
   }) {
     var copy = DOMTemplateBlockIf(variable);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1177,7 +1188,7 @@ class DOMTemplateBlockIfCmp extends DOMTemplateBlockIf {
   }) {
     var copy = DOMTemplateBlockIfCmp(elseIf, variable, cmp, value);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1253,7 +1264,7 @@ class DOMTemplateBlockNot extends DOMTemplateBlockCondition {
   }) {
     var copy = DOMTemplateBlockNot(variable);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1283,7 +1294,7 @@ class DOMTemplateBlockElse extends DOMTemplateBlockElseCondition {
   }) {
     var copy = DOMTemplateBlockElse();
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1309,7 +1320,7 @@ class DOMTemplateBlockElseIf extends DOMTemplateBlockElseCondition {
   }) {
     var copy = DOMTemplateBlockElseIf(variable);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1335,7 +1346,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
   }) {
     var copy = DOMTemplateBlockElseNot(variable);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override
@@ -1348,7 +1359,7 @@ class DOMTemplateBlockElseNot extends DOMTemplateBlockElseCondition {
 
   @override
   String toString() {
-    return '{{?!:${variable!.keysFull}}${_toStringRest()}';
+    return '{{?!${variable!.keysFull}}}${_toStringNodes()}${_toStringRest()}';
   }
 }
 
@@ -1400,7 +1411,7 @@ class DOMTemplateBlockIfCollection extends DOMTemplateBlockCondition {
   }) {
     var copy = DOMTemplateBlockIfCollection(variable);
     copy.nodes.addAll(copyNodes(dsxResolution: dsxResolution));
-    return copy;
+    return _copyElseCondition(copy, dsxResolution);
   }
 
   @override

@@ -225,19 +225,16 @@ void main() {
       expect(domParent.content!.length, equals(2));
     });
 
-    test(
-      'generateFromHTML() into an unmapped parent',
-      () {
-        var generator = TestGenerator();
-        var parent = TestElem('div');
-        generator.generateFromHTML('<b>1</b><i>2</i>', parent: parent);
-        expect(parent.text, equals('12'));
-      },
-      skip:
-          'BUG: generateFromHTML(parent:) without `domParent`/mapped parent '
-          'crashes with a null-check in generateWithRoot '
-          '(dom_builder_generator.dart:236 `domRoot!`)',
-    );
+    // Regression: without a `domParent` or a mapped `parent`,
+    // `generateWithRoot` crashed with a null-check on `domRoot`.
+    test('generateFromHTML() into an unmapped parent', () {
+      var generator = TestGenerator();
+      var parent = TestElem('div');
+      var root = generator.generateFromHTML('<b>1</b><i>2</i>', parent: parent);
+      expect(root, same(parent));
+      expect(parent.text, equals('12'));
+      expect(parent.nodesLength, equals(2));
+    });
 
     test('generateNodes()', () {
       var generator = TestGenerator();
@@ -1526,19 +1523,18 @@ void main() {
       expect(DOMAction.parseParameters(executor, 'a'), equals(['a']));
     });
 
-    test(
-      'multiple call parameters',
-      () {
-        var executor = _LogActionExecutor();
-        expect(DOMAction.parseParameters(executor, 'a, b'), equals(['a', 'b']));
-        DOMAction.parse(executor, 'addClass(a, b)')!.execute(null);
-        expect(executor.log, equals(['addClass:a,b']));
-      },
-      skip:
-          'BUG: DOMAction.parseParameters never advances `endPos`, so any '
-          'call with 2+ parameters throws ArgumentError '
-          '(dom_builder_actions.dart:255)',
-    );
+    // Regression: `parseParameters` never advanced `endPos`, so any call with
+    // 2+ parameters threw `ArgumentError`.
+    test('multiple call parameters', () {
+      var executor = _LogActionExecutor();
+      expect(DOMAction.parseParameters(executor, 'a, b'), equals(['a', 'b']));
+      expect(
+        DOMAction.parseParameters(executor, 'a,b ,  c'),
+        equals(['a', 'b', 'c']),
+      );
+      DOMAction.parse(executor, 'addClass(a, b)')!.execute(null);
+      expect(executor.log, equals(['addClass:a,b']));
+    });
 
     test('unimplemented executor hooks', () {
       var executor = _BareActionExecutor();
@@ -1601,17 +1597,12 @@ void main() {
       expect(() => toIntlMessageResolver(42), throwsArgumentError);
     });
 
-    test(
-      'toIntlMessageResolver with a non-String `dynamic Function()`',
-      () {
-        expect(toIntlMessageResolver(() => 7)!('k'), equals('7'));
-      },
-      skip:
-          'BUG: the `dynamic Function()` branch returns the raw value from a '
-          '`String?` resolver (TypeError for non-String), unlike the '
-          '`dynamic Function(Object?)` branch that uses parseString '
-          '(dom_builder_context.dart:121)',
-    );
+    // Regression: the `dynamic Function()` branch returned the raw value
+    // (a TypeError for non-String values) instead of using `parseString`.
+    test('toIntlMessageResolver with a non-String `dynamic Function()`', () {
+      expect(toIntlMessageResolver(() => 7)!('k'), equals('7'));
+      expect(toIntlMessageResolver(() => null)!('k'), isNull);
+    });
 
     test('variables, intl, source and viewport units', () {
       var parent = DOMContext<TestNode>(variables: {'a': 1, 'b': 2});
@@ -1715,37 +1706,33 @@ void main() {
       expect((elem.get(0) as TestElem).tag, equals('named'));
     });
 
-    test(
-      'named elements with the `context` passed to generate()',
-      () {
-        var generator = TestGenerator();
-        var context = DOMContext<TestNode>()
-          ..namedElementProvider = (
-            name,
-            domGenerator,
-            treeMap,
-            domParent,
-            parent,
-            tag,
-            attrs,
-          ) => TestElem('named');
-        var elem = _elem(
-          generator.generate(
-            $div(
-              content: [
-                $div(attributes: {'name': 'w'}),
-              ],
-            ),
-            context: context,
+    // Regression: `buildElement` resolved named elements only with the
+    // generator's own `domContext`, ignoring the `context` argument.
+    test('named elements with the `context` passed to generate()', () {
+      var generator = TestGenerator();
+      var context = DOMContext<TestNode>()
+        ..namedElementProvider = (
+          name,
+          domGenerator,
+          treeMap,
+          domParent,
+          parent,
+          tag,
+          attrs,
+        ) => TestElem('named');
+      var elem = _elem(
+        generator.generate(
+          $div(
+            content: [
+              $div(attributes: {'name': 'w'}),
+            ],
           ),
-        );
-        expect((elem.get(0) as TestElem).tag, equals('named'));
-      },
-      skip:
-          'BUG: buildElement resolves named elements only with the '
-          "generator's `_domContext`, ignoring the `context` argument "
-          '(dom_builder_generator.dart:538)',
-    );
+          context: context,
+        ),
+      );
+      expect((elem.get(0) as TestElem).tag, equals('named'));
+      expect(generator.domContext, isNull);
+    });
   });
 
   group('DSX', () {
@@ -1847,17 +1834,12 @@ void main() {
       }
     });
 
-    test(
-      'DSX.varArgs with 10 arguments keeps the 10th argument',
-      () {
-        String f(a, [b, c, d, e, f, g, h, i, j]) => '';
-        var dsx = DSX<Function>.varArgs(f, f, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'x');
-        expect(dsx.parameters!.last, equals('x'));
-      },
-      skip:
-          'BUG: DSX.varArgs passes the literal `10` instead of `a10` '
-          '(dom_builder_dsx.dart:227)',
-    );
+    // Regression: `DSX.varArgs` passed the literal `10` instead of `a10`.
+    test('DSX.varArgs with 10 arguments keeps the 10th argument', () {
+      String f(a, [b, c, d, e, f, g, h, i, j]) => '';
+      var dsx = DSX<Function>.varArgs(f, f, 1, 2, 3, 4, 5, 6, 7, 8, 9, 'x');
+      expect(dsx.parameters, equals([1, 2, 3, 4, 5, 6, 7, 8, 9, 'x']));
+    });
 
     test('primitive, typed and toDSXValue objects', () {
       var sDSX = 'text'.dsx()!;
@@ -1899,21 +1881,20 @@ void main() {
       );
     });
 
-    test(
-      'future DSX keeps the resolved value',
-      () async {
-        var completer = Completer<String>();
-        var resolver = completer.future.dsx().createResolver();
-        resolver.resolveValue();
-        completer.complete('done');
-        await Future<void>.delayed(Duration(milliseconds: 10));
-        expect(resolver.resolvedValue, equals('done'));
-      },
-      skip:
-          'BUG: DSXResolver.setResolvedValue sets `_resolvedValue` then calls '
-          'reset() (when the previous element is not in the DOM), wiping it '
-          '(dom_builder_dsx.dart setResolvedValue)',
-    );
+    // Regression: `setResolvedValue` set the value, then `reset()` (when the
+    // previous element isn't in the DOM) wiped it.
+    test('future DSX keeps the resolved value', () async {
+      var completer = Completer<String>();
+      var resolver = completer.future.dsx().createResolver();
+      expect(resolver.resolveValue(), equals('...'));
+      expect(resolver.resolvedValue, equals('...'));
+      completer.complete('done');
+      await Future<void>.delayed(Duration(milliseconds: 10));
+      expect(resolver.resolvedValue, equals('done'));
+      expect(resolver.resolvedElement!.buildHTML(), contains('done'));
+      // Resolving again returns the cached value:
+      expect(resolver.resolveValue(), equals('done'));
+    });
 
     test('DSXResolver', () {
       var lifecycle = _Lifecycle();
@@ -2105,18 +2086,32 @@ void main() {
       expect(CSS.parse(''), isNull);
     });
 
-    test(
-      'CSS parsing keeps comments of typed properties',
-      () {
-        var css = CSS('color: red /* primary */; width: 1px /* w */');
-        expect(css.style, equals('color: red/* primary */; width: 1px/* w */'));
-      },
-      skip:
-          'BUG: comments of `color`/`background(-color)`/`width`/`height`/'
-          '`border`/`opacity`/`display` are dropped: their setters rebuild '
-          'the entry with CSSEntry.from(), which ignores the source entry '
-          'comment (dom_builder_css.dart CSSEntry.from / CSS._putImpl)',
-    );
+    // Regression: the typed-property setters rebuilt the entry with
+    // `CSSEntry.from`, which dropped the comment of the source entry.
+    test('CSS parsing keeps comments of typed properties', () {
+      var css = CSS('color: red /* primary */; width: 1px /* w */');
+      expect(css.style, equals('color: red/* primary */; width: 1px/* w */'));
+
+      var css2 = CSS(
+        'height: 2px /* h */; opacity: 0.5 /* o */; display: block /* d */; '
+        'background-color: #000 /* bg */; border: 1px solid #000 /* b */',
+      );
+      expect(
+        css2.entriesAsString.map((e) => e.substring(e.indexOf('/*'))),
+        equals(['/* h */', '/* o */', '/* d */', '/* bg */', '/* b */']),
+      );
+
+      // An explicit comment still wins over the source entry's:
+      var entry = CSSEntry.parse<CSSGeneric>('cursor: pointer', '/* src */')!;
+      expect(
+        CSSEntry.from<CSSGeneric>('cursor', entry, 'new').toString(),
+        contains('/*new*/'),
+      );
+      expect(
+        CSSEntry.from<CSSGeneric>('cursor', entry).toString(),
+        contains('/* src */'),
+      );
+    });
 
     test('CSS API', () {
       var css = CSS(['color: #ff0000', 'width: 10px', null]);
@@ -2328,17 +2323,17 @@ void main() {
       expect(CSSFunction.computeValue(CSSGeneric('x')), isNull);
     });
 
-    test(
-      'max() / min() of plain numbers',
-      () {
-        expect(CSSMax.parse('max(1, 3, 2)')!.compute(), equals(CSSNumber(3)));
-        expect(CSSMin.parse('min(4, 2, 3)')!.compute(), equals(CSSNumber(2)));
-      },
-      skip:
-          'BUG: CSSMax/CSSMin.compute() reduce `computedCSSLength` (empty) '
-          'instead of `computedCSSNumber`, throwing StateError '
-          '(dom_builder_css.dart CSSMax/CSSMin.compute)',
-    );
+    // Regression: `compute()` reduced the (empty) `computedCSSLength` instead
+    // of `computedCSSNumber`, throwing `StateError`.
+    test('max() / min() of plain numbers', () {
+      expect(CSSMax.parse('max(1, 3, 2)')!.compute(), equals(CSSNumber(3)));
+      expect(CSSMin.parse('min(4, 2, 3)')!.compute(), equals(CSSNumber(2)));
+      expect(CSSMax.parse('max(1.5, -2)')!.compute(), equals(CSSNumber(1.5)));
+      expect(CSSMin.parse('min(1.5, -2)')!.compute(), equals(CSSNumber(-2)));
+
+      // Mixed lengths and numbers still can't be computed:
+      expect(CSSMax.parse('max(1px, 2)')!.compute(), isNull);
+    });
 
     test('units and lengths', () {
       for (var unit in CSSUnit.values) {
@@ -2507,17 +2502,19 @@ void main() {
       expect(CSSColor.parse('#000')!.inverse.toString(), equals('#ffffff'));
     });
 
-    test(
-      'CSSColorName keeps its alpha',
-      () {
-        expect(CSSColorName('black').hasAlpha, isFalse);
-        expect(CSSColorName('transparent').alpha, equals(0.0));
-      },
-      skip:
-          'BUG: CSSColorName._ ignores its `alpha` argument, leaving `_alpha` '
-          'null (hasAlpha is always true; asCSSColorRGBA fails on the VM) '
-          '(dom_builder_css.dart CSSColorName._)',
-    );
+    // Regression: `CSSColorName._` ignored its `alpha` argument, leaving
+    // `_alpha` null (`hasAlpha` always true).
+    test('CSSColorName keeps its alpha', () {
+      expect(CSSColorName('black').alpha, equals(1.0));
+      expect(CSSColorName('black').hasAlpha, isFalse);
+      expect(CSSColorName('transparent').alpha, equals(0.0));
+      expect(CSSColorName('transparent').hasAlpha, isTrue);
+
+      var rgba = CSSColorName('red').asCSSColorRGBA;
+      expect([rgba.red, rgba.green, rgba.blue], equals([255, 0, 0]));
+      expect(rgba.alpha, equals(1.0));
+      expect(CSSColorName('transparent').asCSSColorRGBA.alpha, equals(0.0));
+    });
 
     test('borders', () {
       for (var style in CSSBorderStyle.values) {
@@ -2667,23 +2664,23 @@ void main() {
       expect(CSSBackgroundImage.from(null), isNull);
     });
 
-    test(
-      'background repeat-x / repeat-y',
-      () {
-        expect(
-          CSSBackground.parse('url(a.png) repeat-x')!.firstImage!.repeat,
-          equals(CSSBackgroundRepeat.repeatX),
-        );
-        expect(
-          CSSBackground.parse('url(a.png) repeat-y')!.firstImage!.repeat,
-          equals(CSSBackgroundRepeat.repeatY),
-        );
-      },
-      skip:
-          'BUG: the background `repeat` regexp alternation matches `repeat` '
-          'before `repeat-x`/`repeat-y`, so both parse as `repeat` '
-          '(dom_builder_css.dart _regexpBackgroundDialect)',
-    );
+    // Regression: the `repeat` regexp alternation matched `repeat` before
+    // `repeat-x`/`repeat-y`, so both parsed as `repeat`.
+    test('background repeat-x / repeat-y', () {
+      final expected = {
+        'repeat-x': CSSBackgroundRepeat.repeatX,
+        'repeat-y': CSSBackgroundRepeat.repeatY,
+        'no-repeat': CSSBackgroundRepeat.noRepeat,
+        'repeat': CSSBackgroundRepeat.repeat,
+        'space': CSSBackgroundRepeat.space,
+        'round': CSSBackgroundRepeat.round,
+      };
+      for (final e in expected.entries) {
+        final background = CSSBackground.parse('url(a.png) ${e.key}')!;
+        expect(background.firstImage!.repeat, equals(e.value), reason: e.key);
+        expect(background.toString(), contains(e.key), reason: e.key);
+      }
+    });
 
     test('url()', () {
       expect(CSSURL.parse('url("a b.png")')!.url, equals('a b.png'));
@@ -2749,17 +2746,48 @@ void main() {
       expect(DOMTemplate.tryParse('plain text'), isNull);
     });
 
-    test(
-      'copy() keeps else branches',
-      () {
-        var t = DOMTemplate.parse('{{:a}}x{{?:b}}y{{?}}z{{/}}');
-        expect(t.copy().toString(), equals(t.toString()));
-      },
-      skip:
-          'BUG: DOMTemplateBlockCondition subclasses copy() without their '
-          '`elseCondition`, dropping `{{?:x}}`/`{{?}}` branches '
-          '(dom_builder_template.dart DOMTemplateBlockIf.copy etc.)',
-    );
+    // Regression: `DOMTemplateBlockCondition` subclasses copied without their
+    // `elseCondition`, dropping `{{?:x}}`/`{{?!x}}`/`{{?}}` branches.
+    test('copy() keeps else branches', () {
+      for (final source in [
+        '{{:a}}x{{?:b}}y{{?}}z{{/}}',
+        '{{!a}}x{{?!b}}y{{?}}z{{/}}',
+        '{{:a=="1"}}x{{?:a=="2"}}y{{/}}',
+        '{{*:list}}[{{.}}]{{?}}empty{{/}}',
+      ]) {
+        var t = DOMTemplate.parse(source);
+        var copy = t.copy();
+        expect(copy.toString(), equals(source), reason: source);
+
+        for (final vars in <Map<String, Object?>>[
+          {},
+          {'a': true},
+          {'b': true},
+          {'a': '1'},
+          {'a': '2'},
+          {
+            'list': [1, 2],
+          },
+        ]) {
+          expect(
+            (copy as DOMTemplateNode).buildAsString(vars),
+            equals(t.buildAsString(vars)),
+            reason: '$source $vars',
+          );
+        }
+      }
+
+      // The copy's else chain is independent of the original:
+      var t = DOMTemplate.parse('{{:a}}x{{?}}z{{/}}');
+      var copy = t.copy() as DOMTemplateNode;
+      var copyIf = copy.nodes.single as DOMTemplateBlockCondition;
+      var originalIf = t.nodes.single as DOMTemplateBlockCondition;
+      expect(copyIf.elseCondition, isA<DOMTemplateBlockElse>());
+      expect(
+        identical(copyIf.elseCondition, originalIf.elseCondition),
+        isFalse,
+      );
+    });
 
     test('copy() and isEmpty', () {
       var t = DOMTemplate.parse(
@@ -2797,29 +2825,42 @@ void main() {
       expect(t.buildAsString({'a': false, 'b': true}), equals(''));
     });
 
-    test(
-      'else-not block is not rendered when the if-condition is true',
-      () {
-        var t = DOMTemplate.parse('{{:a}}A{{?!b}}not-b{{/}}');
-        expect(t.buildAsString({'a': true}), equals('A'));
-      },
-      skip:
-          "BUG: the `{{?!x}}` parser branch also adds the else-not block as a "
-          'child of the if block (`cursor.add(o)`), so it renders inside the '
-          'if content (dom_builder_template.dart:284)',
-    );
+    // Regression: the `{{?!x}}` parser branch also added the else-not block as
+    // a child of the if block, so it rendered inside the if content.
+    test('else-not block is not rendered when the if-condition is true', () {
+      var t = DOMTemplate.parse('{{:a}}A{{?!b}}not-b{{/}}');
+      expect(t.buildAsString({'a': true}), equals('A'));
+      expect(t.buildAsString({'a': true, 'b': true}), equals('A'));
+      expect(t.buildAsString({'a': false}), equals('not-b'));
+      expect(t.buildAsString({'a': false, 'b': true}), equals(''));
 
-    test(
-      'else-not block toString() round-trip',
-      () {
-        var source = '{{:a}}A{{?!b}}not-b{{?}}else{{/}}';
+      var ifBlock = t.nodes.single as DOMTemplateBlockCondition;
+      expect(ifBlock.nodes.whereType<DOMTemplateBlockElseNot>(), isEmpty);
+      expect(ifBlock.elseCondition, isA<DOMTemplateBlockElseNot>());
+    });
+
+    // Regression: `DOMTemplateBlockElseNot.toString()` emitted `{{?!:b}`
+    // without the closing brace and its nodes.
+    test('else-not block toString() round-trip', () {
+      for (final source in [
+        '{{:a}}A{{?!b}}not-b{{/}}',
+        '{{:a}}A{{?!b}}not-b{{?}}else{{/}}',
+        'x{{!a}}A{{?!b.c}}B{{?:d}}D{{/}}y',
+      ]) {
         var t = DOMTemplate.parse(source);
-        expect(t.toString(), equals(source));
-      },
-      skip:
-          'BUG: DOMTemplateBlockElseNot.toString() emits `{{?!:b}` without '
-          'the closing brace and its nodes (dom_builder_template.dart)',
-    );
+        expect(t.toString(), equals(source), reason: source);
+        expect(
+          DOMTemplate.parse(t.toString()).toString(),
+          equals(source),
+          reason: source,
+        );
+      }
+
+      var t = DOMTemplate.parse('{{:a}}A{{?!b}}not-b{{?}}else{{/}}');
+      expect(t.buildAsString({'a': true}), equals('A'));
+      expect(t.buildAsString({}), equals('not-b'));
+      expect(t.buildAsString({'b': true}), equals('else'));
+    });
 
     test('intl messages through a context resolver', () {
       var t = DOMTemplate.parse('{{intl:hello}} {{intl:missing}}!');

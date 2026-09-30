@@ -258,6 +258,8 @@ abstract class DOMAction<T extends Object> {
 
       var param = match.group(1)!.trim();
       parameters.add(param);
+
+      endPos = match.end;
     }
 
     return parameters;

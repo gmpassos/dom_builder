@@ -118,7 +118,7 @@ IntlMessageResolver? toIntlMessageResolver(Object? resolver) {
   } else if (resolver is String Function()) {
     return (k, [p]) => resolver();
   } else if (resolver is dynamic Function()) {
-    return (k, [p]) => resolver();
+    return (k, [p]) => parseString(resolver());
   } else if (resolver is Map) {
     return (k, [p]) => resolver[k];
   } else {
