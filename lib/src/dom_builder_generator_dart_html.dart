@@ -549,7 +549,7 @@ class DOMNodeRuntimeDartHTMLImpl extends DOMNodeRuntime<Node> {
   @override
   void clearClasses() {
     if (isNodeElement) {
-      nodeAsElement!.nodes.clear();
+      nodeAsElement!.classes.clear();
     }
   }
 
