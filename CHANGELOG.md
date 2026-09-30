@@ -1,3 +1,35 @@
+## 3.1.0
+
+- sdk: ^3.13.0
+
+- `$asyncContent`: removed `final` from parameters (a compile error with the Dart 3.13 language version).
+
+- Adopted Dart 3.8–3.13 language features (flagged by `lints` 6):
+  - Null-aware collection elements and map values (`?x`, `'k': ?v`) in element constructors, `$tag` helpers
+    (`$a`, `$img`, `$label`, `$button`, `$td`, `$th`) and `DOMElement.allEventHandlers`.
+  - Super parameters in `DIVElement`, `INPUTElement`, `SELECTElement`, `OPTIONElement`, `TEXTAREAElement` and the
+    table elements (`TABLEElement`, `CAPTIONElement`, `THEADElement`, `TBODYElement`, `TFOOTElement`, `TRowElement`,
+    `THElement`, `TDElement`).
+  - `CSSEntry._`: private named parameter `this._comment` (Dart 3.12).
+  - Explicit types for `DOMNode({content})`, `DOMElement.apply`, `createTableContent`, `$b` and
+    `DSXObjectType.forObject`.
+
+- `DOMHtmlBrowserWeb` / `DOMGeneratorWebImpl`:
+  - Use `Object?.isA<T>()` (Dart 3.12) instead of `asJSAny.isA<T>()`.
+
+- Now based on `web_utils` 1.1.0 and `js_interop_utils` 1.1.0, which bring:
+  - `Node.clear()`/`clearNodes()` fixed for non-`Element` nodes (used by the web runtime `clear`).
+  - `isA`-based `asJSAny`/`asJSObject` and typed lists `.toJS` producing JS typed arrays.
+
+- Dependencies:
+  - web_utils: ^1.1.0
+  - js_interop_utils: ^1.1.0
+  - html: ^0.15.7
+  - lints: ^6.1.0
+  - test: ^1.32.0
+  - dependency_validator: ^5.1.0
+  - coverage: ^1.15.1
+
 ## 3.0.9
 
 - `DOMGeneratorWebImpl`:
