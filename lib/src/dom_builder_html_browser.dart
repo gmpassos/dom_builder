@@ -188,10 +188,7 @@ class DOMHtmlBrowserDartHtml extends DOMHtml {
         }
       case '<br><br>':
         {
-          return <DOMNode>[
-            DOMElement('br'),
-            DOMElement('br'),
-          ];
+          return <DOMNode>[DOMElement('br'), DOMElement('br')];
         }
       case '<br><br><br>':
         {
@@ -259,7 +256,7 @@ const _htmlBasicAttrs = [
   'href',
   'target',
   'contenteditable',
-  'xmlns'
+  'xmlns',
 ];
 
 const _htmlControlAttrs = [
@@ -285,13 +282,13 @@ const _htmlExtendedAttrs = [
   'action',
   'uilayout',
   'oneventkeypress',
-  'oneventclick'
+  'oneventclick',
 ];
 
 const _htmlElementsAllowedAttrs = [
   ..._htmlBasicAttrs,
   ..._htmlControlAttrs,
-  ..._htmlExtendedAttrs
+  ..._htmlExtendedAttrs,
 ];
 
 final _anyUriPolicy = _AnyUriPolicy();
@@ -311,7 +308,10 @@ class _FullSvgNodeValidator implements dart_html.NodeValidator {
 
   @override
   bool allowsAttribute(
-      dart_html.Element element, String attributeName, String value) {
+    dart_html.Element element,
+    String attributeName,
+    String value,
+  ) {
     if (attributeName == 'is' || attributeName.startsWith('on')) {
       return false;
     }
@@ -319,8 +319,10 @@ class _FullSvgNodeValidator implements dart_html.NodeValidator {
   }
 }
 
-dart_html.NodeValidatorBuilder _createStandardNodeValidator(
-    {bool svg = true, bool allowSvgForeignObject = false}) {
+dart_html.NodeValidatorBuilder _createStandardNodeValidator({
+  bool svg = true,
+  bool allowSvgForeignObject = false,
+}) {
   var validator = dart_html.NodeValidatorBuilder()
     ..allowTextElements()
     ..allowHtml5()

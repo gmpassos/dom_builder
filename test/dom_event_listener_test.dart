@@ -103,9 +103,7 @@ void main() {
       var elDiv = el.buildDOM(generator: generator)!;
       tree.map(el, elDiv, generator: generator);
 
-      tree.cancelAllSubscriptions(
-        elementsSubscriptions: true,
-      );
+      tree.cancelAllSubscriptions(elementsSubscriptions: true);
 
       expect(el.hasAnyEventListener, isTrue);
     });

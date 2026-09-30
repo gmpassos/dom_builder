@@ -12,8 +12,12 @@ class TestActionExecutorLog extends DOMActionExecutor<TestNode> {
 
   @override
   TestNode? execute(
-      DOMAction<TestNode> action, TestNode? target, TestNode? self,
-      {DOMTreeMap? treeMap, DOMContext? context}) {
+    DOMAction<TestNode> action,
+    TestNode? target,
+    TestNode? self, {
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  }) {
     log.add(action.actionString());
     return null;
   }

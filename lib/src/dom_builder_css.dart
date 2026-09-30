@@ -79,8 +79,12 @@ class CSS {
         var entryStr = css.substring(entryStart);
         if (entryStr.isNotEmpty) {
           if (comment != null) {
-            entryStr =
-                _cutString(entryStr, entryStart, commentStart, comment.length);
+            entryStr = _cutString(
+              entryStr,
+              entryStart,
+              commentStart,
+              comment.length,
+            );
             entries.add(comment);
           }
           entries.add(entryStr.trim());
@@ -95,8 +99,12 @@ class CSS {
         var entryStr = css.substring(entryStart, idx);
         if (entryStr.isNotEmpty) {
           if (comment != null) {
-            entryStr =
-                _cutString(entryStr, entryStart, commentStart, comment.length);
+            entryStr = _cutString(
+              entryStr,
+              entryStart,
+              commentStart,
+              comment.length,
+            );
             entries.add(comment);
           }
           entries.add(entryStr.trim());
@@ -118,7 +126,11 @@ class CSS {
             if (entryStr.isNotEmpty) {
               if (comment != null) {
                 entryStr = _cutString(
-                    entryStr, entryStart, commentStart, comment.length);
+                  entryStr,
+                  entryStart,
+                  commentStart,
+                  comment.length,
+                );
                 entries.add(comment);
               }
               entries.add(entryStr.trim());
@@ -137,7 +149,11 @@ class CSS {
           if (entryStr.isNotEmpty) {
             if (comment != null) {
               entryStr = _cutString(
-                  entryStr, entryStart, commentStart, comment.length);
+                entryStr,
+                entryStart,
+                commentStart,
+                comment.length,
+              );
               entries.add(comment);
             }
             entries.add(entryStr.trim());
@@ -154,8 +170,12 @@ class CSS {
       var entryStr = css.substring(entryStart);
       if (entryStr.isNotEmpty) {
         if (comment != null) {
-          entryStr =
-              _cutString(entryStr, entryStart, commentStart, comment.length);
+          entryStr = _cutString(
+            entryStr,
+            entryStart,
+            commentStart,
+            comment.length,
+          );
           entries.add(comment);
         }
         entries.add(entryStr.trim());
@@ -166,7 +186,11 @@ class CSS {
   }
 
   static String _cutString(
-      String entryStr, int entryStart, int commentStart, int length) {
+    String entryStr,
+    int entryStart,
+    int commentStart,
+    int length,
+  ) {
     commentStart -= entryStart;
     var prefix = entryStr.substring(0, commentStart);
     var suffix = entryStr.substring(commentStart + length);
@@ -292,7 +316,8 @@ class CSS {
             var cssValue = CSSGeneric.from(value);
             if (cssValue == null) {
               throw StateError(
-                  "Can't parse CSS value with name '$name': $value");
+                "Can't parse CSS value with name '$name': $value",
+              );
             }
             cssEntry = CSSEntry.from<CSSGeneric>(name, cssValue);
           }
@@ -329,21 +354,31 @@ class CSS {
   List<CSSEntry> getPossibleEntries() {
     var list = [
       _getEntry('color', sampleValue: CSSColor.parse('#000000')),
-      _getEntry('background-color',
-          sampleValue: CSSColor.parse('rgba(0,0,0, 0.50)')),
-      _getEntry('width',
-          sampleValue: CSSLength(1), defaultValue: CSSGeneric('auto')),
-      _getEntry('height',
-          sampleValue: CSSLength(1), defaultValue: CSSGeneric('auto')),
+      _getEntry(
+        'background-color',
+        sampleValue: CSSColor.parse('rgba(0,0,0, 0.50)'),
+      ),
+      _getEntry(
+        'width',
+        sampleValue: CSSLength(1),
+        defaultValue: CSSGeneric('auto'),
+      ),
+      _getEntry(
+        'height',
+        sampleValue: CSSLength(1),
+        defaultValue: CSSGeneric('auto'),
+      ),
       _getEntry('border', sampleValue: CSSBorder.parse('1px solid #000000')),
       _getEntry('opacity', sampleValue: CSSNumber(1)),
       _getEntry('display', sampleValue: CSSGeneric('inline')),
     ];
 
-    var map = LinkedHashMap<String, CSSEntry>.fromEntries(list
-        .where((e) => e != null)
-        .whereType<CSSEntry<CSSValue>>()
-        .map((e) => MapEntry(e.name, e)));
+    var map = LinkedHashMap<String, CSSEntry>.fromEntries(
+      list
+          .where((e) => e != null)
+          .whereType<CSSEntry<CSSValue>>()
+          .map((e) => MapEntry(e.name, e)),
+    );
 
     for (var entry in _entries.values) {
       if (map.containsKey(entry.name)) {
@@ -357,8 +392,11 @@ class CSS {
 
   final LinkedHashMap<String, CSSEntry> _entries = LinkedHashMap();
 
-  CSSEntry<V>? _getEntry<V extends CSSValue>(String name,
-      {V? defaultValue, V? sampleValue}) {
+  CSSEntry<V>? _getEntry<V extends CSSValue>(
+    String name, {
+    V? defaultValue,
+    V? sampleValue,
+  }) {
     var entry = _entries[name] as CSSEntry<V>?;
     if (entry != null) {
       if (sampleValue != null) {
@@ -392,13 +430,17 @@ class CSS {
       _getEntry<CSSColor>('background-color');
 
   set backgroundColor(Object? value) => _addEntry(
-      'background-color', CSSEntry.from<CSSColor>('background-color', value));
+    'background-color',
+    CSSEntry.from<CSSColor>('background-color', value),
+  );
 
   CSSEntry<CSSBackground>? get background =>
       _getEntry<CSSBackground>('background');
 
   set background(Object? value) => _addEntry(
-      'background', CSSEntry.from<CSSBackground>('background', value));
+    'background',
+    CSSEntry.from<CSSBackground>('background', value),
+  );
 
   CSSEntry<CSSLength>? get width => _getEntry<CSSLength>('width');
 
@@ -449,8 +491,12 @@ class CSS {
     return s.toString();
   }
 
-  void _append(StringBuffer s, CSSEntry entry, bool withDelimiter,
-      DOMContext? domContext) {
+  void _append(
+    StringBuffer s,
+    CSSEntry entry,
+    bool withDelimiter,
+    DOMContext? domContext,
+  ) {
     if (s.isNotEmpty) {
       s.write(' ');
     }
@@ -484,18 +530,29 @@ class CSSEntry<V extends CSSValue> {
   String? _comment;
 
   CSSEntry(String name, V? value, {V? sampleValue, String? comment})
-      : this._(normalizeName(name)!, value,
-            sampleValue: sampleValue, comment: comment);
+    : this._(
+        normalizeName(name)!,
+        value,
+        sampleValue: sampleValue,
+        comment: comment,
+      );
 
-  CSSEntry._(this.name, this.value, {this.sampleValue, String? comment})
-      : _comment = comment;
+  CSSEntry._(this.name, this.value, {this.sampleValue, this._comment});
 
-  static CSSEntry<V>? from<V extends CSSValue>(String name, Object? value,
-      [String? comment]) {
+  static CSSEntry<V>? from<V extends CSSValue>(
+    String name,
+    Object? value, [
+    String? comment,
+  ]) {
     if (value == null) return null;
 
     if (value is CSSEntry) {
-      return CSSEntry<V>(name, value.value as V?, comment: comment);
+      // Keep the comment of the source entry:
+      return CSSEntry<V>(
+        name,
+        value.value as V?,
+        comment: comment ?? value._comment,
+      );
     } else if (value is CSSValue) {
       return CSSEntry<V>(name, value as V, comment: comment);
     } else if (value is String) {
@@ -506,8 +563,10 @@ class CSSEntry<V extends CSSValue> {
     return null;
   }
 
-  static CSSEntry<V>? parse<V extends CSSValue>(String entry,
-      [String? comment]) {
+  static CSSEntry<V>? parse<V extends CSSValue>(
+    String entry, [
+    String? comment,
+  ]) {
     var idx = entry.indexOf(pairDelimiter);
     if (idx < 0) return null;
 
@@ -522,8 +581,9 @@ class CSSEntry<V extends CSSValue> {
       var idx = comment.indexOf('DOMContext-original-value:');
       var originalValueStr = comment.substring(idx + 26).trim();
       if (originalValueStr.endsWith('*/')) {
-        originalValueStr =
-            originalValueStr.substring(0, originalValueStr.length - 2).trim();
+        originalValueStr = originalValueStr
+            .substring(0, originalValueStr.length - 2)
+            .trim();
       }
 
       if (originalValueStr.isNotEmpty) {
@@ -758,8 +818,11 @@ abstract class CSSFunction extends CSSValue {
     } else if (cssValue is CSSNumber) {
       return cssValue;
     } else if (cssValue is CSSLength) {
-      var resolved =
-          CSSLength.resolveValue(domContext, cssValue.value, cssValue.unit);
+      var resolved = CSSLength.resolveValue(
+        domContext,
+        cssValue.value,
+        cssValue.unit,
+      );
       return resolved;
     }
     return null;
@@ -768,22 +831,23 @@ abstract class CSSFunction extends CSSValue {
 
 /// A [CSS] `calc(...)` value.
 class CSSCalc extends CSSFunction {
-  static final RegExp pattern =
-      RegExp(r'^\s*calc\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
+  static final RegExp pattern = RegExp(
+    r'^\s*calc\((.*?)\)\s*$',
+    caseSensitive: false,
+    multiLine: false,
+  );
 
   static final RegExp patternExpressionOperation = RegExp(
-      r'^\s*(.*?)\s*([*/+-])\s*(.*?)\s*$',
-      caseSensitive: false,
-      multiLine: false);
+    r'^\s*(.*?)\s*([*/+-])\s*(.*?)\s*$',
+    caseSensitive: false,
+    multiLine: false,
+  );
 
   final String a;
   final CalcOperation? operation;
   final String? b;
 
-  CSSCalc.simpleExpression(this.a)
-      : operation = null,
-        b = null,
-        super();
+  CSSCalc.simpleExpression(this.a) : operation = null, b = null, super();
 
   CSSCalc.withOperation(this.a, this.operation, this.b) : super();
 
@@ -878,15 +942,21 @@ class CSSCalc extends CSSFunction {
 
       if (compA is CSSLength && compB is CSSLength) {
         if (compA.unit == compB.unit) {
-          var val =
-              computeCalcOperationSymbol(operation!, compA.value, compB.value);
+          var val = computeCalcOperationSymbol(
+            operation!,
+            compA.value,
+            compB.value,
+          );
           return CSSLength(val, compB.unit);
         } else {
           return null;
         }
       } else if (compA is CSSNumber && compB is CSSNumber) {
-        var val =
-            computeCalcOperationSymbol(operation!, compA.value!, compB.value!);
+        var val = computeCalcOperationSymbol(
+          operation!,
+          compA.value!,
+          compB.value!,
+        );
         return CSSNumber(val);
       } else {
         return null;
@@ -911,11 +981,16 @@ class CSSCalc extends CSSFunction {
 
 /// A [CSS] `max(...)` value.
 class CSSMax extends CSSFunction {
-  static final RegExp pattern =
-      RegExp(r'^\s*max\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
+  static final RegExp pattern = RegExp(
+    r'^\s*max\((.*?)\)\s*$',
+    caseSensitive: false,
+    multiLine: false,
+  );
 
-  static final RegExp patternArgsDelimiter =
-      RegExp(r'\s*,\s*', multiLine: false);
+  static final RegExp patternArgsDelimiter = RegExp(
+    r'\s*,\s*',
+    multiLine: false,
+  );
 
   final List<String> args;
 
@@ -969,8 +1044,9 @@ class CSSMax extends CSSFunction {
     var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
-    var computed =
-        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computed = valuesNotNull
+        .map((a) => CSSFunction.computeValue(a))
+        .toList();
     var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
@@ -995,8 +1071,9 @@ class CSSMax extends CSSFunction {
     var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
-    var computed =
-        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computed = valuesNotNull
+        .map((a) => CSSFunction.computeValue(a))
+        .toList();
     var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
@@ -1014,7 +1091,7 @@ class CSSMax extends CSSFunction {
     var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
 
     if (computedCSSNumber.length == computedNotNull.length) {
-      var maxVal = computedCSSLength.map((a) => a.value).max;
+      var maxVal = computedCSSNumber.map((a) => a.value ?? 0).max;
       return CSSNumber(maxVal);
     }
 
@@ -1034,11 +1111,16 @@ class CSSMax extends CSSFunction {
 
 /// A [CSS] `min(...)` value.
 class CSSMin extends CSSFunction {
-  static final RegExp pattern =
-      RegExp(r'^\s*min\((.*?)\)\s*$', caseSensitive: false, multiLine: false);
+  static final RegExp pattern = RegExp(
+    r'^\s*min\((.*?)\)\s*$',
+    caseSensitive: false,
+    multiLine: false,
+  );
 
-  static final RegExp patternArgsDelimiter =
-      RegExp(r'\s*,\s*', multiLine: false);
+  static final RegExp patternArgsDelimiter = RegExp(
+    r'\s*,\s*',
+    multiLine: false,
+  );
 
   final List<String> args;
 
@@ -1092,8 +1174,9 @@ class CSSMin extends CSSFunction {
     var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
-    var computed =
-        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computed = valuesNotNull
+        .map((a) => CSSFunction.computeValue(a))
+        .toList();
     var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
@@ -1118,8 +1201,9 @@ class CSSMin extends CSSFunction {
     var valuesNotNull = values.nonNulls.toList();
     if (valuesNotNull.length != values.length) return null;
 
-    var computed =
-        valuesNotNull.map((a) => CSSFunction.computeValue(a)).toList();
+    var computed = valuesNotNull
+        .map((a) => CSSFunction.computeValue(a))
+        .toList();
     var computedNotNull = computed.nonNulls.toList();
     if (computedNotNull.length != computed.length) return null;
 
@@ -1137,7 +1221,7 @@ class CSSMin extends CSSFunction {
     var computedCSSNumber = computedNotNull.whereType<CSSNumber>();
 
     if (computedCSSNumber.length == computedNotNull.length) {
-      var minVal = computedCSSLength.map((a) => a.value).min;
+      var minVal = computedCSSNumber.map((a) => a.value ?? 0).min;
       return CSSNumber(minVal);
     }
 
@@ -1300,8 +1384,10 @@ String? getCSSUnitName(CSSUnit? unit, [CSSUnit? def]) {
 
 /// A [CSS] value that represents a length with a [unit].
 class CSSLength extends CSSValue {
-  static final RegExp pattern =
-      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(%|\w+)?\s*$', multiLine: false);
+  static final RegExp pattern = RegExp(
+    r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)(%|\w+)?\s*$',
+    multiLine: false,
+  );
 
   num value;
 
@@ -1310,14 +1396,14 @@ class CSSLength extends CSSValue {
   CSSLength(this.value, [this.unit = CSSUnit.px]);
 
   CSSLength.fromCalc(super.calc)
-      : value = 0,
-        unit = CSSUnit.px,
-        super.fromCalc();
+    : value = 0,
+      unit = CSSUnit.px,
+      super.fromCalc();
 
   CSSLength.fromFunction(CSSFunction super.f)
-      : value = 0,
-        unit = CSSUnit.px,
-        super.fromFunction();
+    : value = 0,
+      unit = CSSUnit.px,
+      super.fromFunction();
 
   static CSSLength? from(Object? value) {
     if (value == null) return null;
@@ -1380,8 +1466,11 @@ class CSSLength extends CSSValue {
 
       if (computed != null) {
         if (computed is CSSLength) {
-          var valueStr =
-              resolveValueAsString(domContext, computed.value, computed.unit);
+          var valueStr = resolveValueAsString(
+            domContext,
+            computed.value,
+            computed.unit,
+          );
           return valueStr;
         } else {
           return computed.toString(domContext);
@@ -1406,22 +1495,32 @@ class CSSLength extends CSSValue {
   }
 
   static String resolveValueAsString(
-      DOMContext? domContext, num value, CSSUnit unit,
-      {bool originalValueAsComment = true}) {
+    DOMContext? domContext,
+    num value,
+    CSSUnit unit, {
+    bool originalValueAsComment = true,
+  }) {
     if (domContext != null &&
         domContext.resolveCSSViewportUnit &&
         isCSSViewportUnit(unit) &&
         domContext.viewport != null) {
-      var resolvedViewport = domContext.resolveCSSViewportUnitValue(value, unit,
-          originalValueAsComment: originalValueAsComment);
+      var resolvedViewport = domContext.resolveCSSViewportUnitValue(
+        value,
+        unit,
+        originalValueAsComment: originalValueAsComment,
+      );
       return resolvedViewport;
     } else {
       return valueToString(value, unit);
     }
   }
 
-  static CSSLength resolveValue(DOMContext? domContext, num value, CSSUnit unit,
-      {bool originalValueAsComment = true}) {
+  static CSSLength resolveValue(
+    DOMContext? domContext,
+    num value,
+    CSSUnit unit, {
+    bool originalValueAsComment = true,
+  }) {
     if (domContext != null &&
         domContext.resolveCSSViewportUnit &&
         isCSSViewportUnit(unit) &&
@@ -1447,8 +1546,10 @@ class CSSLength extends CSSValue {
 
 /// A [CSS] value that represents a number (without a unit).
 class CSSNumber extends CSSValue {
-  static final RegExp pattern =
-      RegExp(r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*$', multiLine: false);
+  static final RegExp pattern = RegExp(
+    r'^\s*(-?\d+(?:\.\d+)?|-?\.\d+)\s*$',
+    multiLine: false,
+  );
 
   num? _value;
 
@@ -1545,10 +1646,17 @@ abstract class CSSColor extends CSSValue {
     if (color is List) {
       if (color.length == 3) {
         return CSSColorRGB(
-            parseInt(color[0]), parseInt(color[1]), parseInt(color[2]));
+          parseInt(color[0]),
+          parseInt(color[1]),
+          parseInt(color[2]),
+        );
       } else if (color.length == 4) {
-        return CSSColorRGBA(parseInt(color[0]), parseInt(color[1]),
-            parseInt(color[2]), parseDouble(color[3]));
+        return CSSColorRGBA(
+          parseInt(color[0]),
+          parseInt(color[1]),
+          parseInt(color[2]),
+          parseDouble(color[3]),
+        );
       } else {
         return null;
       }
@@ -1561,7 +1669,11 @@ abstract class CSSColor extends CSSValue {
       if (r != null && g != null && b != null) {
         if (a != null) {
           return CSSColorRGBA(
-              parseInt(r), parseInt(g), parseInt(b), parseDouble(a));
+            parseInt(r),
+            parseInt(g),
+            parseInt(b),
+            parseDouble(a),
+          );
         } else {
           return CSSColorRGB(parseInt(r), parseInt(g), parseInt(b));
         }
@@ -1633,8 +1745,9 @@ abstract class CSSColor extends CSSValue {
 /// A [CSSColor] in RGB.
 class CSSColorRGB extends CSSColor {
   static final RegExp patternRGB = RegExp(
-      r'^\s*(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)\s*$',
-      multiLine: false);
+    r'^\s*(rgba?)\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*(?:,\s*(\d+(?:\.\d+)?)\s*)?\)\s*$',
+    multiLine: false,
+  );
 
   int _red;
 
@@ -1643,10 +1756,10 @@ class CSSColorRGB extends CSSColor {
   int _blue;
 
   CSSColorRGB(int? red, int? green, int? blue)
-      : _red = _clip(red, 0, 255, 0) as int,
-        _green = _clip(green, 0, 255, 0) as int,
-        _blue = _clip(blue, 0, 255, 0) as int,
-        super();
+    : _red = _clip(red, 0, 255, 0) as int,
+      _green = _clip(green, 0, 255, 0) as int,
+      _blue = _clip(blue, 0, 255, 0) as int,
+      super();
 
   static CSSColorRGB? from(Object? color) {
     if (color == null) return null;
@@ -1734,7 +1847,7 @@ class CSSColorRGBA extends CSSColorRGB {
   double _alpha;
 
   CSSColorRGBA(super.red, super.green, super.blue, double? alpha)
-      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double);
+    : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double);
 
   static CSSColorRGBA? from(Object? color) =>
       CSSColorRGB.from(color) as CSSColorRGBA?;
@@ -1775,9 +1888,10 @@ class CSSColorRGBA extends CSSColorRGB {
 /// A [CSSColor] in HEX (no alpha).
 class CSSColorHEX extends CSSColorRGB {
   static final RegExp patternHex = RegExp(
-      r'^([\da-f]{6-8})$|^\s*#([\da-f]{3,8})\s*$',
-      multiLine: false,
-      caseSensitive: false);
+    r'^([\da-f]{6-8})$|^\s*#([\da-f]{3,8})\s*$',
+    multiLine: false,
+    caseSensitive: false,
+  );
 
   factory CSSColorHEX(String hexColor) => CSSColorHEX.parse(hexColor)!;
 
@@ -1878,9 +1992,12 @@ class CSSColorHEXAlpha extends CSSColorHEX {
       CSSColorHEXAlpha.parse(hexColor)!;
 
   CSSColorHEXAlpha._(
-      int super.red, int super.green, int super.blue, double alpha)
-      : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double),
-        super._();
+    int super.red,
+    int super.green,
+    int super.blue,
+    double alpha,
+  ) : _alpha = _normalizeDouble(_clip(alpha, 0, 1, 1) as double),
+      super._();
 
   static CSSColorHEXAlpha? from(Object? color) =>
       CSSColorHEX.from(color) as CSSColorHEXAlpha?;
@@ -2077,7 +2194,9 @@ class CSSColorName extends CSSColorRGB {
   factory CSSColorName(String hexColor) => CSSColorName.parse(hexColor)!;
 
   CSSColorName._(this.name, int red, int green, int blue, double alpha)
-      : super(red, green, blue);
+    : super(red, green, blue) {
+    this.alpha = alpha;
+  }
 
   static CSSColorName? from(Object? color) {
     if (color == null) return null;
@@ -2141,7 +2260,7 @@ enum CSSBorderStyle {
   inset,
   outset,
   none,
-  hidden
+  hidden,
 }
 
 CSSBorderStyle? parseCSSBorderStyle(String? borderStyle) {
@@ -2203,11 +2322,12 @@ String? getCSSBorderStyleName(CSSBorderStyle borderStyle) {
 /// A [CSS] border value.
 class CSSBorder extends CSSValue {
   static final RegExp pattern = RegExp(
-      r'^\s*((?:-?\d+(?:\.\d+)?|-?\.\d+)(?:\%|\w+)?)?'
-      r'\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)'
-      r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}|\w{3,}))?\s*$',
-      multiLine: false,
-      caseSensitive: false);
+    r'^\s*((?:-?\d+(?:\.\d+)?|-?\.\d+)(?:\%|\w+)?)?'
+    r'\s*(dotted|dashed|solid|double|groove|ridge|inset|outset|none|hidden)'
+    r'(?:\s+(rgba?\(.*?\)|\#[0-9a-f]{3,8}|\w{3,}))?\s*$',
+    multiLine: false,
+    caseSensitive: false,
+  );
 
   CSSLength? size;
 
@@ -2216,7 +2336,7 @@ class CSSBorder extends CSSValue {
   CSSColor? color;
 
   CSSBorder([this.size, CSSBorderStyle? style, this.color])
-      : style = style ?? CSSBorderStyle.none;
+    : style = style ?? CSSBorderStyle.none;
 
   static CSSBorder? from(Object? value) {
     if (value == null) return null;
@@ -2356,35 +2476,38 @@ String? getCSSBackgroundAttachmentName(CSSBackgroundAttachment? clip) {
   }
 }
 
-RegExpDialect _regexpBackgroundDialect = RegExpDialect({
-  'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
-  'pos': r'$d(?:\%|\w+)',
-  'pos_pair': r'$pos(?:\s+$pos)?',
-  'color_rgba': r'(?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*$d\s*)?\))',
-  'color_hex': r'#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})',
-  'color': r'(?:$color_rgba|$color_hex)',
-  'quote': r'''(?:"[^"]*"|'[^']*')''',
-  'url': r'''(?:url\(\s*(?:$quote|[^\)]*?)\s*\))''',
-  'gradient_type':
-      r'(?:linear-gradient|radial-gradient|repeating-linear-gradient|repeating-radial-gradient)',
-  'gradient': r'''(?:$gradient_type\(\s*(?:$color|[^\(\)]+?)+\s*\))''',
-  'gradient_capture':
-      r'''(?:($gradient_type)\(\s*((?:$color|[^\(\)]+?)+)\s*\))''',
-  'attachment': r'(?:scroll|fixed|local)',
-  'box': r'(?:border-box|padding-box|content-box)',
-  'repeat': r'(?:repeat|repeat-x|repeat-y|no-repeat|space|round)',
-  'position':
-      r'(?:(?:left|right|center)(?:\s+(?:top|center|bottom))?|$pos_pair)',
-  'size': r'(?:auto|cover|contain|$pos_pair)',
-  'position_size': r'$position(?:\s*/\s*$size)?',
-  'position_size_capture': r'($position)(?:\s*/\s*($size))?',
-  'image_prop': r'(?:$repeat|$attachment|$box(?:\s+$box)?|$position_size)',
-  'image_prop_capture':
-      r'(?:($repeat)|($attachment)|($box)(?:\s+($box))?|$position_size_capture)',
-  'image_src': r'(?:$gradient|$url)',
-  'image': r'(?:$image_src(?:\s+$image_prop)*)',
-  'image_layers': r'$image(?:\s*,\s*$image)*',
-}, multiLine: false, caseSensitive: false);
+RegExpDialect _regexpBackgroundDialect = RegExpDialect(
+  {
+    'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
+    'pos': r'$d(?:\%|\w+)',
+    'pos_pair': r'$pos(?:\s+$pos)?',
+    'color_rgba': r'(?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*$d\s*)?\))',
+    'color_hex': r'#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})',
+    'color': r'(?:$color_rgba|$color_hex)',
+    'quote': r'''(?:"[^"]*"|'[^']*')''',
+    'url': r'''(?:url\(\s*(?:$quote|[^\)]*?)\s*\))''',
+    'gradient_type': r'(?:linear-gradient|radial-gradient|repeating-linear-gradient|repeating-radial-gradient)',
+    'gradient': r'''(?:$gradient_type\(\s*(?:$color|[^\(\)]+?)+\s*\))''',
+    'gradient_capture':
+        r'''(?:($gradient_type)\(\s*((?:$color|[^\(\)]+?)+)\s*\))''',
+    'attachment': r'(?:scroll|fixed|local)',
+    'box': r'(?:border-box|padding-box|content-box)',
+    // Longest first: `repeat` would otherwise match the start of `repeat-x`.
+    'repeat': r'(?:repeat-x|repeat-y|no-repeat|repeat|space|round)',
+    'position':
+        r'(?:(?:left|right|center)(?:\s+(?:top|center|bottom))?|$pos_pair)',
+    'size': r'(?:auto|cover|contain|$pos_pair)',
+    'position_size': r'$position(?:\s*/\s*$size)?',
+    'position_size_capture': r'($position)(?:\s*/\s*($size))?',
+    'image_prop': r'(?:$repeat|$attachment|$box(?:\s+$box)?|$position_size)',
+    'image_prop_capture': r'(?:($repeat)|($attachment)|($box)(?:\s+($box))?|$position_size_capture)',
+    'image_src': r'(?:$gradient|$url)',
+    'image': r'(?:$image_src(?:\s+$image_prop)*)',
+    'image_layers': r'$image(?:\s*,\s*$image)*',
+  },
+  multiLine: false,
+  caseSensitive: false,
+);
 
 /// A [CSS] background gradient value.
 class CSSBackgroundGradient {
@@ -2401,13 +2524,16 @@ class CSSBackgroundGradient {
 }
 
 class CSSBackgroundImage {
-  static final RegExp patternURL = _regexpBackgroundDialect
-      .getPattern(r'^\s*($url)((?:\s+$image_prop)+)?\s*$');
-  static final RegExp patternGradient = _regexpBackgroundDialect
-      .getPattern(r'^\s*$gradient_capture((?:\s+$image_prop)+)?\s*$');
+  static final RegExp patternURL = _regexpBackgroundDialect.getPattern(
+    r'^\s*($url)((?:\s+$image_prop)+)?\s*$',
+  );
+  static final RegExp patternGradient = _regexpBackgroundDialect.getPattern(
+    r'^\s*$gradient_capture((?:\s+$image_prop)+)?\s*$',
+  );
 
-  static final RegExp patternPropsCapture =
-      _regexpBackgroundDialect.getPattern(r'(?:^\s*|\s+)$image_prop_capture');
+  static final RegExp patternPropsCapture = _regexpBackgroundDialect.getPattern(
+    r'(?:^\s*|\s+)$image_prop_capture',
+  );
 
   final CSSURL? url;
   final CSSBackgroundGradient? gradient;
@@ -2418,23 +2544,25 @@ class CSSBackgroundImage {
   final String? position;
   final String? size;
 
-  CSSBackgroundImage.url(this.url,
-      {this.origin,
-      this.clip,
-      this.attachment,
-      this.repeat,
-      this.position,
-      this.size})
-      : gradient = null;
+  CSSBackgroundImage.url(
+    this.url, {
+    this.origin,
+    this.clip,
+    this.attachment,
+    this.repeat,
+    this.position,
+    this.size,
+  }) : gradient = null;
 
-  CSSBackgroundImage.gradient(this.gradient,
-      {this.origin,
-      this.clip,
-      this.attachment,
-      this.repeat,
-      this.position,
-      this.size})
-      : url = null;
+  CSSBackgroundImage.gradient(
+    this.gradient, {
+    this.origin,
+    this.clip,
+    this.attachment,
+    this.repeat,
+    this.position,
+    this.size,
+  }) : url = null;
 
   static CSSBackgroundImage? from(Object? value) {
     if (value == null) return null;
@@ -2472,7 +2600,10 @@ class CSSBackgroundImage {
         var gradientTypeStr = match.group(1);
         var gradientParamsStr = match.group(2);
         var parameters = parseListOfStrings(
-            gradientParamsStr, ARGUMENT_LIST_DELIMITER, true);
+          gradientParamsStr,
+          ARGUMENT_LIST_DELIMITER,
+          true,
+        );
         gradient = CSSBackgroundGradient(gradientTypeStr, parameters);
         propsStr = match.group(3);
       }
@@ -2516,21 +2647,25 @@ class CSSBackgroundImage {
     }
 
     if (url != null) {
-      return CSSBackgroundImage.url(url,
-          origin: origin,
-          clip: clip,
-          repeat: repeat,
-          attachment: attachment,
-          position: position,
-          size: size);
+      return CSSBackgroundImage.url(
+        url,
+        origin: origin,
+        clip: clip,
+        repeat: repeat,
+        attachment: attachment,
+        position: position,
+        size: size,
+      );
     } else if (gradient != null) {
-      return CSSBackgroundImage.gradient(gradient,
-          origin: origin,
-          clip: clip,
-          repeat: repeat,
-          attachment: attachment,
-          position: position,
-          size: size);
+      return CSSBackgroundImage.gradient(
+        gradient,
+        origin: origin,
+        clip: clip,
+        repeat: repeat,
+        attachment: attachment,
+        position: position,
+        size: size,
+      );
     }
 
     return null;
@@ -2592,17 +2727,22 @@ class CSSBackgroundImage {
 
 /// A [CSS] background value.
 class CSSBackground extends CSSValue {
-  static final RegExp patternColor =
-      _regexpBackgroundDialect.getPattern(r'^\s*($color)\s*$');
-  static final RegExp patternImage =
-      _regexpBackgroundDialect.getPattern(r'^\s*($image)(?:\s+($color))?\s*$');
-  static final RegExp patternColorImage =
-      _regexpBackgroundDialect.getPattern(r'^\s*($color)\s+($image)\s*$');
-  static final RegExp patternImages = _regexpBackgroundDialect
-      .getPattern(r'^\s*($image_layers)(?:\s+($color))?\s*$');
+  static final RegExp patternColor = _regexpBackgroundDialect.getPattern(
+    r'^\s*($color)\s*$',
+  );
+  static final RegExp patternImage = _regexpBackgroundDialect.getPattern(
+    r'^\s*($image)(?:\s+($color))?\s*$',
+  );
+  static final RegExp patternColorImage = _regexpBackgroundDialect.getPattern(
+    r'^\s*($color)\s+($image)\s*$',
+  );
+  static final RegExp patternImages = _regexpBackgroundDialect.getPattern(
+    r'^\s*($image_layers)(?:\s+($color))?\s*$',
+  );
 
-  static final RegExp patternImageCapture =
-      _regexpBackgroundDialect.getPattern(r'(?:^\s*|\s+)($image)');
+  static final RegExp patternImageCapture = _regexpBackgroundDialect.getPattern(
+    r'(?:^\s*|\s+)($image)',
+  );
 
   CSSColor? color;
   List<CSSBackgroundImage>? _images;
@@ -2610,28 +2750,31 @@ class CSSBackground extends CSSValue {
   CSSBackground.color(this.color);
 
   CSSBackground.image(CSSBackgroundImage image, [this.color])
-      : _images = [image];
+    : _images = [image];
 
   CSSBackground.images(List<CSSBackgroundImage> images, [this.color])
-      : _images = images;
+    : _images = images;
 
-  CSSBackground.url(CSSURL url,
-      {CSSBackgroundBox? origin,
-      CSSBackgroundBox? clip,
-      CSSBackgroundAttachment? attachment,
-      CSSBackgroundRepeat? repeat,
-      String? position,
-      String? size,
-      this.color})
-      : _images = [
-          CSSBackgroundImage.url(url,
-              origin: origin,
-              clip: clip,
-              attachment: attachment,
-              repeat: repeat,
-              position: position,
-              size: size)
-        ];
+  CSSBackground.url(
+    CSSURL url, {
+    CSSBackgroundBox? origin,
+    CSSBackgroundBox? clip,
+    CSSBackgroundAttachment? attachment,
+    CSSBackgroundRepeat? repeat,
+    String? position,
+    String? size,
+    this.color,
+  }) : _images = [
+         CSSBackgroundImage.url(
+           url,
+           origin: origin,
+           clip: clip,
+           attachment: attachment,
+           repeat: repeat,
+           position: position,
+           size: size,
+         ),
+       ];
 
   CSSBackground.gradient(
     CSSBackgroundGradient gradient, {
@@ -2643,14 +2786,16 @@ class CSSBackground extends CSSValue {
     String? size,
     this.color,
   }) : _images = [
-          CSSBackgroundImage.gradient(gradient,
-              origin: origin,
-              clip: clip,
-              attachment: attachment,
-              repeat: repeat,
-              position: position,
-              size: size)
-        ];
+         CSSBackgroundImage.gradient(
+           gradient,
+           origin: origin,
+           clip: clip,
+           attachment: attachment,
+           repeat: repeat,
+           position: position,
+           size: size,
+         ),
+       ];
 
   static CSSBackground? from(Object? value) {
     if (value == null) return null;
@@ -2697,8 +2842,9 @@ class CSSBackground extends CSSValue {
       var color = CSSColor.parse(colorStr);
 
       var matches = patternImageCapture.allMatches(imagesStr);
-      var images =
-          matches.map((m) => CSSBackgroundImage.parse(m.group(1))!).toList();
+      var images = matches
+          .map((m) => CSSBackgroundImage.parse(m.group(1))!)
+          .toList();
 
       return CSSBackground.images(images, color);
     }
@@ -2739,8 +2885,10 @@ class CSSBackground extends CSSValue {
 /// A [CSS] `url(...)` value.
 class CSSURL extends CSSValue {
   static final RegExp pattern = RegExp(
-      r'''^\s*url\(\s*(?:"(.*?)"|'(.*?)'|(.*?))\s*\)\s*$''',
-      caseSensitive: false, multiLine: false);
+    r'''^\s*url\(\s*(?:"(.*?)"|'(.*?)'|(.*?))\s*\)\s*$''',
+    caseSensitive: false,
+    multiLine: false,
+  );
 
   final String? url;
 

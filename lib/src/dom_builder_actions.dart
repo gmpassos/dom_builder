@@ -15,25 +15,47 @@ abstract class DOMActionExecutor<T extends Object> {
     _domGenerator = generator;
   }
 
-  T? execute(DOMAction<T> action, T? target, T? self,
-      {DOMTreeMap? treeMap, DOMContext? context}) {
+  T? execute(
+    DOMAction<T> action,
+    T? target,
+    T? self, {
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  }) {
     T? result;
     if (action is DOMActionSelect<T>) {
       result = selectByID(action.id, target, self, treeMap, context);
     } else if (action is DOMActionCall<T>) {
-      result =
-          call(action.name, action.parameters, target, self, treeMap, context);
+      result = call(
+        action.name,
+        action.parameters,
+        target,
+        self,
+        treeMap,
+        context,
+      );
     }
     return result;
   }
 
   T? selectByID(
-      String id, T? target, T? self, DOMTreeMap? treeMap, DOMContext? context) {
+    String id,
+    T? target,
+    T? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     throw UnimplementedError();
   }
 
-  T? call(String name, List<String> parameters, T? target, T? self,
-      DOMTreeMap? treeMap, DOMContext? context) {
+  T? call(
+    String name,
+    List<String> parameters,
+    T? target,
+    T? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     name = name.trim().toLowerCase();
     if (name.isEmpty) return null;
 
@@ -107,38 +129,47 @@ abstract class DOMActionExecutor<T extends Object> {
   }
 }
 
-final RegExpDialect _regexpActionsDialect = RegExpDialect({
-  'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
-  'bool': r'(?:true|false|yes|no|y|n)',
-  'pos': r'$d(?:\%|\w+)',
-  'id': r'[\w-]+',
-  'color_rgba': r'(?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*$d\s*)?\))',
-  'color_hex': r'#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})',
-  'color': r'(?:$color_rgba|$color_hex)',
-  'quote': r'''(?:"[^"]*"|'[^']*')''',
-  'parameter': r'(?:$quote|$pos|$d|$bool|$color|[\w-]+)',
-  'parameter_capture': r'($parameter)(?:\s*,\s*)?',
-  'parameters': r'$parameter(?:\s*,\s*$parameter)*',
-  'call': r'\w+\(\s*(?:$parameters)?\s*\)',
-  'call_capture': r'(\w+)\(\s*($parameters)?\s*\)',
-  'sel': r'\#$id',
-  'sel_capture': r'\#($id)',
-  'action': r'(?:$sel|$call)',
-  'action_capture': r'(?:($sel)|($call))',
-}, multiLine: false, caseSensitive: false);
+final RegExpDialect _regexpActionsDialect = RegExpDialect(
+  {
+    'd': r'(?:-?\d+(?:\.\d+)?|-?\.\d+)',
+    'bool': r'(?:true|false|yes|no|y|n)',
+    'pos': r'$d(?:\%|\w+)',
+    'id': r'[\w-]+',
+    'color_rgba': r'(?:rgba?\(\s*\d+\s*,\s*\d+\s*,\s*\d+\s*(?:,\s*$d\s*)?\))',
+    'color_hex': r'#(?:[0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})',
+    'color': r'(?:$color_rgba|$color_hex)',
+    'quote': r'''(?:"[^"]*"|'[^']*')''',
+    'parameter': r'(?:$quote|$pos|$d|$bool|$color|[\w-]+)',
+    'parameter_capture': r'($parameter)(?:\s*,\s*)?',
+    'parameters': r'$parameter(?:\s*,\s*$parameter)*',
+    'call': r'\w+\(\s*(?:$parameters)?\s*\)',
+    'call_capture': r'(\w+)\(\s*($parameters)?\s*\)',
+    'sel': r'\#$id',
+    'sel_capture': r'\#($id)',
+    'action': r'(?:$sel|$call)',
+    'action_capture': r'(?:($sel)|($call))',
+  },
+  multiLine: false,
+  caseSensitive: false,
+);
 
 abstract class DOMAction<T extends Object> {
-  static final RegExp _regexpActionCapture =
-      _regexpActionsDialect.getPattern(r'$action_capture\.?');
+  static final RegExp _regexpActionCapture = _regexpActionsDialect.getPattern(
+    r'$action_capture\.?',
+  );
 
-  static final RegExp _regexpSelCapture =
-      _regexpActionsDialect.getPattern(r'$sel_capture\.?');
+  static final RegExp _regexpSelCapture = _regexpActionsDialect.getPattern(
+    r'$sel_capture\.?',
+  );
 
-  static final RegExp _regexpCallCapture =
-      _regexpActionsDialect.getPattern(r'$call_capture\.?');
+  static final RegExp _regexpCallCapture = _regexpActionsDialect.getPattern(
+    r'$call_capture\.?',
+  );
 
   static DOMAction<T>? parse<T extends Object>(
-      DOMActionExecutor<T> executor, String? actionLine) {
+    DOMActionExecutor<T> executor,
+    String? actionLine,
+  ) {
     if (actionLine == null) return null;
     actionLine = actionLine.trim();
     if (actionLine.isEmpty) return null;
@@ -204,11 +235,13 @@ abstract class DOMAction<T extends Object> {
     return rootAction;
   }
 
-  static final RegExp _regexpParameterCapture =
-      _regexpActionsDialect.getPattern(r'$parameter_capture');
+  static final RegExp _regexpParameterCapture = _regexpActionsDialect
+      .getPattern(r'$parameter_capture');
 
   static List<String>? parseParameters<T>(
-      DOMActionExecutor executor, String? parametersLine) {
+    DOMActionExecutor executor,
+    String? parametersLine,
+  ) {
     if (parametersLine == null) return null;
     parametersLine = parametersLine.trim();
     if (parametersLine.isEmpty) return null;
@@ -225,6 +258,8 @@ abstract class DOMAction<T extends Object> {
 
       var param = match.group(1)!.trim();
       parameters.add(param);
+
+      endPos = match.end;
     }
 
     return parameters;
@@ -237,13 +272,22 @@ abstract class DOMAction<T extends Object> {
   DOMAction(this.executor);
 
   T? execute(T? target, {T? self, DOMTreeMap? treeMap, DOMContext? context}) {
-    var result = executor.execute(this, target, self,
-        treeMap: treeMap, context: context);
+    var result = executor.execute(
+      this,
+      target,
+      self,
+      treeMap: treeMap,
+      context: context,
+    );
 
     var next = this.next;
     if (next != null) {
-      result = next.execute(target,
-          self: result, treeMap: treeMap, context: context);
+      result = next.execute(
+        target,
+        self: result,
+        treeMap: treeMap,
+        context: context,
+      );
     }
 
     return result;
@@ -278,8 +322,12 @@ class DOMActionList<T extends Object> extends DOMAction<T> {
     T? result;
 
     for (var action in actions) {
-      result = action.execute(target,
-          self: self, treeMap: treeMap, context: context);
+      result = action.execute(
+        target,
+        self: self,
+        treeMap: treeMap,
+        context: context,
+      );
     }
 
     return result;
@@ -330,9 +378,11 @@ class DOMActionCall<T extends Object> extends DOMAction<T> {
 
   // ignore: use_super_parameters
   DOMActionCall(
-      DOMActionExecutor<T> executor, this.name, List<String>? parameters)
-      : parameters = parameters ?? <String>[],
-        super(executor);
+    DOMActionExecutor<T> executor,
+    this.name,
+    List<String>? parameters,
+  ) : parameters = parameters ?? <String>[],
+      super(executor);
 
   @override
   String actionString() {

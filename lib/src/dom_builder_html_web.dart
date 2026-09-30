@@ -8,26 +8,16 @@ import 'dom_builder_treemap.dart';
 class DOMHtmlBrowserWeb extends DOMHtml {
   DOMHtmlBrowserWeb() : super.create();
 
-  @override
-  bool isHtmlNode(Object? o) {
-    var jsAny = o.asJSAny;
-    if (jsAny == null) return false;
-    return jsAny.isA<web.Node>() || jsAny.isA<web.Text>();
-  }
+  // `isA` works on any `Object?` (Dart 3.12+), including `null`:
 
   @override
-  bool isHtmlTextNode(Object? node) {
-    var jsAny = node.asJSAny;
-    if (jsAny == null) return false;
-    return jsAny.isA<web.Text>();
-  }
+  bool isHtmlNode(Object? o) => o.isA<web.Node>();
 
   @override
-  bool isHtmlElementNode(Object? node) {
-    var jsAny = node.asJSAny;
-    if (jsAny == null) return false;
-    return jsAny.isA<web.Element>();
-  }
+  bool isHtmlTextNode(Object? node) => node.isA<web.Text>();
+
+  @override
+  bool isHtmlElementNode(Object? node) => node.isA<web.Element>();
 
   @override
   String getNodeText(Object? node) {
@@ -102,12 +92,13 @@ class DOMHtmlBrowserWeb extends DOMHtml {
     } else if (jsAny.isA<web.Text>()) {
       return (jsAny as web.Text).textContent ?? '';
     } else if (jsAny.isA<web.Document>()) {
-      var html =
-          (jsAny as web.Document).childNodes.toIterable().map(toHTML).join();
+      var html = (jsAny as web.Document).childNodes
+          .toIterable()
+          .map(toHTML)
+          .join();
       return html;
     } else if (jsAny.isA<web.DocumentFragment>()) {
-      var html = (jsAny as web.DocumentFragment)
-          .childNodes
+      var html = (jsAny as web.DocumentFragment).childNodes
           .toIterable()
           .map(toHTML)
           .join();
@@ -228,10 +219,7 @@ class DOMHtmlBrowserWeb extends DOMHtml {
         }
       case '<br><br>':
         {
-          return <DOMNode>[
-            DOMElement('br'),
-            DOMElement('br'),
-          ];
+          return <DOMNode>[DOMElement('br'), DOMElement('br')];
         }
       case '<br><br><br>':
         {

@@ -9,6 +9,7 @@ import 'dom_builder_context.dart';
 import 'dom_builder_dsx.dart';
 import 'dom_builder_generator.dart';
 import 'dom_builder_runtime.dart';
+import 'dom_builder_weak_store.dart';
 
 /// Represents a mapping tree. Can be used to map a [DOMNode] to a generated
 /// node [T], or a node [T] to a [DOMNode].
@@ -22,13 +23,19 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
       domGenerator.equalsNodes(node1, node2);
 
   /// Alias to [DOMGenerator.generate].
-  T? generate(DOMGenerator<T> domGenerator, DOMNode root,
-          {T? parent, DOMContext<T>? context, bool setTreeMapRoot = true}) =>
-      domGenerator.generate(root,
-          parent: parent,
-          treeMap: this,
-          context: context,
-          setTreeMapRoot: setTreeMapRoot);
+  T? generate(
+    DOMGenerator<T> domGenerator,
+    DOMNode root, {
+    T? parent,
+    DOMContext<T>? context,
+    bool setTreeMapRoot = true,
+  }) => domGenerator.generate(
+    root,
+    parent: parent,
+    treeMap: this,
+    context: context,
+    setTreeMapRoot: setTreeMapRoot,
+  );
 
   DOMNode? _rootDOMNode;
 
@@ -50,8 +57,10 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   static final _lazyWeakReferenceManagerByType =
       LazyWeakReferenceManagerByType.global;
 
-  static final Expando<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
-      Expando('Elements->DOMTreeMap');
+  // Not an `Expando`: with `dart2wasm` a DOM node can have distinct Dart
+  // wrappers, so it must be keyed by JS identity (see [DOMWeakStore]).
+  static final DOMWeakStore<WeakReference<DOMTreeMap>> _elementsDOMTreeMap =
+      DOMWeakStore('Elements->DOMTreeMap');
 
   /// Returns the [DOMTreeMap] of the [element],
   /// if it's associated with some [DOMElement].
@@ -64,10 +73,13 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   late final _selfWeakReference = WeakReference(this);
 
   /// Maps in this instance the pair [domNode] and [element].
-  void map(DOMNode domNode, T element,
-      {DOMGenerator<T>? generator,
-      DOMContext<T>? context,
-      bool allowOverwrite = false}) {
+  void map(
+    DOMNode domNode,
+    T element, {
+    DOMGenerator<T>? generator,
+    DOMContext<T>? context,
+    bool allowOverwrite = false,
+  }) {
     if (generator != null) {
       var mappable = generator.isMappable(domNode, context: context);
       // Skip mapping:
@@ -92,7 +104,8 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
       } else {
         if (!allowOverwrite) {
           print(
-              'WARNING> Mapping to different instances: $element ; $prevDomNode');
+            'WARNING> Mapping to different instances: $element ; $prevDomNode',
+          );
         }
       }
     }
@@ -207,8 +220,12 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   /// Maps a DOM subtree starting at [domRoot] to the component tree rooted at [root].
   /// Returns `true` if the mapping was created or updated.
-  bool mapTree(DOMNode domRoot, T root,
-      {DOMGenerator<T>? generator, DOMContext<T>? context}) {
+  bool mapTree(
+    DOMNode domRoot,
+    T root, {
+    DOMGenerator<T>? generator,
+    DOMContext<T>? context,
+  }) {
     map(domRoot, root, generator: generator, context: context);
 
     if (domRoot is TextNode) return false;
@@ -401,8 +418,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     return DOMNodeMapping(this, domNode, node);
   }
 
-  DOMNodeMapping<T>? mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
-      {bool onlyCompatibles = false}) {
+  DOMNodeMapping<T>? mergeNearNodes(
+    DOMNode domNode1,
+    DOMNode domNode2, {
+    bool onlyCompatibles = false,
+  }) {
     if (onlyCompatibles && !domNode1.isCompatibleForMerge(domNode2)) {
       return null;
     }
@@ -430,11 +450,17 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     return null;
   }
 
-  DOMNodeMapping<T>? mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
-      {bool onlyCompatibles = false}) {
+  DOMNodeMapping<T>? mergeNearStringNodes(
+    DOMNode domNode1,
+    DOMNode domNode2, {
+    bool onlyCompatibles = false,
+  }) {
     if (domNode1.isStringElement && domNode2.isStringElement) {
-      return mergeNearNodes(domNode1, domNode2,
-          onlyCompatibles: onlyCompatibles);
+      return mergeNearNodes(
+        domNode1,
+        domNode2,
+        onlyCompatibles: onlyCompatibles,
+      );
     }
 
     return null;
@@ -450,23 +476,28 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
     return node;
   }
 
-  static final RegExp regexpTagRef =
-      RegExp(r'\{\{\s*([\w-]+|\*)#([\w-]+)\s*\}\}');
-  static final RegExp regexpTagOpen =
-      RegExp(r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''');
+  static final RegExp regexpTagRef = RegExp(
+    r'\{\{\s*([\w-]+|\*)#([\w-]+)\s*\}\}',
+  );
+  static final RegExp regexpTagOpen = RegExp(
+    r'''^\s*<[\w-]+\s(?:".*?"|'.*?'|\s+|[^>\s]+)*>''',
+  );
   static final RegExp regexpTagClose = RegExp(r'''<\/[\w-]+\s*>\s*$''');
 
-  String? queryElementAsHTML(String query,
-      {DOMContext? domContext,
-      bool buildTemplates = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX}) {
+  String? queryElementAsHTML(
+    String query, {
+    DOMContext? domContext,
+    bool buildTemplates = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+  }) {
     var node = queryElement(query);
     if (node == null) return null;
 
     var html = node.buildHTML(
-        domContext: domContext,
-        buildTemplates: buildTemplates,
-        dsxResolution: dsxResolution);
+      domContext: domContext,
+      buildTemplates: buildTemplates,
+      dsxResolution: dsxResolution,
+    );
 
     html = html.replaceFirst(regexpTagOpen, '');
     html = html.replaceFirst(regexpTagClose, '');
@@ -555,10 +586,11 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
 
   bool get isDisposed => _disposed;
 
-  void dispose(
-      {bool cancelSubscriptions = true,
-      bool disposeEventHandlers = true,
-      bool disposeDSXs = true}) {
+  void dispose({
+    bool cancelSubscriptions = true,
+    bool disposeEventHandlers = true,
+    bool disposeDSXs = true,
+  }) {
     _disposed = true;
 
     if (cancelSubscriptions) {
@@ -582,7 +614,8 @@ class DOMTreeMap<T extends Object> implements DSXLifecycleManager {
   }
 
   @override
-  String toString() => 'DOMTreeMap{'
+  String toString() =>
+      'DOMTreeMap{'
       'rootDOMNode: $_rootDOMNode, '
       'rootElement: $_rootElement, '
       'elementToDOMNodeMap: ${_elementToDOMNodeMap?.length ?? 'null'}, '
@@ -616,10 +649,13 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   DOMTreeMapDummy(super.domGenerator) : super();
 
   @override
-  void map(DOMNode domNode, T element,
-      {DOMGenerator<T>? generator,
-      DOMContext<T>? context,
-      bool allowOverwrite = false}) {}
+  void map(
+    DOMNode domNode,
+    T element, {
+    DOMGenerator<T>? generator,
+    DOMContext<T>? context,
+    bool allowOverwrite = false,
+  }) {}
 
   @override
   bool unmap(DOMNode domNode, T element) => false;
@@ -646,14 +682,18 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   bool matchesMapping(DOMNode domNode, T node) => false;
 
   @override
-  DOMNodeMapping<T>? mergeNearNodes(DOMNode domNode1, DOMNode domNode2,
-          {bool onlyCompatibles = false}) =>
-      null;
+  DOMNodeMapping<T>? mergeNearNodes(
+    DOMNode domNode1,
+    DOMNode domNode2, {
+    bool onlyCompatibles = false,
+  }) => null;
 
   @override
-  DOMNodeMapping<T>? mergeNearStringNodes(DOMNode domNode1, DOMNode domNode2,
-          {bool onlyCompatibles = false}) =>
-      null;
+  DOMNodeMapping<T>? mergeNearStringNodes(
+    DOMNode domNode1,
+    DOMNode domNode2, {
+    bool onlyCompatibles = false,
+  }) => null;
 
   @override
   DOMNodeMapping<T>? removeByDOMNode(DOMNode? domNode) => null;
@@ -677,9 +717,12 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   void setRoot(DOMNode rootDOMNode, T? rootElement) {}
 
   @override
-  bool mapTree(DOMNode domRoot, T root,
-          {DOMGenerator<T>? generator, DOMContext<T>? context}) =>
-      false;
+  bool mapTree(
+    DOMNode domRoot,
+    T root, {
+    DOMGenerator<T>? generator,
+    DOMContext<T>? context,
+  }) => false;
 
   @override
   DOMNode? asMappedDOMNode(DOMNode? domNode) => null;
@@ -700,11 +743,12 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   DOMNode? queryElement(String query) => null;
 
   @override
-  String? queryElementAsHTML(String query,
-          {DOMContext<Object>? domContext,
-          bool buildTemplates = false,
-          DSXResolution dsxResolution = DSXResolution.skipDSX}) =>
-      null;
+  String? queryElementAsHTML(
+    String query, {
+    DOMContext<Object>? domContext,
+    bool buildTemplates = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+  }) => null;
 
   @override
   bool manageDSX(DSX<Object> dsx) => false;
@@ -746,10 +790,11 @@ class DOMTreeMapDummy<T extends Object> extends DOMTreeMap<T> {
   void purge() {}
 
   @override
-  void dispose(
-      {bool cancelSubscriptions = true,
-      bool disposeEventHandlers = true,
-      bool disposeDSXs = true}) {}
+  void dispose({
+    bool cancelSubscriptions = true,
+    bool disposeEventHandlers = true,
+    bool disposeDSXs = true,
+  }) {}
 
   @override
   String toString() => 'DOMTreeMapDummy{}@$domGenerator';

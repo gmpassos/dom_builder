@@ -21,8 +21,11 @@ final DOMHtml _domHTML = DOMHtml();
 /// [s] If is a [String] uses [delimiter] to split strings. If [s] is a [List] iterator over it and flatten sub lists.
 /// [delimiter] Pattern to split [s] to list.
 /// [trim] If [true] trims all strings.
-List<String> parseListOfStrings(Object? s, Pattern delimiter,
-    [bool trim = true]) {
+List<String> parseListOfStrings(
+  Object? s,
+  Pattern delimiter, [
+  bool trim = true,
+]) {
   if (s == null) return <String>[];
 
   List<String> list;
@@ -56,8 +59,10 @@ final RegExp _regexpPossiblyHtmlEntity = RegExp(r'&#?\w+;');
 bool possiblyWithHTMLEntity(String? s) =>
     s != null && s.contains('&') && s.contains(_regexpPossiblyHtmlEntity);
 
-final RegExp _regexpDependentTag =
-    RegExp(r'^\s*<(tbody|thread|tfoot|tr|td|th)\W', multiLine: false);
+final RegExp _regexpDependentTag = RegExp(
+  r'^\s*<(tbody|thread|tfoot|tr|td|th)\W',
+  multiLine: false,
+);
 
 /// Parses a [html] to nodes.
 List<DOMNode>? parseHTML(String? html) {
@@ -70,8 +75,9 @@ List<DOMNode>? parseHTML(String? html) {
 
     late Object parsed;
     if (dependentTagName == 'td' || dependentTagName == 'th') {
-      parsed =
-          _domHTML.parse('<table><tbody><tr></tr>\n$html\n</tbody></table>')!;
+      parsed = _domHTML.parse(
+        '<table><tbody><tr></tr>\n$html\n</tbody></table>',
+      )!;
     } else if (dependentTagName == 'tbody' ||
         dependentTagName == 'thead' ||
         dependentTagName == 'tfoot') {
@@ -117,8 +123,10 @@ List<DOMNode>? parseHTML(String? html) {
       }
     }
 
-    var domList =
-        parsedNodes.map((e) => DOMNode.from(e)).whereType<DOMNode>().toList();
+    var domList = parsedNodes
+        .map((e) => DOMNode.from(e))
+        .whereType<DOMNode>()
+        .toList();
 
     return domList;
   }
@@ -162,12 +170,13 @@ bool _isTextTag(String? tag) {
 /// - [instantiator]: the node instantiator, in case of [node] is null.
 /// - [preValidate]: validates the node before the instance is defined/created.
 /// - [validate]: validates a node after the instance is defined/created
-T? $validate<T extends DOMNode>(
-    {bool Function()? preValidate,
-    DOMNodeValidator<T>? validate,
-    T? node,
-    DOMNodeInstantiator<T>? instantiator,
-    bool rethrowErrors = false}) {
+T? $validate<T extends DOMNode>({
+  bool Function()? preValidate,
+  DOMNodeValidator<T>? validate,
+  T? node,
+  DOMNodeInstantiator<T>? instantiator,
+  bool rethrowErrors = false,
+}) {
   if (preValidate != null) {
     try {
       var preValid = preValidate();
@@ -176,8 +185,11 @@ T? $validate<T extends DOMNode>(
       if (rethrowErrors) {
         rethrow;
       } else {
-        domBuilderLog("Error calling 'preValidate' function: $preValidate",
-            error: e, stackTrace: s);
+        domBuilderLog(
+          "Error calling 'preValidate' function: $preValidate",
+          error: e,
+          stackTrace: s,
+        );
       }
     }
   }
@@ -187,8 +199,11 @@ T? $validate<T extends DOMNode>(
     try {
       theNode = instantiator();
     } catch (e, s) {
-      domBuilderLog("Error calling 'instantiator' function: $instantiator",
-          error: e, stackTrace: s);
+      domBuilderLog(
+        "Error calling 'instantiator' function: $instantiator",
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 
@@ -199,16 +214,22 @@ T? $validate<T extends DOMNode>(
       var valid = validate(theNode);
       if (!valid) return null;
     } catch (e, s) {
-      domBuilderLog("Error calling 'validate' function: $validate",
-          error: e, stackTrace: s);
+      domBuilderLog(
+        "Error calling 'validate' function: $validate",
+        error: e,
+        stackTrace: s,
+      );
     }
   }
 
   return theNode;
 }
 
-DOMElement? $htmlRoot(Object? html,
-    {String? defaultRootTag, bool? defaultTagDisplayInlineBlock}) {
+DOMElement? $htmlRoot(
+  Object? html, {
+  String? defaultRootTag,
+  bool? defaultTagDisplayInlineBlock,
+}) {
   var nodes = $html(html);
   if (nodes.isEmpty) return null;
 
@@ -219,8 +240,10 @@ DOMElement? $htmlRoot(Object? html,
     } else {
       Map<String, String>? attributes;
       if (defaultRootTag == null) {
-        var onlyText = listMatchesAll(nodes,
-            (e) => e is TextNode || (e is DOMElement && _isTextTag(e.tag)));
+        var onlyText = listMatchesAll(
+          nodes,
+          (e) => e is TextNode || (e is DOMElement && _isTextTag(e.tag)),
+        );
         defaultRootTag = onlyText ? 'span' : 'div';
       }
 
@@ -266,22 +289,26 @@ bool hasHTMLEntity(String s) {
 }
 
 /// Creates a node with [tag].
-DOMElement $tag(String tag,
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, dynamic>? attributes,
-    Object? content,
-    bool? hidden,
-    bool commented = false}) {
-  return DOMElement(tag,
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      content: content,
-      hidden: hidden,
-      commented: commented);
+DOMElement $tag(
+  String tag, {
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, dynamic>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) {
+  return DOMElement(
+    tag,
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    content: content,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a tag node from [html].
@@ -289,8 +316,11 @@ T? $tagHTML<T extends DOMElement>(Object? html) =>
     $html<DOMElement>(html).firstWhereOrNull((e) => e is T) as T?;
 
 /// Creates a list of nodes of same [tag].
-List<DOMElement> $tags<T>(String tag, Iterable<T>? iterable,
-    [ContentGenerator<T>? elementGenerator]) {
+List<DOMElement> $tags<T>(
+  String tag,
+  Iterable<T>? iterable, [
+  ContentGenerator<T>? elementGenerator,
+]) {
   var elements = <DOMElement>[];
   if (iterable == null) return elements;
 
@@ -311,246 +341,264 @@ List<DOMElement> $tags<T>(String tag, Iterable<T>? iterable,
 }
 
 /// Creates a `table` node.
-TABLEElement $table(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Object? thsStyle,
-    Object? tdsStyle,
-    Object? trsStyle,
-    Map<String, String>? attributes,
-    Object? caption,
-    Object? head,
-    Object? body,
-    Object? foot,
-    bool? hidden,
-    bool commented = false}) {
+TABLEElement $table({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Object? thsStyle,
+  Object? tdsStyle,
+  Object? trsStyle,
+  Map<String, String>? attributes,
+  Object? caption,
+  Object? head,
+  Object? body,
+  Object? foot,
+  bool? hidden,
+  bool commented = false,
+}) {
   var tableElement = TABLEElement(
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      caption: caption,
-      head: head,
-      body: body,
-      foot: foot,
-      hidden: hidden,
-      commented: commented);
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    caption: caption,
+    head: head,
+    body: body,
+    foot: foot,
+    hidden: hidden,
+    commented: commented,
+  );
 
   if (thsStyle != null) {
     var css = CSS(thsStyle);
-    tableElement
-        .selectAllByType<THElement>()
-        .forEach((e) => e.style.putAllIfAbsent(css.entries));
+    tableElement.selectAllByType<THElement>().forEach(
+      (e) => e.style.putAllIfAbsent(css.entries),
+    );
   }
 
   if (tdsStyle != null) {
     var css = CSS(tdsStyle);
-    tableElement
-        .selectAllByType<TDElement>()
-        .forEach((e) => e.style.putAllIfAbsent(css.entries));
+    tableElement.selectAllByType<TDElement>().forEach(
+      (e) => e.style.putAllIfAbsent(css.entries),
+    );
   }
 
   if (trsStyle != null) {
     var css = CSS(trsStyle);
-    tableElement
-        .selectAllByType<TRowElement>()
-        .forEach((e) => e.style.putAllIfAbsent(css.entries));
+    tableElement.selectAllByType<TRowElement>().forEach(
+      (e) => e.style.putAllIfAbsent(css.entries),
+    );
   }
 
   return tableElement;
 }
 
 /// Creates a `thread` node.
-THEADElement $thead(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? rows,
-    bool? hidden,
-    bool commented = false}) {
+THEADElement $thead({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? rows,
+  bool? hidden,
+  bool commented = false,
+}) {
   return THEADElement(
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      rows: rows,
-      hidden: hidden,
-      commented: commented);
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    rows: rows,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a `caption` node.
-CAPTIONElement $caption(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    String? captionSide,
-    Map<String, String>? attributes,
-    Object? content,
-    bool? hidden,
-    bool commented = false}) {
+CAPTIONElement $caption({
+  Object? id,
+  Object? classes,
+  Object? style,
+  String? captionSide,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) {
   return CAPTIONElement(
-      id: id,
-      classes: classes,
-      style: captionSide != null && captionSide.isNotEmpty
-          ? (style != null
+    id: id,
+    classes: classes,
+    style: captionSide != null && captionSide.isNotEmpty
+        ? (style != null
               ? 'caption-side: $captionSide; ${CSS(style).style}'
               : 'caption-side: $captionSide;')
-          : style,
-      attributes: attributes,
-      content: content,
-      hidden: hidden,
-      commented: commented);
+        : style,
+    attributes: attributes,
+    content: content,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a `tbody` node.
-TBODYElement $tbody(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? rows,
-    bool? hidden,
-    bool commented = false}) {
+TBODYElement $tbody({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? rows,
+  bool? hidden,
+  bool commented = false,
+}) {
   return TBODYElement(
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      rows: rows,
-      hidden: hidden,
-      commented: commented);
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    rows: rows,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a `tfoot` node.
-TFOOTElement $tfoot(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? rows,
-    bool? hidden,
-    bool commented = false}) {
+TFOOTElement $tfoot({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? rows,
+  bool? hidden,
+  bool commented = false,
+}) {
   return TFOOTElement(
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      rows: rows,
-      hidden: hidden,
-      commented: commented);
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    rows: rows,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a `tr` node.
-TRowElement $tr(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? cells,
-    bool? hidden,
-    bool commented = false}) {
+TRowElement $tr({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? cells,
+  bool? hidden,
+  bool commented = false,
+}) {
   return TRowElement(
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      cells: cells,
-      hidden: hidden,
-      commented: commented);
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    cells: cells,
+    hidden: hidden,
+    commented: commented,
+  );
 }
 
 /// Creates a `td` node.
-TDElement $td(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        int? colspan,
-        int? rowspan,
-        String? headers,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    TDElement(
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {
-          if (colspan != null) 'colspan': '$colspan',
-          if (rowspan != null) 'rowspan': '$rowspan',
-          if (headers != null) 'headers': headers,
-          ...?attributes,
-        },
-        content: content,
-        hidden: hidden,
-        commented: commented);
+TDElement $td({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  int? colspan,
+  int? rowspan,
+  String? headers,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => TDElement(
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: {
+    if (colspan != null) 'colspan': '$colspan',
+    if (rowspan != null) 'rowspan': '$rowspan',
+    'headers': ?headers,
+    ...?attributes,
+  },
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `th` node.
-THElement $th(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        int? colspan,
-        int? rowspan,
-        String? abbr,
-        String? scope,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    THElement(
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {
-          if (colspan != null) 'colspan': '$colspan',
-          if (rowspan != null) 'rowspan': '$rowspan',
-          if (abbr != null) 'abbr': abbr,
-          if (scope != null) 'scope': scope,
-          ...?attributes,
-        },
-        content: content,
-        hidden: hidden,
-        commented: commented);
+THElement $th({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  int? colspan,
+  int? rowspan,
+  String? abbr,
+  String? scope,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => THElement(
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: {
+    if (colspan != null) 'colspan': '$colspan',
+    if (rowspan != null) 'rowspan': '$rowspan',
+    'abbr': ?abbr,
+    'scope': ?scope,
+    ...?attributes,
+  },
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `div` node.
-DIVElement $div(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    DIVElement(
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DIVElement $div({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => DIVElement(
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `div` node with `display: inline-block`.
-DIVElement $divInline(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    DIVElement(
-        id: id,
-        classes: classes,
-        style: toFlatListOfStrings(['display: inline-block', style],
-            delimiter: CSS_LIST_DELIMITER),
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DIVElement $divInline({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => DIVElement(
+  id: id,
+  classes: classes,
+  style: toFlatListOfStrings([
+    'display: inline-block',
+    style,
+  ], delimiter: CSS_LIST_DELIMITER),
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `div` node from HTML.
 DIVElement? $divHTML(Object? html) => $tagHTML(html);
@@ -618,29 +666,30 @@ DIVElement $divCenteredContent({
     var rowList = row is List ? row : [row];
 
     var rowCells = rowList
-        .map((e) => $div(
-              classes: cellsClasses,
-              style:
-                  'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
-              content: e,
-            ))
+        .map(
+          (e) => $div(
+            classes: cellsClasses,
+            style:
+                'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
+            content: e,
+          ),
+        )
         .toList();
 
-    var rowDiv = $div(
-      style: 'display: table-row;',
-      content: rowCells,
-    );
+    var rowDiv = $div(style: 'display: table-row;', content: rowCells);
 
     list.add(rowDiv);
   }
 
   if (content != null) {
-    list.add($div(
-      classes: cellsClasses,
-      style:
-          'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
-      content: content,
-    ));
+    list.add(
+      $div(
+        classes: cellsClasses,
+        style:
+            'display: table-cell; text-align: center; vertical-align: middle; $cellsStyle',
+        content: content,
+      ),
+    );
   }
 
   return $div(classes: classes, style: divStyle, content: list);
@@ -648,262 +697,284 @@ DIVElement $divCenteredContent({
 
 /// Creates a `div` node with `display: inline-block`.
 DOMAsync $asyncContent({
-  final Object? loading,
+  Object? loading,
   Future? future,
-  final Future Function()? function,
+  Future Function()? function,
 }) {
   return DOMAsync(loading: loading, future: future, function: function);
 }
 
 /// Creates a `span` node.
-DOMElement $span(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('span',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $span({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'span',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `button` node.
-DOMElement $button(
-        {Object? id,
-        Object? name,
-        Object? classes,
-        Object? style,
-        String? type,
-        Map<String, dynamic>? attributes,
-        Object? content,
-        bool? hidden,
-        bool disabled = false,
-        bool commented = false}) =>
-    $tag('button',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {
-          'type': type != null && type.isNotEmpty ? type : 'button',
-          if (name != null) 'name': name,
-          if (disabled) 'disabled': disabled,
-          ...?attributes
-        },
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $button({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  String? type,
+  Map<String, dynamic>? attributes,
+  Object? content,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) => $tag(
+  'button',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: {
+    'type': type != null && type.isNotEmpty ? type : 'button',
+    'name': ?name,
+    if (disabled) 'disabled': disabled,
+    ...?attributes,
+  },
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `label` node.
-DOMElement $label(
-        {Object? id,
-        String? forID,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('label',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {if (forID != null) 'for': forID, ...?attributes},
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $label({
+  Object? id,
+  String? forID,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'label',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: {'for': ?forID, ...?attributes},
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `ul` node.
-DOMElement $ul(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('ul',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $ul({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'ul',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `ol` node.
-DOMElement $ol(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('ol',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $ol({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'ol',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `li` node.
-DOMElement $li(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('li',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $li({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'li',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `textarea` node.
-TEXTAREAElement $textarea(
-    {Object? id,
-    Object? name,
-    Object? classes,
-    Object? style,
-    Object? cols,
-    Object? rows,
-    Map<String, String>? attributes,
-    Object? content,
-    bool? hidden,
-    bool disabled = false,
-    bool commented = false}) {
+TEXTAREAElement $textarea({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  Object? cols,
+  Object? rows,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) {
   return TEXTAREAElement(
-      id: id,
-      name: name,
-      classes: classes,
-      style: style,
-      cols: cols,
-      rows: rows,
-      attributes: attributes,
-      content: content,
-      hidden: hidden,
-      disabled: disabled,
-      commented: commented);
+    id: id,
+    name: name,
+    classes: classes,
+    style: style,
+    cols: cols,
+    rows: rows,
+    attributes: attributes,
+    content: content,
+    hidden: hidden,
+    disabled: disabled,
+    commented: commented,
+  );
 }
 
 /// Creates an `input` node.
-INPUTElement $input(
-    {Object? id,
-    Object? name,
-    Object? classes,
-    Object? style,
-    Object? type,
-    Object? placeholder,
-    Map<String, String>? attributes,
-    Object? value,
-    bool? hidden,
-    bool disabled = false,
-    bool commented = false}) {
+INPUTElement $input({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  Object? type,
+  Object? placeholder,
+  Map<String, String>? attributes,
+  Object? value,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) {
   return INPUTElement(
-      id: id,
-      name: name,
-      type: type,
-      placeholder: placeholder,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      value: value,
-      hidden: hidden,
-      disabled: disabled,
-      commented: commented);
+    id: id,
+    name: name,
+    type: type,
+    placeholder: placeholder,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    value: value,
+    hidden: hidden,
+    disabled: disabled,
+    commented: commented,
+  );
 }
 
 /// Creates an `input` node of type `checkbox`.
-CHECKBOXElement $checkbox(
-    {Object? id,
-    Object? name,
-    Object? classes,
-    Object? style,
-    Object? placeholder,
-    Map<String, String>? attributes,
-    bool? checked,
-    Object? value,
-    bool? hidden,
-    bool disabled = false,
-    bool commented = false}) {
+CHECKBOXElement $checkbox({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  Object? placeholder,
+  Map<String, String>? attributes,
+  bool? checked,
+  Object? value,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) {
   return CHECKBOXElement(
-      id: id,
-      name: name,
-      type: 'checkbox',
-      placeholder: placeholder,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      value: value,
-      checked: checked,
-      hidden: hidden,
-      disabled: disabled,
-      commented: commented);
+    id: id,
+    name: name,
+    type: 'checkbox',
+    placeholder: placeholder,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    value: value,
+    checked: checked,
+    hidden: hidden,
+    disabled: disabled,
+    commented: commented,
+  );
 }
 
 /// Creates an `input` node of type `radio`.
-INPUTElement $radiobutton(
-    {Object? id,
-    Object? name,
-    Object? classes,
-    Object? style,
-    Object? placeholder,
-    Map<String, String>? attributes,
-    Object? value,
-    bool? hidden,
-    bool disabled = false,
-    bool commented = false}) {
+INPUTElement $radiobutton({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  Object? placeholder,
+  Map<String, String>? attributes,
+  Object? value,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) {
   return INPUTElement(
-      id: id,
-      name: name,
-      type: 'radio',
-      placeholder: placeholder,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      value: value,
-      hidden: hidden,
-      disabled: disabled,
-      commented: commented);
+    id: id,
+    name: name,
+    type: 'radio',
+    placeholder: placeholder,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    value: value,
+    hidden: hidden,
+    disabled: disabled,
+    commented: commented,
+  );
 }
 
 /// Creates an `select` node.
-SELECTElement $select(
-    {Object? id,
-    Object? name,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? options,
-    Object? selected,
-    bool? multiple,
-    bool? hidden,
-    bool disabled = false,
-    bool commented = false}) {
+SELECTElement $select({
+  Object? id,
+  Object? name,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? options,
+  Object? selected,
+  bool? multiple,
+  bool? hidden,
+  bool disabled = false,
+  bool commented = false,
+}) {
   var selectElement = SELECTElement(
-      id: id,
-      name: name,
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      options: options,
-      multiple: multiple,
-      hidden: hidden,
-      disabled: disabled,
-      commented: commented);
+    id: id,
+    name: name,
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    options: options,
+    multiple: multiple,
+    hidden: hidden,
+    disabled: disabled,
+    commented: commented,
+  );
 
   selectElement.selectOption(selected);
 
@@ -911,51 +982,52 @@ SELECTElement $select(
 }
 
 /// Creates an `option` node.
-OPTIONElement $option(
-    {Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    Object? value,
-    String? label,
-    bool? selected,
-    bool disabled = false,
-    Object? text,
-    Object? valueAndText}) {
+OPTIONElement $option({
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? value,
+  String? label,
+  bool? selected,
+  bool disabled = false,
+  Object? text,
+  Object? valueAndText,
+}) {
   return OPTIONElement(
-      classes: classes,
-      style: style,
-      attributes: attributes,
-      value: value ?? valueAndText,
-      label: label,
-      selected: selected,
-      disabled: disabled,
-      text: DOMNode.toText(text ?? valueAndText));
+    classes: classes,
+    style: style,
+    attributes: attributes,
+    value: value ?? valueAndText,
+    label: label,
+    selected: selected,
+    disabled: disabled,
+    text: DOMNode.toText(text ?? valueAndText),
+  );
 }
 
 /// Creates an `img` node.
-DOMElement $img(
-    {Object? id,
-    Object? classes,
-    Object? style,
-    Map<String, String>? attributes,
-    String? src,
-    Future<String?>? srcFuture,
-    String? title,
-    Object? content,
-    bool? hidden,
-    bool commented = false}) {
-  var img = $tag('img',
-      id: id,
-      classes: classes,
-      style: style,
-      attributes: {
-        if (src != null) 'src': src,
-        if (title != null) 'title': title,
-        ...?attributes
-      },
-      content: content,
-      hidden: hidden,
-      commented: commented);
+DOMElement $img({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  String? src,
+  Future<String?>? srcFuture,
+  String? title,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) {
+  var img = $tag(
+    'img',
+    id: id,
+    classes: classes,
+    style: style,
+    attributes: {'src': ?src, 'title': ?title, ...?attributes},
+    content: content,
+    hidden: hidden,
+    commented: commented,
+  );
 
   if (srcFuture != null) {
     srcFuture.then((src) {
@@ -971,68 +1043,71 @@ DOMElement $img(
 }
 
 /// Creates an `a` node.
-DOMElement $a(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        String? href,
-        String? target,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('a',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: {
-          if (href != null) 'href': href,
-          if (target != null) 'target': target,
-          ...?attributes
-        },
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $a({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  String? href,
+  String? target,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'a',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: {'href': ?href, 'target': ?target, ...?attributes},
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `b` node.
-$b({Object? content, bool? hidden, bool commented = false}) =>
+DOMElement $b({Object? content, bool? hidden, bool commented = false}) =>
     $tag('b', content: content, hidden: hidden, commented: commented);
 
 /// Creates a `p` node.
-DOMElement $p(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('p',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $p({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'p',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `h$N` node (h1, h2, h3...).
-DOMElement $h(int n,
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('h$n',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $h(
+  int n, {
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'h$n',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `br` node.
 DOMElement $br({int amount = 1, bool commented = false}) {
@@ -1080,92 +1155,102 @@ String $emsp([int length = 1]) {
 }
 
 /// Creates a `hr` node.
-DOMElement $hr(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('hr',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        hidden: hidden,
-        commented: commented);
+DOMElement $hr({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'hr',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `form` node.
-DOMElement $form(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('form',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $form({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'form',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `nav` node.
-DOMElement $nav(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('nav',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $nav({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'nav',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `header` node.
-DOMElement $header(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('header',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $header({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'header',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Creates a `footer` node.
-DOMElement $footer(
-        {Object? id,
-        Object? classes,
-        Object? style,
-        Map<String, String>? attributes,
-        Object? content,
-        bool? hidden,
-        bool commented = false}) =>
-    $tag('footer',
-        id: id,
-        classes: classes,
-        style: style,
-        attributes: attributes,
-        content: content,
-        hidden: hidden,
-        commented: commented);
+DOMElement $footer({
+  Object? id,
+  Object? classes,
+  Object? style,
+  Map<String, String>? attributes,
+  Object? content,
+  bool? hidden,
+  bool commented = false,
+}) => $tag(
+  'footer',
+  id: id,
+  classes: classes,
+  style: style,
+  attributes: attributes,
+  content: content,
+  hidden: hidden,
+  commented: commented,
+);
 
 /// Returns [true] if [f] is a DOM Builder helper, like `$div` and `$br`.
 ///

@@ -17,8 +17,12 @@ import 'dom_builder_runtime.dart';
 import 'dom_builder_template.dart';
 import 'dom_builder_treemap.dart';
 
-void domBuilderLog(String message,
-    {bool warning = false, Object? error, StackTrace? stackTrace}) {
+void domBuilderLog(
+  String message, {
+  bool warning = false,
+  Object? error,
+  StackTrace? stackTrace,
+}) {
   if (error != null) {
     print('dom_builder> [ERROR] $message > $error');
   } else if (warning) {
@@ -107,7 +111,8 @@ NodeSelector? asNodeSelector(Object? selector) {
   }
 
   throw ArgumentError(
-      "Can't use NodeSelector of type: [ ${selector.runtimeType}");
+    "Can't use NodeSelector of type: [ ${selector.runtimeType}",
+  );
 }
 
 final DOMHtml _domHTML = DOMHtml();
@@ -159,8 +164,11 @@ class DOMNode implements AsDOMNode {
         var tag = f();
         return parseNodes(tag);
       } catch (e, s) {
-        domBuilderLog('Error calling function: $entry',
-            error: e, stackTrace: s);
+        domBuilderLog(
+          'Error calling function: $entry',
+          error: e,
+          stackTrace: s,
+        );
         return <DOMNode>[];
       }
     } else if (entry is DOMElementGenerator ||
@@ -190,8 +198,11 @@ class DOMNode implements AsDOMNode {
         var tag = f();
         return _parseNode(tag);
       } catch (e, s) {
-        domBuilderLog('Error calling function: $entry',
-            error: e, stackTrace: s);
+        domBuilderLog(
+          'Error calling function: $entry',
+          error: e,
+          stackTrace: s,
+        );
         return null;
       }
     } else if (entry is DOMElementGenerator ||
@@ -235,7 +246,9 @@ class DOMNode implements AsDOMNode {
   static List<DOMNode> _parseListNodes(Iterable l) {
     if (l is List) {
       if (l is List<DOMNode>) {
-        return l;
+        // A copy: the caller's list must not be shared (and may have a
+        // narrower element type, like `List<DOMElement>`).
+        return List<DOMNode>.of(l);
       } else if (l is List<DOMNode?>) {
         return l.nonNulls.toList();
       }
@@ -331,8 +344,9 @@ class DOMNode implements AsDOMNode {
     final treeMap = this.treeMap;
     return treeMap != null
         ? treeMap.getRuntimeNode(this) ??
-            (throw StateError(
-                "This `DOMNode` is not associated with `treeMap`!"))
+              (throw StateError(
+                "This `DOMNode` is not associated with `treeMap`!",
+              ))
         : DOMNodeRuntimeDummy(treeMap, this, null);
   }
 
@@ -341,8 +355,9 @@ class DOMNode implements AsDOMNode {
     final treeMap = this.treeMap as DOMTreeMap<T>?;
     return treeMap != null
         ? treeMap.getRuntimeNode(this) ??
-            (throw StateError(
-                "This `DOMNode` is not associated with `treeMap`!"))
+              (throw StateError(
+                "This `DOMNode` is not associated with `treeMap`!",
+              ))
         : DOMNodeRuntimeDummy(treeMap, this, null);
   }
 
@@ -364,10 +379,10 @@ class DOMNode implements AsDOMNode {
   late bool _commented;
 
   DOMNode._(bool? allowContent, bool? commented)
-      : allowContent = allowContent ?? true,
-        _commented = commented ?? false;
+    : allowContent = allowContent ?? true,
+      _commented = commented ?? false;
 
-  DOMNode({content}) : allowContent = true {
+  DOMNode({Object? content}) : allowContent = true, _commented = false {
     if (content != null) {
       _content = DOMNode.parseNodes(content);
       _setChildrenParent();
@@ -396,17 +411,18 @@ class DOMNode implements AsDOMNode {
   /// Generates a HTML from this node tree.
   ///
   /// [withIndent] If [true] will generate a indented HTML.
-  String buildHTML(
-      {bool withIndent = false,
-      String parentIndent = '',
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext}) {
+  String buildHTML({
+    bool withIndent = false,
+    String parentIndent = '',
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+  }) {
     if (isCommented) return '';
 
     final content = _content;
@@ -417,16 +433,18 @@ class DOMNode implements AsDOMNode {
     DOMNode? prev;
     for (var node in content) {
       var subHtml = node.buildHTML(
-          withIndent: withIndent,
-          parentIndent: parentIndent + indent,
-          indent: indent,
-          disableIndent: disableIndent,
-          xhtml: xhtml,
-          dsxResolution: dsxResolution,
-          buildTemplates: buildTemplates,
-          parentNode: parentNode,
-          previousNode: prev,
-          domContext: domContext);
+        withIndent: withIndent,
+        // A `DOMNode` has no tag: its content is at its own indentation.
+        parentIndent: parentIndent,
+        indent: indent,
+        disableIndent: disableIndent,
+        xhtml: xhtml,
+        dsxResolution: dsxResolution,
+        buildTemplates: buildTemplates,
+        parentNode: parentNode,
+        previousNode: prev,
+        domContext: domContext,
+      );
       html.write(subHtml);
       prev = node;
     }
@@ -439,7 +457,8 @@ class DOMNode implements AsDOMNode {
   /// Note that `dom_builder_generator_dart_html.dart` should be imported
   /// to enable `dart:html`.
   @Deprecated(
-      "Use `setDefaultDomGeneratorToWeb`. Package `dart:html` is deprecated.")
+    "Use `setDefaultDomGeneratorToWeb`. Package `dart:html` is deprecated.",
+  )
   static DOMGenerator setDefaultDomGeneratorToDartHTML() {
     return _defaultDomGenerator = DOMGenerator.dartHTML();
   }
@@ -467,20 +486,23 @@ class DOMNode implements AsDOMNode {
   ///
   /// Note that this instance is a virtual DOM and an implementation of
   /// [DOMGenerator] is responsible to actually generate a DOM tree.
-  T? buildDOM<T extends Object>(
-      {DOMGenerator<T>? generator,
-      DOMTreeMap<T>? treeMap,
-      T? parent,
-      DOMContext<T>? context,
-      bool setTreeMapRoot = true}) {
+  T? buildDOM<T extends Object>({
+    DOMGenerator<T>? generator,
+    DOMTreeMap<T>? treeMap,
+    T? parent,
+    DOMContext<T>? context,
+    bool setTreeMapRoot = true,
+  }) {
     if (isCommented) return null;
 
     generator ??= defaultDomGenerator as DOMGenerator<T>;
-    return generator.generate(this,
-        parent: parent,
-        context: context,
-        treeMap: treeMap,
-        setTreeMapRoot: setTreeMapRoot);
+    return generator.generate(
+      this,
+      parent: parent,
+      context: context,
+      treeMap: treeMap,
+      setTreeMapRoot: setTreeMapRoot,
+    );
   }
 
   EventStream<Object>? _onGenerate;
@@ -573,7 +595,10 @@ class DOMNode implements AsDOMNode {
   }
 
   int _contentFromIndexBackwardWhere(
-      int idx, int steps, bool Function(DOMNode node) test) {
+    int idx,
+    int steps,
+    bool Function(DOMNode node) test,
+  ) {
     for (var i = math.min(idx, _content!.length - 1); i >= 0; i--) {
       var node = _content![i];
       if (test(node)) {
@@ -588,7 +613,10 @@ class DOMNode implements AsDOMNode {
   }
 
   int _contentFromIndexForwardWhere(
-      int idx, int steps, bool Function(DOMNode node) test) {
+    int idx,
+    int steps,
+    bool Function(DOMNode node) test,
+  ) {
     for (var i = idx; i < _content!.length; i++) {
       var node = _content![i];
       if (test(node)) {
@@ -620,7 +648,10 @@ class DOMNode implements AsDOMNode {
     _content!.removeAt(idx);
 
     var idxUp = _contentFromIndexBackwardWhere(
-        idx - 1, 0, (node) => node is DOMElement);
+      idx - 1,
+      0,
+      (node) => node is DOMElement,
+    );
     if (idxUp < 0) {
       idxUp = 0;
     }
@@ -647,8 +678,11 @@ class DOMNode implements AsDOMNode {
 
     _content!.removeAt(idx);
 
-    var idxDown =
-        _contentFromIndexForwardWhere(idx, 1, (node) => node is DOMElement);
+    var idxDown = _contentFromIndexForwardWhere(
+      idx,
+      1,
+      (node) => node is DOMElement,
+    );
     if (idxDown < 0) {
       idxDown = _content!.length;
     }
@@ -871,6 +905,7 @@ class DOMNode implements AsDOMNode {
         _addNodeToContent(elem);
       } else {
         _content!.insert(index, elem);
+        elem.parent = this;
       }
       return;
     }
@@ -1134,7 +1169,9 @@ class DOMNode implements AsDOMNode {
   }
 
   void _selectAllWhereImpl<T extends DOMNode>(
-      NodeSelector? selector, List<T> all) {
+    NodeSelector? selector,
+    List<T> all,
+  ) {
     if (isEmptyContent) return;
 
     catchNodesWhere(selector, all);
@@ -1188,8 +1225,10 @@ class DOMNode implements AsDOMNode {
   /// Adds each entry of [iterable] to [content].
   ///
   /// [contentGenerator] Optional element generator, that is called for each entry of [iterable].
-  DOMNode addEach<T>(Iterable<T> iterable,
-      [ContentGenerator<T>? contentGenerator]) {
+  DOMNode addEach<T>(
+    Iterable<T> iterable, [
+    ContentGenerator<T>? contentGenerator,
+  ]) {
     if (contentGenerator != null) {
       for (var entry in iterable) {
         var content = contentGenerator(entry);
@@ -1205,8 +1244,11 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
-  DOMNode addEachAsTag<T>(String tag, Iterable<T> iterable,
-      [ContentGenerator<T>? contentGenerator]) {
+  DOMNode addEachAsTag<T>(
+    String tag,
+    Iterable<T> iterable, [
+    ContentGenerator<T>? contentGenerator,
+  ]) {
     if (contentGenerator != null) {
       for (var entry in iterable) {
         var content = contentGenerator(entry);
@@ -1224,8 +1266,11 @@ class DOMNode implements AsDOMNode {
     return this;
   }
 
-  DOMNode addAsTag<T>(String tag, T entry,
-      [ContentGenerator<T>? contentGenerator]) {
+  DOMNode addAsTag<T>(
+    String tag,
+    T entry, [
+    ContentGenerator<T>? contentGenerator,
+  ]) {
     if (contentGenerator != null) {
       var content = contentGenerator(entry);
       var tagElem = $tag(tag, content: content);
@@ -1358,9 +1403,9 @@ class TextNode extends DOMNode with WithValue {
   bool _hasUnresolvedTemplate;
 
   TextNode(this._text, [bool? hasTemplateToResolve])
-      : _hasUnresolvedTemplate =
-            hasTemplateToResolve ?? DOMTemplate.possiblyATemplate(_text),
-        super._(false, false);
+    : _hasUnresolvedTemplate =
+          hasTemplateToResolve ?? DOMTemplate.possiblyATemplate(_text),
+      super._(false, false);
 
   @override
   String get text => _text;
@@ -1439,17 +1484,18 @@ class TextNode extends DOMNode with WithValue {
   bool get isWhiteSpaceContent => DOMNode.regexpWhiteSpace.hasMatch(text);
 
   @override
-  String buildHTML(
-      {bool withIndent = false,
-      String parentIndent = '',
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext}) {
+  String buildHTML({
+    bool withIndent = false,
+    String parentIndent = '',
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+  }) {
     var nbsp = xhtml ? '&#160;' : '&nbsp;';
     return text.replaceAll('\xa0', nbsp);
   }
@@ -1577,32 +1623,37 @@ class TemplateNode extends DOMNode with WithValue {
   bool get isWhiteSpaceContent => DOMNode.regexpWhiteSpace.hasMatch(text);
 
   @override
-  String buildHTML(
-      {bool withIndent = false,
-      String parentIndent = '',
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext}) {
+  String buildHTML({
+    bool withIndent = false,
+    String parentIndent = '',
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+  }) {
     String? html;
 
     if (dsxResolution.resolve) {
       if (template.isDSX) {
-        html = template.buildAsString(domContext,
-            dsxResolution: dsxResolution,
-            intlMessageResolver: domContext?.intlMessageResolver);
+        html = template.buildAsString(
+          domContext,
+          dsxResolution: dsxResolution,
+          intlMessageResolver: domContext?.intlMessageResolver,
+        );
       } else if (template.hasDSX) {
         var template2 = template.copy(dsxResolution: dsxResolution);
 
         if (buildTemplates) {
-          var built = template2.build(domContext,
-              asElement: false,
-              dsxResolution: dsxResolution,
-              intlMessageResolver: domContext?.intlMessageResolver);
+          var built = template2.build(
+            domContext,
+            asElement: false,
+            dsxResolution: dsxResolution,
+            intlMessageResolver: domContext?.intlMessageResolver,
+          );
           html = DOMTemplate.objectToString(built);
         } else {
           html = template2.toString();
@@ -1612,9 +1663,11 @@ class TemplateNode extends DOMNode with WithValue {
 
     if (html == null) {
       if (buildTemplates) {
-        html = template.buildAsString(domContext,
-            dsxResolution: dsxResolution,
-            intlMessageResolver: domContext?.intlMessageResolver);
+        html = template.buildAsString(
+          domContext,
+          dsxResolution: dsxResolution,
+          intlMessageResolver: domContext?.intlMessageResolver,
+        );
       } else {
         html = text;
       }
@@ -1710,26 +1763,29 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   /// The tag name in lower-case.
   final String tag;
 
-  factory DOMElement(String? tag,
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false}) {
+  factory DOMElement(
+    String? tag, {
+    Map<String, dynamic>? attributes,
+    Object? id,
+    Object? classes,
+    Object? style,
+    Object? content,
+    bool? hidden,
+    bool commented = false,
+  }) {
     tag = _normalizeTag(tag);
 
     switch (tag) {
       case 'div':
         return DIVElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'input':
         {
@@ -1737,34 +1793,37 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
           if (type == 'checkbox') {
             return CHECKBOXElement(
-                attributes: attributes,
-                id: id,
-                classes: classes,
-                style: style,
-                value: content,
-                hidden: hidden,
-                commented: commented);
-          }
-
-          return INPUTElement(
               attributes: attributes,
               id: id,
               classes: classes,
               style: style,
               value: content,
               hidden: hidden,
-              commented: commented);
-        }
+              commented: commented,
+            );
+          }
 
-      case 'select':
-        return SELECTElement(
+          return INPUTElement(
             attributes: attributes,
             id: id,
             classes: classes,
             style: style,
-            options: content,
+            value: content,
             hidden: hidden,
-            commented: commented);
+            commented: commented,
+          );
+        }
+
+      case 'select':
+        return SELECTElement(
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          options: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'option':
         return OPTIONElement(
@@ -1776,115 +1835,127 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
       case 'textarea':
         return TEXTAREAElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'table':
         return TABLEElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'thead':
         return THEADElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            rows: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'caption':
         return CAPTIONElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'tbody':
         return TBODYElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            rows: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'tfoot':
         return TFOOTElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            rows: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          rows: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'tr':
         return TRowElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            cells: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          cells: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'td':
         return TDElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       case 'th':
         return THElement(
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
 
       default:
-        return DOMElement._(tag,
-            attributes: attributes,
-            id: id,
-            classes: classes,
-            style: style,
-            content: content,
-            hidden: hidden,
-            commented: commented);
+        return DOMElement._(
+          tag,
+          attributes: attributes,
+          id: id,
+          classes: classes,
+          style: style,
+          content: content,
+          hidden: hidden,
+          commented: commented,
+        );
     }
   }
 
-  DOMElement._(this.tag,
-      {Map<String, dynamic>? attributes,
-      Object? id,
-      Object? classes,
-      Object? style,
-      Object? content,
-      bool? hidden,
-      bool commented = false})
-      : super._(true, commented) {
+  DOMElement._(
+    this.tag, {
+    Map<String, dynamic>? attributes,
+    Object? id,
+    Object? classes,
+    Object? style,
+    Object? content,
+    bool? hidden,
+    bool commented = false,
+  }) : super._(true, commented) {
     addAllAttributes(attributes);
 
     if (id != null) {
@@ -2135,13 +2206,18 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   Map<String, dynamic> get attributes =>
-      _attributes?.map((key, value) => MapEntry<String, dynamic>(
-          key, value.isCollection ? value.values : value.value)) ??
+      _attributes?.map(
+        (key, value) => MapEntry<String, dynamic>(
+          key,
+          value.isCollection ? value.values : value.value,
+        ),
+      ) ??
       <String, dynamic>{};
 
   Map<String, String> get attributesAsString =>
       _attributes?.map(
-          ((key, value) => MapEntry<String, String>(key, value.value ?? ''))) ??
+        ((key, value) => MapEntry<String, String>(key, value.value ?? '')),
+      ) ??
       <String, String>{};
 
   static const Set<String> possibleGlobalAttributes = {
@@ -2150,7 +2226,7 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     'action',
     'uilayout',
     'oneventkeypress',
-    'oneventclick'
+    'oneventclick',
   };
 
   /// Map of possible attributes for this element.
@@ -2367,13 +2443,13 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   /// Applies [id], [classes] and [style] to this instance.
-  T apply<T extends DOMElement>({id, classes, style}) {
+  T apply<T extends DOMElement>({Object? id, Object? classes, Object? style}) {
     if (id != null) {
       setAttribute('id', id);
     }
 
     if (classes != null) {
-      appendToAttribute('classes', classes);
+      appendToAttribute('class', classes);
     }
 
     if (style != null) {
@@ -2384,7 +2460,12 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   /// Applies [id], [classes] and [style] to children nodes that matches [selector].
-  T applyWhere<T extends DOMElement>(Object? selector, {id, classes, style}) {
+  T applyWhere<T extends DOMElement>(
+    Object? selector, {
+    Object? id,
+    Object? classes,
+    Object? style,
+  }) {
     var all = selectAllWhere(selector);
 
     for (var elem in all) {
@@ -2402,14 +2483,19 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   @override
-  DOMElement addEach<T>(Iterable<T> iterable,
-      [ContentGenerator<T>? contentGenerator]) {
+  DOMElement addEach<T>(
+    Iterable<T> iterable, [
+    ContentGenerator<T>? contentGenerator,
+  ]) {
     return super.addEach(iterable, contentGenerator) as DOMElement;
   }
 
   @override
-  DOMElement addEachAsTag<T>(String tag, Iterable<T> iterable,
-      [ContentGenerator<T>? contentGenerator]) {
+  DOMElement addEachAsTag<T>(
+    String tag,
+    Iterable<T> iterable, [
+    ContentGenerator<T>? contentGenerator,
+  ]) {
     return super.addEachAsTag(tag, iterable, contentGenerator) as DOMElement;
   }
 
@@ -2498,8 +2584,9 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         .entries
         .toList();
     entries.sort((a, b) => a.key.compareTo(b.key));
-    var attributesSignature =
-        entries.map((e) => '${e.key}=${e.value}').toList();
+    var attributesSignature = entries
+        .map((e) => '${e.key}=${e.value}')
+        .toList();
     return attributesSignature.join('\n');
   }
 
@@ -2537,10 +2624,11 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     return false;
   }
 
-  String buildOpenTagHTML(
-      {bool openCloseTag = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      DOMContext? domContext}) {
+  String buildOpenTagHTML({
+    bool openCloseTag = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    DOMContext? domContext,
+  }) {
     var html = StringBuffer('<$tag');
 
     final attributes = _attributes;
@@ -2549,27 +2637,54 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       var attributeClass = attributes['class'];
       var attributeStyle = attributes['style'];
 
-      DOMAttribute.appendTo(html, ' ', attributeId,
-          domContext: domContext, dsxResolution: dsxResolution);
-      DOMAttribute.appendTo(html, ' ', attributeClass,
-          domContext: domContext, dsxResolution: dsxResolution);
-      DOMAttribute.appendTo(html, ' ', attributeStyle,
-          domContext: domContext, dsxResolution: dsxResolution);
+      DOMAttribute.appendTo(
+        html,
+        ' ',
+        attributeId,
+        domContext: domContext,
+        dsxResolution: dsxResolution,
+      );
+      DOMAttribute.appendTo(
+        html,
+        ' ',
+        attributeClass,
+        domContext: domContext,
+        dsxResolution: dsxResolution,
+      );
+      DOMAttribute.appendTo(
+        html,
+        ' ',
+        attributeStyle,
+        domContext: domContext,
+        dsxResolution: dsxResolution,
+      );
 
-      var attributesNormal = attributes.values
-          .where((v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean);
+      var attributesNormal = attributes.values.where(
+        (v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean,
+      );
 
       for (var attr in attributesNormal) {
-        DOMAttribute.appendTo(html, ' ', attr,
-            domContext: domContext, dsxResolution: dsxResolution);
+        DOMAttribute.appendTo(
+          html,
+          ' ',
+          attr,
+          domContext: domContext,
+          dsxResolution: dsxResolution,
+        );
       }
 
-      var attributesBoolean = attributes.values
-          .where((v) => v.hasValue && !_isPriorityAttribute(v) && v.isBoolean);
+      var attributesBoolean = attributes.values.where(
+        (v) => v.hasValue && !_isPriorityAttribute(v) && v.isBoolean,
+      );
 
       for (var attr in attributesBoolean) {
-        DOMAttribute.appendTo(html, ' ', attr,
-            domContext: domContext, dsxResolution: dsxResolution);
+        DOMAttribute.appendTo(
+          html,
+          ' ',
+          attr,
+          domContext: domContext,
+          dsxResolution: dsxResolution,
+        );
       }
     }
 
@@ -2613,17 +2728,22 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   }
 
   @override
-  String buildHTML(
-      {bool withIndent = false,
-      String parentIndent = '',
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext}) {
+  String buildHTML({
+    bool withIndent = false,
+    String parentIndent = '',
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+  }) {
+    // Commented nodes are ignored, like in `DOMNode.buildHTML` and
+    // `DOMGenerator.build`:
+    if (isCommented) return '';
+
     if (buildTemplates && hasUnresolvedTemplate) {
       var htmlUnresolvedTemplate = buildHTML(
         withIndent: true,
@@ -2637,16 +2757,17 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         var templateNode = TemplateNode(template);
 
         var html = templateNode.buildHTML(
-            withIndent: withIndent,
-            parentIndent: parentIndent,
-            indent: indent,
-            disableIndent: disableIndent,
-            xhtml: xhtml,
-            dsxResolution: dsxResolution,
-            buildTemplates: true,
-            parentNode: parentNode,
-            previousNode: previousNode,
-            domContext: domContext);
+          withIndent: withIndent,
+          parentIndent: parentIndent,
+          indent: indent,
+          disableIndent: disableIndent,
+          xhtml: xhtml,
+          dsxResolution: dsxResolution,
+          buildTemplates: true,
+          parentNode: parentNode,
+          previousNode: previousNode,
+          domContext: domContext,
+        );
 
         return html;
       }
@@ -2656,7 +2777,8 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
       disableIndent = true;
     }
 
-    var allowIndent = withIndent &&
+    var allowIndent =
+        withIndent &&
         isNotEmptyContent &&
         hasOnlyElementNodes &&
         !disableIndent;
@@ -2675,11 +2797,13 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
     if (_selfClosingTags.contains(tag) ||
         (emptyContent && (xhtml || _selfClosingTagsOptional.contains(tag)))) {
-      var html = parentIndent +
+      var html =
+          parentIndent +
           buildOpenTagHTML(
-              openCloseTag: xhtml,
-              dsxResolution: dsxResolution,
-              domContext: domContext);
+            openCloseTag: xhtml,
+            dsxResolution: dsxResolution,
+            domContext: domContext,
+          );
       return html;
     }
 
@@ -2687,7 +2811,8 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
     html.write(parentIndent);
     html.write(
-        buildOpenTagHTML(dsxResolution: dsxResolution, domContext: domContext));
+      buildOpenTagHTML(dsxResolution: dsxResolution, domContext: domContext),
+    );
     html.write(innerBreakLine);
 
     if (!emptyContent) {
@@ -2714,19 +2839,20 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     return html.toString();
   }
 
-  StringBuffer buildHTMLContent(
-      {bool withIndent = false,
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      String innerIndent = '',
-      String innerBreakLine = '',
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext,
-      StringBuffer? output}) {
+  StringBuffer buildHTMLContent({
+    bool withIndent = false,
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    String innerIndent = '',
+    String innerBreakLine = '',
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+    StringBuffer? output,
+  }) {
     output ??= StringBuffer();
 
     final content = _content;
@@ -2736,17 +2862,21 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
     DOMNode? prev;
     for (var node in content) {
+      // Skip commented nodes entirely (no indentation/line break for them):
+      if (node.isCommented) continue;
+
       var subElement = node.buildHTML(
-          withIndent: withIndent,
-          parentIndent: innerIndent,
-          indent: indent,
-          disableIndent: disableIndent,
-          xhtml: xhtml,
-          dsxResolution: dsxResolution,
-          buildTemplates: buildTemplates,
-          parentNode: this,
-          previousNode: prev,
-          domContext: domContext);
+        withIndent: withIndent,
+        parentIndent: innerIndent,
+        indent: indent,
+        disableIndent: disableIndent,
+        xhtml: xhtml,
+        dsxResolution: dsxResolution,
+        buildTemplates: buildTemplates,
+        parentNode: this,
+        previousNode: prev,
+        domContext: domContext,
+      );
       output.write(subElement);
       output.write(innerBreakLine);
       prev = node;
@@ -2763,12 +2893,60 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           tag == other.tag &&
           equalsAttributes(other) &&
           ((isEmptyContent && other.isEmptyContent) ||
-              isEqualsDeep(_content, other._content));
+              _equalsNodes(_content, other._content));
 
   /// Returns true if [other] have the same attributes.
-  bool equalsAttributes(DOMElement other) =>
-      ((hasEmptyAttributes && other.hasEmptyAttributes) ||
-          isEqualsDeep(_attributes, other._attributes));
+  bool equalsAttributes(DOMElement other) {
+    if (hasEmptyAttributes && other.hasEmptyAttributes) return true;
+
+    final attributes = _attributes;
+    final otherAttributes = other._attributes;
+    if (attributes == null ||
+        otherAttributes == null ||
+        attributes.length != otherAttributes.length) {
+      return false;
+    }
+
+    for (var e in attributes.entries) {
+      var otherAttribute = otherAttributes[e.key];
+      if (otherAttribute == null ||
+          !_equalsAttribute(e.value, otherAttribute)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  // `DOMAttribute` and `DOMNode` keep identity equality (they are mutable
+  // and used as map keys, e.g. by `DOMTreeMap`), so compare by value here:
+
+  static bool _equalsAttribute(DOMAttribute a, DOMAttribute b) =>
+      identical(a, b) ||
+      (a.name == b.name &&
+          a.valueHandler.runtimeType == b.valueHandler.runtimeType &&
+          a.value == b.value);
+
+  static bool _equalsNodes(List<DOMNode>? a, List<DOMNode>? b) {
+    if (identical(a, b)) return true;
+    if (a == null || b == null || a.length != b.length) return false;
+
+    for (var i = 0; i < a.length; ++i) {
+      if (!_equalsNode(a[i], b[i])) return false;
+    }
+
+    return true;
+  }
+
+  static bool _equalsNode(DOMNode a, DOMNode b) {
+    if (identical(a, b)) return true;
+
+    if (a is DOMElement) return a.equals(b);
+    if (a is TextNode) return a.equals(b);
+    if (a is TemplateNode) return a.equals(b);
+
+    return a == b;
+  }
 
   static int objectHashcode(Object? o) {
     if (isEmptyObject(o)) return 0;
@@ -2784,8 +2962,12 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
 
   @override
   DOMElement copy() {
-    return DOMElement(tag,
-        attributes: attributes, commented: isCommented, content: copyContent());
+    return DOMElement(
+      tag,
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 
   /// True when at least one event callback is attached.
@@ -2814,16 +2996,16 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   /// active listeners.
   List<EventStream> allEventHandlers() {
     return [
-      if (_onClick != null) _onClick!,
-      if (_onChange != null) _onChange!,
-      if (_onKeyPress != null) _onKeyPress!,
-      if (_onKeyUp != null) _onKeyUp!,
-      if (_onKeyDown != null) _onKeyDown!,
-      if (_onMouseOver != null) _onMouseOver!,
-      if (_onMouseOut != null) _onMouseOut!,
-      if (_onLoad != null) _onLoad!,
-      if (_onError != null) _onError!,
-      if (_onGenerate != null) _onGenerate!,
+      ?_onClick,
+      ?_onChange,
+      ?_onKeyPress,
+      ?_onKeyUp,
+      ?_onKeyDown,
+      ?_onMouseOver,
+      ?_onMouseOut,
+      ?_onLoad,
+      ?_onError,
+      ?_onGenerate,
     ];
   }
 
@@ -2972,8 +3154,11 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   EventStream<DOMEvent> get onError => _onError ??= EventStream();
 
   /// Sets the validator of this [DOMElement].
-  StreamSubscription<DOMEvent> validator(Function validator,
-      {String? errorClass, String? validClass}) {
+  StreamSubscription<DOMEvent> validator(
+    Function validator, {
+    String? errorClass,
+    String? validClass,
+  }) {
     return onChange.listen((_) {
       Object? result;
 
@@ -3053,21 +3238,21 @@ class DOMMouseEvent<T extends Object> extends DOMEvent<T> {
   final bool metaKey;
 
   DOMMouseEvent(
-      super.treeMap,
-      super.event,
-      super.eventTarget,
-      super.target,
-      this.client,
-      this.offset,
-      this.page,
-      this.screen,
-      this.button,
-      this.buttons,
-      this.altKey,
-      this.ctrlKey,
-      this.shiftKey,
-      this.metaKey)
-      : super();
+    super.treeMap,
+    super.event,
+    super.eventTarget,
+    super.target,
+    this.client,
+    this.offset,
+    this.page,
+    this.screen,
+    this.button,
+    this.buttons,
+    this.altKey,
+    this.ctrlKey,
+    this.shiftKey,
+    this.metaKey,
+  ) : super();
 
   /// Creates an artificial event. Useful to generated events programmatically.
   factory DOMMouseEvent.synthetic({
@@ -3089,20 +3274,21 @@ class DOMMouseEvent<T extends Object> extends DOMEvent<T> {
     client ??= Point(0, 0);
 
     return DOMMouseEvent(
-        treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()),
-        event,
-        eventTarget,
-        target,
-        client,
-        offset ?? client,
-        page ?? client,
-        screen ?? client,
-        button,
-        buttons,
-        altKey,
-        ctrlKey,
-        shiftKey,
-        metaKey);
+      treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()),
+      event,
+      eventTarget,
+      target,
+      client,
+      offset ?? client,
+      page ?? client,
+      screen ?? client,
+      button,
+      buttons,
+      altKey,
+      ctrlKey,
+      shiftKey,
+      metaKey,
+    );
   }
 
   @override
@@ -3120,8 +3306,8 @@ class ExternalElementNode extends DOMNode {
   final bool _isFutureElement;
 
   ExternalElementNode(this.externalElement, [bool? allowContent])
-      : _isFutureElement = externalElement != null && externalElement is Future,
-        super._(allowContent, false);
+    : _isFutureElement = externalElement != null && externalElement is Future,
+      super._(allowContent, false);
 
   /// Alias to [isFutureElement].
   @override
@@ -3131,17 +3317,18 @@ class ExternalElementNode extends DOMNode {
   bool get isFutureElement => _isFutureElement;
 
   @override
-  String buildHTML(
-      {bool withIndent = false,
-      String parentIndent = '',
-      String indent = '  ',
-      bool disableIndent = false,
-      bool xhtml = false,
-      DSXResolution dsxResolution = DSXResolution.skipDSX,
-      bool buildTemplates = false,
-      DOMNode? parentNode,
-      DOMNode? previousNode,
-      DOMContext? domContext}) {
+  String buildHTML({
+    bool withIndent = false,
+    String parentIndent = '',
+    String indent = '  ',
+    bool disableIndent = false,
+    bool xhtml = false,
+    DSXResolution dsxResolution = DSXResolution.skipDSX,
+    bool buildTemplates = false,
+    DOMNode? parentNode,
+    DOMNode? previousNode,
+    DOMContext? domContext,
+  }) {
     final externalElement = this.externalElement;
     if (externalElement == null) return '';
 
@@ -3184,28 +3371,32 @@ class DIVElement extends DOMElement {
     if (entry is DOMElement) {
       _checkTag('div', entry);
       return DIVElement(
-          attributes: entry._attributes,
-          content: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        content: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  DIVElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      super.content,
-      super.hidden,
-      super.commented = false})
-      : super._('div');
+  DIVElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    super.content,
+    super.hidden,
+    super.commented = false,
+  }) : super._('div');
 
   @override
   DIVElement copy() {
     return DIVElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 }
 
@@ -3225,34 +3416,38 @@ class INPUTElement extends DOMElement with WithValue {
     if (entry is DOMElement) {
       _checkTag('input', entry);
       return INPUTElement(
-          attributes: entry._attributes,
-          value: entry.value,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        value: entry.value,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  INPUTElement(
-      {Map<String, dynamic>? attributes,
-      super.id,
-      Object? name,
-      Object? type,
-      Object? placeholder,
-      super.classes,
-      super.style,
-      Object? value,
-      super.hidden,
-      bool disabled = false,
-      super.commented = false})
-      : super._('input', attributes: {
-          if (name != null) 'name': name,
-          if (type != null) 'type': type,
-          if (placeholder != null) 'placeholder': placeholder,
-          if (value != null) 'value': value,
-          if (disabled) 'disabled': disabled,
-          ...?attributes
-        });
+  INPUTElement({
+    Map<String, dynamic>? attributes,
+    super.id,
+    Object? name,
+    Object? type,
+    Object? placeholder,
+    super.classes,
+    super.style,
+    Object? value,
+    super.hidden,
+    bool disabled = false,
+    super.commented = false,
+  }) : super._(
+         'input',
+         attributes: {
+           'name': ?name,
+           'type': ?type,
+           'placeholder': ?placeholder,
+           'value': ?value,
+           if (disabled) 'disabled': disabled,
+           ...?attributes,
+         },
+       );
 
   @override
   INPUTElement copy() {
@@ -3285,36 +3480,39 @@ class CHECKBOXElement extends INPUTElement with WithValue {
     if (entry is DOMElement) {
       _checkTag('input', entry);
       return CHECKBOXElement(
-          attributes: entry._attributes,
-          value: entry.value,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        value: entry.value,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  CHECKBOXElement(
-      {Map<String, dynamic>? attributes,
-      super.id,
-      Object? name,
-      Object? type,
-      Object? placeholder,
-      super.classes,
-      super.style,
-      Object? value,
-      bool? checked,
-      super.hidden,
-      bool disabled = false,
-      super.commented})
-      : super(attributes: {
-          if (name != null) 'name': name,
-          'type': 'checkbox',
-          if (placeholder != null) 'placeholder': placeholder,
-          if (value != null) 'value': value,
-          if (checked != null) 'checked': checked,
-          if (disabled) 'disabled': disabled,
-          ...?attributes
-        });
+  CHECKBOXElement({
+    Map<String, dynamic>? attributes,
+    super.id,
+    Object? name,
+    Object? type,
+    Object? placeholder,
+    super.classes,
+    super.style,
+    Object? value,
+    bool? checked,
+    super.hidden,
+    bool disabled = false,
+    super.commented,
+  }) : super(
+         attributes: {
+           'name': ?name,
+           'type': 'checkbox',
+           'placeholder': ?placeholder,
+           'value': ?value,
+           'checked': ?checked,
+           if (disabled) 'disabled': disabled,
+           ...?attributes,
+         },
+       );
 
   @override
   CHECKBOXElement copy() {
@@ -3350,40 +3548,46 @@ class SELECTElement extends DOMElement {
     if (entry is DOMElement) {
       _checkTag('select', entry);
       return SELECTElement(
-          attributes: entry._attributes,
-          options: OPTIONElement.toOptions(entry.content),
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        options: OPTIONElement.toOptions(entry.content),
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  SELECTElement(
-      {Map<String, dynamic>? attributes,
-      super.id,
-      Object? name,
-      Object? type,
-      super.classes,
-      super.style,
-      Object? options,
-      bool? multiple,
-      super.hidden,
-      bool disabled = false,
-      super.commented = false})
-      : super._('select',
-            attributes: {
-              ...?attributes,
-              if (name != null) 'name': name,
-              if (type != null) 'type': type,
-              if (multiple != null && multiple) 'multiple': true,
-              if (disabled) 'disabled': disabled,
-            },
-            content: OPTIONElement.toOptions(options));
+  SELECTElement({
+    Map<String, dynamic>? attributes,
+    super.id,
+    Object? name,
+    Object? type,
+    super.classes,
+    super.style,
+    Object? options,
+    bool? multiple,
+    super.hidden,
+    bool disabled = false,
+    super.commented = false,
+  }) : super._(
+         'select',
+         attributes: {
+           ...?attributes,
+           'name': ?name,
+           'type': ?type,
+           if (multiple != null && multiple) 'multiple': true,
+           if (disabled) 'disabled': disabled,
+         },
+         content: OPTIONElement.toOptions(options),
+       );
 
   @override
   SELECTElement copy() {
     return SELECTElement(
-        attributes: attributes, options: content, commented: isCommented);
+      attributes: attributes,
+      options: content,
+      commented: isCommented,
+    );
   }
 
   bool get hasOptions => isNotEmptyContent;
@@ -3460,7 +3664,8 @@ class OPTIONElement extends DOMElement with WithValue {
       return [
         OPTIONElement.from(options) ??
             (throw ArgumentError(
-                "Can't instantiate `OPTIONElement` from: $options"))
+              "Can't instantiate `OPTIONElement` from: $options",
+            )),
       ];
     }
   }
@@ -3516,42 +3721,36 @@ class OPTIONElement extends DOMElement with WithValue {
 
     if ((valueStr != null && valueStr.trim().isNotEmpty) ||
         (textStr != null && textStr.trim().isNotEmpty)) {
-      return OPTIONElement(
-        value: valueStr,
-        text: textStr,
-      );
+      return OPTIONElement(value: valueStr, text: textStr);
     }
 
     return null;
   }
 
-  OPTIONElement(
-      {Map<String, dynamic>? attributes,
-      super.classes,
-      super.style,
-      Object? value,
-      String? label,
-      bool? selected,
-      bool disabled = false,
-      String? text})
-      : super._(
-          'option',
-          attributes: {
-            ...?attributes,
-            if (value != null) 'value': parseString(value),
-            if (label != null) 'label': label,
-            if (selected != null) 'selected': parseBool(selected),
-            if (disabled) 'disabled': disabled,
-          },
-          content: TextNode.toTextNode(text),
-        );
+  OPTIONElement({
+    Map<String, dynamic>? attributes,
+    super.classes,
+    super.style,
+    Object? value,
+    String? label,
+    bool? selected,
+    bool disabled = false,
+    String? text,
+  }) : super._(
+         'option',
+         attributes: {
+           ...?attributes,
+           if (value != null) 'value': parseString(value),
+           'label': ?label,
+           if (selected != null) 'selected': parseBool(selected),
+           if (disabled) 'disabled': disabled,
+         },
+         content: TextNode.toTextNode(text),
+       );
 
   @override
   OPTIONElement copy() {
-    return OPTIONElement(
-      attributes: attributes,
-      text: text,
-    );
+    return OPTIONElement(attributes: attributes, text: text);
   }
 
   @override
@@ -3596,38 +3795,45 @@ class TEXTAREAElement extends DOMElement with WithValue {
     if (entry is DOMElement) {
       _checkTag('textarea', entry);
       return TEXTAREAElement(
-          attributes: entry._attributes,
-          content: entry.content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        content: entry.content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TEXTAREAElement(
-      {Map<String, dynamic>? attributes,
-      super.id,
-      Object? name,
-      super.classes,
-      super.style,
-      Object? cols,
-      Object? rows,
-      super.content,
-      super.hidden,
-      bool disabled = false,
-      super.commented = false})
-      : super._('textarea', attributes: {
-          if (name != null) 'name': name,
-          if (cols != null) 'cols': cols,
-          if (rows != null) 'rows': rows,
-          if (disabled) 'disabled': disabled,
-          ...?attributes
-        });
+  TEXTAREAElement({
+    Map<String, dynamic>? attributes,
+    super.id,
+    Object? name,
+    super.classes,
+    super.style,
+    Object? cols,
+    Object? rows,
+    super.content,
+    super.hidden,
+    bool disabled = false,
+    super.commented = false,
+  }) : super._(
+         'textarea',
+         attributes: {
+           'name': ?name,
+           'cols': ?cols,
+           'rows': ?rows,
+           if (disabled) 'disabled': disabled,
+           ...?attributes,
+         },
+       );
 
   @override
   TEXTAREAElement copy() {
     return TEXTAREAElement(
-        attributes: attributes, content: content, commented: isCommented);
+      attributes: attributes,
+      content: content,
+      commented: isCommented,
+    );
   }
 
   @override
@@ -3659,14 +3865,21 @@ CAPTIONElement? createTableCaption(Object? caption) {
   return null;
 }
 
-List createTableContent(content, caption, head, body, foot,
-    {bool? header, bool? footer}) {
+List createTableContent(
+  Object? content,
+  Object? caption,
+  Object? head,
+  Object? body,
+  Object? foot, {
+  bool? header,
+  bool? footer,
+}) {
   if (content == null) {
     return [
       createTableCaption(caption),
       createTableEntry(head, header: true),
       createTableEntry(body),
-      createTableEntry(foot, footer: true)
+      createTableEntry(foot, footer: true),
     ];
   }
 
@@ -3677,20 +3890,27 @@ List createTableContent(content, caption, head, body, foot,
   if (content is List) {
     if (listMatchesAll(content, (dynamic e) => _domHTML.isHtmlNode(e))) {
       var caption = content.firstWhere(
-          (e) => _domHTML.getNodeTag(e) == 'caption',
-          orElse: () => null);
-      var thread = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'thead',
-          orElse: () => null);
-      var tfoot = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'tfoot',
-          orElse: () => null);
-      var tbody = content.firstWhere((e) => _domHTML.getNodeTag(e) == 'tbody',
-          orElse: () => null);
+        (e) => _domHTML.getNodeTag(e) == 'caption',
+        orElse: () => null,
+      );
+      var thread = content.firstWhere(
+        (e) => _domHTML.getNodeTag(e) == 'thead',
+        orElse: () => null,
+      );
+      var tfoot = content.firstWhere(
+        (e) => _domHTML.getNodeTag(e) == 'tfoot',
+        orElse: () => null,
+      );
+      var tbody = content.firstWhere(
+        (e) => _domHTML.getNodeTag(e) == 'tbody',
+        orElse: () => null,
+      );
 
       var list = <DOMNode?>[
         DOMNode.from(caption),
         DOMNode.from(thread),
         DOMNode.from(tbody),
-        DOMNode.from(tfoot)
+        DOMNode.from(tfoot),
       ].nonNulls.toList();
 
       return list;
@@ -3732,6 +3952,9 @@ TABLENode? createTableEntry(Object? entry, {bool? header, bool? footer}) {
 }
 
 List<TRowElement> createTableRows(Object? rows, bool header) {
+  // No rows (not a row with an empty cell):
+  if (rows == null) return <TRowElement>[];
+
   List<TRowElement> tableRows;
 
   if (rows is Iterable) {
@@ -3740,10 +3963,14 @@ List<TRowElement> createTableRows(Object? rows, bool header) {
     if (listMatchesAll(rowsList, (dynamic e) => e is TRowElement)) {
       return rowsList.whereType<TRowElement>().toList();
     } else if (listMatchesAll(
-        rowsList, (dynamic e) => _domHTML.isHtmlNode(e))) {
+      rowsList,
+      (dynamic e) => _domHTML.isHtmlNode(e),
+    )) {
       var trList = rowsList.where((e) => _domHTML.getNodeTag(e) == 'tr');
-      var list =
-          trList.map((e) => DOMNode.from(e)).whereType<TRowElement>().toList();
+      var list = trList
+          .map((e) => DOMNode.from(e))
+          .whereType<TRowElement>()
+          .toList();
       return list;
     } else if (listMatchesAll(rowsList, (dynamic e) => e is MapEntry)) {
       var mapEntries = rowsList.whereType<MapEntry>().toList();
@@ -3815,12 +4042,14 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
 
   if (rowCells is List) {
     if (listMatchesAll(
-        rowCells,
-        (dynamic e) =>
-            (!header && e is TDElement) || (header && e is THElement))) {
+      rowCells,
+      (dynamic e) => (!header && e is TDElement) || (header && e is THElement),
+    )) {
       return rowCells.whereType<TABLENode>().toList();
     } else if (listMatchesAll(
-        rowCells, (dynamic e) => _domHTML.isHtmlNode(e))) {
+      rowCells,
+      (dynamic e) => _domHTML.isHtmlNode(e),
+    )) {
       var tdList = rowCells.where((e) {
         var tag = _domHTML.getNodeTag(e);
         return (tag == 'td' || tag == 'th');
@@ -3832,34 +4061,36 @@ List<TABLENode> createTableCells(Object? rowCells, [bool header = false]) {
           .toList();
       return list;
     }
-  } else if (rowCells is TDElement || rowCells is THElement) {
-    return [rowCells as TABLENode];
   }
 
   if (rowCells != null && rowCells is! Iterable) {
     rowCells = [rowCells];
   }
 
-  List list;
-  if (header) {
-    list = $tags('th', rowCells as Iterable?);
-  } else {
-    list = $tags('td', rowCells as Iterable?);
-  }
+  final cells = rowCells as Iterable?;
+  if (cells == null) return <TABLENode>[];
 
-  return list.cast<TABLENode>().toList();
+  // Existing cells are never nested into another cell: a `td` in a header
+  // row is converted to a `th`, and a `th` in a body row is kept (a row
+  // header):
+  return cells.map<TABLENode>((e) {
+    if (e is TDElement) return header ? e.asTHElement() : e;
+    if (e is THElement) return e;
+    return $tag(header ? 'th' : 'td', content: e) as TABLENode;
+  }).toList();
 }
 
 abstract class TABLENode extends DOMElement {
-  TABLENode._(super.tag,
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      super.content,
-      super.hidden,
-      super.commented})
-      : super._();
+  TABLENode._(
+    super.tag, {
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    super.content,
+    super.hidden,
+    super.commented,
+  }) : super._();
 
   @override
   TABLENode copy() {
@@ -3879,33 +4110,39 @@ class TABLEElement extends DOMElement {
     if (entry is DOMElement) {
       _checkTag('table', entry);
       return TABLEElement(
-          attributes: entry._attributes,
-          body: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        body: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TABLEElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      Object? caption,
-      Object? head,
-      Object? body,
-      Object? foot,
-      Object? content,
-      super.hidden,
-      super.commented = false})
-      : super._('table',
-            content: createTableContent(content, caption, head, body, foot));
+  TABLEElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    Object? caption,
+    Object? head,
+    Object? body,
+    Object? foot,
+    Object? content,
+    super.hidden,
+    super.commented = false,
+  }) : super._(
+         'table',
+         content: createTableContent(content, caption, head, body, foot),
+       );
 
   @override
   TABLEElement copy() {
     return TABLEElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 }
 
@@ -3921,28 +4158,32 @@ class THEADElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('thead', entry);
       return THEADElement(
-          attributes: entry._attributes,
-          rows: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        rows: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  THEADElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      Object? rows,
-      super.hidden,
-      super.commented = false})
-      : super._('thead', content: createTableRows(rows, true));
+  THEADElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    Object? rows,
+    super.hidden,
+    super.commented = false,
+  }) : super._('thead', content: createTableRows(rows, true));
 
   @override
   THEADElement copy() {
     return THEADElement(
-        attributes: attributes, commented: isCommented, rows: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      rows: copyContent(),
+    );
   }
 }
 
@@ -3958,28 +4199,32 @@ class CAPTIONElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('caption', entry);
       return CAPTIONElement(
-          attributes: entry._attributes,
-          content: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        content: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  CAPTIONElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      super.content,
-      super.hidden,
-      super.commented = false})
-      : super._('caption');
+  CAPTIONElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    super.content,
+    super.hidden,
+    super.commented = false,
+  }) : super._('caption');
 
   @override
   CAPTIONElement copy() {
     return CAPTIONElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 }
 
@@ -3995,28 +4240,32 @@ class TBODYElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('tbody', entry);
       return TBODYElement(
-          attributes: entry._attributes,
-          rows: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        rows: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TBODYElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      Object? rows,
-      super.hidden,
-      super.commented = false})
-      : super._('tbody', content: createTableRows(rows, false));
+  TBODYElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    Object? rows,
+    super.hidden,
+    super.commented = false,
+  }) : super._('tbody', content: createTableRows(rows, false));
 
   @override
   TBODYElement copy() {
     return TBODYElement(
-        attributes: attributes, commented: isCommented, rows: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      rows: copyContent(),
+    );
   }
 }
 
@@ -4032,28 +4281,32 @@ class TFOOTElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('tfoot', entry);
       return TFOOTElement(
-          attributes: entry._attributes,
-          rows: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        rows: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TFOOTElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      Object? rows,
-      super.hidden,
-      super.commented = false})
-      : super._('tfoot', content: createTableRows(rows, false));
+  TFOOTElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    Object? rows,
+    super.hidden,
+    super.commented = false,
+  }) : super._('tfoot', content: createTableRows(rows, false));
 
   @override
   TFOOTElement copy() {
     return TFOOTElement(
-        attributes: attributes, commented: isCommented, rows: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      rows: copyContent(),
+    );
   }
 }
 
@@ -4069,24 +4322,25 @@ class TRowElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('tr', entry);
       return TRowElement(
-          attributes: entry._attributes,
-          cells: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        cells: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TRowElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      Object? cells,
-      bool headerRow = false,
-      super.hidden,
-      super.commented = false})
-      : super._('tr', content: createTableCells(cells, headerRow));
+  TRowElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    Object? cells,
+    bool headerRow = false,
+    super.hidden,
+    super.commented = false,
+  }) : super._('tr', content: createTableCells(cells, headerRow));
 
   bool get isHeaderRow => parent != null ? parent is THEADElement : false;
 
@@ -4095,10 +4349,11 @@ class TRowElement extends TABLENode {
   @override
   TRowElement copy() {
     return TRowElement(
-        attributes: attributes,
-        commented: isCommented,
-        cells: copyContent(),
-        headerRow: isHeaderRow);
+      attributes: attributes,
+      commented: isCommented,
+      cells: copyContent(),
+      headerRow: isHeaderRow,
+    );
   }
 }
 
@@ -4114,33 +4369,40 @@ class THElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('th', entry);
       return THElement(
-          attributes: entry._attributes,
-          content: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        content: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  THElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      super.content,
-      super.hidden,
-      super.commented = false})
-      : super._('th');
+  THElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    super.content,
+    super.hidden,
+    super.commented = false,
+  }) : super._('th');
 
   @override
   THElement copy() {
     return THElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 
   TDElement asTDElement() {
     return TDElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 }
 
@@ -4156,33 +4418,40 @@ class TDElement extends TABLENode {
     if (entry is DOMElement) {
       _checkTag('td', entry);
       return TDElement(
-          attributes: entry._attributes,
-          content: entry._content,
-          commented: entry.isCommented);
+        attributes: entry._attributes,
+        content: entry._content,
+        commented: entry.isCommented,
+      );
     }
 
     return null;
   }
 
-  TDElement(
-      {super.attributes,
-      super.id,
-      super.classes,
-      super.style,
-      super.content,
-      super.hidden,
-      super.commented = false})
-      : super._('td');
+  TDElement({
+    super.attributes,
+    super.id,
+    super.classes,
+    super.style,
+    super.content,
+    super.hidden,
+    super.commented = false,
+  }) : super._('td');
 
   @override
   TDElement copy() {
     return TDElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 
   THElement asTHElement() {
     return THElement(
-        attributes: attributes, commented: isCommented, content: copyContent());
+      attributes: attributes,
+      commented: isCommented,
+      content: copyContent(),
+    );
   }
 }
 
@@ -4200,10 +4469,10 @@ class DOMAsync extends DOMNode {
   DOMAsync({this.loading, this.future, this.function}) : super._(false, false);
 
   DOMAsync.future(Future future, [Object? loading])
-      : this(future: future, loading: loading);
+    : this(future: future, loading: loading);
 
   DOMAsync.function(Future Function() function, [Object? loading])
-      : this(function: function, loading: loading);
+    : this(function: function, loading: loading);
 
   Future? _resolvedFuture;
 

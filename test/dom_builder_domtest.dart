@@ -11,18 +11,20 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
 
   @override
   TestElem generate(
-      DOMGenerator<dynamic> domGenerator,
-      DOMTreeMap<dynamic> treeMap,
-      String? tag,
-      DOMElement? domParent,
-      parent,
-      DOMNode domNode,
-      Map<String, DOMAttribute> attributes,
-      TestElem? contentHolder,
-      List<DOMNode>? contentNodes,
-      DOMContext<dynamic>? context) {
-    var attributesAsString =
-        attributes.map((key, value) => MapEntry(key, value.value ?? ''));
+    DOMGenerator<dynamic> domGenerator,
+    DOMTreeMap<dynamic> treeMap,
+    String? tag,
+    DOMElement? domParent,
+    parent,
+    DOMNode domNode,
+    Map<String, DOMAttribute> attributes,
+    TestElem? contentHolder,
+    List<DOMNode>? contentNodes,
+    DOMContext<dynamic>? context,
+  ) {
+    var attributesAsString = attributes.map(
+      (key, value) => MapEntry(key, value.value ?? ''),
+    );
 
     var elem = TestElem(tag)..attributes.addAll(attributesAsString);
 
@@ -39,11 +41,12 @@ class TestNodeGenerator extends ElementGenerator<TestElem> {
 
   @override
   DOMElement revert(
-      DOMGenerator<dynamic> domGenerator,
-      DOMTreeMap<dynamic>? treeMap,
-      DOMElement? domParent,
-      TestElem? parent,
-      TestElem? node) {
+    DOMGenerator<dynamic> domGenerator,
+    DOMTreeMap<dynamic>? treeMap,
+    DOMElement? domParent,
+    TestElem? parent,
+    TestElem? node,
+  ) {
     var tag = node!.tag;
     var prevClass = node.attributes['class'];
 
@@ -183,8 +186,9 @@ class TestElem extends TestNode {
 
   @override
   String outerHTML() {
-    var attrs =
-        attributes.entries.map((e) => '${e.key}="${e.value}"').join(' ');
+    var attrs = attributes.entries
+        .map((e) => '${e.key}="${e.value}"')
+        .join(' ');
     if (attrs.isNotEmpty) attrs = ' $attrs';
 
     var html = '<$tag$attrs>';
@@ -286,7 +290,10 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   bool replaceChildElement(
-      TestNode parent, TestNode? child1, List<TestNode>? child2) {
+    TestNode parent,
+    TestNode? child1,
+    List<TestNode>? child2,
+  ) {
     if (parent is TestElem) {
       var idx = parent.indexOf(child1!);
       if (idx >= 0) {
@@ -308,8 +315,11 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   List<TestNode>? addExternalElementToElement(
-      TestNode element, Object? externalElement,
-      {DOMTreeMap<TestNode>? treeMap, DOMContext<TestNode>? context}) {
+    TestNode element,
+    Object? externalElement, {
+    DOMTreeMap<TestNode>? treeMap,
+    DOMContext<TestNode>? context,
+  }) {
     if (element is TestElem) {
       if (externalElement is TestElem) {
         element.add(externalElement);
@@ -394,7 +404,10 @@ class TestGenerator extends DOMGenerator<TestNode> {
 
   @override
   DOMNodeRuntime<TestNode> createDOMNodeRuntime(
-      DOMTreeMap<TestNode> treeMap, DOMNode? domNode, TestNode node) {
+    DOMTreeMap<TestNode> treeMap,
+    DOMNode? domNode,
+    TestNode node,
+  ) {
     return TestNodeRuntime(treeMap, domNode, node as TestElem);
   }
 }
@@ -599,14 +612,25 @@ class TestNodeRuntime extends DOMNodeRuntime<TestNode> {
 
 class TestActionExecutor extends DOMActionExecutor<TestNode> {
   @override
-  TestNode call(String name, List<String> parameters, TestNode? target,
-      TestNode? self, DOMTreeMap? treeMap, DOMContext? context) {
+  TestNode call(
+    String name,
+    List<String> parameters,
+    TestNode? target,
+    TestNode? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     throw UnimplementedError();
   }
 
   @override
-  TestNode selectByID(String id, TestNode? target, TestNode? self,
-      DOMTreeMap? treeMap, DOMContext? context) {
+  TestNode selectByID(
+    String id,
+    TestNode? target,
+    TestNode? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     throw UnimplementedError();
   }
 }

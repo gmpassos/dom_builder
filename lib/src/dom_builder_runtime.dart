@@ -26,7 +26,10 @@ abstract class DOMNodeRuntime<T extends Object> {
     var nodeParent = domGenerator.getNodeParent(node);
     if (nodeParent == null) return null;
     return domGenerator.createDOMNodeRuntime(
-        treeMap!, domNodeParent, nodeParent);
+      treeMap!,
+      domNodeParent,
+      nodeParent,
+    );
   }
 
   /// This [node] parent.
@@ -156,7 +159,8 @@ abstract class DOMNodeRuntime<T extends Object> {
   Map<String, String> removeStyleProperties(List<String> names) {
     var removed = removeStyleEntries(names);
     return Map.fromEntries(
-        removed.map((e) => MapEntry(e.name, e.valueAsString)));
+      removed.map((e) => MapEntry(e.name, e.valueAsString)),
+    );
   }
 
   /// Returns the [List] of children nodes.
@@ -238,8 +242,11 @@ abstract class DOMNodeRuntime<T extends Object> {
     if (elements == null) return false;
     var treeMap = this.treeMap;
 
-    var e = domGenerator.toElements(elements,
-        treeMap: treeMap, setTreeMapRoot: false);
+    var e = domGenerator.toElements(
+      elements,
+      treeMap: treeMap,
+      setTreeMapRoot: false,
+    );
     var ok = domGenerator.replaceElement(node, e);
 
     if (ok && treeMap != null && domNode != null) {
@@ -258,7 +265,10 @@ abstract class DOMNodeRuntime<T extends Object> {
   }
 
   int _contentFromIndexBackwardWhere(
-      int idx, int steps, bool Function(T? node) test) {
+    int idx,
+    int steps,
+    bool Function(T? node) test,
+  ) {
     for (var i = math.min(idx, nodesLength - 1); i >= 0; i--) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -273,7 +283,10 @@ abstract class DOMNodeRuntime<T extends Object> {
   }
 
   int _contentFromIndexForwardWhere(
-      int idx, int steps, bool Function(T? node) test) {
+    int idx,
+    int steps,
+    bool Function(T? node) test,
+  ) {
     for (var i = idx; i < nodesLength; i++) {
       var node = getNodeAt(i);
       if (test(node)) {
@@ -324,7 +337,10 @@ abstract class DOMNodeRuntime<T extends Object> {
     remove();
 
     var idxDown = parentRuntime._contentFromIndexForwardWhere(
-        idx, 1, (node) => domGenerator.isElementNode(node));
+      idx,
+      1,
+      (node) => domGenerator.isElementNode(node),
+    );
     if (idxDown < 0) {
       idxDown = parentRuntime.nodesLength;
     }
@@ -371,7 +387,7 @@ abstract class DOMNodeRuntime<T extends Object> {
 
 class DOMNodeRuntimeDummy<T extends Object> extends DOMNodeRuntime<T> {
   DOMNodeRuntimeDummy(DOMTreeMap<T>? treeMap, DOMNode domNode, T? node)
-      : super(treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()), domNode, node);
+    : super(treeMap ?? DOMTreeMapDummy(DOMGeneratorDummy()), domNode, node);
 
   @override
   String? get tagName => null;

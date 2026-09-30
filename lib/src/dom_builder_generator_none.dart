@@ -14,11 +14,14 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   final String unsupportedPackage;
 
   DOMGeneratorUnsupported(
-      this.unsupportedDOMGenerator, this.unsupportedPackage);
+    this.unsupportedDOMGenerator,
+    this.unsupportedPackage,
+  );
 
   Never _notSupported() {
     throw UnsupportedError(
-        "Unsupported `$unsupportedDOMGenerator`: can't load package `$unsupportedPackage`!");
+      "Unsupported `$unsupportedDOMGenerator`: can't load package `$unsupportedPackage`!",
+    );
   }
 
   @override
@@ -60,8 +63,13 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   bool containsNode(T parent, T? node) => false;
 
   @override
-  void setAttributes(DOMElement domElement, T element, DOMTreeMap<T> treeMap,
-      {bool preserveClass = false, bool preserveStyle = false}) {
+  void setAttributes(
+    DOMElement domElement,
+    T element,
+    DOMTreeMap<T> treeMap, {
+    bool preserveClass = false,
+    bool preserveStyle = false,
+  }) {
     _notSupported();
   }
 
@@ -86,8 +94,12 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   }
 
   @override
-  List<T>? addExternalElementToElement(T element, Object? externalElement,
-      {DOMTreeMap<T>? treeMap, DOMContext<T>? context}) {
+  List<T>? addExternalElementToElement(
+    T element,
+    Object? externalElement, {
+    DOMTreeMap<T>? treeMap,
+    DOMContext<T>? context,
+  }) {
     _notSupported();
   }
 
@@ -103,7 +115,10 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
 
   @override
   DOMNodeRuntime<T>? createDOMNodeRuntime(
-      DOMTreeMap<T> treeMap, DOMNode? domNode, T node) {
+    DOMTreeMap<T> treeMap,
+    DOMNode? domNode,
+    T node,
+  ) {
     _notSupported();
   }
 
@@ -120,22 +135,38 @@ class DOMActionExecutorDartHTMLUnsupported<T extends Object>
   }
 
   @override
-  T? execute(DOMAction action, T? target, T? self,
-      {DOMTreeMap? treeMap, DOMContext? context}) {
+  T? execute(
+    DOMAction action,
+    T? target,
+    T? self, {
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  }) {
     _noDartHTML();
     return null;
   }
 
   @override
-  T? call(String name, List<String> parameters, T? target, T? self,
-      DOMTreeMap? treeMap, DOMContext? context) {
+  T? call(
+    String name,
+    List<String> parameters,
+    T? target,
+    T? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     _noDartHTML();
     return null;
   }
 
   @override
   T? selectByID(
-      String id, T? target, T? self, DOMTreeMap? treeMap, DOMContext? context) {
+    String id,
+    T? target,
+    T? self,
+    DOMTreeMap? treeMap,
+    DOMContext? context,
+  ) {
     _noDartHTML();
     return null;
   }
@@ -143,13 +174,15 @@ class DOMActionExecutorDartHTMLUnsupported<T extends Object>
 
 @Deprecated("Use `_DOMGeneratorWebUnsupported`")
 class _DOMGeneratorDartHTMLUnsupported<T extends Object>
-    extends DOMGeneratorUnsupported<T> implements DOMGeneratorDartHTML<T> {
+    extends DOMGeneratorUnsupported<T>
+    implements DOMGeneratorDartHTML<T> {
   _DOMGeneratorDartHTMLUnsupported()
-      : super('DOMGeneratorDartHTML', 'dart:html');
+    : super('DOMGeneratorDartHTML', 'dart:html');
 }
 
 class _DOMGeneratorWebUnsupported<T extends Object>
-    extends DOMGeneratorUnsupported<T> implements DOMGeneratorWeb<T> {
+    extends DOMGeneratorUnsupported<T>
+    implements DOMGeneratorWeb<T> {
   _DOMGeneratorWebUnsupported() : super('DOMGeneratorWeb', 'web');
 }
 
