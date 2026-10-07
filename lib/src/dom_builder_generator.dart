@@ -1329,12 +1329,14 @@ abstract class DOMGenerator<T extends Object> {
         setAttribute(element, '$attrName-original', attrVal);
         attrVal = attrVal2;
       }
-    } else if (attr.isBoolean &&
-        DOMAttribute.isBooleanAttribute(attrName) &&
-        attrVal != null &&
-        attrVal != 'true') {
-      // A false boolean attribute: off.
-      return null;
+    } else if (DOMAttribute.isBooleanAttribute(attrName) && attrVal != null) {
+      // A keyword is kept: `hidden="until-found"`.
+      var keyword = DOMAttribute.booleanAttributeKeyword(attrName, attrVal);
+      if (keyword != null) return keyword;
+
+      // A boolean attribute, also with a template value
+      // (`checked="{{:on}}true{{?}}false{{/}}"`): `'true'`, or `null` (off).
+      return DOMAttribute.parseBooleanValue(attrName, attrVal) ? 'true' : null;
     }
 
     // No value (also after a preserved class/style): the defaults.

@@ -370,29 +370,24 @@ void main() {
       expect(_build('{{*:sets}}{{vip}},{{/}}', ctx), equals('true,false,'));
     });
 
-    test('Set held as a value is not iterable by a condition (throws)', () {
-      // A `Set` *value* (not a key lookup into it) can't be evaluated as a
-      // condition: `evaluateValue` only knows Lists and Maps.
-      expect(
-        () => _build('{{:tags}}X{{/}}', ctxVip),
-        throwsA(isA<StateError>()),
-      );
+    // Regression: `evaluateValue` only handled Lists and Maps, and threw for
+    // a Set (or any other Iterable) value.
+    test('Set value as a condition / loop', () {
+      expect(_build('{{:tags}}X{{?}}E{{/}}', ctxVip), equals('X'));
+      expect(_build('{{:tags}}X{{?}}E{{/}}', {'tags': <String>{}}), 'E');
+      expect(_build('{{*:tags}}<{{.}}>{{/}}', ctxNew), equals('<new>'));
     });
 
-    test(
-      'Set value as a condition / loop',
-      skip:
-          'Bug: `DOMTemplateVariable.evaluateValue` (lib/src/'
-          'dom_builder_template.dart:788) handles List and Map but throws '
-          'StateError for a Set (or any non-List Iterable) value, so '
-          '`{{:tags}}` / `{{*:tags}}` with a Set throw instead of testing '
-          'emptiness / iterating.',
-      () {
-        expect(_build('{{:tags}}X{{?}}E{{/}}', ctxVip), equals('X'));
-        expect(_build('{{:tags}}X{{?}}E{{/}}', {'tags': <String>{}}), 'E');
-        expect(_build('{{*:tags}}<{{.}}>{{/}}', ctxNew), equals('<new>'));
-      },
-    );
+    test('other Iterable values as a condition', () {
+      expect(
+        _build('{{:it}}X{{?}}E{{/}}', {'it': Iterable.generate(2, (i) => i)}),
+        equals('X'),
+      );
+      expect(
+        _build('{{:it}}X{{?}}E{{/}}', {'it': Iterable.generate(0, (i) => i)}),
+        equals('E'),
+      );
+    });
   });
 
   group('Other Iterables are indexed', () {

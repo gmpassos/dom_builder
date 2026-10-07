@@ -19,9 +19,26 @@
     `dart:html`, delegate, dummy, none) implement them; subclasses of them are unaffected.
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
 
-- Fix: a boolean attribute whose value is its own name is true, as in HTML: `<input checked="checked">`,
-  `selected="selected"`, `disabled="disabled"` (XHTML form) were read as false. (`"false"`, `"off"`, `"no"`, `"0"`
-  are still false: dom_builder reads boolean values, and templates rely on it.)
+- Fix: one rule for every boolean attribute value, `DOMAttribute.parseBooleanValue`: on for `true`, bare, `""`, the
+  attribute's own name (`checked="checked"`, `selected="selected"`: XHTML form, any case) and `on`/`yes`/`1`; off
+  otherwise (`"false"`, `"off"`, `"no"`, `"0"`: dom_builder reads boolean values, and templates rely on it). Used by
+  `DOMAttribute.from`, `setValue` on an existing attribute, `resolveAttributeValue` (template values too) and the
+  generators' `setAttribute`/`setResolvedAttribute`. Before, each read them its own way:
+  - `checked="checked"` and the other own-name forms were off;
+  - a boolean attribute with a template value (`checked="{{:on}}true{{?}}false{{/}}"`, `disabled="{{d}}"`) was not a
+    boolean: `"false"` was set as `checked="false"`/`disabled="false"`, on in a browser;
+  - `"false"` via `setResolvedAttribute`/`setAttribute` turned `checked`/`disabled` on, while `""` or the own name
+    turned `selected`/`hidden` off;
+  - `setAttribute('checked', 'checked')` on an element that already had it turned it off.
+
+- Fix: the generators set a boolean attribute both as the attribute (present when on, removed when off: the
+  element's default state) and, where it stops following it, as the property (`option.selected`, `input.checked`,
+  `media.muted`). `selected` was only a property, so `option[selected]` matched nothing and a form reset selected the
+  first option; `checked` was only an attribute, so a re-render didn't change a checkbox the user had toggled.
+  `setAttribute` takes `null` as a bare attribute (on) for every boolean attribute (it removed `checked`/`disabled`).
+
+- Fix: `hidden="until-found"` (hidden, but found by find-in-page and fragment navigation) is kept as the value: it was
+  read as a boolean, false, so the element was shown. `DOMAttribute.booleanAttributeKeyword` lists such keywords.
 
 - Fix: an empty value is a value: `data-x=""`, a valueless `data-x` and `value=""` are kept (`[data-x]` selectors,
   `dataset.x == ""`); they were dropped from the HTML and the DOM. `DOMAttributeValueString` keeps `''` apart from
@@ -34,6 +51,10 @@
     to a `List` first and indexed, so its membership branch never ran.
   - A `Function(Object?)` value is called with any context: it also matched `Function(Map?)`, checked first, which
     cast the context to `Map?` and threw for a non-`Map` one. A `Function(Map?)` gets `null` for a non-`Map` context.
+  - A `Set` (or any other `Iterable`) value works as a condition and a loop (`{{:tags}}`, `{{*:tags}}`): it threw.
+
+- Fix: an empty string value equals `''` (and not `null`): `DOMAttributeValueString('').equalsAttributeValue('')` was
+  false.
 
 - Tests for the boolean attributes (`checked`, `hidden`, `disabled`, `selected`, `multiple`, `inert`, `autoplay`,
   `controls`, `muted`):

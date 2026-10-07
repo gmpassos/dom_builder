@@ -510,15 +510,23 @@ void main() {
       }
     });
 
-    test('setAttribute: checked/disabled are on with a value, off by null', () {
-      // Not set as properties: `setAttribute` sets them as-is (a `null`
-      // removes them), as in HTML any value is on.
+    test('setAttribute: checked/disabled follow the boolean rule', () {
+      // As every boolean attribute: `null` is a bare attribute (on), a
+      // value is read by `DOMAttribute.parseBooleanValue`.
       final checkbox = HTMLInputElement()..type = 'checkbox';
       _gen.setAttribute(checkbox, 'checked', '');
       expect(checkbox.checked, isTrue);
-      _gen.setAttribute(checkbox, 'checked', null);
+      _gen.setAttribute(checkbox, 'checked', 'false');
       expect(checkbox.checked, isFalse);
       expect(checkbox.hasAttribute('checked'), isFalse);
+      _gen.setAttribute(checkbox, 'checked', null);
+      expect(checkbox.checked, isTrue);
+
+      final button = HTMLButtonElement();
+      _gen.setAttribute(button, 'disabled', 'disabled');
+      expect(button.disabled, isTrue);
+      _gen.setAttribute(button, 'disabled', 'false');
+      expect(button.disabled, isFalse);
     });
 
     test('re-generating a select changes the selected option', () {
@@ -564,9 +572,6 @@ void main() {
         _setResolved(checkbox, 'checked', 'true');
         expect(checkbox.checked, isTrue);
       },
-      skip:
-          'Bug: `checked` is set only as an attribute (defaultChecked), so '
-          'once the checkbox is dirty a re-render does not change `checked`',
     );
   });
 
@@ -757,11 +762,6 @@ void main() {
         form.reset();
         expect(s.value, equals('b'));
       },
-      skip:
-          'Bug: `selected` is set only as the `option.selected` property, '
-          'so there is no `selected` attribute (`defaultSelected` false, '
-          '`option[selected]` matches nothing) and a form reset selects the '
-          'first option',
     );
   });
 
@@ -781,45 +781,33 @@ void main() {
       }
     });
 
-    test(
-      'checked / disabled "false" from a template are off',
-      () {
-        final e = _generateWithVariables(
-          DOMNode.parseNodes(
-            '<div>'
-            '<input type="checkbox" checked="{{:on}}true{{?}}false{{/}}">'
-            '<button disabled="{{:on}}true{{?}}false{{/}}">b</button>'
-            '</div>',
-          ).first,
-          {'on': false},
-        );
-        final checkbox = e.querySelector('input')! as HTMLInputElement;
-        final button = e.querySelector('button')! as HTMLButtonElement;
-        expect(checkbox.checked, isFalse);
-        expect(button.disabled, isFalse);
-      },
-      skip:
-          'Bug: a template value is not a boolean value, so "false" is '
-          'set as `checked="false"`/`disabled="false"`: on in the DOM',
-    );
+    test('checked / disabled "false" from a template are off', () {
+      final e = _generateWithVariables(
+        DOMNode.parseNodes(
+          '<div>'
+          '<input type="checkbox" checked="{{:on}}true{{?}}false{{/}}">'
+          '<button disabled="{{:on}}true{{?}}false{{/}}">b</button>'
+          '</div>',
+        ).first,
+        {'on': false},
+      );
+      final checkbox = e.querySelector('input')! as HTMLInputElement;
+      final button = e.querySelector('button')! as HTMLButtonElement;
+      expect(checkbox.checked, isFalse);
+      expect(button.disabled, isFalse);
+    });
 
-    test(
-      'selected="selected" / "" from a template select the option',
-      () {
-        final s = _generateWithVariables(
-          DOMNode.parseNodes(
-            '<select><option value="a">A</option>'
-            '<option value="b" selected="{{:on}}selected{{/}}">B'
-            '</option></select>',
-          ).first,
-          {'on': true},
-        ) as HTMLSelectElement;
-        expect(s.value, equals('b'));
-      },
-      skip:
-          'Bug: `_parseAttributeBoolValue` takes only "true" as on, so the '
-          'own-name/empty forms coming from a template are off',
-    );
+    test('selected="selected" / "" from a template select the option', () {
+      final s = _generateWithVariables(
+        DOMNode.parseNodes(
+          '<select><option value="a">A</option>'
+          '<option value="b" selected="{{:on}}selected{{/}}">B'
+          '</option></select>',
+        ).first,
+        {'on': true},
+      ) as HTMLSelectElement;
+      expect(s.value, equals('b'));
+    });
   });
 
   group('setAttribute / setResolvedAttribute value forms', () {
@@ -834,27 +822,17 @@ void main() {
         _gen.setAttribute(div, 'hidden', '');
         expect(_isHidden(div), isTrue);
       },
-      skip:
-          'Bug: `_parseAttributeBoolValue` takes only "true" as on: '
-          '"selected"/"" turn `selected`/`hidden` off, while '
-          '`checked=""` is on',
     );
 
-    test(
-      '"false" is off for checked/disabled (as selected/hidden)',
-      () {
-        final checkbox = HTMLInputElement()..type = 'checkbox';
-        _setResolved(checkbox, 'checked', 'false');
-        expect(checkbox.checked, isFalse);
+    test('"false" is off for checked/disabled (as selected/hidden)', () {
+      final checkbox = HTMLInputElement()..type = 'checkbox';
+      _setResolved(checkbox, 'checked', 'false');
+      expect(checkbox.checked, isFalse);
 
-        final button = HTMLButtonElement();
-        _setResolved(button, 'disabled', 'false');
-        expect(button.disabled, isFalse);
-      },
-      skip:
-          'Bug: only selected/multiple/hidden/inert parse the value; '
-          '`checked="false"`, `disabled="false"` are set as attributes: on',
-    );
+      final button = HTMLButtonElement();
+      _setResolved(button, 'disabled', 'false');
+      expect(button.disabled, isFalse);
+    });
   });
 
   group('empty values in the DOM', () {
@@ -1059,17 +1037,67 @@ void main() {
     });
   });
 
+  // `hidden="until-found"`: a state of its own (hidden, but found by
+  // find-in-page and fragment navigation), kept as the value.
   group('hidden="until-found"', () {
-    test(
-      'keeps the until-found state',
-      () {
-        final e = _generateHTML('<div hidden="until-found">x</div>');
-        expect(e.getAttribute('hidden'), equals('until-found'));
-        expect((e as HTMLElement).hidden.dartify(), equals('until-found'));
-      },
-      skip:
-          'Bug: `hidden` is parsed as a boolean, so "until-found" is false '
-          'and the element is shown (no attribute)',
-    );
+    String? hiddenOf(Element e) => e.getAttribute('hidden');
+
+    test('keeps the until-found state', () {
+      final e = _generateHTML('<div hidden="until-found">x</div>');
+      expect(hiddenOf(e), equals('until-found'));
+      expect((e as HTMLElement).hidden.dartify(), equals('until-found'));
+    });
+
+    test('in any case / with spaces: normalized', () {
+      for (final value in ['Until-Found', 'UNTIL-FOUND', ' until-found ']) {
+        final e = _generateHTML('<div hidden="$value">x</div>');
+        expect(hiddenOf(e), equals('until-found'), reason: value);
+      }
+    });
+
+    test(r'from $tag attributes and a template', () {
+      final tagged = _generate(
+        $tag('div', attributes: {'hidden': 'until-found'}, content: 'x'),
+      );
+      expect(hiddenOf(tagged), equals('until-found'));
+
+      for (final (find, expected) in [(true, 'until-found'), (false, '')]) {
+        final e = _generateWithVariables(
+          DOMNode.parseNodes(
+            '<div hidden="{{:find}}until-found{{?}}true{{/}}">x</div>',
+          ).first,
+          {'find': find},
+        );
+        expect(hiddenOf(e), equals(expected), reason: 'find: $find');
+      }
+    });
+
+    test('the boolean forms still work alongside it', () {
+      expect(hiddenOf(_generateHTML('<div hidden>x</div>')), equals(''));
+      expect(hiddenOf(_generateHTML('<div hidden="true">x</div>')), '');
+      expect(hiddenOf(_generateHTML('<div hidden="false">x</div>')), isNull);
+      // Not a keyword of another boolean attribute:
+      final input = _generateHTML(
+        '<input type="checkbox" checked="until-found">',
+      ) as HTMLInputElement;
+      expect(input.checked, isFalse);
+    });
+
+    test('switching an element between until-found and the booleans', () {
+      final div = HTMLDivElement();
+      _gen.setAttribute(div, 'hidden', 'until-found');
+      expect(hiddenOf(div), equals('until-found'));
+
+      _setResolved(div, 'hidden', 'true');
+      expect(hiddenOf(div), equals(''));
+      expect(div.hidden.dartify(), isTrue);
+
+      _setResolved(div, 'hidden', 'until-found');
+      expect(hiddenOf(div), equals('until-found'));
+
+      _setResolved(div, 'hidden', 'false');
+      expect(hiddenOf(div), isNull);
+      expect(div.hidden.dartify(), isFalse);
+    });
   });
 }

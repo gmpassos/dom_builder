@@ -6,6 +6,7 @@ import 'dart:html';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_actions.dart';
+import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_dart_html.dart' as dart_html;
@@ -273,56 +274,32 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }) {
     if (element is! Element) return;
 
+    // A keyword is set as the value: `hidden="until-found"`.
+    var keyword = DOMAttribute.booleanAttributeKeyword(attrName, attrVal);
+    if (keyword != null) {
+      element.setAttribute(attrName, keyword);
+      return;
+    }
+
+    if (DOMAttribute.isBooleanAttribute(attrName) &&
+        // `selected`/`multiple` on an element without them: as is.
+        !(attrName == 'selected' && element is! OptionElement) &&
+        !(attrName == 'multiple' &&
+            element is! SelectElement &&
+            element is! InputElement)) {
+      _setElementBoolean(
+        element,
+        attrName,
+        _parseAttributeBoolValue(
+          attrName,
+          attrVal,
+          defaultValue: booleanDefault,
+        ),
+      );
+      return;
+    }
+
     switch (attrName) {
-      case 'selected':
-        {
-          if (element is OptionElement) {
-            element.selected = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else if (attrVal == null) {
-            element.removeAttribute(attrName);
-          } else {
-            element.setAttribute(attrName, attrVal);
-          }
-          break;
-        }
-      case 'multiple':
-        {
-          if (element is SelectElement) {
-            element.multiple = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else if (element is InputElement) {
-            element.multiple = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else if (attrVal == null) {
-            element.removeAttribute(attrName);
-          } else {
-            element.setAttribute(attrName, attrVal);
-          }
-          break;
-        }
-      case 'hidden':
-        {
-          element.hidden = _parseAttributeBoolValue(
-            attrVal,
-            defaultValue: booleanDefault,
-          );
-          break;
-        }
-      case 'inert':
-        {
-          element.inert = _parseAttributeBoolValue(
-            attrVal,
-            defaultValue: booleanDefault,
-          );
-          break;
-        }
       default:
         {
           if (attrVal == null) {
@@ -361,12 +338,33 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     }
   }
 
-  /// A boolean attribute's value as a `bool`, [defaultValue] if `null`.
-  bool _parseAttributeBoolValue(String? attrVal, {required bool defaultValue}) {
-    if (attrVal == null) {
-      return defaultValue;
+  /// The boolean attribute [attrName]'s value as a `bool`
+  /// ([DOMAttribute.parseBooleanValue]), [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(
+    String attrName,
+    String? attrVal, {
+    required bool defaultValue,
+  }) {
+    if (attrVal == null) return defaultValue;
+    return DOMAttribute.parseBooleanValue(attrName, attrVal);
+  }
+
+  /// Turns the boolean attribute [attrName] of [element] [on] or off: the
+  /// attribute (the default state, for a form reset), and the properties
+  /// that stop following it once changed (`selected`, `checked`, `muted`).
+  void _setElementBoolean(Element element, String attrName, bool on) {
+    if (on) {
+      element.setAttribute(attrName, '');
     } else {
-      return attrVal.toLowerCase() == 'true';
+      element.removeAttribute(attrName);
+    }
+
+    if (attrName == 'selected' && element is OptionElement) {
+      element.selected = on;
+    } else if (attrName == 'checked' && element is InputElement) {
+      element.checked = on;
+    } else if (attrName == 'muted' && element is MediaElement) {
+      element.muted = on;
     }
   }
 

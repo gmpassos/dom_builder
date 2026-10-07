@@ -50,6 +50,57 @@ class DOMAttribute with WithValue {
     return name.trim().toLowerCase();
   }
 
+  /// Keywords of boolean attributes that are a state of their own, kept as
+  /// the attribute's value: `hidden="until-found"` (hidden, but found by
+  /// find-in-page and fragment navigation).
+  static const Map<String, Set<String>> _booleanAttributesKeywords = {
+    'hidden': {'until-found'},
+  };
+
+  /// The keyword of the boolean attribute [attrName] in [value]
+  /// (`hidden="until-found"` -> `'until-found'`), or `null` if [value] is a
+  /// boolean value.
+  ///
+  /// ```dart
+  /// booleanAttributeKeyword('hidden', 'until-found');  // 'until-found'
+  /// booleanAttributeKeyword('hidden', 'Until-Found');  // 'until-found'
+  /// booleanAttributeKeyword('hidden', 'true');         // null
+  /// booleanAttributeKeyword('checked', 'until-found'); // null
+  /// ```
+  static String? booleanAttributeKeyword(String? attrName, Object? value) {
+    if (attrName == null || value is! String) return null;
+    var keywords = _booleanAttributesKeywords[attrName];
+    if (keywords == null) return null;
+    var keyword = value.trim().toLowerCase();
+    return keywords.contains(keyword) ? keyword : null;
+  }
+
+  /// The value of a boolean attribute ([isBooleanAttribute]) [attrName]: the
+  /// one rule for every way a value comes in (parsed HTML, a template, a
+  /// `bool`, `setValue`, a generator's `setAttribute`).
+  ///
+  /// ```dart
+  /// parseBooleanValue('checked', '');         // true: <input checked>
+  /// parseBooleanValue('checked', 'checked');  // true: XHTML form
+  /// parseBooleanValue('checked', 'true');     // true (also on, yes, 1)
+  /// parseBooleanValue('checked', 'false');    // false (also off, no, 0)
+  /// parseBooleanValue('checked', true);       // true
+  /// parseBooleanValue('checked', null);       // false: no value
+  /// ```
+  static bool parseBooleanValue(String? attrName, Object? value) {
+    if (value == null) return false;
+    if (value is bool) return value;
+
+    if (value is String) {
+      var s = value.trim();
+      if (s.isEmpty) return true;
+      if (attrName != null && s.toLowerCase() == attrName) return true;
+      return parseBool(s, false)!;
+    }
+
+    return parseBool(value, false)!;
+  }
+
   static String append(
     String s,
     String delimiter,
@@ -128,14 +179,18 @@ class DOMAttribute with WithValue {
 
       if (attrBoolean) {
         if (value != null) {
-          // As in HTML, an empty value or the attribute's own name is true:
-          // `<input checked="">`, `<input checked="checked">` (XHTML).
-          var attrValue =
-              (value is String &&
-                  (value.isEmpty || value.trim().toLowerCase() == name))
-              ? DOMAttributeValueBoolean(true)
-              : DOMAttributeValueBoolean(value);
-          return DOMAttribute(name, attrValue);
+          // A keyword is kept as the value: `hidden="until-found"`.
+          var keyword = booleanAttributeKeyword(name, value);
+          if (keyword != null) {
+            return DOMAttribute(name, DOMAttributeValueString(keyword));
+          }
+
+          // `<input checked="">` and `<input checked="checked">` are true:
+          // see `parseBooleanValue`.
+          return DOMAttribute(
+            name,
+            DOMAttributeValueBoolean(value, attrName: name),
+          );
         }
         return null;
       } else {
@@ -268,10 +323,16 @@ abstract class DOMAttributeValue {
   String toString();
 }
 
+/// A boolean attribute's value, read by [DOMAttribute.parseBooleanValue]
+/// (with [attrName], its own name is true: `checked="checked"`).
 class DOMAttributeValueBoolean extends DOMAttributeValue {
+  /// The attribute's name, for [DOMAttribute.parseBooleanValue].
+  final String? attrName;
+
   bool _value;
 
-  DOMAttributeValueBoolean(Object? value) : _value = parseBool(value, false)!;
+  DOMAttributeValueBoolean(Object? value, {this.attrName})
+    : _value = DOMAttribute.parseBooleanValue(attrName, value);
 
   @override
   bool get hasAttributeValue => _value;
@@ -287,7 +348,7 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 
   @override
   bool equalsAttributeValue(Object? value) {
-    return _value == parseBool(value, false);
+    return _value == DOMAttribute.parseBooleanValue(attrName, value);
   }
 
   @override
@@ -295,7 +356,7 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 
   @override
   void setAttributeValue(Object? value) {
-    _value = parseBool(value, false)!;
+    _value = DOMAttribute.parseBooleanValue(attrName, value);
   }
 
   @override
@@ -335,16 +396,18 @@ class DOMAttributeValueString extends DOMAttributeValue {
     return value != null ? [value] : null;
   }
 
+  /// `''` equals `''` (a value), `null` equals only no value.
   @override
   bool equalsAttributeValue(Object? value) {
-    if (value == null) return !hasAttributeValue;
-    return hasAttributeValue && _value == parseString(value);
+    if (value == null) return _value == null;
+    return _value == parseString(value);
   }
 
   @override
   bool containsAttributeValue(value) {
-    if (value == null) return false;
-    return hasAttributeValue && _value!.contains(value as Pattern);
+    final v = _value;
+    if (value == null || v == null) return false;
+    return v.contains(value as Pattern);
   }
 
   @override

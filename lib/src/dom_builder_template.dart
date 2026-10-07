@@ -794,7 +794,8 @@ class DOMTemplateVariable {
       return value;
     } else if (value is num) {
       return value != 0;
-    } else if (value is List) {
+    } else if (value is Iterable) {
+      // A `List`, also a `Set` or any other collection: not empty.
       return value.isNotEmpty;
     } else if (value is Map) {
       return value.isNotEmpty;

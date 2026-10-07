@@ -2336,6 +2336,15 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     if (_attributes != null) {
       var prevAttribute = _attributes![name];
       if (prevAttribute != null) {
+        // A boolean attribute's value can change kind
+        // (`hidden` -> `hidden="until-found"`): a new attribute.
+        if (value != null && DOMAttribute.isBooleanAttribute(name)) {
+          var attribute = DOMAttribute.from(name, value);
+          if (attribute != null) {
+            putDOMAttribute(attribute);
+            return this;
+          }
+        }
         prevAttribute.setValue(value);
         return this;
       }

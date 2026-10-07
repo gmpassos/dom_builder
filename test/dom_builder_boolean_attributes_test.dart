@@ -44,6 +44,105 @@ class _RecordingGenerator extends TestGenerator {
 }
 
 void main() {
+  // `hidden="until-found"`: a state of its own, kept as the value.
+  group('hidden="until-found"', () {
+    final generator = TestGenerator();
+    final treeMap = generator.createDOMTreeMap();
+
+    String? resolve(DOMElement e) => generator.resolveAttributeValue(
+      e,
+      TestElem(e.tag),
+      'hidden',
+      treeMap,
+      booleanDefault: false,
+      valueDefault: null,
+    );
+
+    test('booleanAttributeKeyword', () {
+      String? keyword(String? name, Object? value) =>
+          DOMAttribute.booleanAttributeKeyword(name, value);
+
+      expect(keyword('hidden', 'until-found'), equals('until-found'));
+      expect(keyword('hidden', ' Until-Found '), equals('until-found'));
+      expect(keyword('hidden', 'true'), isNull);
+      expect(keyword('hidden', ''), isNull);
+      expect(keyword('hidden', true), isNull);
+      expect(keyword('hidden', null), isNull);
+      expect(keyword('checked', 'until-found'), isNull);
+      expect(keyword(null, 'until-found'), isNull);
+    });
+
+    test('from: a string value, not a boolean', () {
+      final attr = DOMAttribute.from('hidden', 'until-found')!;
+      expect(attr.isBoolean, isFalse);
+      expect(attr.value, equals('until-found'));
+      expect(attr.buildHTML(), equals('hidden="until-found"'));
+
+      expect(
+        DOMAttribute.from('hidden', 'UNTIL-FOUND')!.value,
+        equals('until-found'),
+      );
+      // The boolean forms stay booleans:
+      expect(DOMAttribute.from('hidden', 'true')!.isBoolean, isTrue);
+      expect(DOMAttribute.from('hidden', '')!.isBoolean, isTrue);
+    });
+
+    test('parsed HTML, buildHTML and resolveAttributeValue', () {
+      final e =
+          DOMNode.parseNodes('<div hidden="until-found">x</div>').first
+              as DOMElement;
+      expect(e.getAttributeValue('hidden'), equals('until-found'));
+      expect(e.buildHTML(), equals('<div hidden="until-found">x</div>'));
+      expect(resolve(e), equals('until-found'));
+
+      final round = DOMNode.parseNodes(e.buildHTML()).first as DOMElement;
+      expect(round.buildHTML(), equals(e.buildHTML()));
+    });
+
+    test('a template resolving to it', () {
+      final t = DOMTemplate.tryParse(
+        '<div hidden="{{:find}}until-found{{?}}true{{/}}">x</div>',
+      )!;
+      final on =
+          DOMNode.parseNodes(t.buildAsString({'find': true})).first
+              as DOMElement;
+      final off =
+          DOMNode.parseNodes(t.buildAsString({'find': false})).first
+              as DOMElement;
+      expect(resolve(on), equals('until-found'));
+      expect(resolve(off), equals('true'));
+    });
+
+    test('setAttribute switches between it and the booleans', () {
+      final div = $div(content: 'x');
+
+      div.setAttribute('hidden', true);
+      expect(div.buildHTML(), equals('<div hidden>x</div>'));
+
+      div.setAttribute('hidden', 'until-found');
+      expect(div.buildHTML(), equals('<div hidden="until-found">x</div>'));
+
+      div.setAttribute('hidden', 'false');
+      expect(div.buildHTML(), equals('<div>x</div>'));
+
+      div.setAttribute('hidden', 'until-found');
+      div.setAttribute('hidden', '');
+      expect(div.buildHTML(), equals('<div hidden>x</div>'));
+    });
+
+    test('setResolvedAttribute keeps it (TestGenerator)', () {
+      final elem = TestElem('div');
+      generator.setResolvedAttribute(
+        elem,
+        'hidden',
+        'until-found',
+        booleanDefault: false,
+        valueDefault: null,
+      );
+      expect(elem.attributes['hidden'], equals('until-found'));
+    });
+  });
+
   group('boolean attributes: DOMAttribute', () {
     for (final name in _booleanAttributes) {
       test('$name is boolean', () {

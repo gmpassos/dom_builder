@@ -206,27 +206,20 @@ void main() {
       }
     });
 
-    test(
-      'setValue/setAttribute: "" and the own name are on, as in from()',
-      () {
-        final attr = DOMAttribute.from('checked', false)!;
-        attr.setValue('');
-        expect(attr.hasValue, isTrue);
-        attr.setValue(false);
-        attr.setValue('checked');
-        expect(attr.hasValue, isTrue);
+    test('setValue/setAttribute: "" and the own name are on, as in from()', () {
+      final attr = DOMAttribute.from('checked', false)!;
+      attr.setValue('');
+      expect(attr.hasValue, isTrue);
+      attr.setValue(false);
+      attr.setValue('checked');
+      expect(attr.hasValue, isTrue);
 
-        // `setAttribute` on an already present attribute calls `setValue`:
-        final input = $input()..setAttribute('checked', 'checked');
-        expect(input.buildHTML(), equals('<input checked>'));
-        input.setAttribute('checked', 'checked');
-        expect(input.buildHTML(), equals('<input checked>'));
-      },
-      skip:
-          'Bug: DOMAttributeValueBoolean.setAttributeValue uses parseBool '
-          'only, so "" and "checked" turn an existing boolean attribute off '
-          '(DOMAttribute.from treats them as on).',
-    );
+      // `setAttribute` on an already present attribute calls `setValue`:
+      final input = $input()..setAttribute('checked', 'checked');
+      expect(input.buildHTML(), equals('<input checked>'));
+      input.setAttribute('checked', 'checked');
+      expect(input.buildHTML(), equals('<input checked>'));
+    });
 
     test('equalsAttributeValue / containsValue of a boolean', () {
       final on = DOMAttribute.from('selected', 'selected')!;
@@ -328,20 +321,12 @@ void main() {
       );
     });
 
-    test(
-      'a boolean attribute from a template building "false" is off',
-      () {
-        final generator = TestGenerator()
-          ..domContext = DOMContext(variables: {'d': false});
-        final e = _parse('<input disabled="{{d}}">');
-        expect(_resolve(e, 'disabled', generator: generator), isNull);
-      },
-      skip:
-          'Bug: a boolean attribute with a template value is a '
-          'DOMAttributeValueTemplate (not boolean), so resolveAttributeValue '
-          'returns "false" instead of null and a generator sets '
-          'disabled="false" (on in a browser).',
-    );
+    test('a boolean attribute from a template building "false" is off', () {
+      final generator = TestGenerator()
+        ..domContext = DOMContext(variables: {'d': false});
+      final e = _parse('<input disabled="{{d}}">');
+      expect(_resolve(e, 'disabled', generator: generator), isNull);
+    });
   });
 
   group('resolveAttributeValue: preserveClass / preserveStyle', () {
@@ -705,20 +690,15 @@ void main() {
       expect(empty.asAttributeValue, equals(''));
       expect(empty.asAttributeValues, equals(['']));
       expect(empty.length, equals(0));
-      // '' has no (non-empty) value, as null:
-      expect(empty.equalsAttributeValue(null), isTrue);
+      // '' is a value: not equal to null (no value).
+      expect(empty.equalsAttributeValue(null), isFalse);
     });
 
-    test(
-      "equalsAttributeValue('') of an empty value is true",
-      () {
-        expect(DOMAttributeValueString('').equalsAttributeValue(''), isTrue);
-      },
-      skip:
-          "Bug: DOMAttributeValueString('').equalsAttributeValue('') is "
-          "false (it requires hasAttributeValue), though '' is kept as a "
-          'value and equalsAttributeValue(null) is true.',
-    );
+    // Regression: '' didn't equal '' (it required a non-empty value).
+    test("equalsAttributeValue('') of an empty value is true", () {
+      expect(DOMAttributeValueString('').equalsAttributeValue(''), isTrue);
+      expect(DOMAttributeValueString('').containsAttributeValue(''), isTrue);
+    });
 
     test('class / style: empty equals null', () {
       final cls = DOMAttribute.from('class', '')!.valueHandler;

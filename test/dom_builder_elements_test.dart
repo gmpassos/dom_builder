@@ -1891,7 +1891,8 @@ void main() {
       expect(empty.buildHTML(), equals('title=""'));
       // `toString` is the value:
       expect(empty.toString(), isEmpty);
-      expect(empty.valueHandler.equalsAttributeValue(null), isTrue);
+      expect(empty.valueHandler.equalsAttributeValue(''), isTrue);
+      expect(empty.valueHandler.equalsAttributeValue(null), isFalse);
       expect(
         empty.valueHandler.toString(),
         contains('DOMAttributeValueString'),

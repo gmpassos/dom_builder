@@ -4,6 +4,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'package:web_utils/web_utils.dart';
 
 import 'dom_builder_actions.dart';
+import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator.dart';
@@ -438,56 +439,36 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     String? attrVal, {
     required bool booleanDefault,
   }) {
+    if (DOMAttribute.isBooleanAttribute(attrName)) {
+      // A keyword is set as the value: `hidden="until-found"`.
+      var keyword = DOMAttribute.booleanAttributeKeyword(attrName, attrVal);
+      if (keyword != null) {
+        element.setAttribute(attrName, keyword);
+        return true;
+      }
+
+      // `selected`/`multiple` on an element without them: as is.
+      if ((attrName == 'selected' && !element.isA<HTMLOptionElement>()) ||
+          (attrName == 'multiple' &&
+              !element.isA<HTMLSelectElement>() &&
+              !element.isA<HTMLInputElement>())) {
+        _setElementAttribute(element, attrName, attrVal);
+        return true;
+      }
+
+      _setElementBoolean(
+        element,
+        attrName,
+        _parseAttributeBoolValue(
+          attrName,
+          attrVal,
+          defaultValue: booleanDefault,
+        ),
+      );
+      return true;
+    }
+
     switch (attrName) {
-      case 'selected':
-        {
-          if (element.isA<HTMLOptionElement>()) {
-            (element as HTMLOptionElement).selected = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else {
-            _setElementAttribute(element, attrName, attrVal);
-          }
-          return true;
-        }
-      case 'multiple':
-        {
-          if (element.isA<HTMLSelectElement>()) {
-            (element as HTMLSelectElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else if (element.isA<HTMLInputElement>()) {
-            (element as HTMLInputElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          } else {
-            _setElementAttribute(element, attrName, attrVal);
-          }
-          return true;
-        }
-      case 'hidden':
-        {
-          if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).hidden = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            ).toJS;
-          }
-          return true;
-        }
-      case 'inert':
-        {
-          if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).inert = _parseAttributeBoolValue(
-              attrVal,
-              defaultValue: booleanDefault,
-            );
-          }
-          return true;
-        }
       case 'id':
         {
           if (attrVal == null) {
@@ -520,12 +501,43 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
-  /// A boolean attribute's value as a `bool`, [defaultValue] if `null`.
-  bool _parseAttributeBoolValue(String? attrVal, {required bool defaultValue}) {
-    if (attrVal == null) {
-      return defaultValue;
+  /// The boolean attribute [attrName]'s value as a `bool`
+  /// ([DOMAttribute.parseBooleanValue]), [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(
+    String attrName,
+    String? attrVal, {
+    required bool defaultValue,
+  }) {
+    if (attrVal == null) return defaultValue;
+    return DOMAttribute.parseBooleanValue(attrName, attrVal);
+  }
+
+  /// Turns the boolean attribute [attrName] of [element] [on] or off:
+  /// - the attribute, present or removed: the element's default state (a
+  ///   form reset goes back to it: `defaultSelected`, `defaultChecked`);
+  /// - the properties that stop following the attribute once changed (by
+  ///   the user, or a previous render): `option.selected`, `input.checked`,
+  ///   `media.muted`.
+  void _setElementBoolean(Element element, String attrName, bool on) {
+    if (on) {
+      element.setAttribute(attrName, '');
     } else {
-      return attrVal.toLowerCase() == 'true';
+      element.removeAttribute(attrName);
+    }
+
+    switch (attrName) {
+      case 'selected':
+        if (element.isA<HTMLOptionElement>()) {
+          (element as HTMLOptionElement).selected = on;
+        }
+      case 'checked':
+        if (element.isA<HTMLInputElement>()) {
+          (element as HTMLInputElement).checked = on;
+        }
+      case 'muted':
+        if (element.isA<HTMLMediaElement>()) {
+          (element as HTMLMediaElement).muted = on;
+        }
     }
   }
 
