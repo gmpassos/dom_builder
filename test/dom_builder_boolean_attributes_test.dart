@@ -22,7 +22,7 @@ const _booleanAttributes = [
 /// A [TestGenerator] that records the values given to
 /// [setResolvedAttribute] (by [setAttributes]).
 class _RecordingGenerator extends TestGenerator {
-  final List<(String, String?, bool)> resolved = [];
+  final List<(String, String?, bool, String?)> resolved = [];
 
   @override
   void setResolvedAttribute(
@@ -30,11 +30,16 @@ class _RecordingGenerator extends TestGenerator {
     String attrName,
     String? attrVal, {
     required bool booleanDefaultValue,
+    required String? valueDefaultValue,
   }) {
-    resolved.add((attrName, attrVal, booleanDefaultValue));
-    if (element is TestElem && attrVal != null) {
-      element.attributes[attrName] = attrVal;
-    }
+    resolved.add((attrName, attrVal, booleanDefaultValue, valueDefaultValue));
+    super.setResolvedAttribute(
+      element,
+      attrName,
+      attrVal,
+      booleanDefaultValue: booleanDefaultValue,
+      valueDefaultValue: valueDefaultValue,
+    );
   }
 }
 
@@ -130,15 +135,36 @@ void main() {
     final generator = TestGenerator();
     final treeMap = generator.createDOMTreeMap();
 
-    String? resolve(String html, String name) {
+    String? resolve(
+      String html,
+      String name, {
+      bool booleanDefaultValue = false,
+      String? valueDefaultValue,
+    }) {
       final domElement = DOMNode.parseNodes(html).first as DOMElement;
       return generator.resolveAttributeValue(
         domElement,
         TestElem(domElement.tag),
         name,
         treeMap,
+        booleanDefaultValue: booleanDefaultValue,
+        valueDefaultValue: valueDefaultValue,
       );
     }
+
+    String? resolveNode(
+      DOMElement domElement,
+      String name, {
+      required bool booleanDefaultValue,
+      required String? valueDefaultValue,
+    }) => generator.resolveAttributeValue(
+      domElement,
+      TestElem(domElement.tag),
+      name,
+      treeMap,
+      booleanDefaultValue: booleanDefaultValue,
+      valueDefaultValue: valueDefaultValue,
+    );
 
     for (final name in _booleanAttributes) {
       test('$name: "true" -> "true", "false" -> null', () {
@@ -152,6 +178,79 @@ void main() {
     test('other attributes keep their value', () {
       expect(resolve('<div title="false">x</div>', 'title'), equals('false'));
       expect(resolve('<div data-x="false">x</div>', 'data-x'), equals('false'));
+    });
+
+    test('a false boolean is off, whatever booleanDefaultValue', () {
+      for (final b in [false, true]) {
+        expect(
+          resolve(
+            '<div hidden="false">x</div>',
+            'hidden',
+            booleanDefaultValue: b,
+          ),
+          isNull,
+          reason: 'booleanDefaultValue: $b',
+        );
+      }
+    });
+
+    test('a value attribute without a value: valueDefaultValue', () {
+      final div = $div(attributes: {'title': 'x'});
+      div.getAttribute('title')!.setValue(null);
+
+      expect(
+        resolveNode(
+          div,
+          'title',
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
+        ),
+        isNull,
+      );
+      expect(
+        resolveNode(
+          div,
+          'title',
+          booleanDefaultValue: false,
+          valueDefaultValue: '-',
+        ),
+        equals('-'),
+      );
+      // A value is kept:
+      expect(
+        resolve('<div title="t">x</div>', 'title', valueDefaultValue: '-'),
+        equals('t'),
+      );
+    });
+  });
+
+  group('DOMGenerator.applyAttributeDefaults', () {
+    String? apply(String name, String? value, bool b, String? v) =>
+        DOMGenerator.applyAttributeDefaults(
+          name,
+          value,
+          booleanDefaultValue: b,
+          valueDefaultValue: v,
+        );
+
+    test('a value is kept', () {
+      expect(apply('title', 'x', false, '-'), equals('x'));
+      expect(apply('checked', 'true', false, null), equals('true'));
+    });
+
+    for (final name in _booleanAttributes) {
+      test('$name: null is booleanDefaultValue', () {
+        expect(apply(name, null, true, null), equals('true'));
+        expect(apply(name, null, false, null), isNull);
+        // `valueDefaultValue` is not for boolean attributes:
+        expect(apply(name, null, false, 'x'), isNull);
+      });
+    }
+
+    test('other attributes: null is valueDefaultValue', () {
+      expect(apply('title', null, false, null), isNull);
+      expect(apply('title', null, true, null), isNull);
+      expect(apply('title', null, false, '-'), equals('-'));
     });
   });
 
@@ -174,9 +273,11 @@ void main() {
       div.buildDOM(generator: generator);
 
       final byName = <String, List<String?>>{};
-      for (final (name, value, booleanDefault) in generator.resolved) {
-        // The default for a resolved value: `null` is false.
+      for (final (name, value, booleanDefault, valueDefault)
+          in generator.resolved) {
+        // `setAttributes`' defaults: off, and no attribute.
         expect(booleanDefault, isFalse, reason: name);
+        expect(valueDefault, isNull, reason: name);
         byName.putIfAbsent(name, () => []).add(value);
       }
 
@@ -187,38 +288,33 @@ void main() {
       expect(byName['selected'], equals([null, 'true']));
     });
 
-    test('DOMGeneratorDelegate forwards it, with booleanDefaultValue', () {
+    test('DOMGeneratorDelegate forwards it, with both defaults', () {
       final target = _RecordingGenerator();
       final delegate = DOMGeneratorDelegate<TestNode>(target);
       final elem = TestElem('option');
 
-      delegate.setResolvedAttribute(
-        elem,
-        'selected',
-        null,
-        booleanDefaultValue: false,
-      );
-      delegate.setResolvedAttribute(
-        elem,
-        'selected',
-        null,
-        booleanDefaultValue: true,
-      );
-      delegate.setResolvedAttribute(
-        elem,
-        'title',
-        'x',
-        booleanDefaultValue: false,
-      );
+      void set(String name, String? value, bool b, String? v) =>
+          delegate.setResolvedAttribute(
+            elem,
+            name,
+            value,
+            booleanDefaultValue: b,
+            valueDefaultValue: v,
+          );
+
+      set('selected', null, false, null);
+      set('selected', null, true, null);
+      set('title', null, false, '-');
 
       expect(
         target.resolved,
         equals([
-          ('selected', null, false),
-          ('selected', null, true),
-          ('title', 'x', false),
+          ('selected', null, false, null),
+          ('selected', null, true, null),
+          ('title', null, false, '-'),
         ]),
       );
+      expect(elem.attributes, equals({'selected': 'true', 'title': '-'}));
     });
 
     test('DOMGeneratorDummy ignores it', () {
@@ -227,16 +323,35 @@ void main() {
       dummy.setResolvedAttribute(
         elem,
         'selected',
-        null,
-        booleanDefaultValue: false,
-      );
-      dummy.setResolvedAttribute(
-        elem,
-        'selected',
         'true',
         booleanDefaultValue: true,
+        valueDefaultValue: '-',
       );
       expect(elem.attributes, isEmpty);
+    });
+
+    test('TestGenerator: null is the defaults', () {
+      final generator = TestGenerator();
+      final elem = TestElem('input')..attributes['title'] = 'old';
+
+      void set(String name, String? value, bool b, String? v) =>
+          generator.setResolvedAttribute(
+            elem,
+            name,
+            value,
+            booleanDefaultValue: b,
+            valueDefaultValue: v,
+          );
+
+      set('checked', null, true, null);
+      expect(elem.attributes['checked'], equals('true'));
+      set('checked', null, false, null);
+      expect(elem.attributes.containsKey('checked'), isFalse);
+
+      set('title', null, false, '-');
+      expect(elem.attributes['title'], equals('-'));
+      set('title', null, false, null);
+      expect(elem.attributes.containsKey('title'), isFalse);
     });
   });
 }

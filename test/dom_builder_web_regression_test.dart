@@ -165,6 +165,7 @@ void main() {
         'selected',
         null,
         booleanDefaultValue: false,
+        valueDefaultValue: null,
       );
       expect(option.selected, isFalse);
 
@@ -173,6 +174,7 @@ void main() {
         'selected',
         null,
         booleanDefaultValue: true,
+        valueDefaultValue: null,
       );
       expect(option.selected, isTrue);
 

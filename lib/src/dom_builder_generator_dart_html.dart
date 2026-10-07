@@ -243,19 +243,24 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   void setAttribute(Node element, String attrName, String? attrVal) =>
       _setAttributeImpl(element, attrName, attrVal, booleanDefaultValue: true);
 
-  // A `null` boolean is the caller's `booleanDefaultValue`
-  // (see `DOMGenerator.setResolvedAttribute`):
+  // After the defaults, `null` is off (boolean) or removed (other):
   @override
   void setResolvedAttribute(
     Node element,
     String attrName,
     String? attrVal, {
     required bool booleanDefaultValue,
+    required String? valueDefaultValue,
   }) => _setAttributeImpl(
     element,
     attrName,
-    attrVal,
-    booleanDefaultValue: booleanDefaultValue,
+    DOMGenerator.applyAttributeDefaults(
+      attrName,
+      attrVal,
+      booleanDefaultValue: booleanDefaultValue,
+      valueDefaultValue: valueDefaultValue,
+    ),
+    booleanDefaultValue: false,
   );
 
   /// [booleanDefaultValue] is a boolean attribute's value for a `null`

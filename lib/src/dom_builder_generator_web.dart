@@ -329,16 +329,19 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     List<String?>? attrsValues;
 
     for (var attrName in domElement.attributesNames) {
+      // No value: a boolean attribute is off, any other one is removed.
       var attrVal = resolveAttributeValue(
         domElement,
         element,
         attrName,
         treeMap,
+        booleanDefaultValue: false,
+        valueDefaultValue: null,
         preserveClass: preserveClass,
         preserveStyle: preserveStyle,
       );
 
-      // A false boolean attribute resolves to `null` (no attribute):
+      // `null` (a false boolean attribute, or no value): no attribute.
       var set = _setElementAttributeSpecial(
         element2,
         attrName,
@@ -376,21 +379,26 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     setElementAttribute(element as Element, attrName, attrVal);
   }
 
-  // A `null` boolean is the caller's `booleanDefaultValue`
-  // (see `DOMGenerator.setResolvedAttribute`):
   @override
   void setResolvedAttribute(
     Node element,
     String attrName,
     String? attrVal, {
     required bool booleanDefaultValue,
+    required String? valueDefaultValue,
   }) {
     if (!element.isA<Element>()) return;
+    // After the defaults, `null` is off (boolean) or removed (other):
     setElementAttribute(
       element as Element,
       attrName,
-      attrVal,
-      booleanDefaultValue: booleanDefaultValue,
+      DOMGenerator.applyAttributeDefaults(
+        attrName,
+        attrVal,
+        booleanDefaultValue: booleanDefaultValue,
+        valueDefaultValue: valueDefaultValue,
+      ),
+      booleanDefaultValue: false,
     );
   }
 

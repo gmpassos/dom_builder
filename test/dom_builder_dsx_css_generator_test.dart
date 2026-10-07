@@ -692,6 +692,8 @@ void main() {
           element,
           'class',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
           preserveClass: true,
         ),
         equals('a b'),
@@ -702,6 +704,8 @@ void main() {
           element,
           'style',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
           preserveStyle: true,
         ),
         equals('color: red; width: 1px'),
@@ -713,6 +717,8 @@ void main() {
           element,
           'style',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
           preserveStyle: true,
         ),
         equals('color: red; width: 1px'),
@@ -736,6 +742,8 @@ void main() {
           input,
           'checked',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
         ),
         isNull,
       );
@@ -745,6 +753,8 @@ void main() {
           input,
           'checked',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
         ),
         equals('true'),
       );
@@ -1012,6 +1022,8 @@ void main() {
           e,
           'class',
           treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
           preserveClass: true,
         ),
         equals('a b'),
@@ -1109,7 +1121,17 @@ void main() {
       expect(g.replaceElement(e, [e]), isFalse);
       expect(g.toElements([e]), isNull);
       g.setAttribute(e, 'a', 'b');
-      expect(g.resolveAttributeValue($div(), e, 'a', treeMap), isNull);
+      expect(
+        g.resolveAttributeValue(
+          $div(),
+          e,
+          'a',
+          treeMap,
+          booleanDefaultValue: false,
+          valueDefaultValue: null,
+        ),
+        isNull,
+      );
       g.onElementCreated(treeMap, $div(), e, null);
       g.resolveActionAttribute(treeMap, $div(), e, null);
       g.registerEventListeners(treeMap, $div(), e, null);
