@@ -1189,8 +1189,8 @@ abstract class DOMGenerator<T extends Object> {
         element,
         attrName,
         treeMap,
-        booleanDefaultValue: false,
-        valueDefaultValue: null,
+        booleanDefault: false,
+        valueDefault: null,
         preserveClass: preserveClass,
         preserveStyle: preserveStyle,
       );
@@ -1199,8 +1199,8 @@ abstract class DOMGenerator<T extends Object> {
         element,
         attrName,
         attrVal,
-        booleanDefaultValue: false,
-        valueDefaultValue: null,
+        booleanDefault: false,
+        valueDefault: null,
       );
     }
   }
@@ -1209,33 +1209,33 @@ abstract class DOMGenerator<T extends Object> {
   ///
   /// A value is set as is. A `null` [attrVal] is:
   /// - for a boolean attribute (`selected`, `checked`, `disabled`…):
-  ///   [booleanDefaultValue] (`true`: on, `false`: off);
-  /// - for any other attribute: [valueDefaultValue] (`null`: removed).
+  ///   [booleanDefault] (`true`: on, `false`: off);
+  /// - for any other attribute: [valueDefault] (`null`: removed).
   ///
   /// ```dart
   /// // A value, as is:
   /// setResolvedAttribute(option, 'selected', 'true',
-  ///     booleanDefaultValue: false, valueDefaultValue: null);
+  ///     booleanDefault: false, valueDefault: null);
   ///     // option.selected = true
   ///
   /// // <option selected="false"> resolves to `null`: off.
   /// setResolvedAttribute(option, 'selected', null,
-  ///     booleanDefaultValue: false, valueDefaultValue: null);
+  ///     booleanDefault: false, valueDefault: null);
   ///     // option.selected = false
   ///
   /// // <input checked>, bare: on.
   /// setResolvedAttribute(input, 'checked', null,
-  ///     booleanDefaultValue: true, valueDefaultValue: null);
+  ///     booleanDefault: true, valueDefault: null);
   ///     // input.checked = true
   ///
   /// // No `title`: removed, or a default.
   /// setResolvedAttribute(div, 'title', null,
-  ///     booleanDefaultValue: false, valueDefaultValue: null);  // no `title`
+  ///     booleanDefault: false, valueDefault: null);  // no `title`
   /// setResolvedAttribute(div, 'title', null,
-  ///     booleanDefaultValue: false, valueDefaultValue: '-');   // title="-"
+  ///     booleanDefault: false, valueDefault: '-');   // title="-"
   /// ```
   ///
-  /// [setAttribute] is as `booleanDefaultValue: true, valueDefaultValue:
+  /// [setAttribute] is as `booleanDefault: true, valueDefault:
   /// null` for the boolean attributes set as properties.
   ///
   /// Every generator implements it (it has no default: a fallback to
@@ -1245,58 +1245,58 @@ abstract class DOMGenerator<T extends Object> {
     T element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   });
 
   /// [attrVal], or for `null` its default (see [setResolvedAttribute]):
   /// `'true'` or `null` (off) for a boolean attribute, as
-  /// [booleanDefaultValue]; [valueDefaultValue] for any other one. A `null`
+  /// [booleanDefault]; [valueDefault] for any other one. A `null`
   /// result is "no attribute".
   ///
   /// ```dart
   /// applyAttributeDefaults('checked', null,
-  ///     booleanDefaultValue: true, valueDefaultValue: null);   // 'true'
+  ///     booleanDefault: true, valueDefault: null);   // 'true'
   /// applyAttributeDefaults('checked', null,
-  ///     booleanDefaultValue: false, valueDefaultValue: null);  // null
+  ///     booleanDefault: false, valueDefault: null);  // null
   /// applyAttributeDefaults('title', null,
-  ///     booleanDefaultValue: false, valueDefaultValue: '-');   // '-'
+  ///     booleanDefault: false, valueDefault: '-');   // '-'
   /// applyAttributeDefaults('title', 'x',
-  ///     booleanDefaultValue: false, valueDefaultValue: '-');   // 'x'
+  ///     booleanDefault: false, valueDefault: '-');   // 'x'
   /// ```
   static String? applyAttributeDefaults(
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {
     if (attrVal != null) return attrVal;
     if (DOMAttribute.isBooleanAttribute(attrName)) {
-      return booleanDefaultValue ? 'true' : null;
+      return booleanDefault ? 'true' : null;
     }
-    return valueDefaultValue;
+    return valueDefault;
   }
 
   /// The value to set for [attrName] of [domElement] in [element] (`null`:
   /// no attribute).
   ///
   /// A boolean attribute resolves to `'true'`, or `null` when false. An
-  /// attribute without a value resolves to [booleanDefaultValue] (boolean)
-  /// or [valueDefaultValue] (any other one), as [applyAttributeDefaults].
+  /// attribute without a value resolves to [booleanDefault] (boolean)
+  /// or [valueDefault] (any other one), as [applyAttributeDefaults].
   ///
   /// ```dart
   /// // <option selected="true">  -> 'true'
   /// // <option selected="false"> -> null (off)
   /// // <div title="x">           -> 'x'
-  /// // <div title> with no value -> valueDefaultValue
+  /// // <div title> with no value -> valueDefault
   /// ```
   String? resolveAttributeValue(
     DOMElement domElement,
     T element,
     String attrName,
     DOMTreeMap<T> treeMap, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
     bool preserveClass = false,
     bool preserveStyle = false,
   }) {
@@ -1340,8 +1340,8 @@ abstract class DOMGenerator<T extends Object> {
     return applyAttributeDefaults(
       attrName,
       attrVal,
-      booleanDefaultValue: booleanDefaultValue,
-      valueDefaultValue: valueDefaultValue,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
     );
   }
 
@@ -1996,14 +1996,14 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) => domGenerator.setResolvedAttribute(
     element,
     attrName,
     attrVal,
-    booleanDefaultValue: booleanDefaultValue,
-    valueDefaultValue: valueDefaultValue,
+    booleanDefault: booleanDefault,
+    valueDefault: valueDefault,
   );
 
   @override
@@ -2012,8 +2012,8 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     DOMTreeMap<T> treeMap, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
     bool preserveClass = false,
     bool preserveStyle = false,
   }) => domGenerator.resolveAttributeValue(
@@ -2021,8 +2021,8 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
     element,
     attrName,
     treeMap,
-    booleanDefaultValue: booleanDefaultValue,
-    valueDefaultValue: valueDefaultValue,
+    booleanDefault: booleanDefault,
+    valueDefault: valueDefault,
     preserveClass: preserveClass,
     preserveStyle: preserveStyle,
   );
@@ -2658,8 +2658,8 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {}
 
   @override
@@ -2668,8 +2668,8 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     DOMTreeMap<T> treeMap, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
     bool preserveClass = false,
     bool preserveStyle = false,
   }) => null;

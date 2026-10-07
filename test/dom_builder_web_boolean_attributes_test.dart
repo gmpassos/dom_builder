@@ -89,15 +89,15 @@ final List<_Case> _cases = [
 ];
 
 /// [DOMGenerator.setResolvedAttribute] as `setAttributes` calls it: a `null`
-/// boolean is off, any other `null` is removed (`booleanDefaultValue: false`,
-/// `valueDefaultValue: null`).
+/// boolean is off, any other `null` is removed (`booleanDefault: false`,
+/// `valueDefault: null`).
 void _setResolved(Node element, String attrName, String? attrVal) =>
     _gen.setResolvedAttribute(
       element,
       attrName,
       attrVal,
-      booleanDefaultValue: false,
-      valueDefaultValue: null,
+      booleanDefault: false,
+      valueDefault: null,
     );
 
 /// The value of the `selected` options of [select].
@@ -284,7 +284,7 @@ void main() {
     });
   });
 
-  group('setResolvedAttribute: `null` is the booleanDefaultValue', () {
+  group('setResolvedAttribute: `null` is the booleanDefault', () {
     test('turns on and off an existing element', () {
       final option = HTMLOptionElement();
       final select = HTMLSelectElement();
@@ -309,13 +309,13 @@ void main() {
       expect(div.inert, isFalse);
     });
 
-    test('booleanDefaultValue: true turns every boolean on', () {
+    test('booleanDefault: true turns every boolean on', () {
       void setOn(Node element, String attrName) => _gen.setResolvedAttribute(
         element,
         attrName,
         null,
-        booleanDefaultValue: true,
-        valueDefaultValue: null,
+        booleanDefault: true,
+        valueDefault: null,
       );
 
       final option = HTMLOptionElement();
@@ -335,26 +335,26 @@ void main() {
       expect(button.disabled, isTrue);
     });
 
-    test('valueDefaultValue for a value attribute without a value', () {
+    test('valueDefault for a value attribute without a value', () {
       final div = HTMLDivElement()..title = 'old';
 
       _gen.setResolvedAttribute(
         div,
         'title',
         null,
-        booleanDefaultValue: false,
-        valueDefaultValue: '-',
+        booleanDefault: false,
+        valueDefault: '-',
       );
       expect(div.title, equals('-'));
 
-      // `valueDefaultValue` is not for boolean attributes:
+      // `valueDefault` is not for boolean attributes:
       final checkbox = HTMLInputElement()..type = 'checkbox';
       _gen.setResolvedAttribute(
         checkbox,
         'checked',
         null,
-        booleanDefaultValue: false,
-        valueDefaultValue: '-',
+        booleanDefault: false,
+        valueDefault: '-',
       );
       expect(checkbox.checked, isFalse);
       expect(checkbox.hasAttribute('checked'), isFalse);
@@ -378,12 +378,7 @@ void main() {
       gen.setElementAttribute(option, 'selected', null);
       expect(option.selected, isTrue);
 
-      gen.setElementAttribute(
-        option,
-        'selected',
-        null,
-        booleanDefaultValue: false,
-      );
+      gen.setElementAttribute(option, 'selected', null, booleanDefault: false);
       expect(option.selected, isFalse);
     });
   });

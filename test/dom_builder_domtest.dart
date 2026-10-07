@@ -391,16 +391,16 @@ class TestGenerator extends DOMGenerator<TestNode> {
     TestNode element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {
     if (element is! TestElem) return;
 
     var value = DOMGenerator.applyAttributeDefaults(
       attrName,
       attrVal,
-      booleanDefaultValue: booleanDefaultValue,
-      valueDefaultValue: valueDefaultValue,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
     );
 
     if (value != null) {

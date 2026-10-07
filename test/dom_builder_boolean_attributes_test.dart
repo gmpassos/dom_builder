@@ -29,16 +29,16 @@ class _RecordingGenerator extends TestGenerator {
     TestNode element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {
-    resolved.add((attrName, attrVal, booleanDefaultValue, valueDefaultValue));
+    resolved.add((attrName, attrVal, booleanDefault, valueDefault));
     super.setResolvedAttribute(
       element,
       attrName,
       attrVal,
-      booleanDefaultValue: booleanDefaultValue,
-      valueDefaultValue: valueDefaultValue,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
     );
   }
 }
@@ -138,8 +138,8 @@ void main() {
     String? resolve(
       String html,
       String name, {
-      bool booleanDefaultValue = false,
-      String? valueDefaultValue,
+      bool booleanDefault = false,
+      String? valueDefault,
     }) {
       final domElement = DOMNode.parseNodes(html).first as DOMElement;
       return generator.resolveAttributeValue(
@@ -147,23 +147,23 @@ void main() {
         TestElem(domElement.tag),
         name,
         treeMap,
-        booleanDefaultValue: booleanDefaultValue,
-        valueDefaultValue: valueDefaultValue,
+        booleanDefault: booleanDefault,
+        valueDefault: valueDefault,
       );
     }
 
     String? resolveNode(
       DOMElement domElement,
       String name, {
-      required bool booleanDefaultValue,
-      required String? valueDefaultValue,
+      required bool booleanDefault,
+      required String? valueDefault,
     }) => generator.resolveAttributeValue(
       domElement,
       TestElem(domElement.tag),
       name,
       treeMap,
-      booleanDefaultValue: booleanDefaultValue,
-      valueDefaultValue: valueDefaultValue,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
     );
 
     for (final name in _booleanAttributes) {
@@ -180,45 +180,31 @@ void main() {
       expect(resolve('<div data-x="false">x</div>', 'data-x'), equals('false'));
     });
 
-    test('a false boolean is off, whatever booleanDefaultValue', () {
+    test('a false boolean is off, whatever booleanDefault', () {
       for (final b in [false, true]) {
         expect(
-          resolve(
-            '<div hidden="false">x</div>',
-            'hidden',
-            booleanDefaultValue: b,
-          ),
+          resolve('<div hidden="false">x</div>', 'hidden', booleanDefault: b),
           isNull,
-          reason: 'booleanDefaultValue: $b',
+          reason: 'booleanDefault: $b',
         );
       }
     });
 
-    test('a value attribute without a value: valueDefaultValue', () {
+    test('a value attribute without a value: valueDefault', () {
       final div = $div(attributes: {'title': 'x'});
       div.getAttribute('title')!.setValue(null);
 
       expect(
-        resolveNode(
-          div,
-          'title',
-          booleanDefaultValue: false,
-          valueDefaultValue: null,
-        ),
+        resolveNode(div, 'title', booleanDefault: false, valueDefault: null),
         isNull,
       );
       expect(
-        resolveNode(
-          div,
-          'title',
-          booleanDefaultValue: false,
-          valueDefaultValue: '-',
-        ),
+        resolveNode(div, 'title', booleanDefault: false, valueDefault: '-'),
         equals('-'),
       );
       // A value is kept:
       expect(
-        resolve('<div title="t">x</div>', 'title', valueDefaultValue: '-'),
+        resolve('<div title="t">x</div>', 'title', valueDefault: '-'),
         equals('t'),
       );
     });
@@ -229,8 +215,8 @@ void main() {
         DOMGenerator.applyAttributeDefaults(
           name,
           value,
-          booleanDefaultValue: b,
-          valueDefaultValue: v,
+          booleanDefault: b,
+          valueDefault: v,
         );
 
     test('a value is kept', () {
@@ -239,15 +225,15 @@ void main() {
     });
 
     for (final name in _booleanAttributes) {
-      test('$name: null is booleanDefaultValue', () {
+      test('$name: null is booleanDefault', () {
         expect(apply(name, null, true, null), equals('true'));
         expect(apply(name, null, false, null), isNull);
-        // `valueDefaultValue` is not for boolean attributes:
+        // `valueDefault` is not for boolean attributes:
         expect(apply(name, null, false, 'x'), isNull);
       });
     }
 
-    test('other attributes: null is valueDefaultValue', () {
+    test('other attributes: null is valueDefault', () {
       expect(apply('title', null, false, null), isNull);
       expect(apply('title', null, true, null), isNull);
       expect(apply('title', null, false, '-'), equals('-'));
@@ -298,8 +284,8 @@ void main() {
             elem,
             name,
             value,
-            booleanDefaultValue: b,
-            valueDefaultValue: v,
+            booleanDefault: b,
+            valueDefault: v,
           );
 
       set('selected', null, false, null);
@@ -324,8 +310,8 @@ void main() {
         elem,
         'selected',
         'true',
-        booleanDefaultValue: true,
-        valueDefaultValue: '-',
+        booleanDefault: true,
+        valueDefault: '-',
       );
       expect(elem.attributes, isEmpty);
     });
@@ -339,8 +325,8 @@ void main() {
             elem,
             name,
             value,
-            booleanDefaultValue: b,
-            valueDefaultValue: v,
+            booleanDefault: b,
+            valueDefault: v,
           );
 
       set('checked', null, true, null);

@@ -6,12 +6,12 @@
   its last option; `hidden="false"`, `multiple="false"` and `inert="false"` turned those on too.
   - `DOMGenerator.setAttributes` now sets each resolved value with the new `setResolvedAttribute`.
     `resolveAttributeValue` and `setResolvedAttribute` take 2 required named defaults for an attribute without a
-    value: `booleanDefaultValue` (a boolean attribute: on or off) and `valueDefaultValue` (any other: that value, or
+    value: `booleanDefault` (a boolean attribute: on or off) and `valueDefault` (any other: that value, or
     removed when `null`); `setAttributes` passes `false` and `null`. A false boolean attribute resolves to `null`
-    (off). New `DOMGenerator.applyAttributeDefaults` applies them. `booleanDefaultValue` holds for every boolean
+    (off). New `DOMGenerator.applyAttributeDefaults` applies them. `booleanDefault` holds for every boolean
     attribute (`checked`, `disabled`… too), not only the ones set as properties.
     `setAttribute` keeps `null` as a bare attribute (`true`). The web generator's `setElementAttribute` takes
-    `booleanDefaultValue` too (default `true`). `_parseAttributeBoolValue` takes the `null` value as a named
+    `booleanDefault` too (default `true`). `_parseAttributeBoolValue` takes the `null` value as a named
     `defaultValue` (web and `dart:html` generators).
   - **Breaking** for a class extending `DOMGenerator` directly: `setResolvedAttribute` is abstract, and must be
     implemented (a fallback to `setAttribute` would turn every false boolean attribute on); a caller or override of
@@ -33,7 +33,7 @@
     (also through `DOMGeneratorDelegate` and `DOMGeneratorDummy`).
   - `dom_builder_web_boolean_attributes_test.dart` (browser): each one on its element's property, `"true"`, bare,
     `"false"` and absent, from parsed HTML and `$tag` attributes; `selected` options (parsed, `$option`, a multiple
-    select, a template's language select); `setAttribute`, `setResolvedAttribute` (on and off, `booleanDefaultValue`)
+    select, a template's language select); `setAttribute`, `setResolvedAttribute` (on and off, `booleanDefault`)
     and `setElementAttribute`.
 
 - Coverage tests (VM): `dom_builder_base_coverage_test.dart`, `dom_builder_css_coverage_test.dart`,

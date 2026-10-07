@@ -93,8 +93,8 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
     T element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {
     _notSupported();
   }

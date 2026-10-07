@@ -335,8 +335,8 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         element,
         attrName,
         treeMap,
-        booleanDefaultValue: false,
-        valueDefaultValue: null,
+        booleanDefault: false,
+        valueDefault: null,
         preserveClass: preserveClass,
         preserveStyle: preserveStyle,
       );
@@ -346,7 +346,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         element2,
         attrName,
         attrVal,
-        booleanDefaultValue: false,
+        booleanDefault: false,
       );
       if (!set) {
         List<String> keys;
@@ -384,8 +384,8 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     Node element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) {
     if (!element.isA<Element>()) return;
     // After the defaults, `null` is off (boolean) or removed (other):
@@ -395,27 +395,27 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       DOMGenerator.applyAttributeDefaults(
         attrName,
         attrVal,
-        booleanDefaultValue: booleanDefaultValue,
-        valueDefaultValue: valueDefaultValue,
+        booleanDefault: booleanDefault,
+        valueDefault: valueDefault,
       ),
-      booleanDefaultValue: false,
+      booleanDefault: false,
     );
   }
 
-  /// Sets [attrName] of [element]. [booleanDefaultValue] is the value of a
+  /// Sets [attrName] of [element]. [booleanDefault] is the value of a
   /// boolean attribute set as a property for a `null` [attrVal]: by default
   /// `true`, a bare attribute (`<input multiple>`).
   void setElementAttribute(
     Element element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = true,
+    bool booleanDefault = true,
   }) {
     var set = _setElementAttributeSpecial(
       element,
       attrName,
       attrVal,
-      booleanDefaultValue: booleanDefaultValue,
+      booleanDefault: booleanDefault,
     );
     if (!set) {
       _setElementAttribute(element, attrName, attrVal);
@@ -430,16 +430,16 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
-  /// Sets the attributes that are properties. [booleanDefaultValue] is a
+  /// Sets the attributes that are properties. [booleanDefault] is a
   /// boolean attribute's value for a `null` [attrVal].
   bool _setElementAttributeSpecial(
     Element element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
+    required bool booleanDefault,
   }) {
     bool parseBool(String? attrVal) =>
-        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefaultValue);
+        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefault);
 
     switch (attrName) {
       case 'selected':

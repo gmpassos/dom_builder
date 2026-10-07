@@ -241,7 +241,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   // `null` for a boolean attribute is a bare attribute (`<input multiple>`):
   @override
   void setAttribute(Node element, String attrName, String? attrVal) =>
-      _setAttributeImpl(element, attrName, attrVal, booleanDefaultValue: true);
+      _setAttributeImpl(element, attrName, attrVal, booleanDefault: true);
 
   // After the defaults, `null` is off (boolean) or removed (other):
   @override
@@ -249,32 +249,32 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     Node element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
-    required String? valueDefaultValue,
+    required bool booleanDefault,
+    required String? valueDefault,
   }) => _setAttributeImpl(
     element,
     attrName,
     DOMGenerator.applyAttributeDefaults(
       attrName,
       attrVal,
-      booleanDefaultValue: booleanDefaultValue,
-      valueDefaultValue: valueDefaultValue,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
     ),
-    booleanDefaultValue: false,
+    booleanDefault: false,
   );
 
-  /// [booleanDefaultValue] is a boolean attribute's value for a `null`
+  /// [booleanDefault] is a boolean attribute's value for a `null`
   /// [attrVal].
   void _setAttributeImpl(
     Node element,
     String attrName,
     String? attrVal, {
-    required bool booleanDefaultValue,
+    required bool booleanDefault,
   }) {
     if (element is! Element) return;
 
     bool parseBool(String? attrVal) =>
-        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefaultValue);
+        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefault);
 
     switch (attrName) {
       case 'selected':
