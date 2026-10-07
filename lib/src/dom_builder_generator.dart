@@ -1200,8 +1200,16 @@ abstract class DOMGenerator<T extends Object> {
   /// [setAttributes]): `null` is no attribute, also for a false boolean
   /// attribute, while for [setAttribute] it's a bare (`true`) boolean
   /// attribute where a generator sets it as a property (`option.selected`).
-  void setResolvedAttribute(T element, String attrName, String? attrVal) =>
-      setAttribute(element, attrName, attrVal);
+  ///
+  /// [booleanDefaultValue] is the value of a boolean attribute set as a
+  /// property for a `null` [attrVal]. The generators that set them (web,
+  /// `dart:html`) override this; by default it's as [setAttribute].
+  void setResolvedAttribute(
+    T element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefaultValue = false,
+  }) => setAttribute(element, attrName, attrVal);
 
   String? resolveAttributeValue(
     DOMElement domElement,
@@ -1895,8 +1903,17 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.setAttribute(element, attrName, attrVal);
 
   @override
-  void setResolvedAttribute(T element, String attrName, String? attrVal) =>
-      domGenerator.setResolvedAttribute(element, attrName, attrVal);
+  void setResolvedAttribute(
+    T element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefaultValue = false,
+  }) => domGenerator.setResolvedAttribute(
+    element,
+    attrName,
+    attrVal,
+    booleanDefaultValue: booleanDefaultValue,
+  );
 
   @override
   String? resolveAttributeValue(
@@ -2542,7 +2559,12 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
   void setAttribute(T element, String attrName, String? attrVal) {}
 
   @override
-  void setResolvedAttribute(T element, String attrName, String? attrVal) {}
+  void setResolvedAttribute(
+    T element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefaultValue = false,
+  }) {}
 
   @override
   String? resolveAttributeValue(

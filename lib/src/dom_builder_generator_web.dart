@@ -376,13 +376,37 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     setElementAttribute(element as Element, attrName, attrVal);
   }
 
-  void setElementAttribute(Element element, String attrName, String? attrVal) {
-    // `null` for a boolean attribute is a bare attribute (`<input multiple>`):
+  // A false boolean attribute resolves to `null` (no attribute):
+  @override
+  void setResolvedAttribute(
+    Node element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefaultValue = false,
+  }) {
+    if (!element.isA<Element>()) return;
+    setElementAttribute(
+      element as Element,
+      attrName,
+      attrVal,
+      booleanDefaultValue: booleanDefaultValue,
+    );
+  }
+
+  /// Sets [attrName] of [element]. [booleanDefaultValue] is the value of a
+  /// boolean attribute set as a property for a `null` [attrVal]: by default
+  /// `true`, a bare attribute (`<input multiple>`).
+  void setElementAttribute(
+    Element element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefaultValue = true,
+  }) {
     var set = _setElementAttributeSpecial(
       element,
       attrName,
       attrVal,
-      booleanDefaultValue: true,
+      booleanDefaultValue: booleanDefaultValue,
     );
     if (!set) {
       _setElementAttribute(element, attrName, attrVal);

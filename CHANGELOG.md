@@ -5,8 +5,9 @@
   properties: every `selected="false"` option (also `$option(selected: false)`) was selected, so a `<select>` showed
   its last option; `hidden="false"`, `multiple="false"` and `inert="false"` turned those on too.
   - `DOMGenerator.setAttributes` now sets each resolved value with the new `setResolvedAttribute`, where `null` is no
-    attribute (`false`); `setAttribute` keeps `null` as a bare attribute (`true`). `_parseAttributeBoolValue` takes
-    the `null` value as a named `defaultValue` (web and `dart:html` generators).
+    attribute (`false`, or its named `booleanDefaultValue`); `setAttribute` keeps `null` as a bare attribute
+    (`true`). The web generator's `setElementAttribute` takes `booleanDefaultValue` too (default `true`).
+    `_parseAttributeBoolValue` takes the `null` value as a named `defaultValue` (web and `dart:html` generators).
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
   - Regression tests (`dom_builder_web_regression_test.dart`).
 

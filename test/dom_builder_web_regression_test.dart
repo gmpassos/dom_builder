@@ -158,6 +158,25 @@ void main() {
       expect(span.hidden.dartify(), isNot(equals(true)));
     });
 
+    test('setResolvedAttribute: `null` is false, or `booleanDefaultValue`', () {
+      final option = HTMLOptionElement()..selected = true;
+      _gen.setResolvedAttribute(option, 'selected', null);
+      expect(option.selected, isFalse);
+
+      _gen.setResolvedAttribute(
+        option,
+        'selected',
+        null,
+        booleanDefaultValue: true,
+      );
+      expect(option.selected, isTrue);
+
+      // `setAttribute` keeps `null` as a bare attribute:
+      final input = HTMLInputElement()..type = 'file';
+      _gen.setAttribute(input, 'multiple', null);
+      expect(input.multiple, isTrue);
+    });
+
     test('a bare `selected` still selects', () {
       final select = generateSelect(
         DOMNode.parseNodes(
