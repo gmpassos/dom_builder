@@ -88,6 +88,16 @@ final List<_Case> _cases = [
   ),
 ];
 
+/// [DOMGenerator.setResolvedAttribute] as `setAttributes` calls it: a `null`
+/// boolean is off (`booleanDefaultValue: false`).
+void _setResolved(Node element, String attrName, String? attrVal) =>
+    _gen.setResolvedAttribute(
+      element,
+      attrName,
+      attrVal,
+      booleanDefaultValue: false,
+    );
+
 /// The value of the `selected` options of [select].
 List<String> _selectedValues(HTMLSelectElement select) => [
   for (var i = 0; i < select.options.length; i++)
@@ -265,32 +275,32 @@ void main() {
       final div = HTMLDivElement()
         ..setAttribute('selected', 'x')
         ..setAttribute('multiple', 'x');
-      _gen.setResolvedAttribute(div, 'selected', null);
-      _gen.setResolvedAttribute(div, 'multiple', null);
+      _setResolved(div, 'selected', null);
+      _setResolved(div, 'multiple', null);
       expect(div.hasAttribute('selected'), isFalse);
       expect(div.hasAttribute('multiple'), isFalse);
     });
   });
 
-  group('setResolvedAttribute: `null` is off, or booleanDefaultValue', () {
+  group('setResolvedAttribute: `null` is the booleanDefaultValue', () {
     test('turns on and off an existing element', () {
       final option = HTMLOptionElement();
       final select = HTMLSelectElement();
       final div = HTMLDivElement();
 
-      _gen.setResolvedAttribute(option, 'selected', 'true');
-      _gen.setResolvedAttribute(select, 'multiple', 'true');
-      _gen.setResolvedAttribute(div, 'hidden', 'true');
-      _gen.setResolvedAttribute(div, 'inert', 'true');
+      _setResolved(option, 'selected', 'true');
+      _setResolved(select, 'multiple', 'true');
+      _setResolved(div, 'hidden', 'true');
+      _setResolved(div, 'inert', 'true');
       expect(option.selected, isTrue);
       expect(select.multiple, isTrue);
       expect(div.hidden.dartify(), isTrue);
       expect(div.inert, isTrue);
 
-      _gen.setResolvedAttribute(option, 'selected', null);
-      _gen.setResolvedAttribute(select, 'multiple', null);
-      _gen.setResolvedAttribute(div, 'hidden', null);
-      _gen.setResolvedAttribute(div, 'inert', null);
+      _setResolved(option, 'selected', null);
+      _setResolved(select, 'multiple', null);
+      _setResolved(div, 'hidden', null);
+      _setResolved(div, 'inert', null);
       expect(option.selected, isFalse);
       expect(select.multiple, isFalse);
       expect(div.hidden.dartify(), isNot(isTrue));
@@ -315,13 +325,13 @@ void main() {
 
     test('other attributes: `null` removes them', () {
       final input = HTMLInputElement()..setAttribute('checked', '');
-      _gen.setResolvedAttribute(input, 'checked', null);
+      _setResolved(input, 'checked', null);
       expect(input.hasAttribute('checked'), isFalse);
 
       final div = HTMLDivElement();
-      _gen.setResolvedAttribute(div, 'title', 't');
+      _setResolved(div, 'title', 't');
       expect(div.title, equals('t'));
-      _gen.setResolvedAttribute(div, 'title', null);
+      _setResolved(div, 'title', null);
       expect(div.hasAttribute('title'), isFalse);
     });
 

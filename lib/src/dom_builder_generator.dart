@@ -1192,38 +1192,50 @@ abstract class DOMGenerator<T extends Object> {
         preserveStyle: preserveStyle,
       );
 
-      setResolvedAttribute(element, attrName, attrVal);
+      // A false boolean attribute resolves to `null`: off.
+      setResolvedAttribute(
+        element,
+        attrName,
+        attrVal,
+        booleanDefaultValue: false,
+      );
     }
   }
 
   /// Sets a value from [resolveAttributeValue] (used by [setAttributes]).
-  /// Here `null` means **no attribute**:
+  ///
+  /// [booleanDefaultValue] is the value of a boolean attribute set as a
+  /// property (`selected`, `multiple`, `hidden`, `inert`) when [attrVal] is
+  /// `null`. Required: `null` means "off" for a resolved value (a
+  /// `selected="false"` resolves to `null`) but "on" for a bare attribute.
   ///
   /// ```dart
-  /// // <option selected="false"> resolves to `null`:
-  /// setResolvedAttribute(option, 'selected', null);   // option.selected = false
-  /// setResolvedAttribute(option, 'selected', 'true'); // option.selected = true
-  /// setResolvedAttribute(div, 'title', null);         // removes `title`
-  ///
-  /// // [setAttribute] differs: `null` is a bare attribute (`<option selected>`):
-  /// setAttribute(option, 'selected', null);           // option.selected = true
-  /// ```
-  ///
-  /// [booleanDefaultValue] is used for a `null` [attrVal] of the boolean
-  /// attributes set as properties (`selected`, `multiple`, `hidden`, `inert`):
-  ///
-  /// ```dart
+  /// // <option selected="false">: resolved to `null`, off:
   /// setResolvedAttribute(option, 'selected', null,
-  ///     booleanDefaultValue: true);                   // option.selected = true
+  ///     booleanDefaultValue: false);  // option.selected = false
+  ///
+  /// // <option selected>: bare, on:
+  /// setResolvedAttribute(option, 'selected', null,
+  ///     booleanDefaultValue: true);   // option.selected = true
+  ///
+  /// // A value is used as is:
+  /// setResolvedAttribute(option, 'selected', 'true',
+  ///     booleanDefaultValue: false);  // option.selected = true
+  ///
+  /// // Other attributes: `null` removes them.
+  /// setResolvedAttribute(div, 'title', null,
+  ///     booleanDefaultValue: false);  // no `title`
   /// ```
+  ///
+  /// [setAttribute] is as `booleanDefaultValue: true`.
   ///
   /// The web and `dart:html` generators override this. By default it calls
-  /// [setAttribute].
+  /// [setAttribute] (ignoring [booleanDefaultValue]).
   void setResolvedAttribute(
     T element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = false,
+    required bool booleanDefaultValue,
   }) => setAttribute(element, attrName, attrVal);
 
   String? resolveAttributeValue(
@@ -1922,7 +1934,7 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = false,
+    required bool booleanDefaultValue,
   }) => domGenerator.setResolvedAttribute(
     element,
     attrName,
@@ -2578,7 +2590,7 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
     T element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = false,
+    required bool booleanDefaultValue,
   }) {}
 
   @override

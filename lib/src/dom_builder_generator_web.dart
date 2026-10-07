@@ -376,13 +376,14 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     setElementAttribute(element as Element, attrName, attrVal);
   }
 
-  // A false boolean attribute resolves to `null` (no attribute):
+  // A `null` boolean is the caller's `booleanDefaultValue`
+  // (see `DOMGenerator.setResolvedAttribute`):
   @override
   void setResolvedAttribute(
     Node element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = false,
+    required bool booleanDefaultValue,
   }) {
     if (!element.isA<Element>()) return;
     setElementAttribute(

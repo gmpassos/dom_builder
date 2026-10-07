@@ -158,9 +158,14 @@ void main() {
       expect(span.hidden.dartify(), isNot(equals(true)));
     });
 
-    test('setResolvedAttribute: `null` is false, or `booleanDefaultValue`', () {
+    test('setResolvedAttribute: `null` is the `booleanDefaultValue`', () {
       final option = HTMLOptionElement()..selected = true;
-      _gen.setResolvedAttribute(option, 'selected', null);
+      _gen.setResolvedAttribute(
+        option,
+        'selected',
+        null,
+        booleanDefaultValue: false,
+      );
       expect(option.selected, isFalse);
 
       _gen.setResolvedAttribute(

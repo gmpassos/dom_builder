@@ -29,7 +29,7 @@ class _RecordingGenerator extends TestGenerator {
     TestNode element,
     String attrName,
     String? attrVal, {
-    bool booleanDefaultValue = false,
+    required bool booleanDefaultValue,
   }) {
     resolved.add((attrName, attrVal, booleanDefaultValue));
     if (element is TestElem && attrVal != null) {
@@ -192,14 +192,24 @@ void main() {
       final delegate = DOMGeneratorDelegate<TestNode>(target);
       final elem = TestElem('option');
 
-      delegate.setResolvedAttribute(elem, 'selected', null);
+      delegate.setResolvedAttribute(
+        elem,
+        'selected',
+        null,
+        booleanDefaultValue: false,
+      );
       delegate.setResolvedAttribute(
         elem,
         'selected',
         null,
         booleanDefaultValue: true,
       );
-      delegate.setResolvedAttribute(elem, 'title', 'x');
+      delegate.setResolvedAttribute(
+        elem,
+        'title',
+        'x',
+        booleanDefaultValue: false,
+      );
 
       expect(
         target.resolved,
@@ -214,7 +224,12 @@ void main() {
     test('DOMGeneratorDummy ignores it', () {
       final dummy = DOMGeneratorDummy<TestNode>();
       final elem = TestElem('option');
-      dummy.setResolvedAttribute(elem, 'selected', null);
+      dummy.setResolvedAttribute(
+        elem,
+        'selected',
+        null,
+        booleanDefaultValue: false,
+      );
       dummy.setResolvedAttribute(
         elem,
         'selected',
