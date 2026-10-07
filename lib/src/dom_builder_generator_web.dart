@@ -438,14 +438,14 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     String? attrVal, {
     required bool booleanDefault,
   }) {
-    bool parseBool(String? attrVal) =>
-        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefault);
-
     switch (attrName) {
       case 'selected':
         {
           if (element.isA<HTMLOptionElement>()) {
-            (element as HTMLOptionElement).selected = parseBool(attrVal);
+            (element as HTMLOptionElement).selected = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else {
             _setElementAttribute(element, attrName, attrVal);
           }
@@ -454,9 +454,15 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       case 'multiple':
         {
           if (element.isA<HTMLSelectElement>()) {
-            (element as HTMLSelectElement).multiple = parseBool(attrVal);
+            (element as HTMLSelectElement).multiple = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else if (element.isA<HTMLInputElement>()) {
-            (element as HTMLInputElement).multiple = parseBool(attrVal);
+            (element as HTMLInputElement).multiple = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else {
             _setElementAttribute(element, attrName, attrVal);
           }
@@ -465,14 +471,20 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
       case 'hidden':
         {
           if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).hidden = parseBool(attrVal).toJS;
+            (element as HTMLElement).hidden = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            ).toJS;
           }
           return true;
         }
       case 'inert':
         {
           if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).inert = parseBool(attrVal);
+            (element as HTMLElement).inert = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           }
           return true;
         }

@@ -273,14 +273,14 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }) {
     if (element is! Element) return;
 
-    bool parseBool(String? attrVal) =>
-        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefault);
-
     switch (attrName) {
       case 'selected':
         {
           if (element is OptionElement) {
-            element.selected = parseBool(attrVal);
+            element.selected = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else if (attrVal == null) {
             element.removeAttribute(attrName);
           } else {
@@ -291,9 +291,15 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
       case 'multiple':
         {
           if (element is SelectElement) {
-            element.multiple = parseBool(attrVal);
+            element.multiple = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else if (element is InputElement) {
-            element.multiple = parseBool(attrVal);
+            element.multiple = _parseAttributeBoolValue(
+              attrVal,
+              defaultValue: booleanDefault,
+            );
           } else if (attrVal == null) {
             element.removeAttribute(attrName);
           } else {
@@ -303,12 +309,18 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
         }
       case 'hidden':
         {
-          element.hidden = parseBool(attrVal);
+          element.hidden = _parseAttributeBoolValue(
+            attrVal,
+            defaultValue: booleanDefault,
+          );
           break;
         }
       case 'inert':
         {
-          element.inert = parseBool(attrVal);
+          element.inert = _parseAttributeBoolValue(
+            attrVal,
+            defaultValue: booleanDefault,
+          );
           break;
         }
       default:
