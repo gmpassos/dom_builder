@@ -382,4 +382,146 @@ void main() {
       expect(option.selected, isFalse);
     });
   });
+
+  group('checked: the value forms', () {
+    bool checkedOf(String attr) => (_generateHTML(
+      '<input type="checkbox" $attr>',
+    ) as HTMLInputElement).checked;
+
+    for (final attr in [
+      'checked',
+      'checked=""',
+      'checked="true"',
+      'checked="on"',
+      'checked="yes"',
+      'checked="1"',
+    ]) {
+      test('$attr: checked', () => expect(checkedOf(attr), isTrue));
+    }
+
+    for (final attr in [
+      'checked="false"',
+      'checked="off"',
+      'checked="no"',
+      'checked="0"',
+      '',
+    ]) {
+      test('${attr.isEmpty ? 'absent' : attr}: not checked', () {
+        expect(checkedOf(attr), isFalse);
+      });
+    }
+
+    test(
+      'checked="checked": checked (XHTML form)',
+      () => expect(checkedOf('checked="checked"'), isTrue),
+      skip:
+          'Bug: a boolean attribute whose value is its own name is read as '
+          'false',
+    );
+  });
+
+  // "off"/"false" are values of these attributes, kept verbatim: dropping
+  // `spellcheck="false"` would turn spellcheck back on, dropping
+  // `autocomplete="off"` would turn autofill back on.
+  group('on/off and true/false values of non-boolean attributes', () {
+    test('autocomplete', () {
+      final off =
+          _generateHTML('<input autocomplete="off">') as HTMLInputElement;
+      final on = _generateHTML('<input autocomplete="on">') as HTMLInputElement;
+      expect(off.autocomplete, equals('off'));
+      expect(off.getAttribute('autocomplete'), equals('off'));
+      expect(on.autocomplete, equals('on'));
+
+      final form = _generateHTML('<form autocomplete="off"></form>');
+      expect(form.getAttribute('autocomplete'), equals('off'));
+    });
+
+    test('spellcheck', () {
+      final off = _generateHTML(
+        '<textarea spellcheck="false"></textarea>',
+      ) as HTMLTextAreaElement;
+      final on = _generateHTML(
+        '<textarea spellcheck="true"></textarea>',
+      ) as HTMLTextAreaElement;
+      expect(off.spellcheck, isFalse);
+      expect(off.getAttribute('spellcheck'), equals('false'));
+      expect(on.spellcheck, isTrue);
+    });
+
+    test('value', () {
+      final input = _generateHTML('<input value="off">') as HTMLInputElement;
+      expect(input.value, equals('off'));
+
+      final select = _generateHTML(
+        '<select><option value="on">On</option>'
+        '<option value="false" selected>No</option></select>',
+      ) as HTMLSelectElement;
+      expect(select.value, equals('false'));
+
+      final built = _generate($input(value: 'off')) as HTMLInputElement;
+      expect(built.value, equals('off'));
+    });
+
+    test('data-*', () {
+      final e = _generateHTML(
+        '<div data-x="off" data-flag="false" data-on="true">x</div>',
+      );
+      expect(e.getAttribute('data-x'), equals('off'));
+      expect(e.getAttribute('data-flag'), equals('false'));
+      expect(e.getAttribute('data-on'), equals('true'));
+      expect(e.matches('[data-flag="false"]'), isTrue);
+    });
+
+    test(r'from $tag attributes', () {
+      final input = _generate(
+        $tag(
+          'input',
+          attributes: {
+            'autocomplete': 'off',
+            'spellcheck': 'false',
+            'value': 'off',
+            'data-flag': 'false',
+          },
+        ),
+      ) as HTMLInputElement;
+
+      expect(input.autocomplete, equals('off'));
+      expect(input.spellcheck, isFalse);
+      expect(input.value, equals('off'));
+      expect(input.getAttribute('data-flag'), equals('false'));
+    });
+
+    test('setResolvedAttribute keeps them; null is valueDefault', () {
+      final input = HTMLInputElement();
+      void set(String name, String? value, {String? valueDefault}) =>
+          _gen.setResolvedAttribute(
+            input,
+            name,
+            value,
+            booleanDefault: true,
+            valueDefault: valueDefault,
+          );
+
+      set('autocomplete', 'off');
+      set('spellcheck', 'false');
+      expect(input.autocomplete, equals('off'));
+      expect(input.spellcheck, isFalse);
+
+      // `booleanDefault` doesn't apply to them:
+      set('data-x', null);
+      expect(input.hasAttribute('data-x'), isFalse);
+      set('data-x', null, valueDefault: 'off');
+      expect(input.getAttribute('data-x'), equals('off'));
+    });
+
+    test(
+      'an empty value is kept (`data-x=""`)',
+      () {
+        final e = _generateHTML('<div data-x="">x</div>');
+        expect(e.hasAttribute('data-x'), isTrue);
+        expect(e.matches('[data-x]'), isTrue);
+      },
+      skip: 'Bug: an empty value parses to `null`, so the attribute is dropped',
+    );
+  });
 }

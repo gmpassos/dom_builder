@@ -340,4 +340,218 @@ void main() {
       expect(elem.attributes.containsKey('title'), isFalse);
     });
   });
+
+  // The values of a boolean attribute (`checked`…): dom_builder reads them as
+  // booleans, so `"false"`/`"off"` turn it off (templates rely on it), while
+  // HTML would take any present attribute as on.
+  group('boolean attribute values (checked)', () {
+    final generator = TestGenerator();
+    final treeMap = generator.createDOMTreeMap();
+
+    String? resolve(String html) {
+      final domElement = DOMNode.parseNodes(html).first as DOMElement;
+      return generator.resolveAttributeValue(
+        domElement,
+        TestElem(domElement.tag),
+        'checked',
+        treeMap,
+        booleanDefault: false,
+        valueDefault: null,
+      );
+    }
+
+    for (final attr in [
+      'checked',
+      'checked=""',
+      'checked="true"',
+      'checked="on"',
+      'checked="yes"',
+      'checked="1"',
+    ]) {
+      test('<input $attr> is on', () {
+        expect(resolve('<input type="checkbox" $attr>'), equals('true'));
+      });
+    }
+
+    for (final attr in [
+      'checked="false"',
+      'checked="off"',
+      'checked="no"',
+      'checked="0"',
+    ]) {
+      test('<input $attr> is off', () {
+        expect(resolve('<input type="checkbox" $attr>'), isNull);
+      });
+    }
+
+    test(
+      '<input checked="checked"> is on (XHTML form)',
+      () {
+        expect(resolve('<input type="checkbox" checked="checked">'), 'true');
+        for (final name in ['selected', 'disabled', 'multiple', 'hidden']) {
+          final domElement =
+              DOMNode.parseNodes('<div $name="$name">x</div>').first
+                  as DOMElement;
+          expect(
+            domElement.getAttributeValueAsBool(name),
+            isTrue,
+            reason: name,
+          );
+        }
+      },
+      skip:
+          'Bug: a boolean attribute whose value is its own name '
+          '(`checked="checked"`) is read as false',
+    );
+  });
+
+  // Enumerated and string attributes whose "off"/"false" is a value, not an
+  // absent attribute: they are kept verbatim. Dropping `spellcheck="false"`
+  // would turn spellcheck back on (its default is inherited), and dropping
+  // `autocomplete="off"` would turn autofill back on.
+  group('on/off and true/false values of non-boolean attributes', () {
+    const cases = [
+      ('autocomplete', 'off'),
+      ('autocomplete', 'on'),
+      ('spellcheck', 'false'),
+      ('spellcheck', 'true'),
+      ('value', 'off'),
+      ('value', 'false'),
+      ('data-x', 'off'),
+      ('data-flag', 'false'),
+      ('data-flag', 'true'),
+    ];
+
+    final generator = TestGenerator();
+    final treeMap = generator.createDOMTreeMap();
+
+    String? resolve(DOMElement domElement, String name, bool booleanDefault) =>
+        generator.resolveAttributeValue(
+          domElement,
+          TestElem(domElement.tag),
+          name,
+          treeMap,
+          booleanDefault: booleanDefault,
+          valueDefault: null,
+        );
+
+    test('none of them is boolean', () {
+      for (final name in ['autocomplete', 'spellcheck', 'value', 'data-x']) {
+        expect(DOMAttribute.isBooleanAttribute(name), isFalse, reason: name);
+        expect(DOMAttribute.from(name, 'off')!.isBoolean, isFalse);
+      }
+    });
+
+    for (final (name, value) in cases) {
+      test('$name="$value" is kept', () {
+        final domElement =
+            DOMNode.parseNodes('<input $name="$value">').first as DOMElement;
+
+        expect(domElement.getAttributeValue(name), equals(value));
+        expect(domElement.buildHTML(), contains('$name="$value"'));
+
+        // Resolved as is, whatever the boolean default:
+        expect(resolve(domElement, name, false), equals(value));
+        expect(resolve(domElement, name, true), equals(value));
+      });
+    }
+
+    test(r'from $tag attributes', () {
+      final input = $tag(
+        'input',
+        attributes: {
+          'autocomplete': 'off',
+          'spellcheck': 'false',
+          'value': 'off',
+          'data-flag': 'false',
+        },
+      );
+
+      expect(
+        input.buildHTML(),
+        equals(
+          '<input autocomplete="off" spellcheck="false" value="off" '
+          'data-flag="false">',
+        ),
+      );
+    });
+
+    test('from a template', () {
+      final template = DOMTemplate.tryParse(
+        '<input autocomplete="{{:secret}}off{{?}}on{{/}}" '
+        'spellcheck="{{:code}}false{{?}}true{{/}}">',
+      )!;
+
+      final secret =
+          DOMNode.parseNodes(
+                template.buildAsString({'secret': true, 'code': true}),
+              ).first
+              as DOMElement;
+      final plain =
+          DOMNode.parseNodes(
+                template.buildAsString({'secret': false, 'code': false}),
+              ).first
+              as DOMElement;
+
+      expect(secret.getAttributeValue('autocomplete'), equals('off'));
+      expect(secret.getAttributeValue('spellcheck'), equals('false'));
+      expect(plain.getAttributeValue('autocomplete'), equals('on'));
+      expect(plain.getAttributeValue('spellcheck'), equals('true'));
+    });
+
+    test('without a value: valueDefault, not booleanDefault', () {
+      for (final name in ['autocomplete', 'spellcheck', 'value', 'data-x']) {
+        expect(
+          DOMGenerator.resolveAttributeDefaults(
+            name,
+            null,
+            booleanDefault: true,
+            valueDefault: null,
+          ),
+          isNull,
+          reason: name,
+        );
+        expect(
+          DOMGenerator.resolveAttributeDefaults(
+            name,
+            null,
+            booleanDefault: false,
+            valueDefault: 'off',
+          ),
+          equals('off'),
+          reason: name,
+        );
+      }
+    });
+
+    test(
+      'an empty value is kept (`data-x=""`, `value=""`)',
+      () {
+        for (final html in ['<input data-x="">', '<input value="">']) {
+          final domElement = DOMNode.parseNodes(html).first as DOMElement;
+          final name = domElement.attributesNames.single;
+          expect(domElement.getAttributeValue(name), equals(''), reason: html);
+          expect(resolve(domElement, name, false), equals(''), reason: html);
+          expect(domElement.buildHTML(), contains('$name='), reason: html);
+        }
+      },
+      skip:
+          'Bug: an empty value parses to `null`, so the attribute is dropped '
+          '(`[data-x]` selectors, `dataset.x == ""`)',
+    );
+
+    test('setResolvedAttribute keeps them (TestGenerator)', () {
+      final elem = TestElem('input');
+      for (final (name, value) in cases) {
+        generator.setResolvedAttribute(
+          elem,
+          name,
+          value,
+          booleanDefault: false,
+          valueDefault: null,
+        );
+        expect(elem.attributes[name], equals(value), reason: name);
+      }
+    });
+  });
 }
