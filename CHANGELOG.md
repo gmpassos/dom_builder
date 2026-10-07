@@ -11,6 +11,18 @@
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
   - Regression tests (`dom_builder_web_regression_test.dart`).
 
+- Tests for the boolean attributes (`checked`, `hidden`, `disabled`, `selected`, `multiple`, `inert`, `autoplay`,
+  `controls`, `muted`):
+  - `dom_builder_boolean_attributes_test.dart` (VM): `DOMAttribute` parsing, HTML output (a false one is left out),
+    templates, `resolveAttributeValue`, and `setAttributes` setting every resolved value with `setResolvedAttribute`
+    (also through `DOMGeneratorDelegate` and `DOMGeneratorDummy`).
+  - `dom_builder_web_boolean_attributes_test.dart` (browser): each one on its element's property, `"true"`, bare,
+    `"false"` and absent, from parsed HTML and `$tag` attributes; `selected` options (parsed, `$option`, a multiple
+    select, a template's language select); `setAttribute`, `setResolvedAttribute` (on and off, `booleanDefaultValue`)
+    and `setElementAttribute`.
+
+- README: Codecov badge.
+
 ## 3.1.0
 
 - sdk: ^3.13.0
