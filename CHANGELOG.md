@@ -1,4 +1,4 @@
-## 3.1.1
+## 3.2.0
 
 - Fix: a false boolean attribute set as a property turned it on. `resolveAttributeValue` resolves a false boolean
   attribute to `null` (no attribute), which `setAttribute` takes as a bare (`true`) attribute for the ones set as
@@ -8,8 +8,9 @@
     `resolveAttributeValue` and `setResolvedAttribute` take 2 required named defaults for an attribute without a
     value: `booleanDefault` (a boolean attribute: on or off) and `valueDefault` (any other: that value, or
     removed when `null`); `setAttributes` passes `false` and `null`. A false boolean attribute resolves to `null`
-    (off). New `DOMGenerator.resolveAttributeDefaults` returns an attribute's value or its default. `booleanDefault` holds for every boolean
-    attribute (`checked`, `disabled`… too), not only the ones set as properties.
+    (off). New `DOMGenerator.resolveAttributeDefaults` returns an attribute's value or its default.
+    `booleanDefault` holds for every boolean attribute (`checked`, `disabled`… too), not only the ones set as
+    properties.
     `setAttribute` keeps `null` as a bare attribute (`true`). The web generator's `setElementAttribute` takes
     `booleanDefault` too (default `true`). `_parseAttributeBoolValue` takes the `null` value as a named
     `defaultValue` (web and `dart:html` generators).
@@ -44,6 +45,8 @@
   `dataset.x == ""`); they were dropped from the HTML and the DOM. `DOMAttributeValueString` keeps `''` apart from
   `null` (no value), and `DOMElement.buildHTML` writes `name=""`. Behaviour change: `DOMAttribute.from('title', '')`
   now builds `title=""` (it built nothing); an empty `class` or `style` is still left out.
+  `DOMElement.hasAttributeValue` is true for an empty value too (only `null`, absent or a false boolean attribute,
+  is false), as its doc said ("if attribute exists").
   - Regression tests (`dom_builder_web_regression_test.dart`).
 
 - Fix: templates (`DOMTemplateVariable`):

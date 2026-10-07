@@ -637,8 +637,8 @@ void main() {
       for (final name in ['id', 'value', 'title', 'data-x', 'data-y']) {
         expect(e.getAttributeValue(name), equals(''), reason: name);
         expect(e.getAttribute(name)!.hasValue, isFalse, reason: name);
-        // `hasAttributeValue` is a non-empty value:
-        expect(e.hasAttributeValue(name), isFalse, reason: name);
+        // `hasAttributeValue`: an empty value is a value.
+        expect(e.hasAttributeValue(name), isTrue, reason: name);
       }
       expect(
         e.buildHTML(),

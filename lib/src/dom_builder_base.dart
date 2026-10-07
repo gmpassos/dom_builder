@@ -2314,14 +2314,14 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     return parseDouble(getAttributeValue(name, domContext));
   }
 
-  /// Returns [true] if attribute for [name] exists.
+  /// Returns [true] if attribute for [name] has a value: an empty one too
+  /// (`data-x=""`), not a `null` one (absent, or a false boolean attribute).
   ///
   /// [domContext] Optional context used by [DOMGenerator].
   bool hasAttributeValue(String name, [DOMContext? domContext]) {
     var attr = getAttribute(name);
     if (attr == null) return false;
-    var value = attr.getValue(domContext);
-    return value != null && value.isNotEmpty;
+    return attr.getValue(domContext) != null;
   }
 
   /// Returns [DOMAttribute] entry for [name].
