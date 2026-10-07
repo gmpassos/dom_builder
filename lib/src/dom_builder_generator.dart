@@ -1192,9 +1192,16 @@ abstract class DOMGenerator<T extends Object> {
         preserveStyle: preserveStyle,
       );
 
-      setAttribute(element, attrName, attrVal);
+      setResolvedAttribute(element, attrName, attrVal);
     }
   }
+
+  /// Sets an attribute value from [resolveAttributeValue] (in
+  /// [setAttributes]): `null` is no attribute, also for a false boolean
+  /// attribute, while for [setAttribute] it's a bare (`true`) boolean
+  /// attribute where a generator sets it as a property (`option.selected`).
+  void setResolvedAttribute(T element, String attrName, String? attrVal) =>
+      setAttribute(element, attrName, attrVal);
 
   String? resolveAttributeValue(
     DOMElement domElement,
@@ -1888,6 +1895,10 @@ class DOMGeneratorDelegate<T extends Object> implements DOMGenerator<T> {
       domGenerator.setAttribute(element, attrName, attrVal);
 
   @override
+  void setResolvedAttribute(T element, String attrName, String? attrVal) =>
+      domGenerator.setResolvedAttribute(element, attrName, attrVal);
+
+  @override
   String? resolveAttributeValue(
     DOMElement domElement,
     T element,
@@ -2529,6 +2540,9 @@ class DOMGeneratorDummy<T extends Object> implements DOMGenerator<T> {
 
   @override
   void setAttribute(T element, String attrName, String? attrVal) {}
+
+  @override
+  void setResolvedAttribute(T element, String attrName, String? attrVal) {}
 
   @override
   String? resolveAttributeValue(

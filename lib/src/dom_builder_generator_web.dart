@@ -338,7 +338,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
         preserveStyle: preserveStyle,
       );
 
-      var set = _setElementAttributeSpecial(element2, attrName, attrVal);
+      // A false boolean attribute resolves to `null` (no attribute):
+      var set = _setElementAttributeSpecial(
+        element2,
+        attrName,
+        attrVal,
+        booleanDefaultValue: false,
+      );
       if (!set) {
         List<String> keys;
         List<String?> values;
@@ -371,7 +377,13 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
   }
 
   void setElementAttribute(Element element, String attrName, String? attrVal) {
-    var set = _setElementAttributeSpecial(element, attrName, attrVal);
+    // `null` for a boolean attribute is a bare attribute (`<input multiple>`):
+    var set = _setElementAttributeSpecial(
+      element,
+      attrName,
+      attrVal,
+      booleanDefaultValue: true,
+    );
     if (!set) {
       _setElementAttribute(element, attrName, attrVal);
     }
@@ -385,50 +397,49 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
+  /// Sets the attributes that are properties. [booleanDefaultValue] is a
+  /// boolean attribute's value for a `null` [attrVal].
   bool _setElementAttributeSpecial(
     Element element,
     String attrName,
-    String? attrVal,
-  ) {
+    String? attrVal, {
+    required bool booleanDefaultValue,
+  }) {
+    bool parseBool(String? attrVal) =>
+        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefaultValue);
+
     switch (attrName) {
       case 'selected':
         {
           if (element.isA<HTMLOptionElement>()) {
-            (element as HTMLOptionElement).selected = _parseAttributeBoolValue(
-              attrVal,
-            );
+            (element as HTMLOptionElement).selected = parseBool(attrVal);
           } else {
-            element.setAttribute(attrName, attrVal!);
+            _setElementAttribute(element, attrName, attrVal);
           }
           return true;
         }
       case 'multiple':
         {
           if (element.isA<HTMLSelectElement>()) {
-            (element as HTMLSelectElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-            );
+            (element as HTMLSelectElement).multiple = parseBool(attrVal);
           } else if (element.isA<HTMLInputElement>()) {
-            (element as HTMLInputElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-            );
+            (element as HTMLInputElement).multiple = parseBool(attrVal);
           } else {
-            element.setAttribute(attrName, attrVal!);
+            _setElementAttribute(element, attrName, attrVal);
           }
           return true;
         }
       case 'hidden':
         {
           if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).hidden = _parseAttributeBoolValue(attrVal)
-                .toJS;
+            (element as HTMLElement).hidden = parseBool(attrVal).toJS;
           }
           return true;
         }
       case 'inert':
         {
           if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).inert = _parseAttributeBoolValue(attrVal);
+            (element as HTMLElement).inert = parseBool(attrVal);
           }
           return true;
         }
@@ -464,9 +475,10 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
-  bool _parseAttributeBoolValue(String? attrVal) {
+  /// A boolean attribute's value as a `bool`, [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(String? attrVal, {required bool defaultValue}) {
     if (attrVal == null) {
-      return true;
+      return defaultValue;
     } else {
       return attrVal.toLowerCase() == 'true';
     }

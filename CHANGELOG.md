@@ -1,3 +1,15 @@
+## 3.1.1
+
+- Fix: a false boolean attribute set as a property turned it on. `resolveAttributeValue` resolves a false boolean
+  attribute to `null` (no attribute), which `setAttribute` takes as a bare (`true`) attribute for the ones set as
+  properties: every `selected="false"` option (also `$option(selected: false)`) was selected, so a `<select>` showed
+  its last option; `hidden="false"`, `multiple="false"` and `inert="false"` turned those on too.
+  - `DOMGenerator.setAttributes` now sets each resolved value with the new `setResolvedAttribute`, where `null` is no
+    attribute (`false`); `setAttribute` keeps `null` as a bare attribute (`true`). `_parseAttributeBoolValue` takes
+    the `null` value as a named `defaultValue` (web and `dart:html` generators).
+  - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
+  - Regression tests (`dom_builder_web_regression_test.dart`).
+
 ## 3.1.0
 
 - sdk: ^3.13.0

@@ -238,39 +238,62 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     return null;
   }
 
+  // `null` for a boolean attribute is a bare attribute (`<input multiple>`):
   @override
-  void setAttribute(Node element, String attrName, String? attrVal) {
+  void setAttribute(Node element, String attrName, String? attrVal) =>
+      _setAttributeImpl(element, attrName, attrVal, booleanDefaultValue: true);
+
+  // A false boolean attribute resolves to `null` (no attribute):
+  @override
+  void setResolvedAttribute(Node element, String attrName, String? attrVal) =>
+      _setAttributeImpl(element, attrName, attrVal, booleanDefaultValue: false);
+
+  /// [booleanDefaultValue] is a boolean attribute's value for a `null`
+  /// [attrVal].
+  void _setAttributeImpl(
+    Node element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefaultValue,
+  }) {
     if (element is! Element) return;
+
+    bool parseBool(String? attrVal) =>
+        _parseAttributeBoolValue(attrVal, defaultValue: booleanDefaultValue);
 
     switch (attrName) {
       case 'selected':
         {
           if (element is OptionElement) {
-            element.selected = _parseAttributeBoolValue(attrVal);
+            element.selected = parseBool(attrVal);
+          } else if (attrVal == null) {
+            element.removeAttribute(attrName);
           } else {
-            element.setAttribute(attrName, attrVal!);
+            element.setAttribute(attrName, attrVal);
           }
           break;
         }
       case 'multiple':
         {
           if (element is SelectElement) {
-            element.multiple = _parseAttributeBoolValue(attrVal);
+            element.multiple = parseBool(attrVal);
           } else if (element is InputElement) {
-            element.multiple = _parseAttributeBoolValue(attrVal);
+            element.multiple = parseBool(attrVal);
+          } else if (attrVal == null) {
+            element.removeAttribute(attrName);
           } else {
-            element.setAttribute(attrName, attrVal!);
+            element.setAttribute(attrName, attrVal);
           }
           break;
         }
       case 'hidden':
         {
-          element.hidden = _parseAttributeBoolValue(attrVal);
+          element.hidden = parseBool(attrVal);
           break;
         }
       case 'inert':
         {
-          element.inert = _parseAttributeBoolValue(attrVal);
+          element.inert = parseBool(attrVal);
           break;
         }
       default:
@@ -311,9 +334,10 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     }
   }
 
-  bool _parseAttributeBoolValue(String? attrVal) {
+  /// A boolean attribute's value as a `bool`, [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(String? attrVal, {required bool defaultValue}) {
     if (attrVal == null) {
-      return true;
+      return defaultValue;
     } else {
       return attrVal.toLowerCase() == 'true';
     }
