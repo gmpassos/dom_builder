@@ -11,6 +11,12 @@
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
   - Regression tests (`dom_builder_web_regression_test.dart`).
 
+- Fix: templates (`DOMTemplateVariable`):
+  - A `Set` in the context is checked for membership (`{{:tags.vip}}`), giving `true` or `false`: it was converted
+    to a `List` first and indexed, so its membership branch never ran.
+  - A `Function(Object?)` value is called with any context: it also matched `Function(Map?)`, checked first, which
+    cast the context to `Map?` and threw for a non-`Map` one. A `Function(Map?)` gets `null` for a non-`Map` context.
+
 - Tests for the boolean attributes (`checked`, `hidden`, `disabled`, `selected`, `multiple`, `inert`, `autoplay`,
   `controls`, `muted`):
   - `dom_builder_boolean_attributes_test.dart` (VM): `DOMAttribute` parsing, HTML output (a false one is left out),
@@ -20,6 +26,11 @@
     `"false"` and absent, from parsed HTML and `$tag` attributes; `selected` options (parsed, `$option`, a multiple
     select, a template's language select); `setAttribute`, `setResolvedAttribute` (on and off, `booleanDefaultValue`)
     and `setElementAttribute`.
+
+- Coverage tests (VM): `dom_builder_base_coverage_test.dart`, `dom_builder_css_coverage_test.dart`,
+  `dom_builder_template_coverage_test.dart`, `dom_builder_helpers_attribute_coverage_test.dart` and
+  `dom_builder_generator_coverage_test.dart` (generator, runtime, tree map): VM line coverage ~85% -> 97.4%. Suspected
+  bugs found are reproduced as skipped tests (`skip: 'Bug: …'`).
 
 - README: Codecov badge.
 

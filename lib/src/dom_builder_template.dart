@@ -565,7 +565,8 @@ class DOMTemplateVariable {
       return null;
     }
 
-    if (context is Iterable) {
+    // A `Set` is checked for membership (below), not indexed as a `List`:
+    if (context is Iterable && context is! List && context is! Set) {
       context = context.toList();
     }
 
@@ -590,12 +591,9 @@ class DOMTemplateVariable {
         return idx >= 0 && idx < context.length ? context[idx] : null;
       }
     } else if (context is Set) {
-      if (context.contains(key)) {
-        return true;
-      } else if (isInt(key)) {
-        var n = parseInt(key);
-        return context.contains(n);
-      }
+      // Membership: `true` or `false`.
+      return context.contains(key) ||
+          (isInt(key) && context.contains(parseInt(key)));
     } else if (context is DOMContext) {
       var val = context.variables[key];
       return val;
@@ -741,8 +739,10 @@ class DOMTemplateVariable {
       } else {
         return value.toString();
       }
-    } else if (value is Function(Map? a)) {
-      var res = value(context as Map<dynamic, dynamic>?);
+    } else if (value is Function(Object? a)) {
+      // Before `Function(Map?)`, which a `Function(Object?)` also is: it
+      // takes any context.
+      var res = value(context);
       return evaluateObject(
         context,
         res,
@@ -751,8 +751,9 @@ class DOMTemplateVariable {
         elementProvider: elementProvider,
         intlMessageResolver: intlMessageResolver,
       );
-    } else if (value is Function(Object? a)) {
-      var res = value(context);
+    } else if (value is Function(Map? a)) {
+      // A context that is not a `Map` is given as `null` (it threw).
+      var res = value(context is Map ? context : null);
       return evaluateObject(
         context,
         res,
