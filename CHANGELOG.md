@@ -8,7 +8,7 @@
     `resolveAttributeValue` and `setResolvedAttribute` take 2 required named defaults for an attribute without a
     value: `booleanDefault` (a boolean attribute: on or off) and `valueDefault` (any other: that value, or
     removed when `null`); `setAttributes` passes `false` and `null`. A false boolean attribute resolves to `null`
-    (off). New `DOMGenerator.applyAttributeDefaults` applies them. `booleanDefault` holds for every boolean
+    (off). New `DOMGenerator.resolveAttributeDefaults` returns an attribute's value or its default. `booleanDefault` holds for every boolean
     attribute (`checked`, `disabled`… too), not only the ones set as properties.
     `setAttribute` keeps `null` as a bare attribute (`true`). The web generator's `setElementAttribute` takes
     `booleanDefault` too (default `true`). `_parseAttributeBoolValue` takes the `null` value as a named

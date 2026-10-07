@@ -254,7 +254,7 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
   }) => _setAttributeImpl(
     element,
     attrName,
-    DOMGenerator.applyAttributeDefaults(
+    DOMGenerator.resolveAttributeDefaults(
       attrName,
       attrVal,
       booleanDefault: booleanDefault,

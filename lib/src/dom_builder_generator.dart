@@ -1240,7 +1240,7 @@ abstract class DOMGenerator<T extends Object> {
   ///
   /// Every generator implements it (it has no default: a fallback to
   /// [setAttribute] would turn every false boolean attribute on). See
-  /// [applyAttributeDefaults].
+  /// [resolveAttributeDefaults].
   void setResolvedAttribute(
     T element,
     String attrName,
@@ -1249,22 +1249,23 @@ abstract class DOMGenerator<T extends Object> {
     required String? valueDefault,
   });
 
-  /// [attrVal], or for `null` its default (see [setResolvedAttribute]):
-  /// `'true'` or `null` (off) for a boolean attribute, as
-  /// [booleanDefault]; [valueDefault] for any other one. A `null`
-  /// result is "no attribute".
+  /// Returns [attrVal], or its default when `null` (see
+  /// [setResolvedAttribute]): `'true'` or `null` (off) for a boolean
+  /// attribute, as [booleanDefault]; [valueDefault] for any other one. A
+  /// `null` result is "no attribute". It only returns the value: nothing is
+  /// set.
   ///
   /// ```dart
-  /// applyAttributeDefaults('checked', null,
+  /// resolveAttributeDefaults('checked', null,
   ///     booleanDefault: true, valueDefault: null);   // 'true'
-  /// applyAttributeDefaults('checked', null,
+  /// resolveAttributeDefaults('checked', null,
   ///     booleanDefault: false, valueDefault: null);  // null
-  /// applyAttributeDefaults('title', null,
+  /// resolveAttributeDefaults('title', null,
   ///     booleanDefault: false, valueDefault: '-');   // '-'
-  /// applyAttributeDefaults('title', 'x',
+  /// resolveAttributeDefaults('title', 'x',
   ///     booleanDefault: false, valueDefault: '-');   // 'x'
   /// ```
-  static String? applyAttributeDefaults(
+  static String? resolveAttributeDefaults(
     String attrName,
     String? attrVal, {
     required bool booleanDefault,
@@ -1282,7 +1283,7 @@ abstract class DOMGenerator<T extends Object> {
   ///
   /// A boolean attribute resolves to `'true'`, or `null` when false. An
   /// attribute without a value resolves to [booleanDefault] (boolean)
-  /// or [valueDefault] (any other one), as [applyAttributeDefaults].
+  /// or [valueDefault] (any other one), as [resolveAttributeDefaults].
   ///
   /// ```dart
   /// // <option selected="true">  -> 'true'
@@ -1337,7 +1338,7 @@ abstract class DOMGenerator<T extends Object> {
     }
 
     // No value (also after a preserved class/style): the defaults.
-    return applyAttributeDefaults(
+    return resolveAttributeDefaults(
       attrName,
       attrVal,
       booleanDefault: booleanDefault,

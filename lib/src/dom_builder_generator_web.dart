@@ -392,7 +392,7 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     setElementAttribute(
       element as Element,
       attrName,
-      DOMGenerator.applyAttributeDefaults(
+      DOMGenerator.resolveAttributeDefaults(
         attrName,
         attrVal,
         booleanDefault: booleanDefault,

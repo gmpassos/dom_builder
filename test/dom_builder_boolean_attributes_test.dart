@@ -210,9 +210,9 @@ void main() {
     });
   });
 
-  group('DOMGenerator.applyAttributeDefaults', () {
+  group('DOMGenerator.resolveAttributeDefaults', () {
     String? apply(String name, String? value, bool b, String? v) =>
-        DOMGenerator.applyAttributeDefaults(
+        DOMGenerator.resolveAttributeDefaults(
           name,
           value,
           booleanDefault: b,

@@ -396,7 +396,7 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }) {
     if (element is! TestElem) return;
 
-    var value = DOMGenerator.applyAttributeDefaults(
+    var value = DOMGenerator.resolveAttributeDefaults(
       attrName,
       attrVal,
       booleanDefault: booleanDefault,
