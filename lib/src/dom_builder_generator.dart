@@ -1229,14 +1229,14 @@ abstract class DOMGenerator<T extends Object> {
   ///
   /// [setAttribute] is as `booleanDefaultValue: true`.
   ///
-  /// The web and `dart:html` generators override this. By default it calls
-  /// [setAttribute] (ignoring [booleanDefaultValue]).
+  /// Every generator implements it (it has no default: a fallback to
+  /// [setAttribute] would turn every false boolean attribute on).
   void setResolvedAttribute(
     T element,
     String attrName,
     String? attrVal, {
     required bool booleanDefaultValue,
-  }) => setAttribute(element, attrName, attrVal);
+  });
 
   String? resolveAttributeValue(
     DOMElement domElement,

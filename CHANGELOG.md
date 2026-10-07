@@ -9,6 +9,9 @@
     attribute); `setAttribute` keeps `null` as a bare attribute (`true`). The web generator's `setElementAttribute`
     takes `booleanDefaultValue` too (default `true`).
     `_parseAttributeBoolValue` takes the `null` value as a named `defaultValue` (web and `dart:html` generators).
+  - **Breaking** for a class extending `DOMGenerator` directly: `setResolvedAttribute` is abstract, and must be
+    implemented (a fallback to `setAttribute` would turn every false boolean attribute on). The package's generators
+    (web, `dart:html`, delegate, dummy, none) implement it; subclasses of them are unaffected.
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
   - Regression tests (`dom_builder_web_regression_test.dart`).
 
