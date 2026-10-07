@@ -2314,14 +2314,14 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     return parseDouble(getAttributeValue(name, domContext));
   }
 
-  /// Returns [true] if attribute for [name] exists.
+  /// Returns [true] if attribute for [name] has a value: an empty one too
+  /// (`data-x=""`), not a `null` one (absent, or a false boolean attribute).
   ///
   /// [domContext] Optional context used by [DOMGenerator].
   bool hasAttributeValue(String name, [DOMContext? domContext]) {
     var attr = getAttribute(name);
     if (attr == null) return false;
-    var value = attr.getValue(domContext);
-    return value != null && value.isNotEmpty;
+    return attr.getValue(domContext) != null;
   }
 
   /// Returns [DOMAttribute] entry for [name].
@@ -2336,6 +2336,15 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     if (_attributes != null) {
       var prevAttribute = _attributes![name];
       if (prevAttribute != null) {
+        // A boolean attribute's value can change kind
+        // (`hidden` -> `hidden="until-found"`): a new attribute.
+        if (value != null && DOMAttribute.isBooleanAttribute(name)) {
+          var attribute = DOMAttribute.from(name, value);
+          if (attribute != null) {
+            putDOMAttribute(attribute);
+            return this;
+          }
+        }
         prevAttribute.setValue(value);
         return this;
       }
@@ -2659,8 +2668,12 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         dsxResolution: dsxResolution,
       );
 
+      // An empty value is kept (`data-x=""`): only a `null` one is no value.
       var attributesNormal = attributes.values.where(
-        (v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean,
+        (v) =>
+            (v.hasValue || v.value != null) &&
+            !_isPriorityAttribute(v) &&
+            !v.isBoolean,
       );
 
       for (var attr in attributesNormal) {

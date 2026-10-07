@@ -4,6 +4,7 @@ import 'package:swiss_knife/swiss_knife.dart';
 import 'package:web_utils/web_utils.dart';
 
 import 'dom_builder_actions.dart';
+import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_generator.dart';
@@ -329,16 +330,25 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     List<String?>? attrsValues;
 
     for (var attrName in domElement.attributesNames) {
+      // No value: a boolean attribute is off, any other one is removed.
       var attrVal = resolveAttributeValue(
         domElement,
         element,
         attrName,
         treeMap,
+        booleanDefault: false,
+        valueDefault: null,
         preserveClass: preserveClass,
         preserveStyle: preserveStyle,
       );
 
-      var set = _setElementAttributeSpecial(element2, attrName, attrVal);
+      // `null` (a false boolean attribute, or no value): no attribute.
+      var set = _setElementAttributeSpecial(
+        element2,
+        attrName,
+        attrVal,
+        booleanDefault: false,
+      );
       if (!set) {
         List<String> keys;
         List<String?> values;
@@ -370,8 +380,44 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     setElementAttribute(element as Element, attrName, attrVal);
   }
 
-  void setElementAttribute(Element element, String attrName, String? attrVal) {
-    var set = _setElementAttributeSpecial(element, attrName, attrVal);
+  @override
+  void setResolvedAttribute(
+    Node element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefault,
+    required String? valueDefault,
+  }) {
+    if (!element.isA<Element>()) return;
+    // After the defaults, `null` is off (boolean) or removed (other):
+    setElementAttribute(
+      element as Element,
+      attrName,
+      DOMGenerator.resolveAttributeDefaults(
+        attrName,
+        attrVal,
+        booleanDefault: booleanDefault,
+        valueDefault: valueDefault,
+      ),
+      booleanDefault: false,
+    );
+  }
+
+  /// Sets [attrName] of [element]. [booleanDefault] is the value of a
+  /// boolean attribute set as a property for a `null` [attrVal]: by default
+  /// `true`, a bare attribute (`<input multiple>`).
+  void setElementAttribute(
+    Element element,
+    String attrName,
+    String? attrVal, {
+    bool booleanDefault = true,
+  }) {
+    var set = _setElementAttributeSpecial(
+      element,
+      attrName,
+      attrVal,
+      booleanDefault: booleanDefault,
+    );
     if (!set) {
       _setElementAttribute(element, attrName, attrVal);
     }
@@ -385,53 +431,44 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
+  /// Sets the attributes that are properties. [booleanDefault] is a
+  /// boolean attribute's value for a `null` [attrVal].
   bool _setElementAttributeSpecial(
     Element element,
     String attrName,
-    String? attrVal,
-  ) {
+    String? attrVal, {
+    required bool booleanDefault,
+  }) {
+    if (DOMAttribute.isBooleanAttribute(attrName)) {
+      // A keyword is set as the value: `hidden="until-found"`.
+      var keyword = DOMAttribute.booleanAttributeKeyword(attrName, attrVal);
+      if (keyword != null) {
+        element.setAttribute(attrName, keyword);
+        return true;
+      }
+
+      // `selected`/`multiple` on an element without them: as is.
+      if ((attrName == 'selected' && !element.isA<HTMLOptionElement>()) ||
+          (attrName == 'multiple' &&
+              !element.isA<HTMLSelectElement>() &&
+              !element.isA<HTMLInputElement>())) {
+        _setElementAttribute(element, attrName, attrVal);
+        return true;
+      }
+
+      _setElementBoolean(
+        element,
+        attrName,
+        _parseAttributeBoolValue(
+          attrName,
+          attrVal,
+          defaultValue: booleanDefault,
+        ),
+      );
+      return true;
+    }
+
     switch (attrName) {
-      case 'selected':
-        {
-          if (element.isA<HTMLOptionElement>()) {
-            (element as HTMLOptionElement).selected = _parseAttributeBoolValue(
-              attrVal,
-            );
-          } else {
-            element.setAttribute(attrName, attrVal!);
-          }
-          return true;
-        }
-      case 'multiple':
-        {
-          if (element.isA<HTMLSelectElement>()) {
-            (element as HTMLSelectElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-            );
-          } else if (element.isA<HTMLInputElement>()) {
-            (element as HTMLInputElement).multiple = _parseAttributeBoolValue(
-              attrVal,
-            );
-          } else {
-            element.setAttribute(attrName, attrVal!);
-          }
-          return true;
-        }
-      case 'hidden':
-        {
-          if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).hidden = _parseAttributeBoolValue(attrVal)
-                .toJS;
-          }
-          return true;
-        }
-      case 'inert':
-        {
-          if (element.isA<HTMLElement>()) {
-            (element as HTMLElement).inert = _parseAttributeBoolValue(attrVal);
-          }
-          return true;
-        }
       case 'id':
         {
           if (attrVal == null) {
@@ -464,11 +501,43 @@ class DOMGeneratorWebImpl extends DOMGeneratorWeb<Node> {
     }
   }
 
-  bool _parseAttributeBoolValue(String? attrVal) {
-    if (attrVal == null) {
-      return true;
+  /// The boolean attribute [attrName]'s value as a `bool`
+  /// ([DOMAttribute.parseBooleanValue]), [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(
+    String attrName,
+    String? attrVal, {
+    required bool defaultValue,
+  }) {
+    if (attrVal == null) return defaultValue;
+    return DOMAttribute.parseBooleanValue(attrName, attrVal);
+  }
+
+  /// Turns the boolean attribute [attrName] of [element] [on] or off:
+  /// - the attribute, present or removed: the element's default state (a
+  ///   form reset goes back to it: `defaultSelected`, `defaultChecked`);
+  /// - the properties that stop following the attribute once changed (by
+  ///   the user, or a previous render): `option.selected`, `input.checked`,
+  ///   `media.muted`.
+  void _setElementBoolean(Element element, String attrName, bool on) {
+    if (on) {
+      element.setAttribute(attrName, '');
     } else {
-      return attrVal.toLowerCase() == 'true';
+      element.removeAttribute(attrName);
+    }
+
+    switch (attrName) {
+      case 'selected':
+        if (element.isA<HTMLOptionElement>()) {
+          (element as HTMLOptionElement).selected = on;
+        }
+      case 'checked':
+        if (element.isA<HTMLInputElement>()) {
+          (element as HTMLInputElement).checked = on;
+        }
+      case 'muted':
+        if (element.isA<HTMLMediaElement>()) {
+          (element as HTMLMediaElement).muted = on;
+        }
     }
   }
 

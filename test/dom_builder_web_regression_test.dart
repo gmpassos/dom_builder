@@ -93,4 +93,108 @@ void main() {
       expect(targetElement.classList.contains('y'), isTrue);
     });
   });
+
+  // A false boolean attribute (`selected="false"`) resolves to no value
+  // (`null`), which `option.selected` took as a bare `selected`: every
+  // option became selected, and the last one won.
+  group('false boolean attributes', () {
+    HTMLSelectElement generateSelect(DOMNode domNode) =>
+        _generate(domNode).element as HTMLSelectElement;
+
+    test('selected="false" options from parsed HTML', () {
+      final select = generateSelect(
+        DOMNode.parseNodes(
+          '<select>'
+          '<option value="en" selected="false">EN</option>'
+          '<option value="pt" selected="true">PT</option>'
+          '<option value="es" selected="false">ES</option>'
+          '</select>',
+        ).first,
+      );
+
+      expect(select.value, equals('pt'));
+      expect(
+        [
+          for (var i = 0; i < select.options.length; i++)
+            select.options.item(i)! as HTMLOptionElement,
+        ].where((o) => o.selected).map((o) => o.value).toList(),
+        equals(['pt']),
+      );
+    });
+
+    test('no option selected: the first one shows', () {
+      final select = generateSelect(
+        DOMNode.parseNodes(
+          '<select>'
+          '<option value="en" selected="false">EN</option>'
+          '<option value="pt" selected="false">PT</option>'
+          '</select>',
+        ).first,
+      );
+
+      expect(select.value, equals('en'));
+    });
+
+    test('\$option(selected: false)', () {
+      final select = generateSelect(
+        $select(
+          options: [
+            $option(value: 'a', text: 'A', selected: false),
+            $option(value: 'b', text: 'B', selected: true),
+            $option(value: 'c', text: 'C', selected: false),
+          ],
+        ),
+      );
+
+      expect(select.value, equals('b'));
+    });
+
+    test('hidden="false" does not hide', () {
+      final element = _generate(
+        DOMNode.parseNodes('<div><span hidden="false">x</span></div>').first,
+      ).element;
+
+      final span = element.querySelector('span') as HTMLElement;
+      expect(span.hidden.dartify(), isNot(equals(true)));
+    });
+
+    test('setResolvedAttribute: `null` is the `booleanDefault`', () {
+      final option = HTMLOptionElement()..selected = true;
+      _gen.setResolvedAttribute(
+        option,
+        'selected',
+        null,
+        booleanDefault: false,
+        valueDefault: null,
+      );
+      expect(option.selected, isFalse);
+
+      _gen.setResolvedAttribute(
+        option,
+        'selected',
+        null,
+        booleanDefault: true,
+        valueDefault: null,
+      );
+      expect(option.selected, isTrue);
+
+      // `setAttribute` keeps `null` as a bare attribute:
+      final input = HTMLInputElement()..type = 'file';
+      _gen.setAttribute(input, 'multiple', null);
+      expect(input.multiple, isTrue);
+    });
+
+    test('a bare `selected` still selects', () {
+      final select = generateSelect(
+        DOMNode.parseNodes(
+          '<select>'
+          '<option value="a">A</option>'
+          '<option value="b" selected>B</option>'
+          '</select>',
+        ).first,
+      );
+
+      expect(select.value, equals('b'));
+    });
+  });
 }

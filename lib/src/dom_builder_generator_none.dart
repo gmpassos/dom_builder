@@ -89,6 +89,17 @@ class DOMGeneratorUnsupported<T extends Object> extends DOMGenerator<T> {
   }
 
   @override
+  void setResolvedAttribute(
+    T element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefault,
+    required String? valueDefault,
+  }) {
+    _notSupported();
+  }
+
+  @override
   String? getAttribute(T element, String attrName) {
     _notSupported();
   }

@@ -6,6 +6,7 @@ import 'dart:html';
 import 'package:swiss_knife/swiss_knife.dart';
 
 import 'dom_builder_actions.dart';
+import 'dom_builder_attribute.dart';
 import 'dom_builder_base.dart';
 import 'dom_builder_context.dart';
 import 'dom_builder_dart_html.dart' as dart_html;
@@ -238,84 +239,112 @@ class DOMGeneratorDartHTMLImpl extends DOMGeneratorDartHTML<Node> {
     return null;
   }
 
+  // `null` for a boolean attribute is a bare attribute (`<input multiple>`):
   @override
-  void setAttribute(Node element, String attrName, String? attrVal) {
+  void setAttribute(Node element, String attrName, String? attrVal) =>
+      _setAttributeImpl(element, attrName, attrVal, booleanDefault: true);
+
+  // After the defaults, `null` is off (boolean) or removed (other):
+  @override
+  void setResolvedAttribute(
+    Node element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefault,
+    required String? valueDefault,
+  }) => _setAttributeImpl(
+    element,
+    attrName,
+    DOMGenerator.resolveAttributeDefaults(
+      attrName,
+      attrVal,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
+    ),
+    booleanDefault: false,
+  );
+
+  /// [booleanDefault] is a boolean attribute's value for a `null`
+  /// [attrVal].
+  void _setAttributeImpl(
+    Node element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefault,
+  }) {
     if (element is! Element) return;
 
+    // A keyword is set as the value: `hidden="until-found"`.
+    var keyword = DOMAttribute.booleanAttributeKeyword(attrName, attrVal);
+    if (keyword != null) {
+      element.setAttribute(attrName, keyword);
+      return;
+    }
+
+    if (DOMAttribute.isBooleanAttribute(attrName) &&
+        // `selected`/`multiple` on an element without them: as is.
+        !(attrName == 'selected' && element is! OptionElement) &&
+        !(attrName == 'multiple' &&
+            element is! SelectElement &&
+            element is! InputElement)) {
+      _setElementBoolean(
+        element,
+        attrName,
+        _parseAttributeBoolValue(
+          attrName,
+          attrVal,
+          defaultValue: booleanDefault,
+        ),
+      );
+      return;
+    }
+
+    if (attrVal == null) {
+      element.removeAttribute(attrName);
+      return;
+    }
+
     switch (attrName) {
-      case 'selected':
-        {
-          if (element is OptionElement) {
-            element.selected = _parseAttributeBoolValue(attrVal);
-          } else {
-            element.setAttribute(attrName, attrVal!);
-          }
-          break;
-        }
-      case 'multiple':
-        {
-          if (element is SelectElement) {
-            element.multiple = _parseAttributeBoolValue(attrVal);
-          } else if (element is InputElement) {
-            element.multiple = _parseAttributeBoolValue(attrVal);
-          } else {
-            element.setAttribute(attrName, attrVal!);
-          }
-          break;
-        }
-      case 'hidden':
-        {
-          element.hidden = _parseAttributeBoolValue(attrVal);
-          break;
-        }
-      case 'inert':
-        {
-          element.inert = _parseAttributeBoolValue(attrVal);
-          break;
-        }
+      case 'id':
+        element.id = attrVal;
+      case 'class':
+        element.className = attrVal;
+      case 'title':
+        element.title = attrVal;
+      case 'style':
+        element.style.cssText = attrVal;
       default:
-        {
-          if (attrVal == null) {
-            element.removeAttribute(attrName);
-          } else {
-            switch (attrName) {
-              case 'id':
-                {
-                  element.id = attrVal;
-                  break;
-                }
-              case 'class':
-                {
-                  element.className = attrVal;
-                  break;
-                }
-              case 'title':
-                {
-                  element.title = attrVal;
-                  break;
-                }
-              case 'style':
-                {
-                  element.style.cssText = attrVal;
-                  break;
-                }
-              default:
-                {
-                  element.setAttribute(attrName, attrVal);
-                  break;
-                }
-            }
-          }
-          break;
-        }
+        element.setAttribute(attrName, attrVal);
     }
   }
 
-  bool _parseAttributeBoolValue(String? attrVal) {
-    if (attrVal == null) {
-      return true;
+  /// The boolean attribute [attrName]'s value as a `bool`
+  /// ([DOMAttribute.parseBooleanValue]), [defaultValue] if `null`.
+  bool _parseAttributeBoolValue(
+    String attrName,
+    String? attrVal, {
+    required bool defaultValue,
+  }) {
+    if (attrVal == null) return defaultValue;
+    return DOMAttribute.parseBooleanValue(attrName, attrVal);
+  }
+
+  /// Turns the boolean attribute [attrName] of [element] [on] or off: the
+  /// attribute (the default state, for a form reset), and the properties
+  /// that stop following it once changed (`selected`, `checked`, `muted`).
+  void _setElementBoolean(Element element, String attrName, bool on) {
+    if (on) {
+      element.setAttribute(attrName, '');
     } else {
-      return attrVal.toLowerCase() == 'true';
+      element.removeAttribute(attrName);
+    }
+
+    if (attrName == 'selected' && element is OptionElement) {
+      element.selected = on;
+    } else if (attrName == 'checked' && element is InputElement) {
+      element.checked = on;
+    } else if (attrName == 'muted' && element is MediaElement) {
+      element.muted = on;
     }
   }
 

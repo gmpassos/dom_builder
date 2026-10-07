@@ -1834,9 +1834,10 @@ void main() {
       var attr = DOMAttribute.from('id', 'x');
       expect(DOMAttribute.append('<a', ' ', attr), equals('<a id="x"'));
       expect(DOMAttribute.append('<a', ' ', null), equals('<a'));
+      // An empty value is kept (`t=""`):
       expect(
         DOMAttribute.append('<a', ' ', DOMAttribute.from('t', '')),
-        equals('<a'),
+        equals('<a t=""'),
       );
       expect(
         DOMAttribute.appendTo(StringBuffer('<a'), ' ', attr).toString(),
@@ -1852,7 +1853,7 @@ void main() {
           ' ',
           DOMAttribute.from('t', ''),
         ).toString(),
-        equals('<a'),
+        equals('<a t=""'),
       );
     });
 
@@ -1881,14 +1882,17 @@ void main() {
       attr.setValue('say "hi"');
       expect(attr.buildHTML(), equals('title=\'say "hi"\''));
 
+      // An empty value is a value (`title=""`), not an absent one:
       var empty = DOMAttribute.from('title', '')!;
       expect(empty.hasValue, isFalse);
-      expect(empty.value, isNull);
-      expect(empty.values, isNull);
+      expect(empty.value, equals(''));
+      expect(empty.values, equals(['']));
       expect(empty.valueLength, equals(0));
-      expect(empty.buildHTML(), isEmpty);
+      expect(empty.buildHTML(), equals('title=""'));
+      // `toString` is the value:
       expect(empty.toString(), isEmpty);
-      expect(empty.valueHandler.equalsAttributeValue(null), isTrue);
+      expect(empty.valueHandler.equalsAttributeValue(''), isTrue);
+      expect(empty.valueHandler.equalsAttributeValue(null), isFalse);
       expect(
         empty.valueHandler.toString(),
         contains('DOMAttributeValueString'),

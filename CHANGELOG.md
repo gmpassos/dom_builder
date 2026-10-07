@@ -1,3 +1,81 @@
+## 3.2.0
+
+- Fix: a false boolean attribute set as a property turned it on. `resolveAttributeValue` resolves a false boolean
+  attribute to `null` (no attribute), which `setAttribute` takes as a bare (`true`) attribute for the ones set as
+  properties: every `selected="false"` option (also `$option(selected: false)`) was selected, so a `<select>` showed
+  its last option; `hidden="false"`, `multiple="false"` and `inert="false"` turned those on too.
+  - `DOMGenerator.setAttributes` now sets each resolved value with the new `setResolvedAttribute`.
+    `resolveAttributeValue` and `setResolvedAttribute` take 2 required named defaults for an attribute without a
+    value: `booleanDefault` (a boolean attribute: on or off) and `valueDefault` (any other: that value, or
+    removed when `null`); `setAttributes` passes `false` and `null`. A false boolean attribute resolves to `null`
+    (off). New `DOMGenerator.resolveAttributeDefaults` returns an attribute's value or its default.
+    `booleanDefault` holds for every boolean attribute (`checked`, `disabled`… too), not only the ones set as
+    properties.
+    `setAttribute` keeps `null` as a bare attribute (`true`). The web generator's `setElementAttribute` takes
+    `booleanDefault` too (default `true`). `_parseAttributeBoolValue` takes the `null` value as a named
+    `defaultValue` (web and `dart:html` generators).
+  - **Breaking** for a class extending `DOMGenerator` directly: `setResolvedAttribute` is abstract, and must be
+    implemented (a fallback to `setAttribute` would turn every false boolean attribute on); a caller or override of
+    `resolveAttributeValue` must pass or take the 2 new required parameters. The package's generators (web,
+    `dart:html`, delegate, dummy, none) implement them; subclasses of them are unaffected.
+  - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
+
+- Fix: one rule for every boolean attribute value, `DOMAttribute.parseBooleanValue`: on for `true`, bare, `""`, the
+  attribute's own name (`checked="checked"`, `selected="selected"`: XHTML form, any case) and `on`/`yes`/`1`; off
+  otherwise (`"false"`, `"off"`, `"no"`, `"0"`: dom_builder reads boolean values, and templates rely on it). Used by
+  `DOMAttribute.from`, `setValue` on an existing attribute, `resolveAttributeValue` (template values too) and the
+  generators' `setAttribute`/`setResolvedAttribute`. Before, each read them its own way:
+  - `checked="checked"` and the other own-name forms were off;
+  - a boolean attribute with a template value (`checked="{{:on}}true{{?}}false{{/}}"`, `disabled="{{d}}"`) was not a
+    boolean: `"false"` was set as `checked="false"`/`disabled="false"`, on in a browser;
+  - `"false"` via `setResolvedAttribute`/`setAttribute` turned `checked`/`disabled` on, while `""` or the own name
+    turned `selected`/`hidden` off;
+  - `setAttribute('checked', 'checked')` on an element that already had it turned it off.
+
+- Fix: the generators set a boolean attribute both as the attribute (present when on, removed when off: the
+  element's default state) and, where it stops following it, as the property (`option.selected`, `input.checked`,
+  `media.muted`). `selected` was only a property, so `option[selected]` matched nothing and a form reset selected the
+  first option; `checked` was only an attribute, so a re-render didn't change a checkbox the user had toggled.
+  `setAttribute` takes `null` as a bare attribute (on) for every boolean attribute (it removed `checked`/`disabled`).
+
+- Fix: `hidden="until-found"` (hidden, but found by find-in-page and fragment navigation) is kept as the value: it was
+  read as a boolean, false, so the element was shown. `DOMAttribute.booleanAttributeKeyword` lists such keywords.
+
+- Fix: an empty value is a value: `data-x=""`, a valueless `data-x` and `value=""` are kept (`[data-x]` selectors,
+  `dataset.x == ""`); they were dropped from the HTML and the DOM. `DOMAttributeValueString` keeps `''` apart from
+  `null` (no value), and `DOMElement.buildHTML` writes `name=""`. Behaviour change: `DOMAttribute.from('title', '')`
+  now builds `title=""` (it built nothing); an empty `class` or `style` is still left out.
+  `DOMElement.hasAttributeValue` is true for an empty value too (only `null`, absent or a false boolean attribute,
+  is false), as its doc said ("if attribute exists").
+  - Regression tests (`dom_builder_web_regression_test.dart`).
+
+- Fix: templates (`DOMTemplateVariable`):
+  - A `Set` in the context is checked for membership (`{{:tags.vip}}`), giving `true` or `false`: it was converted
+    to a `List` first and indexed, so its membership branch never ran.
+  - A `Function(Object?)` value is called with any context: it also matched `Function(Map?)`, checked first, which
+    cast the context to `Map?` and threw for a non-`Map` one. A `Function(Map?)` gets `null` for a non-`Map` context.
+  - A `Set` (or any other `Iterable`) value works as a condition and a loop (`{{:tags}}`, `{{*:tags}}`): it threw.
+
+- Fix: an empty string value equals `''` (and not `null`): `DOMAttributeValueString('').equalsAttributeValue('')` was
+  false.
+
+- Tests for the boolean attributes (`checked`, `hidden`, `disabled`, `selected`, `multiple`, `inert`, `autoplay`,
+  `controls`, `muted`):
+  - `dom_builder_boolean_attributes_test.dart` (VM): `DOMAttribute` parsing, HTML output (a false one is left out),
+    templates, `resolveAttributeValue`, and `setAttributes` setting every resolved value with `setResolvedAttribute`
+    (also through `DOMGeneratorDelegate` and `DOMGeneratorDummy`).
+  - `dom_builder_web_boolean_attributes_test.dart` (browser): each one on its element's property, `"true"`, bare,
+    `"false"` and absent, from parsed HTML and `$tag` attributes; `selected` options (parsed, `$option`, a multiple
+    select, a template's language select); `setAttribute`, `setResolvedAttribute` (on and off, `booleanDefault`)
+    and `setElementAttribute`.
+
+- Coverage tests (VM): `dom_builder_base_coverage_test.dart`, `dom_builder_css_coverage_test.dart`,
+  `dom_builder_template_coverage_test.dart`, `dom_builder_helpers_attribute_coverage_test.dart` and
+  `dom_builder_generator_coverage_test.dart` (generator, runtime, tree map): VM line coverage ~85% -> 97.4%. Suspected
+  bugs found are reproduced as skipped tests (`skip: 'Bug: …'`).
+
+- README: Codecov badge.
+
 ## 3.1.0
 
 - sdk: ^3.13.0

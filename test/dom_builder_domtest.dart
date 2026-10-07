@@ -387,6 +387,30 @@ class TestGenerator extends DOMGenerator<TestNode> {
   }
 
   @override
+  void setResolvedAttribute(
+    TestNode element,
+    String attrName,
+    String? attrVal, {
+    required bool booleanDefault,
+    required String? valueDefault,
+  }) {
+    if (element is! TestElem) return;
+
+    var value = DOMGenerator.resolveAttributeDefaults(
+      attrName,
+      attrVal,
+      booleanDefault: booleanDefault,
+      valueDefault: valueDefault,
+    );
+
+    if (value != null) {
+      element.attributes[attrName] = value;
+    } else {
+      element.attributes.remove(attrName);
+    }
+  }
+
+  @override
   String? getAttribute(TestNode element, String attrName) {
     if (element is TestElem) {
       return element.attributes[attrName];
