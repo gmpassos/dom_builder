@@ -384,25 +384,15 @@ void main() {
       });
     }
 
-    test(
-      '<input checked="checked"> is on (XHTML form)',
-      () {
-        expect(resolve('<input type="checkbox" checked="checked">'), 'true');
-        for (final name in ['selected', 'disabled', 'multiple', 'hidden']) {
-          final domElement =
-              DOMNode.parseNodes('<div $name="$name">x</div>').first
-                  as DOMElement;
-          expect(
-            domElement.getAttributeValueAsBool(name),
-            isTrue,
-            reason: name,
-          );
-        }
-      },
-      skip:
-          'Bug: a boolean attribute whose value is its own name '
-          '(`checked="checked"`) is read as false',
-    );
+    test('<input checked="checked"> is on (XHTML form)', () {
+      expect(resolve('<input type="checkbox" checked="checked">'), 'true');
+      for (final name in ['selected', 'disabled', 'multiple', 'hidden']) {
+        final domElement =
+            DOMNode.parseNodes('<div $name="$name">x</div>').first
+                as DOMElement;
+        expect(domElement.getAttributeValueAsBool(name), isTrue, reason: name);
+      }
+    });
   });
 
   // Enumerated and string attributes whose "off"/"false" is a value, not an
@@ -524,21 +514,15 @@ void main() {
       }
     });
 
-    test(
-      'an empty value is kept (`data-x=""`, `value=""`)',
-      () {
-        for (final html in ['<input data-x="">', '<input value="">']) {
-          final domElement = DOMNode.parseNodes(html).first as DOMElement;
-          final name = domElement.attributesNames.single;
-          expect(domElement.getAttributeValue(name), equals(''), reason: html);
-          expect(resolve(domElement, name, false), equals(''), reason: html);
-          expect(domElement.buildHTML(), contains('$name='), reason: html);
-        }
-      },
-      skip:
-          'Bug: an empty value parses to `null`, so the attribute is dropped '
-          '(`[data-x]` selectors, `dataset.x == ""`)',
-    );
+    test('an empty value is kept (`data-x=""`, `value=""`)', () {
+      for (final html in ['<input data-x="">', '<input value="">']) {
+        final domElement = DOMNode.parseNodes(html).first as DOMElement;
+        final name = domElement.attributesNames.single;
+        expect(domElement.getAttributeValue(name), equals(''), reason: html);
+        expect(resolve(domElement, name, false), equals(''), reason: html);
+        expect(domElement.buildHTML(), contains('$name=""'), reason: html);
+      }
+    });
 
     test('setResolvedAttribute keeps them (TestGenerator)', () {
       final elem = TestElem('input');

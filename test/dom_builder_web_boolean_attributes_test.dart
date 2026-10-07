@@ -411,13 +411,20 @@ void main() {
       });
     }
 
-    test(
-      'checked="checked": checked (XHTML form)',
-      () => expect(checkedOf('checked="checked"'), isTrue),
-      skip:
-          'Bug: a boolean attribute whose value is its own name is read as '
-          'false',
-    );
+    test('checked="checked": checked (XHTML form)', () {
+      expect(checkedOf('checked="checked"'), isTrue);
+
+      final option = _generateHTML(
+        '<select><option value="a">A</option>'
+        '<option value="b" selected="selected">B</option></select>',
+      ) as HTMLSelectElement;
+      expect(option.value, equals('b'));
+
+      final button = _generateHTML(
+        '<button disabled="disabled">x</button>',
+      ) as HTMLButtonElement;
+      expect(button.disabled, isTrue);
+    });
   });
 
   // "off"/"false" are values of these attributes, kept verbatim: dropping
@@ -514,14 +521,17 @@ void main() {
       expect(input.getAttribute('data-x'), equals('off'));
     });
 
-    test(
-      'an empty value is kept (`data-x=""`)',
-      () {
-        final e = _generateHTML('<div data-x="">x</div>');
-        expect(e.hasAttribute('data-x'), isTrue);
-        expect(e.matches('[data-x]'), isTrue);
-      },
-      skip: 'Bug: an empty value parses to `null`, so the attribute is dropped',
-    );
+    test('an empty value is kept (`data-x=""`, `value=""`)', () {
+      final e = _generateHTML('<div data-x="" data-y>x</div>');
+      expect(e.getAttribute('data-x'), equals(''));
+      expect(e.matches('[data-x]'), isTrue);
+      expect(e.getAttribute('data-y'), equals(''));
+
+      final input =
+          _generateHTML('<input value="" placeholder="">') as HTMLInputElement;
+      expect(input.hasAttribute('value'), isTrue);
+      expect(input.value, isEmpty);
+      expect(input.getAttribute('placeholder'), equals(''));
+    });
   });
 }

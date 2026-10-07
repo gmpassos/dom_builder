@@ -690,15 +690,15 @@ void main() {
       var empty = DOMAttribute.from('title', '');
 
       expect(DOMAttribute.append('<x', ' ', null), equals('<x'));
-      expect(DOMAttribute.append('<x', ' ', empty), equals('<x'));
+      expect(DOMAttribute.append('<x', ' ', empty), equals('<x title=""'));
       expect(DOMAttribute.append('<x', ' ', attr), equals('<x title="T"'));
 
       var sb = StringBuffer('<x');
       DOMAttribute.appendTo(sb, ' ', null);
       DOMAttribute.appendTo(sb, ' ', empty);
-      expect(sb.toString(), equals('<x'));
+      expect(sb.toString(), equals('<x title=""'));
       DOMAttribute.appendTo(sb, ' ', attr);
-      expect(sb.toString(), equals('<x title="T"'));
+      expect(sb.toString(), equals('<x title="" title="T"'));
     });
 
     test('from: name and value handler selection', () {
@@ -736,7 +736,8 @@ void main() {
         equals("title='say \"hi\"'"),
       );
       expect(DOMAttribute.from('title', 'x')!.buildHTML(), equals('title="x"'));
-      expect(DOMAttribute.from('title', '')!.buildHTML(), isEmpty);
+      // An empty value is kept:
+      expect(DOMAttribute.from('title', '')!.buildHTML(), equals('title=""'));
       expect(DOMAttribute.from('checked', false)!.buildHTML(), isEmpty);
       expect(
         DOMAttribute.from('checked', true)!.buildHTML(),
@@ -851,10 +852,10 @@ void main() {
       );
     });
 
-    test('an emptied template has no value and builds empty', () {
+    test('an emptied template has an empty value and builds empty', () {
       var v = DOMAttributeValueTemplate('{{a}}');
       v.setAttributeValue('');
-      expect(v.asAttributeValue, isNull);
+      expect(v.asAttributeValue, equals(''));
       expect(v.getAttributeValue(DOMContext(variables: {'a': 1})), isEmpty);
     });
 

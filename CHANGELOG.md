@@ -18,6 +18,15 @@
     `resolveAttributeValue` must pass or take the 2 new required parameters. The package's generators (web,
     `dart:html`, delegate, dummy, none) implement them; subclasses of them are unaffected.
   - A `null` `selected` or `multiple` on an element without that property now removes the attribute (it threw).
+
+- Fix: a boolean attribute whose value is its own name is true, as in HTML: `<input checked="checked">`,
+  `selected="selected"`, `disabled="disabled"` (XHTML form) were read as false. (`"false"`, `"off"`, `"no"`, `"0"`
+  are still false: dom_builder reads boolean values, and templates rely on it.)
+
+- Fix: an empty value is a value: `data-x=""`, a valueless `data-x` and `value=""` are kept (`[data-x]` selectors,
+  `dataset.x == ""`); they were dropped from the HTML and the DOM. `DOMAttributeValueString` keeps `''` apart from
+  `null` (no value), and `DOMElement.buildHTML` writes `name=""`. Behaviour change: `DOMAttribute.from('title', '')`
+  now builds `title=""` (it built nothing); an empty `class` or `style` is still left out.
   - Regression tests (`dom_builder_web_regression_test.dart`).
 
 - Fix: templates (`DOMTemplateVariable`):

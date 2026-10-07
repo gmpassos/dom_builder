@@ -2659,8 +2659,12 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         dsxResolution: dsxResolution,
       );
 
+      // An empty value is kept (`data-x=""`): only a `null` one is no value.
       var attributesNormal = attributes.values.where(
-        (v) => v.hasValue && !_isPriorityAttribute(v) && !v.isBoolean,
+        (v) =>
+            (v.hasValue || v.value != null) &&
+            !_isPriorityAttribute(v) &&
+            !v.isBoolean,
       );
 
       for (var attr in attributesNormal) {

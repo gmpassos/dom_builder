@@ -128,8 +128,11 @@ class DOMAttribute with WithValue {
 
       if (attrBoolean) {
         if (value != null) {
-          // An empty value for a boolean attribute should be treated as true:
-          var attrValue = (value is String && value.isEmpty)
+          // As in HTML, an empty value or the attribute's own name is true:
+          // `<input checked="">`, `<input checked="checked">` (XHTML).
+          var attrValue =
+              (value is String &&
+                  (value.isEmpty || value.trim().toLowerCase() == name))
               ? DOMAttributeValueBoolean(true)
               : DOMAttributeValueBoolean(value);
           return DOMAttribute(name, attrValue);
@@ -302,10 +305,13 @@ class DOMAttributeValueBoolean extends DOMAttributeValue {
 }
 
 /// A [DOMAttributeValue] of type [String].
+///
+/// An empty value is a value (`data-x=""` is present: `[data-x]`,
+/// `dataset.x == ""`); only `null` is no value.
 class DOMAttributeValueString extends DOMAttributeValue {
   String? _value;
 
-  DOMAttributeValueString(Object? value) : _value = parseString(value, '');
+  DOMAttributeValueString(Object? value) : _value = parseString(value);
 
   @override
   bool get hasAttributeValue {
@@ -319,12 +325,15 @@ class DOMAttributeValueString extends DOMAttributeValue {
     return value != null ? value.length : 0;
   }
 
+  /// The value, `''` included (`null`: no value).
   @override
-  String? get asAttributeValue => hasAttributeValue ? _value! : null;
+  String? get asAttributeValue => _value;
 
   @override
-  List<String>? get asAttributeValues =>
-      hasAttributeValue ? [asAttributeValue!] : null;
+  List<String>? get asAttributeValues {
+    final value = _value;
+    return value != null ? [value] : null;
+  }
 
   @override
   bool equalsAttributeValue(Object? value) {
