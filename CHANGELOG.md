@@ -1,3 +1,8 @@
+## 3.3.1
+
+- `DOMElement.ariaAttributeName`: strips the `aria`/`aria-`/`aria_` prefix without a `RegExp` (same result).
+- Tests: `ariaAttributeName` with every key form, the prefix edge cases and the empty names that throw.
+
 ## 3.3.0
 
 - Accessibility attributes as parameters: `role`, `ariaLabel` (`aria-label`), `aria` (any other `aria-*`: a key with

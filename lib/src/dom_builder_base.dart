@@ -2486,13 +2486,19 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     return this;
   }
 
-  static final RegExp _ariaPrefix = RegExp(r'^aria[-_]?', caseSensitive: false);
-
   /// The `aria-*` attribute name of [key]: `hidden`, `aria-hidden`,
   /// `ariaHidden` and `aria_hidden` are `aria-hidden`. Throws an
   /// [ArgumentError] for an empty key.
   static String ariaAttributeName(String key) {
-    var name = key.trim().replaceFirst(_ariaPrefix, '').toLowerCase();
+    var name = key.trim().toLowerCase();
+    if (name.startsWith('aria')) {
+      var start = 4;
+      if (name.length > start) {
+        var c = name.codeUnitAt(start);
+        if (c == 0x2D || c == 0x5F) start++; // `-` or `_`
+      }
+      name = name.substring(start);
+    }
     if (name.isEmpty) {
       throw ArgumentError.value(key, 'key', 'Empty `aria-*` attribute name');
     }

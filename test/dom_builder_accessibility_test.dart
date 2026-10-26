@@ -107,6 +107,82 @@ void main() {
       expect(DOMElement.ariaAttributeValue(['a', 'b']), 'a b');
     });
 
+    test('ariaAttributeName: every key form', () {
+      for (var key in [
+        'hidden',
+        'Hidden',
+        'HIDDEN',
+        'aria-hidden',
+        'aria_hidden',
+        'ariaHidden',
+        'ariahidden',
+        'Aria-Hidden',
+        'ARIA_HIDDEN',
+        'AriaHidden',
+        '  hidden  ',
+        ' aria-hidden\n',
+      ]) {
+        expect(DOMElement.ariaAttributeName(key), 'aria-hidden', reason: key);
+      }
+
+      expect(DOMElement.ariaAttributeName('describedby'), 'aria-describedby');
+      expect(
+        DOMElement.ariaAttributeName('ariaDescribedBy'),
+        'aria-describedby',
+      );
+    });
+
+    test('ariaAttributeName: only one prefix and one separator stripped', () {
+      expect(DOMElement.ariaAttributeName('aria-aria-x'), 'aria-aria-x');
+      expect(DOMElement.ariaAttributeName('aria--x'), 'aria--x');
+      expect(DOMElement.ariaAttributeName('aria_-x'), 'aria--x');
+      // The prefix is only stripped at the start.
+      expect(DOMElement.ariaAttributeName('x-aria'), 'aria-x-aria');
+      // A single-char name after the prefix.
+      expect(DOMElement.ariaAttributeName('aria-x'), 'aria-x');
+      expect(DOMElement.ariaAttributeName('x'), 'aria-x');
+      // Shorter than the prefix.
+      expect(DOMElement.ariaAttributeName('ari'), 'aria-ari');
+    });
+
+    test('ariaAttributeName: an empty name throws', () {
+      for (var key in [
+        '',
+        '   ',
+        'aria',
+        'ARIA',
+        'aria-',
+        'aria_',
+        ' Aria- ',
+      ]) {
+        expect(
+          () => DOMElement.ariaAttributeName(key),
+          throwsArgumentError,
+          reason: "'$key'",
+        );
+      }
+    });
+
+    test('setAccessibility: aria keys in every form', () {
+      var e = $div().setAccessibility(
+        aria: {
+          'ariaExpanded': false,
+          'aria_controls': 'menu',
+          'ARIA-Hidden': true,
+          'live': 'polite',
+        },
+      );
+      expect(e.getAttributeValue('aria-expanded'), 'false');
+      expect(e.getAttributeValue('aria-controls'), 'menu');
+      expect(e.getAttributeValue('aria-hidden'), 'true');
+      expect(e.getAttributeValue('aria-live'), 'polite');
+
+      expect(
+        () => $div().setAccessibility(aria: {'aria-': true}),
+        throwsArgumentError,
+      );
+    });
+
     test('returns the element (chainable)', () {
       var e = $div();
       expect(identical(e.setAccessibility(role: 'region'), e), isTrue);
