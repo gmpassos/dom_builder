@@ -4,6 +4,8 @@ library;
 import 'package:dom_builder/dom_builder.dart';
 import 'package:test/test.dart';
 
+enum _Sort { ascending }
+
 /// The accessibility attributes of the elements and helpers: `role`,
 /// `aria-label`, any `aria-*` and `tabindex` ([DOMElement.setAccessibility]).
 void main() {
@@ -47,6 +49,62 @@ void main() {
       expect(e.getAttribute('aria-selected'), isNull);
       expect(e.getAttributeValue('role'), 'tab');
       expect(e.getAttributeValue('aria-label'), 'A');
+    });
+
+    test('a list value is space-joined (an ID list)', () {
+      var e = $input(
+        aria: {
+          'describedby': ['hint', 'error'],
+          'controls': <Object?>['a', null, '', 'b'],
+        },
+      );
+
+      expect(e.getAttributeValue('aria-describedby'), 'hint error');
+      expect(e.getAttributeValue('aria-controls'), 'a b');
+    });
+
+    test('a key camelCase or snake_case is the same attribute', () {
+      var e = $div(
+        aria: {'ariaHidden': true, 'aria_live': 'polite', 'AriaBusy': false},
+      );
+
+      expect(e.getAttributeValue('aria-hidden'), 'true');
+      expect(e.getAttributeValue('aria-live'), 'polite');
+      expect(e.getAttributeValue('aria-busy'), 'false');
+      expect(e.buildHTML(), isNot(contains('aria-aria')));
+    });
+
+    test('an empty key throws', () {
+      expect(() => $div(aria: {' ': true}), throwsArgumentError);
+      expect(() => $div(aria: {'aria-': true}), throwsArgumentError);
+    });
+
+    test("an enum value is its name; a number, its text", () {
+      var e = $div(aria: {'sort': _Sort.ascending, 'valuenow': 3});
+
+      expect(e.getAttributeValue('aria-sort'), 'ascending');
+      expect(e.getAttributeValue('aria-valuenow'), '3');
+    });
+
+    test('ariaLabel wins over an aria label entry', () {
+      expect(
+        $button(
+          ariaLabel: 'Close',
+          aria: {'label': 'X'},
+        ).getAttributeValue('aria-label'),
+        'Close',
+      );
+
+      var e = $div()
+        ..setAccessibility(ariaLabel: 'Close', aria: {'label': null});
+      expect(e.getAttributeValue('aria-label'), 'Close');
+    });
+
+    test('ariaAttributeName and ariaAttributeValue', () {
+      expect(DOMElement.ariaAttributeName('Expanded'), 'aria-expanded');
+      expect(DOMElement.ariaAttributeName('aria-expanded'), 'aria-expanded');
+      expect(DOMElement.ariaAttributeValue(null), isNull);
+      expect(DOMElement.ariaAttributeValue(['a', 'b']), 'a b');
     });
 
     test('returns the element (chainable)', () {
@@ -274,6 +332,13 @@ void main() {
           tabIndex: args.tabIndex,
         ),
         r'$hr': $hr(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$option': $option(
+          valueAndText: 'x',
           role: args.role,
           ariaLabel: args.ariaLabel,
           aria: args.aria,

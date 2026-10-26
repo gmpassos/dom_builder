@@ -54,6 +54,27 @@ void main() {
       expect(hidden.getAttribute('aria-hidden'), 'true');
     });
 
+    test('set after generating: the real element is updated', () {
+      final node = $div(
+        role: 'button',
+        aria: {'expanded': false, 'controls': 'menu'},
+      );
+      final e = _generate(node);
+      expect(e.getAttribute('aria-expanded'), 'false');
+
+      node.setAccessibility(
+        ariaLabel: 'Menu',
+        aria: {'expanded': true, 'controls': null},
+        tabIndex: 0,
+      );
+
+      expect(e.getAttribute('aria-expanded'), 'true');
+      expect(e.getAttribute('aria-label'), 'Menu');
+      expect(e.getAttribute('tabindex'), '0');
+      expect(e.hasAttribute('aria-controls'), isFalse);
+      expect(node.getAttributeValue('aria-expanded'), 'true');
+    });
+
     test('set after building, before generating', () {
       final node = $button(content: 'x')
         ..setAccessibility(ariaLabel: 'Close', aria: {'expanded': true});

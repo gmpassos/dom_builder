@@ -92,9 +92,9 @@ class BootstrapNavbarToggler {
 ## Accessibility
 
 The element helpers (`$div`, `$span`, `$button`, `$a`, `$img`, `$input`, `$table`...), `$tag` and `DOMElement`
-take the accessibility attributes as parameters: `role`, `ariaLabel` (`aria-label`), `aria` (any other `aria-*`,
-with or without the prefix) and `tabIndex` (`tabindex`). An `aria` value `true`/`false` is the string
-`"true"`/`"false"`.
+take the accessibility attributes as parameters: `role`, `ariaLabel` (`aria-label`), `aria` (any other `aria-*`:
+`hidden`, `aria-hidden` or `ariaHidden`) and `tabIndex` (`tabindex`). An `aria` value `true`/`false` is the string
+`"true"`/`"false"`, a list is space-joined (`{'describedby': ['hint', 'error']}`) and an enum is its name.
 
 A clickable `div` needs a role, a name and a `tabindex` to be a button for assistive technologies (and for browser
 automation, which reads the accessibility tree):
@@ -109,7 +109,8 @@ var refresh = $div(
 );
 ```
 
-On an element already built: `element.setAccessibility(role: 'button', ariaLabel: 'Refresh', tabIndex: 0)`.
+On an element already built: `element.setAccessibility(role: 'button', ariaLabel: 'Refresh', tabIndex: 0)`. On a
+generated element, the real one is updated too: `menu.setAccessibility(aria: {'expanded': true})`.
 
 ## Mixing real DOM Element (package `web`) with virtual `DOMElement`:
 

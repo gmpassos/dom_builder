@@ -4,14 +4,19 @@
   or without the `aria-` prefix, `{'hidden': true}`) and `tabIndex` (`tabindex`).
   - On the element helpers (`$tag`, `$div`, `$divInline`, `$span`, `$button`, `$label`, `$a`, `$img`, `$p`, `$b`,
     `$h`, `$ul`, `$ol`, `$li`, `$form`, `$nav`, `$header`, `$footer`, `$hr`, `$input`, `$checkbox`, `$radiobutton`,
-    `$select`, `$textarea`, `$table`, `$thead`, `$caption`, `$tbody`, `$tfoot`, `$tr`, `$th`, `$td`), the
+    `$select`, `$option`, `$textarea`, `$table`, `$thead`, `$caption`, `$tbody`, `$tfoot`, `$tr`, `$th`, `$td`), the
     `DOMElement` factory and the element classes (`DIVElement`, `INPUTElement`, `CHECKBOXElement`, `SELECTElement`,
-    `TEXTAREAElement`, `TABLEElement` and its parts).
+    `OPTIONElement`, `TEXTAREAElement`, `TABLEElement` and its parts).
   - New `DOMElement.setAccessibility`: sets them on an element already built (a `null` parameter keeps the
-    attribute; a `null` `aria` value removes it). Chainable.
-  - An `aria` value `true`/`false` is the string `"true"`/`"false"`: an `aria-*` attribute isn't a boolean attribute
-    (whose presence alone means `true`).
-  - The parameters win over the same attributes in `attributes`.
+    attribute; a `null` `aria` value removes it). Chainable. On a generated element, the real one is updated too
+    (e.g. toggling `aria-expanded` on a click).
+  - An `aria` key in any form: `hidden`, `aria-hidden`, `ariaHidden`, `aria_hidden` (an empty one throws an
+    `ArgumentError`). New `DOMElement.ariaAttributeName`.
+  - An `aria` value is a string: a `bool` `"true"`/`"false"` (an `aria-*` attribute isn't a boolean attribute,
+    whose presence alone means `true`), an `Iterable` space-joined (an ID list: `aria-describedby`…), an `Enum` its
+    `name`. New `DOMElement.ariaAttributeValue`.
+  - `ariaLabel` wins over an `aria` `label` entry; the parameters win over the same attributes in `attributes`.
+  - Element construction (parsing, `copy()`) is unchanged when none of them is given.
 - README: an Accessibility section; the `navbar-toggler` example uses `ariaLabel` and `aria`.
 - Tests: `test/dom_builder_accessibility_test.dart` (VM) and `test/dom_builder_web_accessibility_test.dart` (real
   DOM).

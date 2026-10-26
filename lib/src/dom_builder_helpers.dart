@@ -1168,6 +1168,10 @@ OPTIONElement $option({
   bool disabled = false,
   Object? text,
   Object? valueAndText,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
 }) {
   return OPTIONElement(
     classes: classes,
@@ -1178,6 +1182,10 @@ OPTIONElement $option({
     selected: selected,
     disabled: disabled,
     text: DOMNode.toText(text ?? valueAndText),
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
   );
 }
 
