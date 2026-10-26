@@ -1763,6 +1763,9 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
   /// The tag name in lower-case.
   final String tag;
 
+  /// An element of [tag] (its specialized class, when there's one:
+  /// [DIVElement], [INPUTElement]...). [role], [ariaLabel], [aria] and
+  /// [tabIndex] are its accessibility attributes ([setAccessibility]).
   factory DOMElement(
     String? tag, {
     Map<String, dynamic>? attributes,
@@ -1771,6 +1774,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     Object? style,
     Object? content,
     bool? hidden,
+    String? role,
+    String? ariaLabel,
+    Map<String, Object?>? aria,
+    int? tabIndex,
     bool commented = false,
   }) {
     tag = _normalizeTag(tag);
@@ -1784,6 +1791,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1799,6 +1810,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
               style: style,
               value: content,
               hidden: hidden,
+              role: role,
+              ariaLabel: ariaLabel,
+              aria: aria,
+              tabIndex: tabIndex,
               commented: commented,
             );
           }
@@ -1810,6 +1825,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
             style: style,
             value: content,
             hidden: hidden,
+            role: role,
+            ariaLabel: ariaLabel,
+            aria: aria,
+            tabIndex: tabIndex,
             commented: commented,
           );
         }
@@ -1822,6 +1841,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           options: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1841,6 +1864,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1852,6 +1879,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1863,6 +1894,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           rows: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1874,6 +1909,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1885,6 +1924,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           rows: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1896,6 +1939,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           rows: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1907,6 +1954,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           cells: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1918,6 +1969,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1929,6 +1984,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
 
@@ -1941,6 +2000,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
           style: style,
           content: content,
           hidden: hidden,
+          role: role,
+          ariaLabel: ariaLabel,
+          aria: aria,
+          tabIndex: tabIndex,
           commented: commented,
         );
     }
@@ -1954,6 +2017,10 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     Object? style,
     Object? content,
     bool? hidden,
+    String? role,
+    String? ariaLabel,
+    Map<String, Object?>? aria,
+    int? tabIndex,
     bool commented = false,
   }) : super._(true, commented) {
     addAllAttributes(attributes);
@@ -1977,6 +2044,13 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
         removeAttribute('hidden');
       }
     }
+
+    setAccessibility(
+      role: role,
+      ariaLabel: ariaLabel,
+      aria: aria,
+      tabIndex: tabIndex,
+    );
 
     if (content != null) {
       setContent(content);
@@ -2355,6 +2429,47 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     if (attribute != null) {
       putDOMAttribute(attribute);
     }
+
+    return this;
+  }
+
+  /// Sets the accessibility attributes of this element (for assistive
+  /// technologies and browser automation): [role] (`role`), [ariaLabel]
+  /// (`aria-label`), any other `aria-*` attribute in [aria] (a key with or
+  /// without the `aria-` prefix: `{'hidden': true}` or `{'aria-hidden':
+  /// true}`; a `null` value removes it) and [tabIndex] (`tabindex`).
+  ///
+  /// A parameter left `null` keeps the current attribute. `aria-*` values are
+  /// strings: a `bool` is `"true"` or `"false"` (an `aria-*` attribute isn't
+  /// a boolean attribute, whose presence alone would mean `true`).
+  ///
+  /// A clickable non-interactive element (a `div` with a click listener)
+  /// needs a [role] (`button`, `link`...), a name ([ariaLabel], or its text)
+  /// and, to be reached by the keyboard, a [tabIndex] of `0`.
+  DOMElement setAccessibility({
+    String? role,
+    String? ariaLabel,
+    Map<String, Object?>? aria,
+    int? tabIndex,
+  }) {
+    if (role != null) setAttribute('role', role);
+    if (ariaLabel != null) setAttribute('aria-label', ariaLabel);
+
+    if (aria != null) {
+      for (var e in aria.entries) {
+        var name = e.key.trim().toLowerCase();
+        if (!name.startsWith('aria-')) name = 'aria-$name';
+
+        var value = e.value;
+        if (value == null) {
+          removeAttribute(name);
+        } else {
+          setAttribute(name, value is bool ? '$value' : value);
+        }
+      }
+    }
+
+    if (tabIndex != null) setAttribute('tabindex', '$tabIndex');
 
     return this;
   }
@@ -3400,6 +3515,10 @@ class DIVElement extends DOMElement {
     super.style,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('div');
 
@@ -3448,6 +3567,10 @@ class INPUTElement extends DOMElement with WithValue {
     super.style,
     Object? value,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     bool disabled = false,
     super.commented = false,
   }) : super._(
@@ -3513,6 +3636,10 @@ class CHECKBOXElement extends INPUTElement with WithValue {
     Object? value,
     bool? checked,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     bool disabled = false,
     super.commented,
   }) : super(
@@ -3580,6 +3707,10 @@ class SELECTElement extends DOMElement {
     Object? options,
     bool? multiple,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     bool disabled = false,
     super.commented = false,
   }) : super._(
@@ -3827,6 +3958,10 @@ class TEXTAREAElement extends DOMElement with WithValue {
     Object? rows,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     bool disabled = false,
     super.commented = false,
   }) : super._(
@@ -4102,6 +4237,10 @@ abstract class TABLENode extends DOMElement {
     super.style,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented,
   }) : super._();
 
@@ -4143,6 +4282,10 @@ class TABLEElement extends DOMElement {
     Object? foot,
     Object? content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._(
          'table',
@@ -4187,6 +4330,10 @@ class THEADElement extends TABLENode {
     super.style,
     Object? rows,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('thead', content: createTableRows(rows, true));
 
@@ -4228,6 +4375,10 @@ class CAPTIONElement extends TABLENode {
     super.style,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('caption');
 
@@ -4269,6 +4420,10 @@ class TBODYElement extends TABLENode {
     super.style,
     Object? rows,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('tbody', content: createTableRows(rows, false));
 
@@ -4310,6 +4465,10 @@ class TFOOTElement extends TABLENode {
     super.style,
     Object? rows,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('tfoot', content: createTableRows(rows, false));
 
@@ -4352,6 +4511,10 @@ class TRowElement extends TABLENode {
     Object? cells,
     bool headerRow = false,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('tr', content: createTableCells(cells, headerRow));
 
@@ -4398,6 +4561,10 @@ class THElement extends TABLENode {
     super.style,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('th');
 
@@ -4447,6 +4614,10 @@ class TDElement extends TABLENode {
     super.style,
     super.content,
     super.hidden,
+    super.role,
+    super.ariaLabel,
+    super.aria,
+    super.tabIndex,
     super.commented = false,
   }) : super._('td');
 

@@ -1,3 +1,21 @@
+## 3.3.0
+
+- Accessibility attributes as parameters: `role`, `ariaLabel` (`aria-label`), `aria` (any other `aria-*`: a key with
+  or without the `aria-` prefix, `{'hidden': true}`) and `tabIndex` (`tabindex`).
+  - On the element helpers (`$tag`, `$div`, `$divInline`, `$span`, `$button`, `$label`, `$a`, `$img`, `$p`, `$b`,
+    `$h`, `$ul`, `$ol`, `$li`, `$form`, `$nav`, `$header`, `$footer`, `$hr`, `$input`, `$checkbox`, `$radiobutton`,
+    `$select`, `$textarea`, `$table`, `$thead`, `$caption`, `$tbody`, `$tfoot`, `$tr`, `$th`, `$td`), the
+    `DOMElement` factory and the element classes (`DIVElement`, `INPUTElement`, `CHECKBOXElement`, `SELECTElement`,
+    `TEXTAREAElement`, `TABLEElement` and its parts).
+  - New `DOMElement.setAccessibility`: sets them on an element already built (a `null` parameter keeps the
+    attribute; a `null` `aria` value removes it). Chainable.
+  - An `aria` value `true`/`false` is the string `"true"`/`"false"`: an `aria-*` attribute isn't a boolean attribute
+    (whose presence alone means `true`).
+  - The parameters win over the same attributes in `attributes`.
+- README: an Accessibility section; the `navbar-toggler` example uses `ariaLabel` and `aria`.
+- Tests: `test/dom_builder_accessibility_test.dart` (VM) and `test/dom_builder_web_accessibility_test.dart` (real
+  DOM).
+
 ## 3.2.0
 
 - Fix: a false boolean attribute set as a property turned it on. `resolveAttributeValue` resolves a false boolean
