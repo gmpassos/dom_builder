@@ -107,6 +107,53 @@ void main() {
       expect(DOMElement.ariaAttributeValue(['a', 'b']), 'a b');
     });
 
+    test('ariaAttributeValue: scalars', () {
+      expect(DOMElement.ariaAttributeValue(null), isNull);
+      expect(DOMElement.ariaAttributeValue(''), '');
+      expect(DOMElement.ariaAttributeValue(' a b '), ' a b ');
+      expect(DOMElement.ariaAttributeValue(true), 'true');
+      expect(DOMElement.ariaAttributeValue(false), 'false');
+      expect(DOMElement.ariaAttributeValue(_Sort.ascending), 'ascending');
+      expect(DOMElement.ariaAttributeValue(3), '3');
+      expect(DOMElement.ariaAttributeValue(1.5), '1.5');
+    });
+
+    test('ariaAttributeValue: iterables', () {
+      expect(DOMElement.ariaAttributeValue(<Object?>[]), '');
+      expect(DOMElement.ariaAttributeValue(['a']), 'a');
+      expect(DOMElement.ariaAttributeValue(['a', 'b', 'c']), 'a b c');
+      // `null` and empty items are skipped, with no extra space.
+      expect(DOMElement.ariaAttributeValue(<Object?>[null, '', 'a']), 'a');
+      expect(DOMElement.ariaAttributeValue(<Object?>['a', null, '']), 'a');
+      expect(
+        DOMElement.ariaAttributeValue(<Object?>['a', null, '', 'b']),
+        'a b',
+      );
+      expect(DOMElement.ariaAttributeValue(<Object?>[null, '']), '');
+      // Mixed item types.
+      expect(
+        DOMElement.ariaAttributeValue(<Object?>['x', true, _Sort.ascending, 2]),
+        'x true ascending 2',
+      );
+      // Nested iterables are flattened; an empty one is skipped.
+      expect(
+        DOMElement.ariaAttributeValue(<Object?>[
+          'a',
+          ['b', null, 'c'],
+          <Object?>[],
+          {'d'},
+        ]),
+        'a b c d',
+      );
+      // A lazy iterable.
+      expect(
+        DOMElement.ariaAttributeValue(
+          [1, 2, 3].where((e) => e != 2).map((e) => 'id$e'),
+        ),
+        'id1 id3',
+      );
+    });
+
     test('ariaAttributeName: every key form', () {
       for (var key in [
         'hidden',
