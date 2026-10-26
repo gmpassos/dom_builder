@@ -1,3 +1,9 @@
+## 3.3.2
+
+- `DOMElement.ariaAttributeValue`: an `Iterable` is joined in a single loop into a `StringBuffer`, instead of a
+  `map`/`whereType`/`where`/`join` chain (same result).
+- Tests: `ariaAttributeValue` with every scalar type and iterables (`null`/empty items, mixed types, nested, lazy).
+
 ## 3.3.1
 
 - `DOMElement.ariaAttributeName`: strips the `aria`/`aria-`/`aria_` prefix without a `RegExp` (same result).

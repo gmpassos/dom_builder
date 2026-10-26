@@ -2514,11 +2514,14 @@ class DOMElement extends DOMNode with WithValue implements AsDOMElement {
     if (value is bool) return '$value';
     if (value is Enum) return value.name;
     if (value is Iterable) {
-      return value
-          .map(ariaAttributeValue)
-          .whereType<String>()
-          .where((e) => e.isNotEmpty)
-          .join(' ');
+      var buffer = StringBuffer();
+      for (var e in value) {
+        var s = ariaAttributeValue(e);
+        if (s == null || s.isEmpty) continue;
+        if (buffer.isNotEmpty) buffer.write(' ');
+        buffer.write(s);
+      }
+      return buffer.toString();
     }
     return '$value';
   }
