@@ -206,6 +206,85 @@ void main() {
           aria: args.aria,
           tabIndex: args.tabIndex,
         ),
+        r'$th': $th(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$tr': $tr(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$thead': $thead(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$tbody': $tbody(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$tfoot': $tfoot(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$caption': $caption(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$h': $h(
+          2,
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$ol': $ol(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$form': $form(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$header': $header(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$footer': $footer(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$hr': $hr(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
+        r'$radiobutton': $radiobutton(
+          role: args.role,
+          ariaLabel: args.ariaLabel,
+          aria: args.aria,
+          tabIndex: args.tabIndex,
+        ),
       };
 
       for (var e in elements.entries) {
@@ -218,6 +297,44 @@ void main() {
       expect(html, contains('type="button"'));
       expect(html, contains('role="switch"'));
       expect(html, contains('aria-checked="true"'));
+    });
+  });
+
+  group('keeping them', () {
+    test('copy() keeps them', () {
+      var e = $div(role: 'button', ariaLabel: 'Go', tabIndex: 0);
+      var copy = e.copy();
+
+      expect(copy.getAttributeValue('role'), 'button');
+      expect(copy.getAttributeValue('aria-label'), 'Go');
+      expect(copy.getAttributeValue('tabindex'), '0');
+    });
+
+    test('the HTML, parsed back, has them', () {
+      var html = $button(
+        content: 'Go',
+        role: 'link',
+        ariaLabel: 'Go home',
+        aria: {'current': 'page', 'disabled': false},
+        tabIndex: -1,
+      ).buildHTML();
+
+      var parsed = $tagHTML<DOMElement>(html)!;
+      expect(parsed.getAttributeValue('role'), 'link');
+      expect(parsed.getAttributeValue('aria-label'), 'Go home');
+      expect(parsed.getAttributeValue('aria-current'), 'page');
+      expect(parsed.getAttributeValue('aria-disabled'), 'false');
+      expect(parsed.getAttributeValue('tabindex'), '-1');
+    });
+
+    test('a name set later replaces the one of the constructor', () {
+      var e = $div(ariaLabel: 'First')..setAccessibility(ariaLabel: 'Second');
+      expect(e.getAttributeValue('aria-label'), 'Second');
+    });
+
+    test('a template value in the name stays a template ({{intl:...}})', () {
+      var e = $div(ariaLabel: '{{intl:labelRefresh}}');
+      expect(e.buildHTML(), contains('aria-label="{{intl:labelRefresh}}"'));
     });
   });
 
