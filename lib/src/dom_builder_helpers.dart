@@ -297,6 +297,10 @@ DOMElement $tag(
   Map<String, dynamic>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return DOMElement(
@@ -307,6 +311,10 @@ DOMElement $tag(
     attributes: attributes,
     content: content,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -354,6 +362,10 @@ TABLEElement $table({
   Object? body,
   Object? foot,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   var tableElement = TABLEElement(
@@ -366,6 +378,10 @@ TABLEElement $table({
     body: body,
     foot: foot,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 
@@ -401,6 +417,10 @@ THEADElement $thead({
   Map<String, String>? attributes,
   Object? rows,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return THEADElement(
@@ -410,6 +430,10 @@ THEADElement $thead({
     attributes: attributes,
     rows: rows,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -423,6 +447,10 @@ CAPTIONElement $caption({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return CAPTIONElement(
@@ -436,6 +464,10 @@ CAPTIONElement $caption({
     attributes: attributes,
     content: content,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -448,6 +480,10 @@ TBODYElement $tbody({
   Map<String, String>? attributes,
   Object? rows,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return TBODYElement(
@@ -457,6 +493,10 @@ TBODYElement $tbody({
     attributes: attributes,
     rows: rows,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -469,6 +509,10 @@ TFOOTElement $tfoot({
   Map<String, String>? attributes,
   Object? rows,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return TFOOTElement(
@@ -478,6 +522,10 @@ TFOOTElement $tfoot({
     attributes: attributes,
     rows: rows,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -490,6 +538,10 @@ TRowElement $tr({
   Map<String, String>? attributes,
   Object? cells,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   return TRowElement(
@@ -499,6 +551,10 @@ TRowElement $tr({
     attributes: attributes,
     cells: cells,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 }
@@ -514,6 +570,10 @@ TDElement $td({
   String? headers,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => TDElement(
   id: id,
@@ -527,6 +587,10 @@ TDElement $td({
   },
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -542,6 +606,10 @@ THElement $th({
   String? scope,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => THElement(
   id: id,
@@ -556,6 +624,10 @@ THElement $th({
   },
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -567,6 +639,10 @@ DIVElement $div({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => DIVElement(
   id: id,
@@ -575,6 +651,10 @@ DIVElement $div({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -586,6 +666,10 @@ DIVElement $divInline({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => DIVElement(
   id: id,
@@ -597,6 +681,10 @@ DIVElement $divInline({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -712,6 +800,10 @@ DOMElement $span({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'span',
@@ -721,6 +813,10 @@ DOMElement $span({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -734,6 +830,10 @@ DOMElement $button({
   Map<String, dynamic>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) => $tag(
@@ -749,6 +849,10 @@ DOMElement $button({
   },
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -761,6 +865,10 @@ DOMElement $label({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'label',
@@ -770,6 +878,10 @@ DOMElement $label({
   attributes: {'for': ?forID, ...?attributes},
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -781,6 +893,10 @@ DOMElement $ul({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'ul',
@@ -790,6 +906,10 @@ DOMElement $ul({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -801,6 +921,10 @@ DOMElement $ol({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'ol',
@@ -810,6 +934,10 @@ DOMElement $ol({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -821,6 +949,10 @@ DOMElement $li({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'li',
@@ -830,6 +962,10 @@ DOMElement $li({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -844,6 +980,10 @@ TEXTAREAElement $textarea({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) {
@@ -857,6 +997,10 @@ TEXTAREAElement $textarea({
     attributes: attributes,
     content: content,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     disabled: disabled,
     commented: commented,
   );
@@ -873,6 +1017,10 @@ INPUTElement $input({
   Map<String, String>? attributes,
   Object? value,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) {
@@ -886,6 +1034,10 @@ INPUTElement $input({
     attributes: attributes,
     value: value,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     disabled: disabled,
     commented: commented,
   );
@@ -902,6 +1054,10 @@ CHECKBOXElement $checkbox({
   bool? checked,
   Object? value,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) {
@@ -916,6 +1072,10 @@ CHECKBOXElement $checkbox({
     value: value,
     checked: checked,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     disabled: disabled,
     commented: commented,
   );
@@ -931,6 +1091,10 @@ INPUTElement $radiobutton({
   Map<String, String>? attributes,
   Object? value,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) {
@@ -944,6 +1108,10 @@ INPUTElement $radiobutton({
     attributes: attributes,
     value: value,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     disabled: disabled,
     commented: commented,
   );
@@ -960,6 +1128,10 @@ SELECTElement $select({
   Object? selected,
   bool? multiple,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool disabled = false,
   bool commented = false,
 }) {
@@ -972,6 +1144,10 @@ SELECTElement $select({
     options: options,
     multiple: multiple,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     disabled: disabled,
     commented: commented,
   );
@@ -992,6 +1168,10 @@ OPTIONElement $option({
   bool disabled = false,
   Object? text,
   Object? valueAndText,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
 }) {
   return OPTIONElement(
     classes: classes,
@@ -1002,6 +1182,10 @@ OPTIONElement $option({
     selected: selected,
     disabled: disabled,
     text: DOMNode.toText(text ?? valueAndText),
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
   );
 }
 
@@ -1016,6 +1200,10 @@ DOMElement $img({
   String? title,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) {
   var img = $tag(
@@ -1026,6 +1214,10 @@ DOMElement $img({
     attributes: {'src': ?src, 'title': ?title, ...?attributes},
     content: content,
     hidden: hidden,
+    role: role,
+    ariaLabel: ariaLabel,
+    aria: aria,
+    tabIndex: tabIndex,
     commented: commented,
   );
 
@@ -1052,6 +1244,10 @@ DOMElement $a({
   String? target,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'a',
@@ -1061,12 +1257,32 @@ DOMElement $a({
   attributes: {'href': ?href, 'target': ?target, ...?attributes},
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
 /// Creates a `b` node.
-DOMElement $b({Object? content, bool? hidden, bool commented = false}) =>
-    $tag('b', content: content, hidden: hidden, commented: commented);
+DOMElement $b({
+  Object? content,
+  bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
+  bool commented = false,
+}) => $tag(
+  'b',
+  content: content,
+  hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
+  commented: commented,
+);
 
 /// Creates a `p` node.
 DOMElement $p({
@@ -1076,6 +1292,10 @@ DOMElement $p({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'p',
@@ -1085,6 +1305,10 @@ DOMElement $p({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1097,6 +1321,10 @@ DOMElement $h(
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'h$n',
@@ -1106,6 +1334,10 @@ DOMElement $h(
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1161,6 +1393,10 @@ DOMElement $hr({
   Object? style,
   Map<String, String>? attributes,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'hr',
@@ -1169,6 +1405,10 @@ DOMElement $hr({
   style: style,
   attributes: attributes,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1180,6 +1420,10 @@ DOMElement $form({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'form',
@@ -1189,6 +1433,10 @@ DOMElement $form({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1200,6 +1448,10 @@ DOMElement $nav({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'nav',
@@ -1209,6 +1461,10 @@ DOMElement $nav({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1220,6 +1476,10 @@ DOMElement $header({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'header',
@@ -1229,6 +1489,10 @@ DOMElement $header({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 
@@ -1240,6 +1504,10 @@ DOMElement $footer({
   Map<String, String>? attributes,
   Object? content,
   bool? hidden,
+  String? role,
+  String? ariaLabel,
+  Map<String, Object?>? aria,
+  int? tabIndex,
   bool commented = false,
 }) => $tag(
   'footer',
@@ -1249,6 +1517,10 @@ DOMElement $footer({
   attributes: attributes,
   content: content,
   hidden: hidden,
+  role: role,
+  ariaLabel: ariaLabel,
+  aria: aria,
+  tabIndex: tabIndex,
   commented: commented,
 );
 

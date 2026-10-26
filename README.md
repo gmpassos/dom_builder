@@ -74,7 +74,9 @@ class BootstrapNavbarToggler {
   static DOMGenerator domGenerator = DOMGenerator.web() ;
 
   Element render() {
-    var button = $button( type: 'button', classes: 'navbar-toggler', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse", 'aria-controls': "navbarCollapse", 'aria-expanded':"false", 'aria-label':"Toggle navigation"} ,
+    var button = $button( type: 'button', classes: 'navbar-toggler', attributes: {'data-toggle': "collapse", 'data-target': "#navbarCollapse"} ,
+        ariaLabel: 'Toggle navigation',
+        aria: {'controls': 'navbarCollapse', 'expanded': false},
         content: $span( classes: 'navbar-toggler-icon')
     );
 
@@ -86,6 +88,29 @@ class BootstrapNavbarToggler {
 ```
 
 - NOTE: package `dart:html` is deprecated.
+
+## Accessibility
+
+The element helpers (`$div`, `$span`, `$button`, `$a`, `$img`, `$input`, `$table`...), `$tag` and `DOMElement`
+take the accessibility attributes as parameters: `role`, `ariaLabel` (`aria-label`), `aria` (any other `aria-*`:
+`hidden`, `aria-hidden` or `ariaHidden`) and `tabIndex` (`tabindex`). An `aria` value `true`/`false` is the string
+`"true"`/`"false"`, a list is space-joined (`{'describedby': ['hint', 'error']}`) and an enum is its name.
+
+A clickable `div` needs a role, a name and a `tabindex` to be a button for assistive technologies (and for browser
+automation, which reads the accessibility tree):
+
+```dart
+var refresh = $div(
+  classes: 'refresh-icon',
+  role: 'button',
+  ariaLabel: 'Refresh',
+  tabIndex: 0,
+  content: $img(src: 'icons/refresh.svg', aria: {'hidden': true}),
+);
+```
+
+On an element already built: `element.setAccessibility(role: 'button', ariaLabel: 'Refresh', tabIndex: 0)`. On a
+generated element, the real one is updated too: `menu.setAccessibility(aria: {'expanded': true})`.
 
 ## Mixing real DOM Element (package `web`) with virtual `DOMElement`:
 
