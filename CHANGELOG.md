@@ -1,3 +1,14 @@
+## 3.3.3
+
+- Dependencies:
+  - Updated `swiss_knife` from ^3.3.14 to ^3.4.2.
+  - Updated `js_interop_utils` from ^1.1.0 to ^1.1.1.
+  - Dev: `test` ^1.32.0 -> ^1.33.0, `coverage` ^1.15.1 -> ^1.16.0, `web` ^1.1.1 -> ^1.1.2.
+- No code changes: the `swiss_knife` 3.4.2 fixes don't change what `dom_builder` uses. The `RegExpDialect`s don't use
+  `withParameters`; `LazyWeakReferenceManagerByType.global` keeps its 2 s `weakenDelay`; `DOMContext.copy` deep
+  copies a `Map<String, dynamic>` of variables, whose type `deepCopy` reproduces.
+- CI: `actions/checkout@v7`, `codecov/codecov-action@v7`.
+
 ## 3.3.2
 
 - `DOMElement.ariaAttributeValue`: an `Iterable` is joined in a single loop into a `StringBuffer`, instead of a
